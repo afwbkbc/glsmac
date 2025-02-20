@@ -10,10 +10,8 @@
 namespace gse {
 namespace value {
 
-static Value* s_undefined = VALUE( value::Undefined );
-
-Object::Object( context::ChildContext* const ctx, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
-	: Value( GetType() )
+Object::Object( gc::Space* const gc_space, context::ChildContext* const ctx, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
+	: Value( gc_space, GetType() )
 	, m_ctx( ctx )
 	, value( initial_value )
 	, object_class( object_class )
@@ -32,9 +30,9 @@ Object::~Object() {
 
 Value* const Object::Get( const object_key_t& key ) const {
 	const auto& it = value.find( key );
-	return it == value.end()
-		? s_undefined
-		: it->second;
+	return it != value.end()
+		? it->second
+		: VALUEEXT( value::Undefined, m_gc_space );
 }
 
 void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
@@ -46,7 +44,7 @@ void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE 
 		) {
 		if ( wrapobj ) {
 			if ( !wrapsetter ) {
-				throw gse::Exception( EC.INVALID_ASSIGNMENT, "Property is read-only", GSE_CALL );
+				GSE_ERROR( EC.INVALID_ASSIGNMENT, "Property is read-only" );
 			}
 			wrapsetter( wrapobj, key, new_value, GSE_CALL );
 		}
@@ -60,7 +58,7 @@ void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE 
 }
 
 Value* const Object::GetRef( const object_key_t& key ) {
-	return VALUE( ObjectRef, this, key );
+	return VALUEEXT( ObjectRef, m_gc_space, this, key );
 }
 
 void Object::Unlink() {

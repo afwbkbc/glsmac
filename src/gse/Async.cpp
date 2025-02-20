@@ -14,6 +14,9 @@ namespace gse {
 // just a precaution
 #define MAX_SLEEP_MS ( 1000 * 3600 )
 
+Async::Async( gc::Space* const gc_space )
+	: m_gc_space( gc_space ) {}
+
 void Async::Iterate( ExecutionPointer& ep ) {
 	while ( !m_timers.empty() && Now() >= m_timers.begin()->first ) {
 		ProcessTimers( m_timers.begin(), ep );
@@ -22,15 +25,15 @@ void Async::Iterate( ExecutionPointer& ep ) {
 
 static Async::timer_id_t s_next_id = 0;
 
-const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_CALLABLE ) {
+const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_CALLABLE_NOGC ) {
 	ASSERT( f->type == Value::T_CALLABLE, "invalid callable type: " + f->GetTypeString() );
 	if ( s_next_id == SIZE_MAX - 1 ) {
 		s_next_id = 0;
 	}
 	s_next_id++;
 	auto* subctx = ctx->ForkAndExecute(
-		GSE_CALL, true, [ this, &ms, &si, &ep, &f ]( gse::context::ChildContext* const subctx ) {
-			ValidateMs( ms, subctx, si, ep );
+		m_gc_space, GSE_CALL_NOGC, true, [ this, &ms, &si, &ep, &f ]( gse::context::ChildContext* const subctx ) {
+			ValidateMs( ms, m_gc_space, subctx, si, ep );
 			subctx->PersistValue( f );
 		}
 	);
@@ -125,7 +128,7 @@ void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) 
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
 		const auto si = timer.si;
-		const auto result = ( (value::Callable*)f )->Run( GSE_CALL, {} );
+		const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
 
 		size_t ms = 0;
 		bool repeat = false;
@@ -145,12 +148,12 @@ void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) 
 			}
 			case Value::T_INT: {
 				ms = ( (value::Int*)r )->value;
-				ValidateMs( ms, GSE_CALL );
+				ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
 				repeat = true;
 				break;
 			}
 			default:
-				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int, got: " + result->GetTypeString() );
+				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 		}
 
 		if ( repeat ) {

@@ -31,7 +31,7 @@ gse::Value* const TurnFinalized::Apply( Game* game ) const {
 	if ( game->GetState()->IsMaster() ) {
 		game->GlobalProcessTurnFinalized( m_initiator_slot, m_checksum );
 	}
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( TurnFinalized )

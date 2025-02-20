@@ -3,14 +3,14 @@
 namespace gse {
 namespace builtins {
 
-void Builtins::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
-	m_common.AddToContext( ctx, ep );
-	m_include.AddToContext( ctx, ep );
-	m_console.AddToContext( ctx, ep );
-	m_conversions.AddToContext( ctx, ep );
-	m_math.AddToContext( ctx, ep );
-	m_string.AddToContext( ctx, ep );
-	m_async.AddToContext( ctx, ep );
+void Builtins::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
+	m_common.AddToContext( gc_space, ctx, ep );
+	m_include.AddToContext( gc_space, ctx, ep );
+	m_console.AddToContext( gc_space, ctx, ep );
+	m_conversions.AddToContext( gc_space, ctx, ep );
+	m_math.AddToContext( gc_space, ctx, ep );
+	m_string.AddToContext( gc_space, ctx, ep );
+	m_async.AddToContext( gc_space, ctx, ep );
 }
 
 }

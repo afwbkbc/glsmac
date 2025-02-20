@@ -426,7 +426,7 @@ void Game::Iterate() {
 								m_state->TriggerObject( this, "start", {
 									{
 										"game",
-										Wrap()
+										Wrap( GetGCSpace() )
 									},
 								});
 							}
@@ -504,31 +504,31 @@ WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 		{
 			"year",
-			VALUE( gse::value::Int, 2100/*tmp*/ + m_current_turn.GetId() )
+			VALUE( gse::value::Int,, 2100/*tmp*/ + m_current_turn.GetId() )
 		},
 		{
 			"random",
-			m_random->Wrap()
+			m_random->Wrap( gc_space )
 		},
 		{
 			"tm",
-			m_tm->Wrap()
+			m_tm->Wrap( gc_space )
 		},
 		{
 			"rm",
-			m_rm->Wrap()
+			m_rm->Wrap( gc_space )
 		},
 		{
 			"um",
-			m_um->Wrap()
+			m_um->Wrap( gc_space )
 		},
 		{
 			"bm",
-			m_bm->Wrap(),
+			m_bm->Wrap( gc_space ),
 		},
 		{
 			"am",
-			m_am->Wrap()
+			m_am->Wrap( gc_space )
 		},
 		{
 		"message",
@@ -550,9 +550,9 @@ WRAPIMPL_BEGIN( Game )
 					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
 						continue; // skip
 					}
-					elements.push_back( slot.Wrap() );
+					elements.push_back( slot.Wrap( gc_space ) );
 				}
-				return VALUE( gse::value::Array, elements );
+				return VALUE( gse::value::Array,, elements );
 			} )
 		},
 	};
@@ -729,7 +729,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			const std::string* errmsg = nullptr;
 			event::Event* event = nullptr;
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			event = event::Event::Unserialize( buf );
+			event = event::Event::Unserialize( GetGCSpace(), buf );
 			if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
 				errmsg = new std::string( "Turn not active" );
 			}
@@ -859,7 +859,7 @@ gse::Value* const Game::AddEvent( event::Event* event ) {
 		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
 		return ProcessEvent( event );
 	}
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, GetGCSpace() );
 }
 
 const size_t Game::GetTurnId() const {
@@ -933,6 +933,7 @@ void Game::FinalizeTurn() {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
+	auto* gc_space = GetGCSpace();
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
 	Log( "Turn started: " + std::to_string( turn_id ) );
@@ -948,7 +949,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		m_state->TriggerObject( m_um, "unit_turn", {
 			{
 				"unit",
-				unit->Wrap( true )
+				unit->Wrap( gc_space, true )
 			},
 		});
 		unit->m_moved_this_turn = false;
@@ -960,7 +961,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		m_state->TriggerObject( m_bm, "base_turn", {
 			{
 				"base",
-				base->Wrap( true )
+				base->Wrap( gc_space, true )
 			},
 		});
 		m_bm->RefreshBase( base );
@@ -969,7 +970,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	m_state->TriggerObject( this, "turn", {
 		{
 			"game",
-			Wrap()
+			Wrap( gc_space )
 		}
 	});
 
@@ -1058,6 +1059,12 @@ animation::AnimationManager* Game::GetAM() const {
 	return m_am;
 }
 
+gc::Space* const Game::GetGCSpace() const {
+	ASSERT( m_state, "state not set" );
+	ASSERT( m_state->m_gc_space, "state gc space not set" );
+	return m_state->m_gc_space;
+}
+
 void Game::ValidateEvent( event::Event* event ) {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( this );
@@ -1104,6 +1111,7 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 
 void Game::UpdateYields( map::tile::Tile* tile ) const {
 	tile->yields = m_rm->GetYields(
+		GetGCSpace(),
 		tile,
 		m_slot
 	);
@@ -1120,11 +1128,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
 	Log( "Initializing game" );
-	
+
+	auto* gc_space = GetGCSpace();
+
 	m_state->TriggerObject( this, "configure", {
 		{
 			"game",
-			Wrap()
+			Wrap( gc_space )
 		},
 	});
 

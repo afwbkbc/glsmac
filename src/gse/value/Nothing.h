@@ -8,11 +8,11 @@ public:
 
 	static const type_t GetType() { return Value::T_NOTHING; }
 
-	Nothing()
-		: Value( GetType() ) {}
+	Nothing( gc::Space* const gc_space )
+		: Value( gc_space, GetType() ) {}
 
-	Nothing( const Nothing& other )
-		: Nothing() {}
+	Nothing( gc::Space* const gc_space, const Nothing& other )
+		: Nothing( gc_space ) {}
 };
 
 }

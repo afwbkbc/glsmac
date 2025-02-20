@@ -6,11 +6,10 @@ namespace gc {
 
 class Object {
 public:
-
+	Object( const bool is_container = false );
 	virtual ~Object() = default;
-	
-	virtual void CollectActiveObjects( std::unordered_set< Object* >& active_objects ) = 0;
 
+	const bool m_is_container = false;
 };
 
 }

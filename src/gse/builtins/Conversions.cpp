@@ -14,36 +14,36 @@
 namespace gse {
 namespace builtins {
 
-void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
-#define CONVERSION_ERROR( _type ) throw Exception( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString() + " to " + _type + ": " + v->ToString(), GSE_CALL );
+#define CONVERSION_ERROR( _type ) GSE_ERROR( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString() + " to " + _type + ": " + v->ToString() );
 
 #define CONVERT_COLOR( _type, _constructor, _min, _max ) { \
 	N_GETVALUE( r, 0, _type ); \
-    if ( r < _min || r > _max ) throw Exception( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ), GSE_CALL ); \
+    if ( r < _min || r > _max ) GSE_ERROR( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ) ); \
 	N_GETVALUE( g, 1, _type ); \
-    if ( g < _min || g > _max ) throw Exception( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ), GSE_CALL ); \
+    if ( g < _min || g > _max ) GSE_ERROR( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ) ); \
 	N_GETVALUE( b, 2, _type ); \
-    if ( b < _min || b > _max ) throw Exception( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ), GSE_CALL ); \
+    if ( b < _min || b > _max ) GSE_ERROR( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ) ); \
 	if ( arguments.size() == 4 ) { \
 		N_GETVALUE( a, 3, _type ); \
-	    if ( a < _min || a > _max ) throw Exception( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ), GSE_CALL ); \
-		return _constructor( r, g, b, a ).Wrap(); \
+	    if ( a < _min || a > _max ) GSE_ERROR( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ) ); \
+		return _constructor( r, g, b, a ).Wrap( gc_space ); \
 	} \
-	return _constructor( r, g, b ).Wrap(); \
+	return _constructor( r, g, b ).Wrap( gc_space ); \
 }
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
-		return VALUE( value::String, v->ToString() );
-	} ), ep );
+		return VALUE( value::String,, v->ToString() );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
-		return VALUE( value::String, v->Dump() );
-	} ), ep );
+		return VALUE( value::String,, v->Dump() );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "to_int", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -66,8 +66,8 @@ void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			default:
 				CONVERSION_ERROR( "Int" );
 		}
-		return VALUE( value::Int, value );
-	} ), ep );
+		return VALUE( value::Int,, value );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "to_float", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -94,13 +94,13 @@ void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			default:
 				CONVERSION_ERROR( "Float" );
 		}
-		return VALUE( value::Float, value );
-	} ), ep );
+		return VALUE( value::Float,, value );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "to_color", NATIVE_CALL() {
 		N_EXPECT_ARGS_MIN_MAX( 3, 4 );
-		const auto f_err = [ &ctx, &si, &ep ] () {
-			throw Exception( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)", GSE_CALL );
+		const auto f_err = [ &gc_space, &ctx, &si, &ep ] () {
+			GSE_ERROR( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)" );
 		};
 
 		switch ( arguments.at( 0 )->type ) {
@@ -110,7 +110,7 @@ void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 				f_err();
 		}
 		return VALUE( value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 
 #undef CONVERT_COLOR
 

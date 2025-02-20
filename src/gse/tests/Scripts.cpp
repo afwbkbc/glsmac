@@ -20,7 +20,7 @@
 namespace gse {
 namespace tests {
 
-void AddScriptsTests( task::gsetests::GSETests* task ) {
+void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	const std::string tests_path = util::FS::GeneratePath(
 		{
@@ -51,7 +51,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 		}
 		task->AddTest(
 			"testing " + script,
-			GT( task, script ) {
+			GT( &gc_space, script ) {
 
 				parser::Parser* parser = nullptr;
 				const runner::Runner* runner = nullptr;
@@ -63,7 +63,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
-					mocks::AddMocks( context, { script } );
+					mocks::AddMocks( gc_space, context, { script } );
 					program = parser->Parse();
 					runner = gse->GetRunner();
 					{

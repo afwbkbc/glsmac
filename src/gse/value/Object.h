@@ -4,6 +4,8 @@
 #include <string>
 #include <functional>
 
+#include "gse/Value.h"
+
 #include "Types.h"
 #include "gse/Types.h"
 
@@ -27,7 +29,7 @@ public:
 	static const type_t GetType() { return Value::T_OBJECT; }
 
 	typedef void (wrapsetter_t)( Wrappable*, const std::string&, Value* const, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
-	Object( context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
+	Object( gc::Space* const gc_space, context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	Value* const Get( const object_key_t& key ) const;

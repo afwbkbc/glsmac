@@ -168,19 +168,19 @@ WRAPIMPL_BEGIN( Slot )
 	WRAPIMPL_PROPS
 		{
 			"id",
-			VALUE( gse::value::Int, m_player_data.cid )
+			VALUE( gse::value::Int,, m_player_data.cid )
 		},
 		{
 			"type",
-			VALUE( gse::value::String, "human" )
+			VALUE( gse::value::String,, "human" )
 		},
 		{
 			"name",
-			VALUE( gse::value::String, player->GetPlayerName() )
+			VALUE( gse::value::String,, player->GetPlayerName() )
 		},
 		{
 			"faction",
-			player->GetFaction()->Wrap()
+			player->GetFaction()->Wrap( gc_space )
 		},
 	};
 WRAPIMPL_END_PTR()

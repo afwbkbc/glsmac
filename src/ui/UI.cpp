@@ -41,7 +41,7 @@ UI::UI( GSE_CALLABLE )
 	m_root = new dom::Root( GSE_CALL, this );
 	Resize();
 
-	g_engine->GetInput()->AddHandler( this, [ this, ctx, si ]( const input::Event& event ){
+	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
 		if ( event.type == input::EV_MOUSE_MOVE ) {
 			m_last_mouse_position = {
 				event.data.mouse.x,
@@ -86,7 +86,7 @@ WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
 			{
 				"root",
-				m_root->Wrap( true )
+				m_root->Wrap( gc_space, true )
 			},
 			{
 				"class",
@@ -128,7 +128,7 @@ WRAPIMPL_BEGIN( UI )
 						// passing parent class or properties in constructor works only if class didn't exist yet
 						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
 					}
-					return it->second->Wrap( true );
+					return it->second->Wrap( gc_space, true );
 				} )
 			},
 		};

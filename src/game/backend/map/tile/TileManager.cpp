@@ -173,14 +173,14 @@ WRAPIMPL_BEGIN( TileManager )
 			"get_map_width",
 			NATIVE_CALL( this ) {
 				const auto* m = m_game->GetMap();
-				return VALUE( gse::value::Int, m->GetWidth() );
+				return VALUE( gse::value::Int,, m->GetWidth() );
 			} )
 		},
 		{
 			"get_map_height",
 			NATIVE_CALL( this ) {
 				const auto* m = m_game->GetMap();
-				return VALUE( gse::value::Int, m->GetHeight() );
+				return VALUE( gse::value::Int,, m->GetHeight() );
 			})
 		},
 		{
@@ -207,7 +207,7 @@ WRAPIMPL_BEGIN( TileManager )
 				if ( x % 2 != y % 2 ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
-				return m->GetTile( x, y )->Wrap();
+				return m->GetTile( x, y )->Wrap( gc_space );
 			} )
 		},
 		{
@@ -222,10 +222,10 @@ WRAPIMPL_BEGIN( TileManager )
 					N_UNWRAP( tile, tileobj, map::tile::Tile );
 					tile_positions.push_back( tile->coord );
 				}
-				SendTileLockRequest( tile_positions, [ this, on_complete, tile_positions, ctx, si, ep ]() {
+				SendTileLockRequest( tile_positions, [ this, gc_space, on_complete, tile_positions, ctx, si, ep ]() {
 					auto ep2 = ep;
-					on_complete->Run( ctx, si, ep2, {
-						VALUE( gse::callable::Native, [ this, tile_positions ](
+					on_complete->Run( gc_space, ctx, si, ep2, {
+						VALUE( gse::callable::Native,, [ this, tile_positions ](
 							GSE_CALLABLE,
 							const gse::value::function_arguments_t& arguments
 						)  {

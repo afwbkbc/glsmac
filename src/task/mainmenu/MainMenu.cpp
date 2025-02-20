@@ -28,7 +28,7 @@ namespace mainmenu {
 
 void MainMenu::Start() {
 	ASSERT( !m_state, "mainmenu state already set" );
-	NEW( m_state, ::game::backend::State, nullptr );
+	NEW( m_state, ::game::backend::State, nullptr, nullptr );
 
 	NEW( m_random, util::random::Random );
 
@@ -219,7 +219,7 @@ void MainMenu::StartGame() {
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu
 	auto* real_state = m_state;
-	NEW( m_state, ::game::backend::State, nullptr );
+	NEW( m_state, ::game::backend::State, nullptr, nullptr );
 	m_state->m_settings = real_state->m_settings;
 	NEWV( task, task::game::Game, real_state, UH( this ) {
 		g_engine->GetScheduler()->RemoveTask( this );

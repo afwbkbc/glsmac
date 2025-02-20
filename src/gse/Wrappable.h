@@ -24,7 +24,7 @@ class Wrappable {
 public:
 	virtual ~Wrappable();
 
-	virtual Value* const Wrap( const bool dynamic = false ) = 0;
+	virtual Value* const Wrap( gc::Space* const gc_space, const bool dynamic = false ) = 0;
 
 	void Link( value::Object* wrapobj );
 	void Unlink( value::Object* wrapobj );

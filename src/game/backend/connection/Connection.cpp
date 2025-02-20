@@ -240,6 +240,12 @@ void Connection::ProcessEvent( const network::Event& event ) {
 	ASSERT( m_state, "connection state not set" );
 }
 
+gc::Space* Connection::GetGCSpace() const {
+	ASSERT( m_state, "state not set" );
+	ASSERT( m_state->m_gc_space, "state gc space not set" );
+	return m_state->m_gc_space;
+}
+
 void Connection::Disconnect( const std::string& reason ) {
 	if ( !reason.empty() ) {
 		m_disconnect_reason = reason;

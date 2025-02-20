@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 
 #include "Parser.h"
 
@@ -30,13 +31,15 @@ namespace parser {
 
 CLASS( JS, Parser )
 
-	JS( const std::string& filename, const std::string& source, const size_t initial_line_num );
+	JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 
 protected:
 	void GetElements( source_elements_t& elements ) override;
 	const program::Program* GetProgram( const source_elements_t& elements ) override;
 
 private:
+
+	gc::Space* m_gc_space = nullptr;
 
 	const si_t GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
@@ -160,22 +163,30 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, Value* > PREDEF_OPERATORS = {
+	const std::unordered_map< std::string, std::function< Value*( gc::Space* const ) > > PREDEF_OPERATORS = {
 		{
 			"true",
-			VALUE( value::Bool, true ),
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Bool, , true );
+			},
 		},
 		{
 			"false",
-			VALUE( value::Bool, false ),
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Bool, , false );
+			},
 		},
 		{
 			"null",
-			VALUE( value::Null ),
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Null );
+			},
 		},
 		{
 			"undefined",
-			VALUE( value::Undefined ),
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Undefined );
+			},
 		},
 	};
 

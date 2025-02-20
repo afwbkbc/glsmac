@@ -51,15 +51,15 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 	m_resource_idx.push_back( resource->m_id );
 }
 
-const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slot::Slot* slot ) {
+const map::tile::yields_t ResourceManager::GetYields( gc::Space* const gc_space, map::tile::Tile* tile, slot::Slot* slot ) {
 	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", {
 			{
 				"tile",
-				tile->Wrap()
+				tile->Wrap( gc_space )
 			},
 			{
 				"player",
-				slot->Wrap()
+				slot->Wrap( gc_space )
 			},
 		}
 	);
@@ -80,7 +80,7 @@ const map::tile::yields_t ResourceManager::GetYields( map::tile::Tile* tile, slo
 			THROW( "missing yields for resource: " + idx );
 		}
 		if ( v->second->type != gse::Value::T_INT ) {
-			THROW( "invalid resource value, expected Int, got " + v->second->GetTypeString() + ": " + v->second->ToString() );
+			THROW( "invalid resource value, expected Int,, got " + v->second->GetTypeString() + ": " + v->second->ToString() );
 		}
 		yields.push_back(
 			{

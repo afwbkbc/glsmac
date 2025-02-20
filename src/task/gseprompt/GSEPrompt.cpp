@@ -131,7 +131,7 @@ void GSEPrompt::ProcessInput() {
 	);
 
 	const gse::program::Program* program = nullptr;
-	gse::Value* result = VALUE( gse::value::Undefined );
+	gse::Value* result = nullptr;
 	try {
 		program = parser->Parse();
 		if ( m_is_tty ) {
@@ -149,7 +149,7 @@ void GSEPrompt::ProcessInput() {
 			{
 				gse::ExecutionPointer ep;
 				m_gse_context->ForkAndExecute(
-					m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
+					m_gse->GetGCSpace(), m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
 						result = m_runner->Execute( subctx, ep, program );
 						subctx->JoinContext();
 					}
@@ -165,6 +165,7 @@ void GSEPrompt::ProcessInput() {
 			);
 		}
 
+		ASSERT_NOLOG( result, "result is null" );
 		util::LogHelper::Println( result->Dump() );
 	}
 	catch ( const gse::Exception& e ) {

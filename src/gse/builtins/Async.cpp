@@ -11,30 +11,30 @@
 namespace gse {
 namespace builtins {
 
-void Async::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Async::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "async", NATIVE_CALL() {
 		N_EXPECT_ARGS( 2 );
 		N_GETVALUE( ms, 0, Int );
 
-		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), GSE_CALL );
+		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), GSE_CALL_NOGC );
 
 		const gse::value::object_properties_t properties = {
 			{
 				"stop",
 				// recursive NATIVE_CALL doesn't work
-				( new gse::callable::Native([ timer_id ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value* {
+				new gse::callable::Native( gc_space, [ timer_id ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) {
 					N_EXPECT_ARGS( 0 );
 					if ( !ctx->GetGSE()->GetAsync()->StopTimer( timer_id ) ) {
 						GSE_ERROR( EC.OPERATION_FAILED, "Timer is already stopped" );
 					}
 					return VALUE( value::Undefined );
-				} ) ),
+				} ),
 			}
 		};
 
-		return VALUE( value::Object, nullptr, properties, "async" );
-	} ), ep );
+		return VALUE( value::Object,, nullptr, properties, "async" );
+	} ), gc_space, ep );
 
 }
 

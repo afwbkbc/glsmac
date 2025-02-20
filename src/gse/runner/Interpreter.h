@@ -29,6 +29,8 @@ namespace runner {
 
 CLASS( Interpreter, Runner )
 
+	Interpreter( gc::Space* const gc_space );
+
 	Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const override;
 
 private:
@@ -36,6 +38,7 @@ private:
 	class Function : public value::Callable {
 	public:
 		Function(
+			gc::Space* const gc_space,
 			const Interpreter* runner,
 			context::Context* context,
 			const std::vector< std::string >& parameters,

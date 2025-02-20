@@ -68,13 +68,13 @@ const types::Buffer Event::Serialize( const Event* event ) {
 	return buf;
 }
 
-Event* Event::Unserialize( types::Buffer& buf ) {
+Event* Event::Unserialize( gc::Space* const gc_space, types::Buffer& buf ) {
 	const auto initiator_slot = buf.ReadInt();
 	const auto type = buf.ReadInt();
 	Event* result = nullptr;
-#define UNSERIALIZE( _type, _class ) \
+#define UNSERIALIZE( _type, _class, ... ) \
     case _type: { \
-        result = _class::Unserialize( buf, initiator_slot ); \
+        result = _class::Unserialize( __VA_ARGS__ buf, initiator_slot ); \
         break; \
     }
 	switch ( type ) {
@@ -84,8 +84,8 @@ Event* Event::Unserialize( types::Buffer& buf ) {
 		UNSERIALIZE( ET_UNIT_DEFINE, DefineUnit )
 		UNSERIALIZE( ET_UNIT_SPAWN, SpawnUnit )
 		UNSERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
-		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit )
-		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit )
+		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit, gc_space, )
+		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit, gc_space, )
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
 		UNSERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
 		UNSERIALIZE( ET_BASE_SPAWN, SpawnBase )
@@ -115,11 +115,11 @@ const types::Buffer Event::SerializeMultiple( const std::vector< Event* >& event
 	return buf;
 }
 
-void Event::UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& events_out ) {
+void Event::UnserializeMultiple( gc::Space* gc_space, types::Buffer& buf, std::vector< Event* >& events_out ) {
 	const auto count = buf.ReadInt();
 	for ( auto i = 0 ; i < count ; i++ ) {
 		auto event_buf = types::Buffer( buf.ReadString() );
-		events_out.push_back( backend::event::Event::Unserialize( event_buf ) );
+		events_out.push_back( backend::event::Event::Unserialize( gc_space, event_buf ) );
 	}
 }
 

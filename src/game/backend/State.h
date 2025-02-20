@@ -35,7 +35,7 @@ class Slots;
 
 CLASS2( State, common::Class, gse::Wrappable )
 
-	State( GLSMAC* glsmac );
+	State( gc::Space* const gc_space, GLSMAC* glsmac );
 	virtual ~State();
 
 	void SetGame( Game* game );
@@ -78,6 +78,8 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
+
+	gc::Space* m_gc_space = nullptr; // not const yet because in legacy ui it will be set by bindings
 
 private:
 

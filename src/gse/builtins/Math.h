@@ -7,7 +7,7 @@ namespace builtins {
 
 class Math : public Bindings {
 public:
-	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) override;
 };
 
 }

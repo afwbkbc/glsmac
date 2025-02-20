@@ -16,17 +16,21 @@ class Context;
 
 CLASS( Async, common::Class )
 
+	Async( gc::Space* const gc_space );
+
 	typedef size_t timer_id_t;
 
 	void Iterate( ExecutionPointer& ep );
 
-	const timer_id_t StartTimer( const size_t ms, gse::Value* const f, GSE_CALLABLE );
+	const timer_id_t StartTimer( const size_t ms, gse::Value* const f, GSE_CALLABLE_NOGC );
 	const bool StopTimer( const timer_id_t id );
 	void StopTimers();
 
 	void ProcessAndExit( ExecutionPointer& ep );
 
 private:
+
+	gc::Space* const m_gc_space = nullptr;
 
 	struct timer_t {
 		size_t ms;

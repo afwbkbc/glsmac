@@ -4,9 +4,10 @@
 #include <map>
 #include <vector>
 
-#include "gse/Value.h"
-
 namespace gse {
+
+class Value;
+
 namespace value {
 
 typedef std::string object_key_t; // keep it simple for now

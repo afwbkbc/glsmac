@@ -20,7 +20,7 @@ const char GSE::PATH_SEPARATOR = '/';
 GSE::GSE() {
 	NEW( m_gc_space, gc::Space );
 	m_bindings.push_back( &m_builtins );
-	m_async = new Async();
+	m_async = new Async( m_gc_space );
 }
 
 GSE::~GSE() {
@@ -36,7 +36,7 @@ GSE::~GSE() {
 		it.second.Cleanup( this );
 	}
 	for ( const auto& context : m_global_contexts ) {
-		m_gc_space->Remove( context );
+		m_gc_space->RemoveRoot( context );
 	}
 	delete m_gc_space;
 }
@@ -61,14 +61,14 @@ parser::Parser* GSE::GetParser( const std::string& filename, const std::string& 
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	if ( extensions[ 1 ] == ".js" ) {
-		NEW( parser, parser::JS, filename, source, initial_line_num );
+		NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
 	}
 	ASSERT( parser, "could not find parser for '.gls" + extensions[ 1 ] + "' extension" );
 	return parser;
 }
 
 runner::Runner* GSE::GetRunner() const {
-	NEWV( runner, runner::Interpreter );
+	NEWV( runner, runner::Interpreter, m_gc_space );
 	return runner;
 }
 
@@ -82,10 +82,10 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 	{
 		gse::ExecutionPointer ep;
 		for ( const auto& it : m_bindings ) {
-			it->AddToContext( context, ep );
+			it->AddToContext( m_gc_space, context, ep );
 		}
 	}
-	m_gc_space->Add( context );
+	m_gc_space->AddRoot( context );
 	return context;
 }
 
@@ -107,10 +107,10 @@ void GSE::Run() {
 		auto it = m_modules.find( i );
 		ASSERT( it != m_modules.end(), "required module missing: " + i );
 		Log( "Executing module: " + it->first );
-		context::GlobalContext context( this, {} );
+		NEWV( context, context::GlobalContext, this, {} );
 		{
 			ExecutionPointer ep;
-			it->second->Run( &context, {}, ep, {} );
+			it->second->Run( m_gc_space, context, {}, ep, {} );
 		}
 	}
 
@@ -128,7 +128,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 			for ( const auto& it2 : m_supported_extensions ) {
 				if ( util::FS::FileExists( path + it2, PATH_SEPARATOR ) ) {
 					if ( !full_path.empty() ) {
-						throw Exception( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ...", GSE_CALL );
+						GSE_ERROR( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ..." );
 					}
 					full_path = path + it2;
 				}
@@ -143,7 +143,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	}
 	if ( full_path.empty() ) {
 		Log( "Could not find script for include '" + path + "'" );
-		throw Exception( EC.LOADER_ERROR, "Could not find script for include '" + path + "'", GSE_CALL );
+		GSE_ERROR( EC.LOADER_ERROR, "Could not find script for include '" + path + "'" );
 	}
 	const auto& it = m_include_cache.find( full_path );
 	if ( it != m_include_cache.end() ) {
@@ -151,7 +151,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	}
 	const auto source = util::FS::ReadTextFile( full_path, PATH_SEPARATOR );
 	include_cache_t cache = {
-		VALUE( value::Undefined ),
+		nullptr,
 		nullptr,
 		nullptr,
 		nullptr
@@ -191,8 +191,6 @@ void GSE::SetGlobal( const std::string& identifier, Value* variable ) {
 	m_globals.insert_or_assign( identifier, variable );
 }
 
-static Value* const s_undefined_value = VALUE( value::Undefined );
-
 Value* const GSE::GetGlobal( const std::string& identifier ) {
 	Log( "Get global: " + identifier );
 	const auto& it = m_globals.find( identifier );
@@ -200,7 +198,7 @@ Value* const GSE::GetGlobal( const std::string& identifier ) {
 		return it->second;
 	}
 	else {
-		return s_undefined_value;
+		return VALUEEXT( value::Undefined, m_gc_space );
 	}
 }
 
@@ -217,6 +215,7 @@ Async* GSE::GetAsync() {
 }
 
 gc::Space* const GSE::GetGCSpace() const {
+	ASSERT_NOLOG( m_gc_space, "gse gc space not set" );
 	return m_gc_space;
 }
 
@@ -226,7 +225,7 @@ void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 			context->Clear();
 			context = nullptr;
 		}
-		result = VALUE( value::Undefined );
+		result = nullptr;
 		if ( program ) {
 			DELETE( program );
 			program = nullptr;

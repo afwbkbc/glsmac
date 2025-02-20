@@ -56,7 +56,7 @@ Value* const Context::GetVariable( const std::string& name, const si_t& si, gse:
 		return ref->GetVariable( name, si, ep );
 	}
 	m_gc_mutex.unlock();
-	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, si, ep );
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
 }
 
 void Context::SetVariable( const std::string& name, const var_info_t& var_info ) {
@@ -64,10 +64,10 @@ void Context::SetVariable( const std::string& name, const var_info_t& var_info )
 	m_variables.insert_or_assign( name, var_info );
 }
 
-void Context::CreateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
-		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
+		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
 	m_variables.insert_or_assign(
 		name, var_info_t{
@@ -77,10 +77,10 @@ void Context::CreateVariable( const std::string& name, Value* const value, const
 	);
 }
 
-void Context::CreateConst( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_variables.find( name ) != m_variables.end() ) {
-		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", this, si, ep );
+		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
 	m_variables.insert_or_assign(
 		name, var_info_t{
@@ -90,12 +90,12 @@ void Context::CreateConst( const std::string& name, Value* const value, const si
 	);
 }
 
-void Context::UpdateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		if ( it->second.is_const ) {
-			throw Exception( EC.INVALID_ASSIGNMENT, "Can't change value of const '" + name + "'", this, si, ep );
+			throw Exception( EC.INVALID_ASSIGNMENT, "Can't change value of const '" + name + "'", CONTEXT_GSE_CALL );
 		}
 		it->second.value = value;
 		return;
@@ -105,20 +105,20 @@ void Context::UpdateVariable( const std::string& name, Value* const value, const
 		ref_it->second->UpdateVariable( name, value, si, ep );
 		return;
 	}
-	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, si, ep );
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
 }
 
-void Context::DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
+void Context::DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		m_variables.erase( it );
 		return;
 	}
-	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", this, si, ep );
+	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
 }
 
-void Context::CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep ) {
+void Context::CreateBuiltin( const std::string& name, Value* const value, gc::Space* const gc_space, gse::ExecutionPointer& ep ) {
 	CreateConst( "#" + name, value, {}, ep );
 }
 
@@ -176,24 +176,23 @@ ChildContext* const Context::ForkAndExecute(
 }
 
 void Context::Clear() {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
-
+	m_gc_mutex.lock();
 	const auto children = m_child_contexts;
+	const auto persisted_values = m_persisted_values;
+	m_variables.clear();
+	m_gc_mutex.unlock();
 	for ( const auto& c : children ) {
 		c->Clear();
 	}
-	const auto persisted_values = m_persisted_values;
 	for ( const auto& value : persisted_values ) {
 		UnpersistValue( value.second );
 	}
-	m_variables.clear();
 }
 
 void Context::CollectActiveObjects( std::unordered_set< Object* >& active_objects ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 
 	if ( !m_is_executing &&
-		m_variables.empty() &&
 		m_persisted_values.empty() &&
 		m_child_contexts.empty()
 		) {

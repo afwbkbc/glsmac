@@ -264,7 +264,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
-		return obj->Wrap( true );
+		return obj->Wrap( gc_space, true );
 	} ) );
 }
 
@@ -306,7 +306,7 @@ void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse:
 	// check if property was set by any of previous classes with higher modifier
 	for ( const auto& c : m_classes ) {
 		const auto kv = c->GetProperty( key, m_modifiers );
-		if ( kv.first->type != gse::Value::T_UNDEFINED && kv.second > modifier ) {
+		if ( kv.first && kv.second > modifier ) {
 			return;
 		}
 	}
@@ -317,7 +317,7 @@ void Container::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	// check in other classes
 	for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
 		const auto kv = (*it)->GetProperty( key, m_modifiers );
-		if ( kv.first->type != gse::Value::T_UNDEFINED ) {
+		if ( kv.first ) {
 			FORWARD_CALL( SetPropertyFromClass,, kv.first, kv.second );
 			return;
 		}

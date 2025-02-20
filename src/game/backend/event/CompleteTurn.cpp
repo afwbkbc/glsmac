@@ -27,7 +27,7 @@ const std::string* CompleteTurn::Validate( Game* game ) const {
 
 gse::Value* const CompleteTurn::Apply( Game* game ) const {
 	game->CompleteTurn( m_initiator_slot );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( CompleteTurn )

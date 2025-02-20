@@ -19,13 +19,13 @@ private:
 	friend class Event;
 
 	static void Serialize( types::Buffer& buf, const AttackUnit* event );
-	static AttackUnit* Unserialize( types::Buffer& buf, const size_t initiator_slot );
+	static AttackUnit* Unserialize( gc::Space* const gc_space, types::Buffer& buf, const size_t initiator_slot );
 
 private:
 	const size_t m_attacker_unit_id;
 	const size_t m_defender_unit_id;
 
-	gse::Value* m_resolutions;
+	gse::Value* m_resolutions = nullptr;
 
 };
 

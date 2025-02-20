@@ -8,10 +8,15 @@
 #include <mutex>
 #include <atomic>
 
-#include "gc/Object.h"
+#include "gc/Container.h"
 
 #include "gse/Types.h"
 #include "gse/value/Types.h"
+
+#include "gse/Value.h"
+
+#define CONTEXT_GSE_CALLABLE const si_t& si, gse::ExecutionPointer& ep
+#define CONTEXT_GSE_CALL this, si, ep
 
 namespace gse {
 
@@ -25,7 +30,7 @@ namespace context {
 
 class ChildContext;
 
-class Context : public gc::Object {
+class Context : public gc::Container {
 protected:
 	struct var_info_t {
 		Value* value;
@@ -44,13 +49,13 @@ public:
 	GSE* GetGSE() const;
 
 	const bool HasVariable( const std::string& name );
-	Value* const GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
+	Value* const GetVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
 	void SetVariable( const std::string& name, const var_info_t& var_info );
-	void CreateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateConst( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
-	void UpdateVariable( const std::string& name, Value* const value, const si_t& si, gse::ExecutionPointer& ep );
-	void DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep );
+	void CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
+	void CreateBuiltin( const std::string& name, Value* const value, gc::Space* const gc_space, gse::ExecutionPointer& ep );
 	void PersistValue( Value* const value );
 	void UnpersistValue( Value* const value );
 

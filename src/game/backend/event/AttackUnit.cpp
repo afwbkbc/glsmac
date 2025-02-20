@@ -14,10 +14,7 @@ namespace event {
 AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_id, const size_t defender_unit_id )
 	: Event( initiator_slot, ET_UNIT_ATTACK )
 	, m_attacker_unit_id( attacker_unit_id )
-	, m_defender_unit_id( defender_unit_id )
-	, m_resolutions( VALUE( gse::value::Undefined ) ) {
-
-}
+	, m_defender_unit_id( defender_unit_id ) {}
 
 const std::string* AttackUnit::Validate( Game* game ) const {
 	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
@@ -54,9 +51,9 @@ gse::Value* const AttackUnit::Apply( Game* game ) const {
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
 	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
-
+	ASSERT_NOLOG( m_resolutions, "resolutions is null" );
 	game->GetUM()->AttackUnitApply( attacker, defender, m_resolutions );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( AttackUnit )
@@ -74,12 +71,12 @@ void AttackUnit::Serialize( types::Buffer& buf, const AttackUnit* event ) {
 	buf.WriteString( b.ToString() );
 }
 
-AttackUnit* AttackUnit::Unserialize( types::Buffer& buf, const size_t initiator_slot ) {
+AttackUnit* AttackUnit::Unserialize( gc::Space* const gc_space, types::Buffer& buf, const size_t initiator_slot ) {
 	const auto attacker_unit_id = buf.ReadInt();
 	const auto defender_unit_id = buf.ReadInt();
 	auto* result = new AttackUnit( initiator_slot, attacker_unit_id, defender_unit_id );
 	types::Buffer b( buf.ReadString() );
-	result->m_resolutions = gse::Value::Unserialize( &b );
+	result->m_resolutions = gse::Value::Unserialize( gc_space, &b );
 	return result;
 }
 

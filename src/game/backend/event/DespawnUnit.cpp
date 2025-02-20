@@ -24,7 +24,7 @@ const std::string* DespawnUnit::Validate( Game* game ) const {
 
 gse::Value* const DespawnUnit::Apply( Game* game ) const {
 	game->GetUM()->DespawnUnit( m_unit_id );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( DespawnUnit )

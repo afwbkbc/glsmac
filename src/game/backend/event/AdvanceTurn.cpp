@@ -24,7 +24,7 @@ const std::string* AdvanceTurn::Validate( Game* game ) const {
 
 gse::Value* const AdvanceTurn::Apply( Game* game ) const {
 	game->AdvanceTurn( m_turn_id );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( AdvanceTurn )

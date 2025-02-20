@@ -12,8 +12,8 @@ public:
 
 	static const type_t GetType() { return Value::T_VALUEREF; }
 
-	ValueRef( Value* const target )
-		: Value( GetType() )
+	ValueRef( gc::Space* const gc_space, Value* const target )
+		: Value( gc_space, GetType() )
 		, target( target ) {}
 
 	Value* const target;

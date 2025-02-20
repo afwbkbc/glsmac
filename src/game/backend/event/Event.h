@@ -41,10 +41,10 @@ public:
 	virtual ~Event() = default;
 
 	static const types::Buffer Serialize( const Event* event );
-	static Event* Unserialize( types::Buffer& buf );
+	static Event* Unserialize( gc::Space* const gc_space, types::Buffer& buf );
 
 	static const types::Buffer SerializeMultiple( const std::vector< Event* >& events );
-	static void UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& events_out );
+	static void UnserializeMultiple( gc::Space* gc_space, types::Buffer& buf, std::vector< Event* >& events_out );
 
 	static const bool IsBroadcastable( const event_type_t type );
 

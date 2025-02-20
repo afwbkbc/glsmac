@@ -3,6 +3,8 @@
 #include <vector>
 #include <optional>
 
+#include "gse/Value.h"
+
 #include "Types.h"
 
 namespace gse {
@@ -16,7 +18,7 @@ public:
 
 	static const type_t GetType() { return Value::T_ARRAY; }
 
-	Array( array_elements_t initial_value = {} );
+	Array( gc::Space* const gc_space, array_elements_t initial_value = {} );
 
 	Value* const Get( const size_t index ) const;
 	Value* const GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) const;
@@ -29,7 +31,7 @@ public:
 
 	array_elements_t value = {};
 
-	static Value* const FromVector( const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
+	static Value* const FromVector( gc::Space* const gc_space, const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
 
 private:
 	void ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const;

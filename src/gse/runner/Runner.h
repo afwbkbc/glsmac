@@ -2,6 +2,10 @@
 
 #include "common/Common.h"
 
+namespace gc {
+class Space;
+}
+
 namespace gse {
 
 class ExecutionPointer;
@@ -19,6 +23,8 @@ namespace runner {
 
 CLASS( Runner, common::Class )
 
+	Runner( gc::Space* const gc_space );
+
 	virtual Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const = 0;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -31,6 +37,9 @@ CLASS( Runner, common::Class )
 #endif
 
 protected:
+
+	gc::Space* const m_gc_space = nullptr;
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	bool m_are_scope_context_joins_enabled = false;
 #endif

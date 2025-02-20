@@ -10,11 +10,11 @@ public:
 
 	static const type_t GetType() { return Value::T_UNDEFINED; }
 
-	Undefined()
-		: Value( GetType() ) {}
+	Undefined( gc::Space* const gc_space )
+		: Value( gc_space, GetType() ) {}
 
-	Undefined( const Undefined& other )
-		: Undefined() {}
+	Undefined( gc::Space* const gc_space, const Undefined& other )
+		: Undefined( gc_space ) {}
 };
 
 }

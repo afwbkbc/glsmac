@@ -41,39 +41,47 @@ Bindings::~Bindings() {
 	DELETE( m_gse );
 }
 
-void Bindings::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
+void Bindings::AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( "main", NATIVE_CALL(this) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
 		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
 		return VALUE( gse::value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 }
 
 void Bindings::RunMainScript() {
 	gse::ExecutionPointer ep;
-	m_gse->RunScript( m_gse_context, m_si_internal, ep, m_entry_script );
+	m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, m_entry_script );
 	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-		m_gse->RunScript( m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
+		m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
 	}
 }
 
 void Bindings::RunMain() {
+	auto* gc_space = m_gse->GetGCSpace();
+	ASSERT_NOLOG( gc_space, "gc space is null" );
 	for ( const auto& main : m_main_callables ) {
 		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
-		auto gm = m_state->Wrap();
+		auto gm = m_state->Wrap( gc_space );
 		gse::ExecutionPointer ep;
-		((gse::value::Callable*)main)->Run( m_gse_context, m_si_internal, ep, { gm });
+		((gse::value::Callable*)main)->Run( gc_space, m_gse_context, m_si_internal, ep, { gm });
 	}
 }
 
+gc::Space* const Bindings::GetGCSpace() const {
+	ASSERT_NOLOG( m_gse, "gse not set" );
+	return m_gse->GetGCSpace();
+}
+
 gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
-	gse::Value* result = VALUE( gse::value::Undefined );
+	auto* gc_space = m_gse->GetGCSpace();
+	gse::Value* result = VALUEEXT( gse::value::Undefined, gc_space );
 	try {
 		{
 			gse::ExecutionPointer ep;
-			result = object->Trigger( m_gse_context, m_si_internal, ep, event, args );
+			result = object->Trigger( gc_space, m_gse_context, m_si_internal, ep, event, args );
 		}
 		auto* game = m_state->GetGame();
 		if ( game ) {
@@ -82,7 +90,7 @@ gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& 
 		}
 		if ( result->type == gse::Value::T_NOTHING ) {
 			// return undefined by default
-			return VALUE( gse::value::Undefined );
+			return VALUEEXT( gse::value::Undefined, gc_space );
 		}
 	}
 	catch ( const gse::Exception& e ) {

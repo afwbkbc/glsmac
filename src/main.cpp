@@ -295,7 +295,7 @@ int main( const int argc, const char* argv[] ) {
 			NEW( task, task::main::Main );
 		}
 		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-			NEWV( state, game::backend::State, nullptr ); // TODO: initialize settings randomly
+			NEWV( state, game::backend::State, nullptr, nullptr ); // TODO: initialize settings randomly
 			state->m_settings.global.game_rules.Initialize();
 			state->InitBindings();
 			state->Configure();

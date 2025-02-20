@@ -20,6 +20,8 @@
 
 #include "types/Buffer.h"
 
+#include "gc/Space.h"
+
 namespace gse {
 
 static const std::string s_t_nothing = "Nothing";
@@ -406,26 +408,28 @@ const bool Value::operator>=( const Value& other ) const {
 #undef DEFAULT_COMPARE_NE
 
 Value* const Value::New( const Value* value ) {
+	auto* gc_space = value->m_gc_space;
+	ASSERT_NOLOG( gc_space, "value gc space is null" );
 	switch ( type ) {
 		case T_UNDEFINED:
 			return VALUE( value::Undefined );
 		case T_NULL:
 			return VALUE( value::Null );
 		case T_BOOL:
-			return VALUE( value::Bool, ( (value::Bool*)value )->value );
+			return VALUE( value::Bool, , ( (value::Bool*)value )->value );
 		case T_INT:
-			return VALUE( value::Int, ( (value::Int*)value )->value );
+			return VALUE( value::Int, , ( (value::Int*)value )->value );
 		case T_FLOAT:
-			return VALUE( value::Float, ( (value::Float*)value )->value );
+			return VALUE( value::Float, , ( (value::Float*)value )->value );
 		case T_STRING:
-			return VALUE( value::String, ( (value::String*)value )->value );
+			return VALUE( value::String, , ( (value::String*)value )->value );
 		case T_ARRAY: {
 			value::array_elements_t elements = {};
 			const auto* arr = (value::Array*)value;
 			for ( const auto& it : arr->value ) {
 				elements.push_back( it->Clone() );
 			}
-			return VALUE( value::Array, elements );
+			return VALUE( value::Array, , elements );
 		}
 		case T_OBJECT: {
 			value::object_properties_t properties = {};
@@ -433,7 +437,7 @@ Value* const Value::New( const Value* value ) {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second->Clone() );
 			}
-			return VALUE( value::Object, nullptr, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
+			return VALUE( value::Object, , nullptr, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
 		}
 		case T_CALLABLE:
 			return this; // ?????
@@ -503,7 +507,7 @@ void Value::Serialize( types::Buffer* buf, Value* const value ) {
 	}
 }
 
-Value* Value::Unserialize( types::Buffer* buf ) {
+Value* Value::Unserialize( gc::Space* const gc_space, types::Buffer* buf ) {
 	type_t type = (type_t)buf->ReadInt();
 	switch ( type ) {
 		case T_UNDEFINED:
@@ -511,21 +515,21 @@ Value* Value::Unserialize( types::Buffer* buf ) {
 		case T_NULL:
 			return VALUE( value::Null );
 		case T_BOOL:
-			return VALUE( value::Bool, buf->ReadBool() );
+			return VALUE( value::Bool, , buf->ReadBool() );
 		case T_INT:
-			return VALUE( value::Int, buf->ReadInt() );
+			return VALUE( value::Int, , buf->ReadInt() );
 		case T_FLOAT:
-			return VALUE( value::Float, buf->ReadFloat() );
+			return VALUE( value::Float, , buf->ReadFloat() );
 		case T_STRING:
-			return VALUE( value::String, buf->ReadString() );
+			return VALUE( value::String, , buf->ReadString() );
 		case T_ARRAY: {
 			value::array_elements_t elements = {};
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
-				elements.push_back( Value::Unserialize( buf ) );
+				elements.push_back( Value::Unserialize( gc_space, buf ) );
 			}
-			return VALUE( value::Array, elements );
+			return VALUE( value::Array, , elements );
 		}
 		case T_OBJECT: {
 			value::object_properties_t properties = {};
@@ -535,15 +539,23 @@ Value* Value::Unserialize( types::Buffer* buf ) {
 				properties.insert(
 					{
 						k,
-						Value::Unserialize( buf )
+						Value::Unserialize( gc_space, buf )
 					}
 				);
 			}
-			return VALUE( value::Object, nullptr, properties );
+			return VALUE( value::Object, , nullptr, properties );
 		}
 		default:
 			THROW( "invalid/unsupported type for unserialization: " + GetTypeStringStatic( type ) );
 	}
+}
+
+Value::Value( gc::Space* const gc_space, const type_t type )
+	: type( type )
+	, m_gc_space( gc_space ) {
+
+	// TODO: uncomment this and track reachable variables correctly
+	// m_gc_space->Add( this );
 }
 
 }

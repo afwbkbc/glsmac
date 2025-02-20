@@ -48,7 +48,7 @@ Object::Object( DOM_ARGS_T )
 		auto names = util::String::Split( ((gse::value::String*)m_properties.at("class"))->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) == names.end() ) {
 			names.push_back( name );
-			UpdateProperty( "class", VALUE( gse::value::String, util::String::Join( names, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String,, util::String::Join( names, ' ' ) ) );
 			SetClasses( GSE_CALL, names );
 		}
 		return VALUE( gse::value::Undefined );
@@ -66,7 +66,7 @@ Object::Object( DOM_ARGS_T )
 					names_new.push_back( n );
 				}
 			}
-			UpdateProperty( "class", VALUE( gse::value::String, util::String::Join( names_new, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String,, util::String::Join( names_new, ' ' ) ) );
 			SetClasses( GSE_CALL, names_new );
 		}
 		return VALUE( gse::value::Undefined );
@@ -89,7 +89,7 @@ Object::~Object() {
 	}
 };
 
-gse::Value* const Object::Wrap( const bool dynamic ) {
+gse::Value* const Object::Wrap( gc::Space* const gc_space, const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
 		};
@@ -102,7 +102,7 @@ gse::Value* const Object::Wrap( const bool dynamic ) {
 			);
 		}
 		m_wrapobj = new gse::value::Object(
-			nullptr, properties, m_tag, this, dynamic
+			gc_space, nullptr, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
 		);
@@ -192,7 +192,7 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	const auto& event_type = event.GetTypeStr();
 	if ( HasHandlers( event_type ) ) {
 		gse::value::object_properties_t event_data = {};
-		SerializeEvent( event, event_data );
+		WrapEvent( gc_space, event, event_data );
 		const auto result = Trigger( GSE_CALL, event_type, event_data, gse::Value::T_BOOL );
 		return ( (gse::value::Bool*)result )->value;
 	}
@@ -232,8 +232,10 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::
 	const auto& it = m_initial_properties.find( name );
 	gse::Value* const v = it == m_initial_properties.end()
 		? default_value
+			? default_value
+			: VALUE( gse::value::Undefined )
 		: it->second;
-	if ( default_value->type != gse::Value::T_UNDEFINED ) {
+	if ( default_value ) {
 		m_default_properties.insert(
 			{
 				name,
@@ -335,21 +337,21 @@ void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
 	}
 }
 
-void Object::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Object::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_KEY_DOWN: {
 			if ( e.data.key.is_printable ) {
 				obj.insert(
 					{
 						"key",
-						VALUE( gse::value::String, std::string( 1, e.data.key.key ) )
+						VALUE( gse::value::String,, std::string( 1, e.data.key.key ) )
 					}
 				);
 			}
 			obj.insert(
 				{
 					"code",
-					VALUE( gse::value::String, e.GetKeyCodeStr() )
+					VALUE( gse::value::String,, e.GetKeyCodeStr() )
 				}
 			);
 			break;
@@ -479,7 +481,7 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Va
 		// check if property was set by any of previous classes with higher modifier
 		for ( const auto& c : m_classes ) {
 			const auto kv = c->GetProperty( key, m_modifiers );
-			if ( kv.first->type != gse::Value::T_UNDEFINED && kv.second > modifier ) {
+			if ( kv.first && kv.second > modifier ) {
 				return;
 			}
 		}
@@ -503,8 +505,7 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 		// search in other classes
 		for ( auto it2 = m_classes.rbegin() ; it2 != m_classes.rend() ; it2++ ) {
 			const auto kv = ( *it2 )->GetProperty( key, m_modifiers );
-			v = kv.first;
-			if ( v->type != gse::Value::T_UNDEFINED ) {
+			if ( kv.first ) {
 				break;
 			}
 		}

@@ -26,7 +26,7 @@ const std::string* UncompleteTurn::Validate( Game* game ) const {
 
 gse::Value* const UncompleteTurn::Apply( Game* game ) const {
 	game->UncompleteTurn( m_initiator_slot );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( UncompleteTurn )

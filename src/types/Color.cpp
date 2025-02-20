@@ -160,19 +160,19 @@ WRAPIMPL_BEGIN( Color )
 	WRAPIMPL_PROPS
 		{
 			"r",
-			VALUE( gse::value::Float, value.red )
+			VALUE( gse::value::Float,, value.red )
 		},
 		{
 			"g",
-			VALUE( gse::value::Float, value.green )
+			VALUE( gse::value::Float,, value.green )
 		},
 		{
 			"b",
-			VALUE( gse::value::Float, value.blue )
+			VALUE( gse::value::Float,, value.blue )
 		},
 		{
 			"a",
-			VALUE( gse::value::Float, value.alpha )
+			VALUE( gse::value::Float,, value.alpha )
 		},
 	};
 WRAPIMPL_END_NOPTR( Color )

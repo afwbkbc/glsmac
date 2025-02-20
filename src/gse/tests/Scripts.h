@@ -7,7 +7,7 @@ class GSETests;
 namespace gse {
 namespace tests {
 
-void AddScriptsTests( task::gsetests::GSETests* task );
+void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task );
 
 }
 }

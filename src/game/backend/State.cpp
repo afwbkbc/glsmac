@@ -11,8 +11,9 @@
 namespace game {
 namespace backend {
 
-State::State( GLSMAC* glsmac )
-	: m_glsmac( glsmac )
+State::State( gc::Space* const gc_space, GLSMAC* glsmac )
+	: m_gc_space( gc_space )
+	, m_glsmac( glsmac )
 	, m_slots( new slot::Slots( this ) ) {
 	NEW( m_fm, faction::FactionManager );
 }
@@ -36,7 +37,7 @@ void State::SetGame( Game* game ) {
 		this, "start", {
 			{
 				"game",
-				m_game->Wrap()
+				m_game->Wrap( game->GetGCSpace() )
 			}
 		}
 	);
@@ -116,8 +117,10 @@ connection::Connection* State::GetConnection() const {
 void State::InitBindings() {
 	ASSERT_NOLOG( !m_glsmac, "do not use state bindings with new ui" );
 	if ( !m_bindings ) {
+		ASSERT_NOLOG( !m_gc_space, "init bindings but gc space already set" );
 		Log( "Initializing bindings" );
 		m_bindings = new Bindings( this );
+		m_gc_space = m_bindings->GetGCSpace();
 		try {
 			m_bindings->RunMainScript();
 		}
@@ -192,7 +195,7 @@ WRAPIMPL_BEGIN( State )
 	WRAPIMPL_PROPS
 		{
 			"fm",
-			m_fm->Wrap( true )
+			m_fm->Wrap( gc_space, true )
 		},
 	};
 WRAPIMPL_END_PTR()

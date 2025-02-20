@@ -365,6 +365,8 @@ public:
 	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;
 
+	gc::Space* const GetGCSpace() const;
+
 private:
 
 	void ValidateEvent( event::Event* event );

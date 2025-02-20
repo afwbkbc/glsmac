@@ -47,7 +47,7 @@ public:
 
 	Object( DOM_ARGS_T );
 
-	virtual gse::Value* const Wrap( const bool dynamic = false ) override;
+	virtual gse::Value* const Wrap( gc::Space* const gc_space, const bool dynamic = false ) override;
 	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
 	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 
@@ -85,7 +85,7 @@ protected:
 
 	void Actor( scene::actor::Actor* actor );
 
-	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = VALUE( gse::value::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
+	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable );
 	void Events( const std::unordered_set< input::event_type_t >& events );
 	void Iterable( const std::function< void() >& f );
@@ -96,7 +96,7 @@ protected:
 	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const;
 	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const;
 
-	virtual void SerializeEvent( const input::Event& event, gse::value::object_properties_t& event_data ) const;
+	virtual void WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& event_data ) const;
 
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );

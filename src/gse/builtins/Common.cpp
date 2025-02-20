@@ -14,22 +14,22 @@
 namespace gse {
 namespace builtins {
 
-void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "typeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
-		return VALUE( value::String, v->GetTypeString() );
-	} ), ep );
+		return VALUE( value::String,, v->GetTypeString() );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "classof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
 		if ( v->type == Value::T_OBJECT ) {
-			return VALUE( value::String, ( ( value::Object*)v )->object_class );
+			return VALUE( value::String,, ( ( value::Object*)v )->object_class );
 		}
 		return VALUE( value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "sizeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -41,10 +41,10 @@ void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 				break;
 			}
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString(), GSE_CALL );
+				GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString() );
 		}
-		return VALUE( value::Int, size );
-	} ), ep );
+		return VALUE( value::Int,, size );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin("is_defined", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -52,11 +52,11 @@ void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 		switch ( v->type ) {
 			case Value::T_NOTHING:
 			case Value::T_UNDEFINED:
-				return VALUE( gse::value::Bool, false );
+				return VALUE( gse::value::Bool,, false );
 			default:
-				return VALUE( gse::value::Bool, true );
+				return VALUE( gse::value::Bool,, true );
 		}
-	} ), ep );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "is_empty", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -76,10 +76,10 @@ void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 				break;
 			}
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString(), GSE_CALL );
+				GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString() );
 		}
-		return VALUE( value::Bool, is_empty );
-	} ), ep );
+		return VALUE( value::Bool,, is_empty );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "clone", NATIVE_CALL()
 	{
@@ -90,11 +90,11 @@ void Common::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			case Value::T_ARRAY:
 				return v->Clone();
 			default:
-				throw Exception( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v->GetTypeString() + " is not supported", GSE_CALL );
+				GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v->GetTypeString() + " is not supported" );
 		}
-	} ), ep );
+	} ), gc_space, ep );
 
-	ctx->CreateBuiltin( "undefined", VALUE( value::Undefined ), ep );
+	ctx->CreateBuiltin( "undefined", VALUE( value::Undefined ), gc_space, ep );
 }
 
 }

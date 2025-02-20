@@ -5,10 +5,12 @@
 #include "gse/value/Callable.h"
 #include "gse/value/Types.h"
 
+#include "gse/Value.h"
+
 namespace gse {
 namespace callable {
 
-#define NATIVE_CALL( ... ) VALUE( gse::callable::Native, [ __VA_ARGS__ ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value*
+#define NATIVE_CALL( ... ) VALUE( gse::callable::Native,, [ __VA_ARGS__ ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value*
 
 // TODO: refactor these
 #define N_ARGS \
@@ -19,17 +21,17 @@ namespace callable {
     gse::Value* persist_val = VALUE( gse::value::Undefined );
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ) ); \
     } \
     N_ARGS
 #define N_EXPECT_ARGS_MIN( _min ) \
     if ( arguments.size() < _min ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Expected at least " + std::to_string( _min ) + " arguments, found " + std::to_string( arguments.size() ), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Expected at least " + std::to_string( _min ) + " arguments, found " + std::to_string( arguments.size() ) ); \
     } \
     N_ARGS
 #define N_EXPECT_ARGS_MIN_MAX( _min, _max ) \
     if ( arguments.size() < _min || arguments.size() > _max ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Expected " + std::to_string( _min ) + " to " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Expected " + std::to_string( _min ) + " to " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ) ); \
     } \
     N_ARGS
 #define N_GET( _var, _index ) \
@@ -40,11 +42,11 @@ namespace callable {
     const auto* _var = arguments.at( _index );
 #define N_CHECKTYPE( _var, _type ) \
     if ( _var->type != gse::value::_type::GetType() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, (std::string) "Value is expected to be " + #_type + ", found: " + _var->GetTypeString(), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, (std::string) "Value is expected to be " + #_type + ", found: " + _var->GetTypeString() ); \
     }
 #define N_CHECKARG( _var, _index, _type ) \
     if ( _var->type != gse::value::_type::GetType() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + _var->GetTypeString(), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + _var->GetTypeString() ); \
     }
 #define N_PERSIST_CALLABLE( _var, _index ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
@@ -71,7 +73,7 @@ namespace callable {
     arg = _value->Deref(); \
     N_CHECKTYPE( arg, Object ); \
     if ( ((gse::value::Object*)arg)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)arg)->object_class, GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)arg)->object_class ); \
     } \
     obj_val = _value;
 #define N_UNWRAP( _var, _value, _type ) \
@@ -82,7 +84,7 @@ namespace callable {
     arg = arguments.at( _index )->Deref(); \
     N_CHECKARG( arg, _index, Object ); \
     if ( ((gse::value::Object*)arg)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)arg)->object_class, GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)arg)->object_class ); \
     } \
     obj_val = arguments.at( _index );
 #define N_GETVALUE_UNWRAP( _var, _index, _type ) \
@@ -90,19 +92,19 @@ namespace callable {
     auto* _var = _type::Unwrap( obj_val );
 #define N_CHECK_OBJECT_CLASS( _var, _class ) \
     if ( ((gse::value::Object*)_var)->object_class != _class ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)_var)->object_class, GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)_var)->object_class ); \
     }
 #define N_GETPROP_VAL( _obj, _key, _type ) \
     obj_it = _obj.find( _key ); \
     if ( obj_it == _obj.end() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected but not found", GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected but not found" ); \
     } \
     getprop_val = obj_it->second;
 #define N_GETPROP_ARG( _obj, _key, _type ) \
     N_GETPROP_VAL( _obj, _key, _type ); \
     arg = getprop_val->Deref(); \
     if ( arg->type != gse::value::_type::GetType() ) { \
-        throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString(), GSE_CALL ); \
+        GSE_ERROR( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString() ); \
     }
 #define N_GETPROP_UNWRAP( _var, _obj, _key, _type ) \
     N_GETPROP_VAL( _obj, _key, Object ); \
@@ -122,7 +124,7 @@ namespace callable {
         getprop_val = obj_it->second; \
         arg = getprop_val->Deref(); \
         if ( arg->type != gse::value::_type::GetType() ) { \
-            throw gse::Exception( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString(), GSE_CALL ); \
+            GSE_ERROR( gse::EC.INVALID_CALL, (std::string)"Property '" + _key + "' is expected to be " + #_type + ", found: " + arg->GetTypeString() ); \
         } \
         _var = ((gse::value::_type*)arg)->value; \
     }
@@ -133,7 +135,7 @@ class Native : public value::Callable {
 public:
 	typedef std::function< Value*( GSE_CALLABLE, const value::function_arguments_t& arguments ) > executor_t;
 	Native() = delete;
-	Native( const executor_t& executor );
+	Native( gc::Space* const gc_space, const executor_t& executor );
 	virtual Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override;
 
 private:

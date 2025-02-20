@@ -40,6 +40,7 @@ GLSMAC::GLSMAC() {
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_ctx = m_gse->CreateGlobalContext();
+	m_gc_space = m_gse->GetGCSpace();
 
 	const auto& c = g_engine->GetConfig();
 
@@ -57,13 +58,13 @@ GLSMAC::GLSMAC() {
 		gse::ExecutionPointer ep;
 
 		// global objects
-		NEW( m_ui, ui::UI, m_ctx, { "" }, ep );
+		NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
 
 		// run main(s)
-		m_gse->RunScript( m_ctx, {}, ep, entry_script );
+		m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
 		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
 			m_gse->RunScript(
-				m_ctx, {}, ep, util::FS::GeneratePath(
+				m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
 					{
 						mod_path,
 						"main"
@@ -101,7 +102,7 @@ GLSMAC::~GLSMAC() {
 
 	{
 		gse::ExecutionPointer ep;
-		m_ui->Destroy( m_ctx, { "" }, ep );
+		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
 	}
 
 	DELETE( m_gse );
@@ -145,7 +146,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 	WRAPIMPL_PROPS
 		{
 			"ui",
-			m_ui->Wrap( true )
+			m_ui->Wrap( gc_space, true )
 		},
 		{
 			"run",
@@ -176,11 +177,11 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_PERSIST_CALLABLE( on_complete, 0 );
-				InitGameState( GSE_CALL, [ this, on_complete, ctx, si, ep ] () {
+				InitGameState( GSE_CALL, [ this, on_complete, gc_space, ctx, si, ep ] () {
 					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
 					m_state->m_settings.global.Initialize();
 					auto ep2 = ep;
-					on_complete->Run( ctx, si, ep2, {} );
+					on_complete->Run( gc_space, ctx, si, ep2, {} );
 					N_UNPERSIST_CALLABLE( on_complete );
 				} );
 				return VALUE( gse::value::Undefined );
@@ -246,7 +247,7 @@ void GLSMAC::HideLoader() {
 
 gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
 	gse::ExecutionPointer ep;
-	return object->Trigger( m_ctx, {}, ep, event, args );
+	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, args );
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
@@ -274,7 +275,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	} catch ( const std::runtime_error& e ) {
 		gse::value::object_properties_t args = {
 			{
-				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments )  {
+				"set_smacpath", VALUE( gse::callable::Native,, [ this ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments )  {
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( path, 0, String );
 					S_Init( GSE_CALL, path );
@@ -283,7 +284,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 			}
 		};
 		if ( path.has_value() ) {
-			args.insert({ "last_failed_path", VALUE( gse::value::String, path.value() ) } );
+			args.insert({ "last_failed_path", VALUE( gse::value::String,, path.value() ) } );
 		}
 		Trigger( GSE_CALL, "smacpath_prompt", args );
 		return;
@@ -312,7 +313,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 			}
 			AddSinglePlayerSlot( faction );
 			auto ep2 = ep;
-			StartGame( ctx, si, ep2 );
+			StartGame( m_gc_space, ctx, si, ep2 );
 		} );
 	}
 	else if (
@@ -353,7 +354,7 @@ void GLSMAC::UpdateLoaderText() {
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
 	TriggerObject( this, "loader_text", {
 		{
-			"text", VALUE( gse::value::String, text )
+			"text", VALUEEXT( gse::value::String, m_gc_space, text )
 		}
 	} );
 }
@@ -376,11 +377,11 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	AsyncLoad( "Initializing game state", [ this ] {
-		m_state = new game::backend::State( this );
+		m_state = new game::backend::State( m_gc_space, this );
 		TriggerObject( this, "configure_state", {
 			{
 				"fm",
-				m_state->GetFM()->Wrap( true ),
+				m_state->GetFM()->Wrap( m_gc_space, true ),
 			}
 		} );
 	}, on_complete );
@@ -427,7 +428,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	TriggerObject( this, "configure_game", {
 		{
 			"game",
-			game->Wrap( true ),
+			game->Wrap( m_gc_space, true ),
 		}
 	} );
 
@@ -445,11 +446,12 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 }
 
 void GLSMAC::RunMain() {
+	ASSERT_NOLOG( m_gc_space, "gc space is null" );
 	try {
 		for ( const auto& main : m_main_callables ) {
 			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 			gse::ExecutionPointer ep;
-			( (gse::value::Callable*)main )->Run( m_ctx, {}, ep, { Wrap() } );
+			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space ) } );
 		}
 	} catch ( const gse::Exception& e ) {
 		util::LogHelper::Println( e.ToString() );
@@ -457,12 +459,12 @@ void GLSMAC::RunMain() {
 	}
 }
 
-void GLSMAC::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
+void GLSMAC::AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( "main", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
 		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
 		return VALUE( gse::value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 }

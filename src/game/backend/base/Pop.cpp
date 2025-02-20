@@ -47,18 +47,18 @@ WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
 		{
 			"type",
-			VALUE( gse::value::String, m_def->m_id )
+			VALUE( gse::value::String,, m_def->m_id )
 		},
 		{
 			"variant",
-			VALUE( gse::value::Int, m_variant )
+			VALUE( gse::value::Int,, m_variant )
 		},
 		{
 			"get_base",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				ASSERT_NOLOG( m_base, "pop has no base" );
-				return m_base->Wrap();
+				return m_base->Wrap( gc_space );
 			} )
 		},
 	};

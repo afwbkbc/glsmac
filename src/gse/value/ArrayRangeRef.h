@@ -12,8 +12,8 @@ public:
 
 	static const type_t GetType() { return Value::T_ARRAYRANGEREF; }
 
-	ArrayRangeRef( Array* array, const std::optional< size_t > from, const std::optional< size_t > to )
-		: Value( GetType() )
+	ArrayRangeRef( gc::Space* const gc_space, Array* array, const std::optional< size_t > from, const std::optional< size_t > to )
+		: Value( gc_space, GetType() )
 		, array( array )
 		, from( from )
 		, to( to ) {}

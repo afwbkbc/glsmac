@@ -25,7 +25,7 @@ const std::string* DefineResource::Validate( Game* game ) const {
 
 gse::Value* const DefineResource::Apply( Game* game ) const {
 	game->GetRM()->DefineResource( m_resource );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( DefineResource )

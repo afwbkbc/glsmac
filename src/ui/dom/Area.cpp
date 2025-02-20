@@ -63,7 +63,7 @@ const bool Area::IsEventRelevant( const input::Event& event ) const {
 	return Drawable::IsEventRelevant( event );
 }
 
-void Area::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Area::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_MOUSE_MOVE:
 		case input::EV_MOUSE_OVER:
@@ -74,25 +74,25 @@ void Area::SerializeEvent( const input::Event& e, gse::value::object_properties_
 			obj.insert(
 				{
 					"x",
-					VALUE( gse::value::Int, e.data.mouse.x - area.left )
+					VALUE( gse::value::Int, , e.data.mouse.x - area.left )
 				}
 			);
 			obj.insert(
 				{
 					"y",
-					VALUE( gse::value::Int, e.data.mouse.y - area.top )
+					VALUE( gse::value::Int, , e.data.mouse.y - area.top )
 				}
 			);
 			obj.insert(
 				{
 					"ax",
-					VALUE( gse::value::Int, e.data.mouse.x )
+					VALUE( gse::value::Int, , e.data.mouse.x )
 				}
 			);
 			obj.insert(
 				{
 					"ay",
-					VALUE( gse::value::Int, e.data.mouse.y )
+					VALUE( gse::value::Int, , e.data.mouse.y )
 				}
 			);
 			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP ) {
@@ -117,14 +117,14 @@ void Area::SerializeEvent( const input::Event& e, gse::value::object_properties_
 				obj.insert(
 					{
 						"button",
-						VALUE( gse::value::String, buttonstr )
+						VALUE( gse::value::String, , buttonstr )
 					}
 				);
 			}
 			break;
 		}
 		default: {
-			Drawable::SerializeEvent( e, obj );
+			Drawable::WrapEvent( gc_space, e, obj );
 		}
 	}
 }

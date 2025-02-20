@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "gse/Value.h"
+
 #include "Types.h"
 #include "gse/Types.h"
 
@@ -18,8 +20,8 @@ public:
 
 	static const type_t GetType() { return Value::T_CALLABLE; }
 
-	Callable( const bool cleanup_needed )
-		: Value( GetType() )
+	Callable( gc::Space* const gc_space, const bool cleanup_needed )
+		: Value( gc_space, GetType() )
 		, m_cleanup_needed( cleanup_needed ) {}
 
 	virtual ~Callable() {}

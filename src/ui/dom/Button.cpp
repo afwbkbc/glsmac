@@ -90,7 +90,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return result;
 }
 
-void Button::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Button::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CLICK: {
 			std::string buttonstr = "";
@@ -114,13 +114,13 @@ void Button::SerializeEvent( const input::Event& e, gse::value::object_propertie
 			obj.insert(
 				{
 					"button",
-					VALUE( gse::value::String, buttonstr )
+					VALUE( gse::value::String, , buttonstr )
 				}
 			);
 			break;
 		}
 		default: {
-			Panel::SerializeEvent( e, obj );
+			Panel::WrapEvent( gc_space, e, obj );
 		}
 	}
 }

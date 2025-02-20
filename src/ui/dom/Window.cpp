@@ -71,7 +71,7 @@ Window::Window( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "header_background", "background", m_header );
 	ForwardProperty( GSE_CALL, "header_border", "border", m_header );
 	Property(
-		GSE_CALL, "header_height", gse::Value::T_INT, VALUE( gse::value::Int, 20 ), PF_NONE,
+		GSE_CALL, "header_height", gse::Value::T_INT, VALUE( gse::value::Int,, 20 ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetHeaderHeight( ( (gse::value::Int*)v )->value );
 		},

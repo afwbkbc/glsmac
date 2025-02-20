@@ -24,7 +24,7 @@ const std::string* DefinePop::Validate( Game* game ) const {
 
 gse::Value* const DefinePop::Apply( Game* game ) const {
 	game->GetBM()->DefinePop( m_pop_def );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( DefinePop )

@@ -71,12 +71,12 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const v
 	const auto& it = m_callbacks.find( event );
 	Value* result = VALUE( gse::value::Undefined );
 	if ( it != m_callbacks.end() ) {
-		auto e = VALUE( gse::value::Object, nullptr, args );
+		auto e = VALUE( gse::value::Object, , nullptr, args );
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
 		for ( const auto& it2 : callbacks ) {
 			const auto& cb = it2.second.callable;
 			ASSERT_NOLOG( cb->type == Value::T_CALLABLE, "callback not callable" );
-			result = ( (value::Callable*)cb )->Run( it2.second.ctx, it2.second.si, ep, { e } );
+			result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { e } );
 			if ( expected_return_type.has_value() ) {
 				if ( result->type != expected_return_type.value() ) {
 					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + result->GetTypeString() + ": " + result->ToString(), it2.second.ctx, it2.second.si, ep );

@@ -28,7 +28,7 @@ const std::string* LockTiles::Validate( Game* game ) const {
 
 gse::Value* const LockTiles::Apply( Game* game ) const {
 	game->GetTM()->LockTiles( m_lock_owner_slot, m_tile_positions );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 void LockTiles::Serialize( types::Buffer& buf, const LockTiles* event ) {

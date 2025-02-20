@@ -30,7 +30,7 @@ const std::string* DefineAnimation::Validate( Game* game ) const {
 
 gse::Value* const DefineAnimation::Apply( Game* game ) const {
 	game->GetAM()->DefineAnimation( m_def );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( DefineAnimation )

@@ -36,10 +36,9 @@ using namespace program;
 
 namespace parser {
 
-JS::JS( const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: Parser( filename, source, initial_line_num ) {
-
-}
+JS::JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num )
+	: Parser( filename, source, initial_line_num )
+	, m_gc_space( gc_space ) {}
 
 void JS::GetElements( source_elements_t& elements ) {
 	char c;
@@ -663,13 +662,13 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				}
 				const auto predef_it = PREDEF_OPERATORS.find( op );
 				if ( predef_it != PREDEF_OPERATORS.end() ) {
-					elements.push_back( new program::Value( ( *it )->m_si, predef_it->second ) );
+					elements.push_back( new program::Value( ( *it )->m_si, predef_it->second( m_gc_space ) ) );
 				}
 				else {
 					elements.push_back( GetOperator( (Operator*)( *it ) ) );
 					if ( op == "return" && ( ( it + 1 == it_end ) || ( *(it + 1))->m_type == SourceElement::ET_DELIMITER ) ) {
 						// return undefined by default
-						elements.push_back( new program::Value( (*it)->m_si, VALUE( value::Undefined ) ) );
+						elements.push_back( new program::Value( (*it)->m_si, VALUEEXT( value::Undefined, m_gc_space ) ) );
 					}
 				}
 				var_hints_allowed = false;
@@ -919,11 +918,11 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 				const bool is_float = element->m_name.find( '.' ) != std::string::npos;
 				if ( is_float ) {
 					const auto f = std::stof( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( value::Float, f ) );
+					return new program::Value( element->m_si, VALUEEXT( value::Float, m_gc_space, f ) );
 				}
 				else {
 					const auto v = std::stol( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( value::Int, v ) );
+					return new program::Value( element->m_si, VALUEEXT( value::Int, m_gc_space, v ) );
 				}
 			}
 			catch ( std::logic_error const& ex ) {
@@ -931,7 +930,7 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 			}
 		}
 		case IDENTIFIER_STRING: {
-			return new program::Value( element->m_si, VALUE( value::String, element->m_name ) );
+			return new program::Value( element->m_si, VALUEEXT( value::String, m_gc_space, element->m_name ) );
 		}
 		default:
 			THROW( "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );

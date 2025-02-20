@@ -3,27 +3,24 @@
 #include "Undefined.h"
 #include "ArrayRef.h"
 #include "ArrayRangeRef.h"
-#include "String.h"
 #include "gse/Wrappable.h"
 
 namespace gse {
 namespace value {
 
-static Value* s_undefined = VALUE( value::Undefined );
-
-Array::Array( array_elements_t initial_value )
-	: Value( GetType() )
+Array::Array( gc::Space* const gc_space, array_elements_t initial_value )
+	: Value( gc_space, GetType() )
 	, value( initial_value ) {}
 
 Value* const Array::Get( const size_t index ) const {
 	return ( index < value.size() )
 		? value[ index ]
-		: s_undefined;
+		: VALUEEXT( value::Undefined, m_gc_space );
 }
 
 Value* const Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) const {
 	ValidateFromTo( from, to );
-	return VALUE( value::Array, std::vector(
+	return VALUEEXT( value::Array, m_gc_space, std::vector(
 		( from.has_value()
 			? value.begin() + from.value()
 			: value.begin()
@@ -61,20 +58,20 @@ void Array::Append( Value* const new_value ) {
 }
 
 Value* const Array::GetRef( const size_t index ) {
-	return VALUE( ArrayRef, this, index );
+	return VALUEEXT( ArrayRef, m_gc_space, this, index );
 }
 
 Value* const Array::GetRangeRef( const std::optional< size_t > from, const std::optional< size_t > to ) {
-	return VALUE( ArrayRangeRef, this, from, to );
+	return VALUEEXT( ArrayRangeRef, m_gc_space, this, from, to );
 }
 
-Value* const Array::FromVector( const std::vector< Wrappable* >* data, const bool dynamic ) {
+Value* const Array::FromVector( gc::Space* const gc_space, const std::vector< Wrappable* >* data, const bool dynamic ) {
 	array_elements_t elements = {};
 	elements.reserve( data->size() );
 	for ( const auto& el : *data ) {
-		elements.push_back( el->Wrap( dynamic ) );
+		elements.push_back( el->Wrap( gc_space, dynamic ) );
 	}
-	return VALUE( Array, elements );
+	return VALUE( Array, , elements );
 }
 
 void Array::ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const {

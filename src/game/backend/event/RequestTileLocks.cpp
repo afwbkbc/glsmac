@@ -24,7 +24,7 @@ const std::string* RequestTileLocks::Validate( Game* game ) const {
 
 gse::Value* const RequestTileLocks::Apply( Game* game ) const {
 	game->GetTM()->RequestTileLocks( m_initiator_slot, m_tile_positions );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 void RequestTileLocks::Serialize( types::Buffer& buf, const RequestTileLocks* event ) {

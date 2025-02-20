@@ -7,6 +7,10 @@
 #include "game/backend/slot/Types.h"
 #include "network/Types.h"
 
+namespace gc {
+class Space;
+}
+
 namespace network {
 class Network;
 }
@@ -95,6 +99,8 @@ protected:
 	network::Network* const m_network;
 
 	virtual void ProcessEvent( const network::Event& event );
+
+	gc::Space* GetGCSpace() const;
 
 	bool m_is_connected = false;
 	bool m_is_canceled = false; // canceled by user

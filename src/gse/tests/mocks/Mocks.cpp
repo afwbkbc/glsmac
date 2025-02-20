@@ -6,8 +6,8 @@ namespace gse {
 namespace tests {
 namespace mocks {
 
-void AddMocks( context::GlobalContext* ctx, const test_info_t& test_info ) {
-	Test::AddMocks( ctx, test_info );
+void AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, const test_info_t& test_info ) {
+	Test::AddMocks( gc_space, ctx, test_info );
 }
 
 }

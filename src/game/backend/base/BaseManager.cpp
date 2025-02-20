@@ -130,7 +130,7 @@ void BaseManager::SpawnBase( base::Base* base ) {
 		state->TriggerObject( this, "base_spawn",{
 			{
 				"base",
-				base->Wrap()
+				base->Wrap( m_game->GetGCSpace() )
 			},
 		});
 	}
@@ -210,7 +210,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				base::pop_render_infos_t rh = {};
 				base::pop_render_infos_t rp = {};
-				const auto& f_read_renders = [ &def, &arg, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+				const auto& f_read_renders = [ &def, &arg, &gc_space, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {

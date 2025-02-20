@@ -25,7 +25,7 @@ const std::string& Console::CaptureStopGet() const {
 }
 #endif
 
-void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Console::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "print", NATIVE_CALL( this ) {
 		std::string line = "";
@@ -42,19 +42,19 @@ void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 #endif
 		util::LogHelper::Println( "    " + si.ToString() + " " + line );
 		return VALUE( value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 	ctx->CreateBuiltin( "global_mute", NATIVE_CALL() {
 		logger::g_is_muted = true;
 		return VALUE( value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 
 	ctx->CreateBuiltin( "global_unmute", NATIVE_CALL() {
 		logger::g_is_muted = false;
 		return VALUE( value::Undefined );
-	} ), ep );
+	} ), gc_space, ep );
 
 #endif
 }

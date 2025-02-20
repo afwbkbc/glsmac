@@ -167,50 +167,50 @@ const std::string Tile::ToString() const {
 #define GETN( _n ) \
 { \
 	"get_" #_n, \
-	NATIVE_CALL( this ) { return _n->Wrap(); } ) \
+	NATIVE_CALL( this ) { return _n->Wrap( gc_space ); } ) \
 }
 
 WRAPIMPL_BEGIN( Tile )
 	WRAPIMPL_PROPS
 		{
 			"x",
-			VALUE( gse::value::Int, coord.x )
+			VALUE( gse::value::Int,, coord.x )
 		},
 		{
 			"y",
-			VALUE( gse::value::Int, coord.y )
+			VALUE( gse::value::Int,, coord.y )
 		},
 		{
 			"is_water",
-			VALUE( gse::value::Bool, is_water_tile )
+			VALUE( gse::value::Bool,, is_water_tile )
 		},
 		{
 			"is_land",
-			VALUE( gse::value::Bool, !is_water_tile )
+			VALUE( gse::value::Bool,, !is_water_tile )
 		},
 		{
 			"moisture",
-			VALUE( gse::value::Int, moisture )
+			VALUE( gse::value::Int,, moisture )
 		},
 		{
 			"rockiness",
-			VALUE( gse::value::Int, rockiness )
+			VALUE( gse::value::Int,, rockiness )
 		},
 		{
 			"elevation",
-			VALUE( gse::value::Int, *elevation.center )
+			VALUE( gse::value::Int,, *elevation.center )
 		},
 		{
 			"is_rocky",
-			VALUE( gse::value::Bool, rockiness == ROCKINESS_ROCKY )
+			VALUE( gse::value::Bool,, rockiness == ROCKINESS_ROCKY )
 		},
 		{
 			"has_fungus",
-			VALUE( gse::value::Bool, features & FEATURE_XENOFUNGUS )
+			VALUE( gse::value::Bool,, features & FEATURE_XENOFUNGUS )
 		},
 		{
 			"has_river",
-			VALUE( gse::value::Bool, features & FEATURE_RIVER )
+			VALUE( gse::value::Bool,, features & FEATURE_RIVER )
 		},
 		GETN( W ),
 		GETN( NW ),
@@ -225,7 +225,7 @@ WRAPIMPL_BEGIN( Tile )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( other, 0, Tile );
-				return VALUE( gse::value::Bool, IsAdjactentTo( other ) );
+				return VALUE( gse::value::Bool,, IsAdjactentTo( other ) );
 			})
 		},
 		{
@@ -234,9 +234,9 @@ WRAPIMPL_BEGIN( Tile )
 				N_EXPECT_ARGS( 0 );
 				gse::value::array_elements_t result = {};
 				for ( const auto& n : neighbours ) {
-					result.push_back( n->Wrap() );
+					result.push_back( n->Wrap( gc_space ) );
 				}
-				return VALUE( gse::value::Array, result );
+				return VALUE( gse::value::Array,, result );
 			})
 		},
 		{
@@ -245,9 +245,9 @@ WRAPIMPL_BEGIN( Tile )
 				N_EXPECT_ARGS( 0 );
 				gse::value::array_elements_t result = {};
 				for ( auto& it : units ) {
-					result.push_back( it.second->Wrap() );
+					result.push_back( it.second->Wrap( gc_space ) );
 				}
-				return VALUE( gse::value::Array, result );
+				return VALUE( gse::value::Array,, result );
 			} )
 		},
 		{
@@ -255,7 +255,7 @@ WRAPIMPL_BEGIN( Tile )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				if ( base ) {
-					return base->Wrap();
+					return base->Wrap( gc_space );
 				}
 				else {
 					return VALUE( gse::value::Null );

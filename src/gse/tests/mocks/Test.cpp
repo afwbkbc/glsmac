@@ -20,20 +20,20 @@ namespace mocks {
 
 static std::unordered_map< std::string, Value* > s_global_map = {};
 
-void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info ) {
+void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, const test_info_t& test_info ) {
 	value::object_properties_t mocks = {
 		{
 			"assert",
 			NATIVE_CALL() {
 				if ( arguments.size() < 1 ) {
-					throw Exception( EC.INVALID_CALL, "Condition to test.assert is missing", GSE_CALL );
+					GSE_ERROR( EC.INVALID_CALL, "Condition to test.assert is missing" );
 				}
 				if ( arguments.size() > 2 ) {
-					throw Exception( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ), GSE_CALL );
+					GSE_ERROR( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ) );
 				}
 				const auto& condition = arguments.at( 0 );
 				if ( condition->type != Value::T_BOOL ) {
-					throw Exception( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition->ToString(), GSE_CALL );
+					GSE_ERROR( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition->ToString() );
 				}
 				if ( !( (value::Bool*)condition )->value ) {
 					std::string reason = "";
@@ -42,7 +42,7 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 						ASSERT_NOLOG( reasonv->type == Value::T_STRING, "test.assert reason is not string: " + reasonv->ToString() );
 						reason = ( (value::String*)reasonv )->value;
 					}
-					throw Exception( "TestError", "Assertion failed: " + reason, GSE_CALL );
+					GSE_ERROR( "TestError", "Assertion failed: " + reason );
 				}
 				return VALUE( value::Undefined );
 			} )
@@ -50,13 +50,13 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 		{
 			"get_script_path",
 			NATIVE_CALL( test_info ) {
-				return VALUE( value::String, test_info.script_path );
+				return VALUE( value::String,, test_info.script_path );
 			} )
 		},
 		{
 			"get_current_time_nano",
 			NATIVE_CALL() {
-				return VALUE( value::Int, std::chrono::time_point_cast< std::chrono::nanoseconds >( std::chrono::system_clock::now() ).time_since_epoch().count() );
+				return VALUE( value::Int,, std::chrono::time_point_cast< std::chrono::nanoseconds >( std::chrono::system_clock::now() ).time_since_epoch().count() );
 			} )
 		},
 		{
@@ -86,7 +86,7 @@ void Test::AddMocks( context::GlobalContext* ctx, const test_info_t& test_info )
 	};
 	{
 		ExecutionPointer ep;
-		ctx->CreateVariable( "test", VALUE( value::Object, nullptr, mocks ), {}, ep );
+		ctx->CreateVariable( "test", VALUE( value::Object,, nullptr, mocks ), {}, ep );
 	}
 }
 

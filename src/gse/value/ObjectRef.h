@@ -12,12 +12,12 @@ public:
 
 	static const type_t GetType() { return Value::T_OBJECTREF; }
 
-	ObjectRef( Object* object, const std::string& key )
-		: Value( GetType() )
+	ObjectRef( gc::Space* const gc_space, value::Object* object, const std::string& key )
+		: Value( gc_space, GetType() )
 		, object( object )
 		, key( key ) {}
 
-	Object* object;
+	value::Object* object;
 	const std::string key;
 
 };

@@ -67,15 +67,15 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "font", gse::Value::T_STRING, VALUE( gse::value::String, ":32" ), PF_NONE,
+		GSE_CALL, "font", gse::Value::T_STRING, VALUE( gse::value::String, , ":32" ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
 			if ( parts.size() != 2 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v->ToString(), GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v->ToString() );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v->ToString(), GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v->ToString() );
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;

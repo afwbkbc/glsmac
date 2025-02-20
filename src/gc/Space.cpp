@@ -3,6 +3,7 @@
 #include "engine/Engine.h"
 #include "GC.h"
 #include "Object.h"
+#include "Container.h"
 
 namespace gc {
 
@@ -36,9 +37,25 @@ void Space::Add( Object* object ) {
 void Space::Remove( Object* object ) {
 	std::lock_guard< std::mutex > guard( m_objects_to_remove_mutex );
 	//Log( "Removing object: " + std::to_string( (unsigned long)object ) );
-	//ASSERT( m_objects.find( object ) != m_objects.end(), "object not in gc space" );
 	ASSERT( m_objects_to_remove.find( object ) == m_objects_to_remove.end(), "object " + std::to_string( (unsigned long)object ) + " already pending removal" );
 	m_objects_to_remove.insert( object );
+}
+
+void Space::AddRoot( Container* object ) {
+	{
+		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
+		Log( "Adding root object: " + std::to_string( (unsigned long)object ) );
+		ASSERT( m_root_objects.find( object ) == m_root_objects.end(), "root object " + std::to_string( (unsigned long)object ) + " already exists" );
+		m_root_objects.insert( object );
+	}
+	Add( object );
+}
+
+void Space::RemoveRoot( Container* object ) {
+	std::lock_guard< std::mutex > guard( m_root_objects_mutex );
+	Log( "Removing root object: " + std::to_string( (unsigned long)object ) );
+	ASSERT( m_root_objects.find( object ) != m_root_objects.end(), "root object " + std::to_string( (unsigned long)object ) + " not found" );
+	m_root_objects.erase( object );
 }
 
 const bool Space::Collect() {
@@ -67,7 +84,14 @@ const bool Space::Collect() {
 	m_objects_to_remove.clear();
 	m_objects_to_remove_mutex.unlock();
 
+	m_root_objects_mutex.lock();
+	const auto root_objects = m_root_objects;
+	m_root_objects_mutex.unlock();
+
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
+	for ( const auto* object : root_objects ) { // prevent deletion of root objects
+		m_reachable_objects_tmp.insert( (Object*)object );
+	}
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	for ( const auto& object_to_remove : objects_to_remove ) {
@@ -75,11 +99,9 @@ const bool Space::Collect() {
 	}
 #endif
 
-	//Log( "Collecting from " + std::to_string( m_objects.size() ) + " objects" );
-	for ( const auto& object : m_objects ) {
-		if ( objects_to_remove.find( object ) == objects_to_remove.end() ) {
-			object->CollectActiveObjects( m_reachable_objects_tmp );
-		}
+	Log( "Collecting from " + std::to_string( root_objects.size() ) + " root objects" );
+	for ( const auto& object : root_objects ) {
+		object->CollectActiveObjects( m_reachable_objects_tmp );
 	}
 	Log( "Found " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, " + std::to_string( m_objects.size() - m_reachable_objects_tmp.size() ) + " unreachable" );
 

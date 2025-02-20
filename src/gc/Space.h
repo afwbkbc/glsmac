@@ -9,6 +9,7 @@ namespace gc {
 
 class GC;
 class Object;
+class Container;
 
 CLASS( Space, common::Class )
 
@@ -17,13 +18,18 @@ CLASS( Space, common::Class )
 
 	void Add( Object* object );
 	void Remove( Object* object );
+	void AddRoot( Container* object );
+	void RemoveRoot( Container* object );
 
 private:
 	std::unordered_set< Object* > m_objects = {};
 
+	std::mutex m_root_objects_mutex;
+	std::unordered_set< Container* > m_root_objects = {};
+
 	std::mutex m_objects_to_add_mutex;
 	std::unordered_set< Object* > m_objects_to_add = {};
-	
+
 	std::mutex m_objects_to_remove_mutex;
 	std::unordered_set< Object* > m_objects_to_remove = {};
 

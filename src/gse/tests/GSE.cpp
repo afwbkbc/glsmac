@@ -13,12 +13,12 @@
 namespace gse {
 namespace tests {
 
-void AddGSETests( task::gsetests::GSETests* task ) {
+void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	class Sum : public value::Callable {
 	public:
-		Sum()
-			: value::Callable( false ) {}
+		Sum( gc::Space* const gc_space )
+			: value::Callable( gc_space, false ) {}
 		Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 			int64_t result = 0;
 			for ( const auto& it : arguments ) {
@@ -33,38 +33,38 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					}
 				}
 			}
-			return VALUE( value::Int, result );
+			return VALUE( value::Int, , result );
 		}
 	};
 
 	task->AddTest(
 		"test if modules get assigned and run correctly",
-		GT() {
+		GT( gc_space ) {
 
 			static std::string modules_run_order = "";
 
 			class TestModuleY : public value::Callable {
 			public:
-				TestModuleY()
-					: Callable( false ) {}
+				TestModuleY( gc::Space* const gc_space )
+					: Callable( gc_space, false ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'Y';
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_y, TestModuleY );
+			NEWV( test_module_y, TestModuleY, gc_space );
 			gse->AddModule( "test_module_y", test_module_y );
 
 			class TestModuleX : public value::Callable {
 			public:
-				TestModuleX()
-					: Callable( false ) {}
+				TestModuleX( gc::Space* const gc_space )
+					: Callable( gc_space, false ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'X';
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_x, TestModuleX );
+			NEWV( test_module_x, TestModuleX, gc_space );
 			gse->AddModule( "test_module_x", test_module_x );
 
 			gse->Run();
@@ -77,34 +77,34 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if variables are written and read correctly",
-		GT() {
+		GT( gc_space ) {
 			class SetVariables : public value::Callable {
 			public:
-				SetVariables( GSE* gse )
-					: value::Callable( false )
+				SetVariables( gc::Space* const gc_space, GSE* gse )
+					: value::Callable( gc_space, false )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					gse->SetGlobal( "testvar_null", VALUE( value::Null ) );
-					gse->SetGlobal( "testvar_bool_first", VALUE( value::Bool, true ) );
-					gse->SetGlobal( "testvar_bool_second", VALUE( value::Bool, false ) );
-					gse->SetGlobal( "testvar_int_first", VALUE( value::Int, 3 ) );
-					gse->SetGlobal( "testvar_int_second", VALUE( value::Int, 7 ) );
-					gse->SetGlobal( "testvar_int_third", VALUE( value::Int, 25 ) );
-					gse->SetGlobal( "testvar_string_first", VALUE( value::String, "FIRST" ) );
-					gse->SetGlobal( "testvar_string_second", VALUE( value::String, "SECOND" ) );
+					gse->SetGlobal( "testvar_bool_first", VALUE( value::Bool, , true ) );
+					gse->SetGlobal( "testvar_bool_second", VALUE( value::Bool, , false ) );
+					gse->SetGlobal( "testvar_int_first", VALUE( value::Int, , 3 ) );
+					gse->SetGlobal( "testvar_int_second", VALUE( value::Int, , 7 ) );
+					gse->SetGlobal( "testvar_int_third", VALUE( value::Int, , 25 ) );
+					gse->SetGlobal( "testvar_string_first", VALUE( value::String, , "FIRST" ) );
+					gse->SetGlobal( "testvar_string_second", VALUE( value::String, , "SECOND" ) );
 
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gse );
+			NEWV( set_variables, SetVariables, gc_space, gse );
 			gse->AddModule( "set_variables", set_variables );
 
 			static std::string errmsg = "";
 			class CheckVariables : public value::Callable {
 			public:
-				CheckVariables( GSE* gse )
-					: value::Callable( false )
+				CheckVariables( gc::Space* const gc_space, GSE* gse )
+					: value::Callable( gc_space, false )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -131,14 +131,13 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 						CHECKV( "testvar_string_second", String, "SECOND" );
 #undef CHECKV
 #undef CHECK
-
 						GT_OK();
 					};
 					errmsg = validate();
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( check_variables, CheckVariables, gse );
+			NEWV( check_variables, CheckVariables, gc_space, gse );
 			gse->AddModule( "check_variables", check_variables );
 
 			gse->Run();
@@ -150,21 +149,21 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if methods are defined and called correctly",
-		GT() {
+		GT( gc_space ) {
 
 			static bool wasTestMethodCalled = false;
 
 			class SetMethods : public value::Callable {
 			public:
-				SetMethods( GSE* gse )
-					: value::Callable( false )
+				SetMethods( gc::Space* const gc_space, GSE* gse )
+					: value::Callable( gc_space, false )
 					, gse( gse ) {}
 				GSE* gse;
 
 				class TestMethod : public value::Callable {
 				public:
-					TestMethod()
-						: value::Callable( false ) {}
+					TestMethod( gc::Space* const gc_space )
+						: value::Callable( gc_space, false ) {}
 					Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 						wasTestMethodCalled = true;
 						return VALUE( value::Null );
@@ -177,7 +176,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_methods, SetMethods, gse );
+			NEWV( set_methods, SetMethods, gc_space, gse );
 			gse->AddModule( "set_methods", set_methods );
 
 			gse->Run();
@@ -190,7 +189,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 #define GETRESULT( _args, _expected_type, _cast_type ) \
     ExecutionPointer ep; \
-    auto resultvalue = method->Run( nullptr, {}, ep, _args ); \
+    auto resultvalue = method->Run( gc_space, nullptr, {}, ep, _args ); \
     auto* resultv = resultvalue; \
     GT_ASSERT( resultv->type == _expected_type, "wrong result type ( " + std::to_string( resultv->type ) + " != " + std::to_string( _expected_type ) + " )" ); \
     auto* result = (_cast_type*)resultv;
@@ -210,16 +209,16 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			{ // test sum()
 				GETMETHOD( "sum" );
 				CHECKRESULT( {}, Value::T_INT, value::Int, 0 );
-				CHECKRESULT( { VALUE( value::Int, 3 ) }, Value::T_INT, value::Int, 3 );
+				CHECKRESULT( { VALUE( value::Int, , 3 ) }, Value::T_INT, value::Int, 3 );
 				std::vector< Value* > args = {
-					VALUE( value::Int, 2 ),
-					VALUE( value::Int, 5 ),
+					VALUE( value::Int, , 2 ),
+					VALUE( value::Int, , 5 ),
 				};
 				CHECKRESULT( args, Value::T_INT, value::Int, 7 );
 				args = {
-					VALUE( value::Int, 11 ),
-					VALUE( value::Int, 22 ),
-					VALUE( value::Int, 33 ),
+					VALUE( value::Int, , 11 ),
+					VALUE( value::Int, , 22 ),
+					VALUE( value::Int, , 33 ),
 				};
 				CHECKRESULT( args, Value::T_INT, value::Int, 66 );
 			}
@@ -234,17 +233,17 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if variables are assigned and reassigned correctly",
-		GT() {
+		GT( gc_space ) {
 			class SetVariables : public value::Callable {
 			public:
-				SetVariables( GSE* gse )
-					: value::Callable( false )
+				SetVariables( gc::Space* const gc_space, GSE* gse )
+					: value::Callable( gc_space, false )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 
-					auto val1 = VALUE( value::Int, 1 );
-					auto val2 = VALUE( value::Int, VALUE_GET( value::Int, val1 ) + 1 );
+					auto val1 = VALUE( value::Int, , 1 );
+					auto val2 = VALUE( value::Int, , VALUE_GET( value::Int, val1 ) + 1 );
 
 					gse->SetGlobal( "testvar_first", val1 );
 					gse->SetGlobal( "testvar_second", val2 );
@@ -255,28 +254,28 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					VALUE_SET( value::Int, val3, 20 ); // this should not update testvar_second
 					gse->SetGlobal( "testvar_third", val3 );
 
-					gse->SetGlobal( "testvar_obj1", VALUE( value::Object, nullptr ) );
+					gse->SetGlobal( "testvar_obj1", VALUE( value::Object, , nullptr ) );
 
-					auto obj2 = VALUE( value::Object, nullptr );
+					auto obj2 = VALUE( value::Object, , nullptr );
 					auto data2 = VALUE_DATA( value::Object, obj2 );
-					data2->Set( "property_int", VALUE( value::Int, 555 ), GSE_CALL );
-					data2->Set( "property_bool", VALUE( value::Bool, false ), GSE_CALL );
-					data2->Set( "property_bool", VALUE( value::Bool, true ), GSE_CALL ); // this should overwrite previous value
+					data2->Set( "property_int", VALUE( value::Int, , 555 ), GSE_CALL );
+					data2->Set( "property_bool", VALUE( value::Bool, , false ), GSE_CALL );
+					data2->Set( "property_bool", VALUE( value::Bool, , true ), GSE_CALL ); // this should overwrite previous value
 					gse->SetGlobal( "testvar_obj2", obj2 );
 
 					auto properties = value::object_properties_t{
 						{ "property_int", val3 },
 						{ "property_sum",    VALUE( Sum ) },
-						{ "property_string", VALUE( value::String, "STRING" ) },
+						{ "property_string", VALUE( value::String, , "STRING" ) },
 					};
-					gse->SetGlobal( "testvar_obj3", VALUE( value::Object, nullptr, properties ) );
+					gse->SetGlobal( "testvar_obj3", VALUE( value::Object, , nullptr, properties ) );
 
 					VALUE_SET( value::Int, val3, 30 ); // this should update testvar_third and testvar_obj3.property_int
 
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gse );
+			NEWV( set_variables, SetVariables, gc_space, gse );
 			gse->AddModule( "set_variables", set_variables );
 
 			gse->Run();
@@ -299,12 +298,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( VALUE_GET( value::String, obj3.at( "property_string" ) ) == "STRING" );
 			const auto sum = VALUE_DATA( value::Callable, obj3.at( "property_sum" ) );
 			std::vector< Value* > args = {
-				VALUE( value::Int, 2 ),
-				VALUE( value::Int, 5 ),
+				VALUE( value::Int, , 2 ),
+				VALUE( value::Int, , 5 ),
 			};
 			{
 				ExecutionPointer ep;
-				GT_ASSERT( VALUE_GET( value::Int, sum->Run( nullptr, {}, ep, args ) ) == 7 );
+				GT_ASSERT( VALUE_GET( value::Int, sum->Run( gc_space, nullptr, {}, ep, args ) ) == 7 );
 			}
 
 			GT_OK();

@@ -12,8 +12,8 @@ public:
 
 	static const type_t GetType() { return Value::T_STRING; }
 
-	String( const std::string& initial_value )
-		: Value( GetType() )
+	String( gc::Space* const gc_space, const std::string& initial_value )
+		: Value( gc_space, GetType() )
 		, value( initial_value ) {
 	}
 

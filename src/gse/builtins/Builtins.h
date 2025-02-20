@@ -16,7 +16,7 @@ namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) override;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 

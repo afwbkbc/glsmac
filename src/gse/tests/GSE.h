@@ -1,5 +1,9 @@
 #pragma once
 
+namespace gc {
+class Space;
+}
+
 namespace task::gsetests {
 class GSETests;
 }
@@ -7,7 +11,7 @@ class GSETests;
 namespace gse {
 namespace tests {
 
-void AddGSETests( task::gsetests::GSETests* task );
+void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task );
 
 }
 }

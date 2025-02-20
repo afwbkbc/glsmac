@@ -10,8 +10,8 @@ public:
 
 	static const type_t GetType() { return Value::T_ARRAYREF; }
 
-	ArrayRef( Array* array, const size_t index )
-		: Value( GetType() )
+	ArrayRef( gc::Space* const gc_space, Array* array, const size_t index )
+		: Value( gc_space, GetType() )
 		, array( array )
 		, index( index ) {}
 

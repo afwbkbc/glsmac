@@ -24,7 +24,7 @@ const std::string* DefineMorales::Validate( Game* game ) const {
 
 gse::Value* const DefineMorales::Apply( Game* game ) const {
 	game->GetUM()->DefineMoraleSet( m_moraleset );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( DefineMorales )

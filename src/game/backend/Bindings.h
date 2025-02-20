@@ -6,6 +6,7 @@
 
 #include "gse/Types.h"
 #include "gse/value/Types.h"
+#include "gse/Value.h"
 
 #include "gse/Bindings.h"
 
@@ -31,10 +32,12 @@ public:
 	Bindings( State* state );
 	~Bindings();
 
-	void AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
 
 	void RunMainScript();
 	void RunMain();
+
+	gc::Space* const GetGCSpace() const;
 
 	gse::Value* const Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
 

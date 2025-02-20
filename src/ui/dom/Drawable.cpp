@@ -58,7 +58,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 		for ( const auto& str : strs ) {
 			const auto& it = s_align_strs.find( str );
 			if ( it == s_align_strs.end() ) {
-				throw gse::Exception( gse::EC.UI_ERROR, "Invalid align value: " + str, GSE_CALL );
+				GSE_ERROR( gse::EC.UI_ERROR, "Invalid align value: " + str );
 			}
 			auto a = it->second;
 			if ( a == geometry::Geometry::ALIGN_CENTER ) {

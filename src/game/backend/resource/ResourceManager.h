@@ -34,7 +34,7 @@ CLASS2( ResourceManager, common::Class, gse::Wrappable )
 	void Clear();
 	void DefineResource( resource::Resource* resource );
 
-	const map::tile::yields_t GetYields( map::tile::Tile* tile, slot::Slot* slot );
+	const map::tile::yields_t GetYields( gc::Space* const gc_space, map::tile::Tile* tile, slot::Slot* slot );
 
 	WRAPDEFS_PTR( ResourceManager )
 

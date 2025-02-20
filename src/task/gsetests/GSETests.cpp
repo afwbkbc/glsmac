@@ -8,7 +8,7 @@
 #include "util/LogHelper.h"
 
 namespace gse::tests {
-const gse::program::Program* GetTestProgram();
+const gse::program::Program* GetTestProgram( gc::Space* const gc_space );
 const gse::program::Program* g_test_program = nullptr;
 }
 
@@ -16,10 +16,12 @@ namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
+	gse::GSE gse;
+	auto* gc_space = gse.GetGCSpace();
 	ASSERT( !gse::tests::g_test_program, "test program already set" );
-	gse::tests::g_test_program = gse::tests::GetTestProgram();
+	gse::tests::g_test_program = gse::tests::GetTestProgram( gc_space );
 	Log( "Loading tests" );
-	gse::tests::AddTests( this );
+	gse::tests::AddTests( gc_space, this );
 }
 
 void GSETests::Stop() {
@@ -39,9 +41,9 @@ void GSETests::Stop() {
 
 void GSETests::Iterate() {
 	if ( current_test_index < m_tests.size() ) {
-		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
 		LogTest( "  " + it.first + "..." );
+		gse::GSE gse;
 		const auto errmsg = it.second( &gse );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;

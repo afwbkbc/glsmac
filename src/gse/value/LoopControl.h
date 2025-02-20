@@ -10,8 +10,8 @@ public:
 
 	static const type_t GetType() { return Value::T_LOOPCONTROL; }
 
-	LoopControl( const program::loop_control_type_t initial_value )
-		: Value( GetType() )
+	LoopControl( gc::Space* const gc_space, const program::loop_control_type_t initial_value )
+		: Value( gc_space, GetType() )
 		, value( initial_value ) {
 	}
 

@@ -62,7 +62,7 @@ gse::Value* const SpawnUnit::Apply( Game* game ) const {
 		false
 	);
 	game->GetUM()->SpawnUnit( unit );
-	return unit->Wrap();
+	return unit->Wrap( game->GetGCSpace() );
 }
 
 TS_BEGIN( SpawnUnit )

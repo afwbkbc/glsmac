@@ -25,7 +25,7 @@ Input::Input( DOM_ARGS )
 	m_text->SetText( m_value );
 
 	Property(
-		GSE_CALL, "value", gse::Value::T_STRING, VALUE( gse::value::String, "" ), PF_NONE,
+		GSE_CALL, "value", gse::Value::T_STRING, VALUE( gse::value::String, , "" ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetValue( GSE_CALL, ( (gse::value::String*)v )->value );
 			return VALUE( gse::value::Undefined );
@@ -104,7 +104,7 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return Panel::ProcessEventImpl( GSE_CALL, event );
 }
 
-void Input::SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Input::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CHANGE:
 		case input::EV_SELECT: {
@@ -112,13 +112,13 @@ void Input::SerializeEvent( const input::Event& e, gse::value::object_properties
 			obj.insert(
 				{
 					"value",
-					VALUE( gse::value::String, *e.data.value.change_select.text )
+					VALUE( gse::value::String, , *e.data.value.change_select.text )
 				}
 			);
 			break;
 		}
 		default: {
-			Panel::SerializeEvent( e, obj );
+			Panel::WrapEvent( gc_space, e, obj );
 		}
 	}
 }
@@ -132,7 +132,7 @@ void Input::SetValue( GSE_CALLABLE, const std::string& value ) {
 				: " "
 			)
 		);
-		UpdateProperty( "value", VALUE( gse::value::String, value ) );
+		UpdateProperty( "value", VALUE( gse::value::String, , value ) );
 		input::Event e;
 		e.SetType( input::EV_CHANGE );
 		e.data.value.change_select.text = new std::string( m_value );

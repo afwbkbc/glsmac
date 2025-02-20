@@ -29,7 +29,7 @@ namespace tests {
 
 extern const gse::program::Program* g_test_program;
 
-void AddParserTests( task::gsetests::GSETests* task ) {
+void AddParserTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	const auto validate_program = []( const Program* program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
@@ -315,8 +315,8 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if JS parser produces valid output",
-		GT( validate_program ) {
-			parser::JS parser( GetTestFilename(), GetTestSource(), 1 );
+		GT( &gc_space, validate_program ) {
+			parser::JS parser( gc_space, GetTestFilename(), GetTestSource(), 1 );
 			const auto* program = parser.Parse();
 			const auto result = validate_program( program );
 			if ( program ) {

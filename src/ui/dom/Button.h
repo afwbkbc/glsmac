@@ -14,7 +14,7 @@ public:
 protected:
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
 
-	virtual void SerializeEvent( const input::Event& e, gse::value::object_properties_t& obj ) const override;
+	virtual void WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const override;
 
 private:
 	Text* m_label;

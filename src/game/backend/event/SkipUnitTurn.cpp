@@ -39,7 +39,7 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 
 gse::Value* const SkipUnitTurn::Apply( Game* game ) const {
 	game->GetUM()->SkipUnitTurn( m_unit_id );
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( SkipUnitTurn )

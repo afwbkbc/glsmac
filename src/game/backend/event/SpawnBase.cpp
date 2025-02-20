@@ -60,7 +60,7 @@ gse::Value* const SpawnBase::Apply( Game* game ) const {
 	ASSERT_NOLOG( bm, "bm is null" );
 	bm->SpawnBase( base );
 
-	return base->Wrap();
+	return base->Wrap( game->GetGCSpace() );
 }
 
 TS_BEGIN( SpawnBase )

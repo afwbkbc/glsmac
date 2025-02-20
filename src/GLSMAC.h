@@ -52,6 +52,7 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;
+	gc::Space* m_gc_space = nullptr;
 
 	std::vector< gse::Value* > m_main_callables = {};
 
@@ -93,6 +94,6 @@ private:
 
 private:
 	friend class gse::GSE;
-	void AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
 
 };

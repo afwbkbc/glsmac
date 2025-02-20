@@ -26,7 +26,7 @@ Surface::Surface( DOM_ARGS )
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& str = ( (gse::value::String*)v )->value;
 			if ( str.empty() ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path" );
 			}
 			bool is_tiled = true;
 			types::Color color = {};

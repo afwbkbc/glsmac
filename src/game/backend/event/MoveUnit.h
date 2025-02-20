@@ -21,13 +21,13 @@ private:
 	friend class Event;
 
 	static void Serialize( types::Buffer& buf, const MoveUnit* event );
-	static MoveUnit* Unserialize( types::Buffer& buf, const size_t initiator_slot );
+	static MoveUnit* Unserialize( gc::Space* const gc_space, types::Buffer& buf, const size_t initiator_slot );
 
 private:
 	const size_t m_unit_id;
 	const backend::map::tile::direction_t m_direction;
 
-	gse::Value* m_resolutions;
+	gse::Value* m_resolutions = nullptr;
 
 };
 

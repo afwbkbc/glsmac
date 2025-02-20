@@ -79,18 +79,18 @@ WRAPIMPL_BEGIN( FactionManager )
 				std::vector< gse::Value* > land_names = {};
 				land_names.reserve( data.bases_names.land.size() );
 				for ( const auto& name : data.bases_names.land ) {
-					land_names.push_back( VALUE( gse::value::String, name ) );
+					land_names.push_back( VALUE( gse::value::String,, name ) );
 				}
 				std::vector< gse::Value* > water_names = {};
 				water_names.reserve( data.bases_names.water.size() );
 				for ( const auto& name : data.bases_names.water ) {
-					water_names.push_back( VALUE( gse::value::String, name ) );
+					water_names.push_back( VALUE( gse::value::String,, name ) );
 				}
 				const auto properties = gse::value::object_properties_t{
-					{ "land", VALUE( gse::value::Array, land_names ) },
-					{ "water", VALUE( gse::value::Array, water_names ) },
+					{ "land", VALUE( gse::value::Array,, land_names ) },
+					{ "water", VALUE( gse::value::Array,, water_names ) },
 				};
-				return VALUE( gse::value::Object, nullptr, properties );
+				return VALUE( gse::value::Object,, nullptr, properties );
 			} )
 			},
 			{
@@ -100,15 +100,15 @@ WRAPIMPL_BEGIN( FactionManager )
 				N_GETVALUE( filename, 0, String );
 				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
 				const auto properties = gse::value::object_properties_t{
-					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap() },
-					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap() },
-					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap() },
-					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap() },
-					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap() },
-					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
-					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
+					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap( gc_space ) },
+					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap( gc_space ) },
+					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap( gc_space ) },
+					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap( gc_space ) },
+					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap( gc_space ) },
+					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap( gc_space ) },
+					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap( gc_space ) },
 				};
-				return VALUE( gse::value::Object, nullptr, properties );
+				return VALUE( gse::value::Object,, nullptr, properties );
 			} )
 		},
 		{
@@ -189,7 +189,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				}
 
 				Add( faction );
-				return faction->Wrap();
+				return faction->Wrap( gc_space );
 			} )
 		},
 		{

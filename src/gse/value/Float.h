@@ -8,14 +8,14 @@ public:
 
 	static const type_t GetType() { return Value::T_FLOAT; }
 
-	Float( const float initial_value )
-		: Value( GetType() )
+	Float( gc::Space* const gc_space, const float initial_value )
+		: Value( gc_space, GetType() )
 		, value( initial_value ) {}
 
 	float value;
 
-	Float( const Float& other )
-		: Float( other.value ) {}
+	Float( gc::Space* const gc_space, const Float& other )
+		: Float( gc_space, other.value ) {}
 
 };
 

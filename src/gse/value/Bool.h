@@ -10,8 +10,8 @@ public:
 
 	static const type_t GetType() { return Value::T_BOOL; }
 
-	Bool( const bool initial_value )
-		: Value( GetType() )
+	Bool( gc::Space* const gc_space, const bool initial_value )
+		: Value( gc_space, GetType() )
 		, value( initial_value ) {
 	}
 

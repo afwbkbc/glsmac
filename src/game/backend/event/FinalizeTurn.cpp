@@ -26,7 +26,7 @@ const std::string* FinalizeTurn::Validate( Game* game ) const {
 
 gse::Value* const FinalizeTurn::Apply( Game* game ) const {
 	game->FinalizeTurn();
-	return VALUE( gse::value::Undefined );
+	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
 TS_BEGIN( FinalizeTurn )

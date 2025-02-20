@@ -54,11 +54,11 @@ WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
 		{
 			"name",
-			VALUE( gse::value::String, m_name )
+			VALUE( gse::value::String,, m_name )
 		},
 		{
 			"type",
-			VALUE( gse::value::String, "static" ) // TODO
+			VALUE( gse::value::String,, "static" ) // TODO
 		},
 	};
 WRAPIMPL_END_PTR()

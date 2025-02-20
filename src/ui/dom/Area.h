@@ -15,7 +15,7 @@ public:
 protected:
 	virtual const bool IsEventRelevant( const input::Event& event ) const override;
 
-	virtual void SerializeEvent( const input::Event& event, gse::value::object_properties_t& event_data ) const override;
+	virtual void WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& event_data ) const override;
 
 };
 

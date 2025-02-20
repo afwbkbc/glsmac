@@ -109,7 +109,7 @@ void UnitManager::SpawnUnit( Unit* unit ) {
 		state->TriggerObject( this, "unit_spawn",{
 			{
 				"unit",
-				unit->Wrap()
+				unit->Wrap( m_game->GetGCSpace() )
 			},
 		});
 	}
@@ -138,7 +138,7 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 		state->TriggerObject( this, "unit_despawn", {
 			{
 				"unit",
-				unit->Wrap()
+				unit->Wrap( m_game->GetGCSpace() )
 			}
 		});
 	}
@@ -493,15 +493,15 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", {
 		{
 			"unit",
-			unit->Wrap()
+			unit->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"src_tile",
-			unit->GetTile()->Wrap()
+			unit->GetTile()->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"dst_tile",
-			dst_tile->Wrap()
+			dst_tile->Wrap( m_game->GetGCSpace() )
 		},
 	});
 	switch ( result->type ) {
@@ -520,15 +520,15 @@ gse::Value* const UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst
 	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", {
 		{
 			"unit",
-			unit->Wrap()
+			unit->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"src_tile",
-			unit->GetTile()->Wrap()
+			unit->GetTile()->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"dst_tile",
-			dst_tile->Wrap()
+			dst_tile->Wrap( m_game->GetGCSpace() )
 		},
 	});
 }
@@ -550,15 +550,15 @@ void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, gse::Val
 	m_game->GetState()->TriggerObject( this, "unit_move_apply", {
 		{
 			"unit",
-			unit->Wrap( true )
+			unit->Wrap( m_game->GetGCSpace(), true )
 		},
 		{
 			"src_tile",
-			src_tile->Wrap()
+			src_tile->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"dst_tile",
-			dst_tile->Wrap()
+			dst_tile->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"resolutions",
@@ -598,11 +598,11 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", {
 		{
 			"attacker",
-			attacker->Wrap()
+			attacker->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"defender",
-			defender->Wrap()
+			defender->Wrap( m_game->GetGCSpace() )
 		},
 	});
 	switch ( result->type ) {
@@ -621,25 +621,26 @@ gse::Value* const UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender
 	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", {
 		{
 			"attacker",
-			attacker->Wrap()
+			attacker->Wrap( m_game->GetGCSpace() )
 		},
 		{
 			"defender",
-			defender->Wrap()
+			defender->Wrap( m_game->GetGCSpace() )
 		},
 	});
 }
 
 void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
+	auto* gc_space = m_game->GetGCSpace();
 	state->TriggerObject( this, "unit_attack_apply",{
 		{
 			"attacker",
-			attacker->Wrap( true )
+			attacker->Wrap( gc_space, true )
 		},
 		{
 			"defender",
-			defender->Wrap( true )
+			defender->Wrap( gc_space, true )
 		},
 		{
 			"resolutions",

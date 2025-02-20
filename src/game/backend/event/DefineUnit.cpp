@@ -23,7 +23,7 @@ const std::string* DefineUnit::Validate( Game* game ) const {
 
 gse::Value* const DefineUnit::Apply( Game* game ) const {
 	game->GetUM()->DefineUnit( m_def );
-	return m_def->Wrap();
+	return m_def->Wrap( game->GetGCSpace() );
 }
 
 TS_BEGIN( DefineUnit )

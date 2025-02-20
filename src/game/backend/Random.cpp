@@ -28,7 +28,7 @@ WRAPIMPL_BEGIN( Random )
 				if ( !m_game->GetState()->IsMaster() ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
-				return VALUE( gse::value::Int, m_game->GetRandom()->GetInt64( min, max ) );
+				return VALUE( gse::value::Int,, m_game->GetRandom()->GetInt64( min, max ) );
 			})
 		},
 		{
@@ -43,7 +43,7 @@ WRAPIMPL_BEGIN( Random )
 				if ( !m_game->GetState()->IsMaster() ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "Only master is allowed to generate random values" );
 				}
-				return VALUE( gse::value::Float, m_game->GetRandom()->GetFloat( min, max ) );
+				return VALUE( gse::value::Float,, m_game->GetRandom()->GetFloat( min, max ) );
 			})
 		},
 	};
