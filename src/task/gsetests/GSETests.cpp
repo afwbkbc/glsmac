@@ -9,19 +9,13 @@
 
 namespace gse::tests {
 const gse::program::Program* GetTestProgram( gc::Space* const gc_space );
-const gse::program::Program* g_test_program = nullptr;
 }
 
 namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
-	m_global_gse = new gse::GSE();
-	auto* gc_space = m_global_gse->GetGCSpace();
-	ASSERT( !gse::tests::g_test_program, "test program already set" );
-	gse::tests::g_test_program = gse::tests::GetTestProgram( gc_space );
-	Log( "Loading tests" );
-	gse::tests::AddTests( gc_space, this );
+	gse::tests::AddTests( this );
 }
 
 void GSETests::Stop() {
@@ -34,10 +28,6 @@ void GSETests::Stop() {
 	m_tests.clear();
 	m_stats.passed = 0;
 	m_stats.failed = 0;
-	ASSERT( gse::tests::g_test_program, "test program not set" );
-	delete gse::tests::g_test_program;
-	gse::tests::g_test_program = nullptr;
-	delete m_global_gse;
 }
 
 void GSETests::Iterate() {

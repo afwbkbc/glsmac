@@ -28,7 +28,9 @@ Object::~Object() {
 	}
 }
 
-Value* const Object::Get( const object_key_t& key ) const {
+Value* const Object::Get( const object_key_t& key ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
 	const auto& it = value.find( key );
 	return it != value.end()
 		? it->second
@@ -36,6 +38,8 @@ Value* const Object::Get( const object_key_t& key ) const {
 }
 
 void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	
 	const bool has_value = new_value->type != T_UNDEFINED;
 	const auto it = value.find( key );
 	if (
@@ -65,6 +69,20 @@ void Object::Unlink() {
 	ASSERT_NOLOG( wrapobj, "wrapobj not linked" );
 	wrapobj = nullptr;
 	wrapsetter = nullptr;
+}
+
+void Object::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	// object is reachable
+	active_objects.insert( this );
+
+	// internal object context is reachable
+	ASSERT_NOLOG( m_ctx, "object ctx not set" );
+	if ( active_objects.find( m_ctx ) == active_objects.end() ) {
+		m_ctx->CollectWithDependencies( active_objects );
+	}
+
 }
 
 }

@@ -24,7 +24,6 @@
 
 namespace gse {
 
-static const std::string s_t_nothing = "Nothing";
 static const std::string s_t_undefined = "Undefined";
 static const std::string s_t_null = "Null";
 static const std::string s_t_bool = "Bool";
@@ -44,8 +43,6 @@ static const std::string s_t_unknown = "Unknown";
 
 const std::string& Value::GetTypeStringStatic( const type_t type ) {
 	switch ( type ) {
-		case T_NOTHING:
-			return s_t_nothing;
 		case T_UNDEFINED:
 			return s_t_undefined;
 		case T_NULL:
@@ -87,8 +84,6 @@ const std::string& Value::GetTypeString() const {
 
 const std::string Value::ToString() const {
 	switch ( type ) {
-		case T_NOTHING:
-			return "nothing";
 		case T_UNDEFINED:
 			return "undefined";
 		case T_NULL:
@@ -407,6 +402,10 @@ const bool Value::operator>=( const Value& other ) const {
 #undef DEFAULT_COMPARE
 #undef DEFAULT_COMPARE_NE
 
+const std::string Value::GCString() const {
+	return gc::Object::GCString() + "( " + ToString() + " )";
+}
+
 Value* const Value::New( const Value* value ) {
 	auto* gc_space = value->m_gc_space;
 	ASSERT_NOLOG( gc_space, "value gc space is null" );
@@ -551,11 +550,8 @@ Value* Value::Unserialize( gc::Space* const gc_space, types::Buffer* buf ) {
 }
 
 Value::Value( gc::Space* const gc_space, const type_t type )
-	: type( type )
-	, m_gc_space( gc_space ) {
-
-	// TODO: uncomment this and track reachable variables correctly
-	//m_gc_space->Add( this );
-}
+	: gc::Object( gc_space )
+	, type( type )
+	, m_gc_space( gc_space ) {}
 
 }

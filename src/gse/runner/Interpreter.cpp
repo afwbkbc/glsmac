@@ -26,7 +26,6 @@
 #include "gse/program/Catch.h"
 #include "gse/program/LoopControl.h"
 #include "gse/value/Undefined.h"
-#include "gse/value/Nothing.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
@@ -87,7 +86,7 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 					default:
 						THROW( "unexpected control type: " + it->Dump() );
 				}
-				if ( result->type != gse::Value::T_NOTHING ) {
+				if ( result ) {
 					// got return statement
 					break;
 				}
@@ -101,9 +100,7 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 		}
 	);
 
-	return result
-		? result
-		: VALUEEXT( gse::value::Undefined, m_gc_space );
+	return result;
 }
 
 gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement ) const {
@@ -113,9 +110,12 @@ gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, Executi
 		m_gc_space->Collect();
 	}
 	if ( returnflag ) {
-		return result;
+		auto* gc_space = m_gc_space;
+		return result
+			? result
+			: VALUE( value::Undefined );
 	}
-	return VALUEEXT( Nothing, m_gc_space );
+	return nullptr;
 }
 
 gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested ) const {
@@ -130,7 +130,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				return EvaluateConditional( ctx, ep, c->els, true );
 			}
 			else {
-				return VALUEEXT( Nothing, m_gc_space );
+				return nullptr;
 			}
 		}
 		case Conditional::CT_ELSEIF: {
@@ -146,7 +146,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				return EvaluateConditional( ctx, ep, c->els, true );
 			}
 			else {
-				return VALUEEXT( Nothing, m_gc_space );
+				return nullptr;
 			}
 		}
 		case Conditional::CT_ELSE: {
@@ -159,14 +159,14 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 		}
 		case Conditional::CT_WHILE: {
 			const auto* c = (While*)conditional;
-			gse::Value* result = VALUEEXT( Nothing, m_gc_space );
+			gse::Value* result = nullptr;
 			bool need_break = false;
 			bool need_clear = false;
 			while ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
 				result = EvaluateScope( ctx, ep, c->body );
 				CheckBreakCondition( result, &need_break, &need_clear );
 				if ( need_clear ) {
-					result = VALUEEXT( Nothing, m_gc_space );
+					result = nullptr;
 				}
 				if ( need_break ) {
 					break;
@@ -176,19 +176,20 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 		}
 		case Conditional::CT_FOR: {
 			const auto* c = (For*)conditional;
-			gse::Value* result = VALUEEXT( Nothing, m_gc_space );
+			gse::Value* result = nullptr;
 			bool need_break = false;
 			bool need_clear = false;
 			switch ( c->condition->for_type ) {
 				case ForCondition::FCT_EXPRESSIONS: {
 					const auto* condition = (ForConditionExpressions*)c->condition;
+					bool return_flag = false;
 					EvaluateExpression( ctx, ep, condition->init );
 					while ( EvaluateBool( ctx, ep, condition->check ) ) {
 						result = EvaluateScope( ctx, ep, c->body );
 						CheckBreakCondition( result, &need_break, &need_clear );
 						if ( need_break ) {
 							if ( need_clear ) {
-								result = VALUEEXT( Nothing, m_gc_space );
+								result = nullptr;
 							}
 							break;
 						}
@@ -214,7 +215,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
-														result = VALUEEXT( Nothing, m_gc_space );
+														result = nullptr;
 													}
 													break;
 												}
@@ -229,7 +230,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 												CheckBreakCondition( result, &need_break, &need_clear );
 												if ( need_break ) {
 													if ( need_clear ) {
-														result = VALUEEXT( Nothing, m_gc_space );
+														result = nullptr;
 													}
 													break;
 												}
@@ -254,7 +255,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 										);
 										result = EvaluateScope( subctx, ep, c->body );
 										subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
-										if ( result->type != gse::Value::T_NOTHING ) {
+										if ( result ) {
 											break;
 										}
 									}
@@ -270,8 +271,8 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				default:
 					THROW( "unexpected for condition type: " + std::to_string( c->condition->for_type ) );
 			}
-			if ( result->type == gse::Value::T_LOOPCONTROL ) {
-				return VALUEEXT( Nothing, m_gc_space ); // we don't want to break out from parent scope
+			if ( result && result->type == gse::Value::T_LOOPCONTROL ) {
+				return nullptr; // we don't want to break out from parent scope
 			}
 			return result;
 		}
@@ -556,7 +557,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         if ( a->type != b->type ) {                                 \
             throw operation_not_supported( a->ToString(), b->ToString() ); \
         } \
-        gse::Value* result = VALUEEXT( Nothing, m_gc_space ); \
+        gse::Value* result = nullptr; \
         switch ( a->type ) { \
             case gse::Value::T_INT: { \
                 result = VALUE( Int,, ( (Int*)a )->value _op ( (Int*)b )->value ); \
@@ -807,7 +808,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						throw operation_not_supported_not_array( expression->a->ToString() );
 					}
 					auto& a = ( (value::Array*)arr )->value;
-					gse::Value* value = VALUE( Undefined );
+					gse::Value* value = nullptr;
 					if ( !a.empty() ) {
 						value = a.back();
 						a.pop_back();
@@ -835,7 +836,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					if ( idx < 0 ) {
 						throw operation_not_supported( expression->a->ToString(), idxval->ToString() );
 					}
-					gse::Value* value = VALUE( Undefined );
+					gse::Value* value = nullptr;
 					if ( idx < a.size() ) {
 						value = a.at( idx );
 						a.erase( a.begin() + idx );
@@ -891,7 +892,7 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 			return VALUE( value::Array, , elements );
 		}
 		case Operand::OT_OBJECT: {
-			gse::Value* result = VALUE( value::Undefined );
+			gse::Value* result = nullptr;
 			ctx->ForkAndExecute(
 				gc_space, ctx, operand->m_si, ep, false, [ this, &gc_space, &result, &operand, &ep, &ctx ]( context::ChildContext* const subctx ) {
 					result = VALUE( value::Object, , subctx, object_properties_t{} );
@@ -925,19 +926,15 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 		}
 		case Operand::OT_CALL: {
 			const auto* call = (Call*)operand;
-			const auto callable = Deref( ctx, call->m_si, ep, EvaluateExpression( ctx, ep, call->callable ) );
+			const auto* callable = Deref( ctx, call->m_si, ep, EvaluateExpression( ctx, ep, call->callable ) );
+			ASSERT( callable, "callable is null" );
 			switch ( callable->type ) {
 				case gse::Value::T_CALLABLE: {
 					function_arguments_t arguments = {};
 					for ( const auto& it : call->arguments ) {
 						arguments.push_back( Deref( ctx, it->m_si, ep, EvaluateExpression( ctx, ep, it ) ) );
 					}
-					const auto result = ( (Callable*)callable )->Run( gc_space, ctx, call->m_si, ep, arguments );
-					if ( result->type == gse::Value::T_NOTHING ) {
-						// function will return undefined by default
-						return VALUE( Undefined );
-					}
-					return result;
+					return ( (Callable*)callable )->Run( gc_space, ctx, call->m_si, ep, arguments );
 				}
 				default:
 					throw gse::Exception( EC.INVALID_CALL, "Callable expected, found: " + callable->ToString(), ctx, call->m_si, ep );
@@ -1023,26 +1020,29 @@ const std::string Interpreter::EvaluateVarName( context::Context* ctx, Execution
 }
 
 gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const value ) const {
-	switch ( value->type ) {
-		case gse::Value::T_ARRAYREF: {
-			const auto* ref = (ArrayRef*)value;
-			return ref->array->Get( ref->index );
+	if ( value ) {
+		switch ( value->type ) {
+			case gse::Value::T_ARRAYREF: {
+				const auto* ref = (ArrayRef*)value;
+				return ref->array->Get( ref->index );
+			}
+			case gse::Value::T_ARRAYRANGEREF: {
+				const auto* ref = (ArrayRangeRef*)value;
+				ValidateRange( ctx, si, ep, ref->array, ref->from, ref->to );
+				return ref->array->GetSubArray( ref->from, ref->to );
+			}
+			case gse::Value::T_OBJECTREF: {
+				const auto* ref = (ObjectRef*)value;
+				return ref->object->Get( ref->key );
+			}
+			case gse::Value::T_VALUEREF: {
+				THROW( "TODO: T_VALUEREF" );
+			}
+			default: {
+			}
 		}
-		case gse::Value::T_ARRAYRANGEREF: {
-			const auto* ref = (ArrayRangeRef*)value;
-			ValidateRange( ctx, si, ep, ref->array, ref->from, ref->to );
-			return ref->array->GetSubArray( ref->from, ref->to );
-		}
-		case gse::Value::T_OBJECTREF: {
-			const auto* ref = (ObjectRef*)value;
-			return ref->object->Get( ref->key );
-		}
-		case gse::Value::T_VALUEREF: {
-			THROW( "TODO: T_VALUEREF" );
-		}
-		default:
-			return value;
 	}
+	return value;
 }
 
 void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const ref, gse::Value* const value ) const {
@@ -1092,11 +1092,12 @@ void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, Executio
 }
 
 void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear ) const {
+	if ( !result ) {
+		*need_break = false;
+		*need_clear = false;
+		return;
+	}
 	switch ( result->type ) {
-		case gse::Value::T_NOTHING:
-			*need_break = false;
-			*need_clear = false;
-			return;
 		case gse::Value::T_LOOPCONTROL: {
 			*need_clear = true;
 			const auto type = ( (value::LoopControl*)result )->value;
@@ -1127,7 +1128,7 @@ Interpreter::Function::Function(
 	const std::vector< std::string >& parameters,
 	const Program* const program
 )
-	: value::Callable( gc_space, true )
+	: value::Callable( gc_space )
 	, runner( runner )
 	, context( context )
 	, parameters( parameters )
@@ -1136,6 +1137,19 @@ Interpreter::Function::Function(
 
 Interpreter::Function::~Function() {
 	delete program;
+}
+
+void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+
+	// function is reachable
+	active_objects.insert( this );
+
+	// function owner context is reachable
+	ASSERT_NOLOG( context, "function ctx not set" );
+	if ( active_objects.find( context ) == active_objects.end() ) {
+		context->CollectWithDependencies( active_objects );
+	}
+
 }
 
 gse::Value* Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t& arguments ) {
@@ -1158,7 +1172,7 @@ gse::Value* Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t
 	);
 	return result
 		? result
-		: VALUE( gse::value::Undefined );
+		: VALUE( Undefined ); // functions return undefined by default
 }
 
 }

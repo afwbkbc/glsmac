@@ -215,7 +215,7 @@ WRAPIMPL_BEGIN( TileManager )
 				NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( tiles, 0, Array );
-				N_PERSIST_CALLABLE( on_complete, 1 );
+				N_GET_CALLABLE( on_complete, 1 );
 				map::tile::positions_t tile_positions = {};
 				tile_positions.reserve( tiles.size() );
 				for ( const auto& tileobj : tiles ) {
@@ -233,7 +233,6 @@ WRAPIMPL_BEGIN( TileManager )
 							return VALUE( gse::value::Undefined );
 						} )
 					});
-					N_UNPERSIST_CALLABLE( on_complete );
 				});
 				return VALUE( gse::value::Undefined );
 			})

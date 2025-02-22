@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gse/Value.h"
+
 #include <optional>
 
 namespace gse {
@@ -22,6 +24,7 @@ public:
 	const std::optional< size_t > from;
 	const std::optional< size_t > to;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 };
 
 }

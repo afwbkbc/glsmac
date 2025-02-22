@@ -163,30 +163,55 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, std::function< Value*( gc::Space* const ) > > PREDEF_OPERATORS = {
+	enum predef_op_t {
+		PO_TRUE,
+		PO_FALSE,
+		PO_NULL,
+		PO_UNDEFINED,
+	};
+
+	const std::unordered_map< predef_op_t, std::function< Value*( gc::Space* const ) > > PREDEF_OPERATORS = {
 		{
-			"true",
+			PO_TRUE,
 			[]( gc::Space* const gc_space ) {
 				return VALUE( value::Bool, , true );
 			},
 		},
 		{
-			"false",
+			PO_FALSE,
 			[]( gc::Space* const gc_space ) {
 				return VALUE( value::Bool, , false );
 			},
 		},
 		{
-			"null",
+			PO_NULL,
 			[]( gc::Space* const gc_space ) {
 				return VALUE( value::Null );
 			},
 		},
 		{
-			"undefined",
+			PO_UNDEFINED,
 			[]( gc::Space* const gc_space ) {
 				return VALUE( value::Undefined );
 			},
+		},
+	};
+	const std::unordered_map< std::string, predef_op_t > PREDEF_OPERATORS_S = {
+		{
+			"true",
+			PO_TRUE
+		},
+		{
+			"false",
+			PO_FALSE
+		},
+		{
+			"null",
+			PO_NULL
+		},
+		{
+			"undefined",
+			PO_UNDEFINED
 		},
 	};
 
@@ -566,6 +591,11 @@ private:
 	void LogElement( const std::string& prefix, const SourceElement* element ) const;
 	void LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;
 #endif
+
+	gse::Value* const static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f );
+	std::unordered_map< predef_op_t, gse::Value* > m_static_vars_p = {};
+
+	void collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const override;
 
 };
 

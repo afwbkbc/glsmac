@@ -35,7 +35,7 @@
 namespace gse {
 namespace tests {
 
-void AddTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
+void AddTests( task::gsetests::GSETests* task ) {
 
 	if ( !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		task->AddTest(
@@ -44,11 +44,11 @@ void AddTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 				GT_OK();
 			}
 		);
-		tests::AddGSETests( gc_space, task );
-		tests::AddParserTests( gc_space, task );
-		tests::AddRunnerTests( gc_space, task );
+		tests::AddGSETests( task );
+		tests::AddParserTests( task );
+		tests::AddRunnerTests( task );
 	}
-	tests::AddScriptsTests( gc_space, task );
+	tests::AddScriptsTests( task );
 
 }
 

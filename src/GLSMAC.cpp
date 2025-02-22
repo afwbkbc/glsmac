@@ -176,13 +176,12 @@ WRAPIMPL_BEGIN( GLSMAC )
 			"init_single_player",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
-				N_PERSIST_CALLABLE( on_complete, 0 );
+				N_GET_CALLABLE( on_complete, 0 );
 				InitGameState( GSE_CALL, [ this, on_complete, gc_space, ctx, si, ep ] () {
 					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
 					m_state->m_settings.global.Initialize();
 					auto ep2 = ep;
 					on_complete->Run( gc_space, ctx, si, ep2, {} );
-					N_UNPERSIST_CALLABLE( on_complete );
 				} );
 				return VALUE( gse::value::Undefined );
 			} )
@@ -466,5 +465,5 @@ void GLSMAC::AddToContext( gc::Space* const gc_space, gse::context::Context* ctx
 		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
 		return VALUE( gse::value::Undefined );
-	} ), gc_space, ep );
+	} ), ep );
 }

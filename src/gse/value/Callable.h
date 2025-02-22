@@ -20,15 +20,12 @@ public:
 
 	static const type_t GetType() { return Value::T_CALLABLE; }
 
-	Callable( gc::Space* const gc_space, const bool cleanup_needed )
-		: Value( gc_space, GetType() )
-		, m_cleanup_needed( cleanup_needed ) {}
+	Callable( gc::Space* const gc_space )
+		: Value( gc_space, GetType() ) {}
 
 	virtual ~Callable() {}
 
 	virtual Value* Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
-
-	const bool m_cleanup_needed;
 
 };
 

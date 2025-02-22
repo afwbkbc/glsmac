@@ -507,7 +507,6 @@ const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* d
 	switch ( result->type ) {
 		case gse::Value::T_NULL:
 		case gse::Value::T_UNDEFINED:
-		case gse::Value::T_NOTHING:
 			return nullptr; // no errors
 		case gse::Value::T_STRING:
 			return new std::string( ( (gse::value::String*)result )->value ); // error
@@ -608,7 +607,6 @@ const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defend
 	switch ( result->type ) {
 		case gse::Value::T_NULL:
 		case gse::Value::T_UNDEFINED:
-		case gse::Value::T_NOTHING:
 			return nullptr; // no errors
 		case gse::Value::T_STRING:
 			return new std::string( ( (gse::value::String*)result )->value ); // error

@@ -7,6 +7,7 @@
 #include "gse/context/GlobalContext.h"
 #include "gse/runner/Interpreter.h"
 #include "gse/ExecutionPointer.h"
+#include "gse/program/Program.h"
 
 #include "mocks/Mocks.h"
 
@@ -15,9 +16,7 @@
 namespace gse {
 namespace tests {
 
-extern const program::Program* g_test_program;
-
-void AddRunnerTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
+void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 	const std::string expected_output = GetExpectedResult();
 
@@ -26,7 +25,8 @@ void AddRunnerTests( gc::Space* const gc_space, task::gsetests::GSETests* task )
 }
 	task->AddTest(
 		"test if interpreter executes programs correctly",
-		GT( &gc_space, expected_output ) {
+		GT( expected_output ) {
+			auto* gc_space = gse->GetGCSpace();
 
 			runner::Interpreter interpreter( gc_space );
 
@@ -35,14 +35,18 @@ void AddRunnerTests( gc::Space* const gc_space, task::gsetests::GSETests* task )
 			mocks::AddMocks( gc_space, context, {} );
 
 			gse->LogCaptureStart();
+			const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
+			ASSERT_NOLOG( test_program, "test program is null" );
 			try {
 				ExecutionPointer ep;
-				interpreter.Execute( context, ep, g_test_program );
+				interpreter.Execute( context, ep, test_program );
 			}
 			catch ( const std::runtime_error& e ) {
+				delete test_program;
 				context->Clear();
 				throw;
 			}
+			delete test_program;
 			context->Clear();
 
 			const auto actual_output = gse->LogCaptureStopGet();

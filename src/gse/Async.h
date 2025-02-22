@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "common/Common.h"
+#include "gc/Object.h"
 
 #include "Value.h"
 #include "Types.h"
@@ -14,7 +15,7 @@ namespace context {
 class Context;
 }
 
-CLASS( Async, common::Class )
+CLASS2( Async, common::Class, gc::Object )
 
 	Async( gc::Space* const gc_space );
 
@@ -27,6 +28,8 @@ CLASS( Async, common::Class )
 	void StopTimers();
 
 	void ProcessAndExit( ExecutionPointer& ep );
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 
 private:
 
@@ -45,7 +48,7 @@ private:
 
 	const uint64_t Now() const;
 	void ValidateMs( const int64_t ms, GSE_CALLABLE ) const;
-	void ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep );
+	void ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep );
 };
 
 }

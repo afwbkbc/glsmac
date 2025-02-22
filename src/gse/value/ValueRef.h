@@ -18,6 +18,7 @@ public:
 
 	Value* const target;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 };
 
 }

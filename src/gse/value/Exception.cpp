@@ -13,11 +13,11 @@ Exception::Exception( gc::Space* const gc_space, const gse::Exception& exception
 	{
 		{
 			"type",
-			VALUEEXT( value::String, m_gc_space, exception.class_name )
+			VALUEEXT( value::String, gc_space, exception.class_name )
 		},
 		{
 			"reason",
-			VALUEEXT( value::String, m_gc_space, exception.reason )
+			VALUEEXT( value::String, gc_space, exception.reason )
 		},
 	},
 	"Exception"

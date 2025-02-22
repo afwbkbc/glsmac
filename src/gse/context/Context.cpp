@@ -12,8 +12,8 @@ namespace gse {
 namespace context {
 
 Context::Context( gse::GSE* gse )
-	: m_gse( gse ) {
-}
+	: gc::Object( gse->GetGCSpace() )
+	, m_gse( gse ) {}
 
 Context::~Context() {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
@@ -118,25 +118,8 @@ void Context::DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE ) {
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
 }
 
-void Context::CreateBuiltin( const std::string& name, Value* const value, gc::Space* const gc_space, gse::ExecutionPointer& ep ) {
+void Context::CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep ) {
 	CreateConst( "#" + name, value, {}, ep );
-}
-
-void Context::PersistValue( Value* const value ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	ASSERT_NOLOG( m_persisted_values.find( value ) == m_persisted_values.end(), "value already persisted" );
-	m_persisted_values.insert(
-		{
-			value,
-			value
-		}
-	);
-}
-
-void Context::UnpersistValue( Value* const value ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	ASSERT_NOLOG( m_persisted_values.find( value ) != m_persisted_values.end(), "value was not persisted" );
-	m_persisted_values.erase( value );
 }
 
 void Context::Execute( const std::function< void() >& f ) {
@@ -155,7 +138,6 @@ ChildContext* const Context::ForkAndExecute(
 	NEWV( result, ChildContext, m_gse, this, si, is_traceable );
 	ASSERT_NOLOG( !result->m_is_executing, "context already executing" );
 	result->m_is_executing = true;
-	m_gse->GetGCSpace()->Add( result );
 	// functions have access to parent variables
 	for ( auto& it : m_ref_contexts ) {
 		result->m_ref_contexts.insert_or_assign( it.first, it.second );
@@ -178,31 +160,46 @@ ChildContext* const Context::ForkAndExecute(
 void Context::Clear() {
 	m_gc_mutex.lock();
 	const auto children = m_child_contexts;
-	const auto persisted_values = m_persisted_values;
 	m_variables.clear();
 	m_gc_mutex.unlock();
 	for ( const auto& c : children ) {
 		c->Clear();
 	}
-	for ( const auto& value : persisted_values ) {
-		UnpersistValue( value.second );
+}
+
+void Context::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	if ( m_is_executing ) {
+		CollectWithDependencies( active_objects );
+
+		for ( const auto& child : m_child_contexts ) {
+			ASSERT_NOLOG( !child->m_is_executing, "context is executing but child isn't" );
+			child->GetReachableObjects( active_objects );
+		}
 	}
 }
 
-void Context::CollectActiveObjects( std::unordered_set< Object* >& active_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+void Context::CollectWithDependencies( std::unordered_set< Object* >& active_objects ) {
 
-	if ( !m_is_executing &&
-		m_persisted_values.empty() &&
-		m_child_contexts.empty()
-		) {
-		// context is not used for anything anymore
-		return;
+	// context is reachable
+	active_objects.insert( this );
+
+	// all variables are reachable
+	for ( const auto& v : m_variables ) {
+		auto* variable = v.second.value;
+		if ( active_objects.find( variable ) == active_objects.end() ) {
+			variable->GetReachableObjects( active_objects );
+		}
 	}
 
-	active_objects.insert( this );
-	for ( const auto& child_context : m_child_contexts ) {
-		child_context->CollectActiveObjects( active_objects );
+	// all ref contexts are reachable
+	for ( const auto& c : m_ref_contexts ) {
+		auto* context = c.second;
+		if ( active_objects.find( context ) == active_objects.end() ) {
+			ASSERT_NOLOG( context->m_is_executing, "ref context not executing" );
+			context->CollectWithDependencies( active_objects );
+		}
 	}
 }
 

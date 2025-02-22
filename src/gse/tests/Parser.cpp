@@ -1,6 +1,9 @@
 #include "Tests.h"
 
 #include "task/gsetests/GSETests.h"
+#include "gc/Space.h"
+
+#include "gse/GSE.h"
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
@@ -27,11 +30,9 @@ namespace gse {
 using namespace program;
 namespace tests {
 
-extern const gse::program::Program* g_test_program;
+void AddParserTests( task::gsetests::GSETests* task ) {
 
-void AddParserTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
-
-	const auto validate_program = []( const Program* program ) -> std::string {
+	const auto validate_program = []( const Program* program, const Program* reference_program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
 
 #define VALIDATOR( _type, ... ) [ __VA_ARGS__ ]( const _type* a, const _type* b ) -> std::string
@@ -306,7 +307,7 @@ void AddParserTests( gc::Space* const gc_space, task::gsetests::GSETests* task )
 			GT_OK();
 		};
 
-		VALIDATE( scope, g_test_program->body, program->body );
+		VALIDATE( scope, program->body, reference_program->body );
 
 #undef VALIDATOR
 #undef VALIDATE
@@ -315,13 +316,17 @@ void AddParserTests( gc::Space* const gc_space, task::gsetests::GSETests* task )
 
 	task->AddTest(
 		"test if JS parser produces valid output",
-		GT( &gc_space, validate_program ) {
-			parser::JS parser( gc_space, GetTestFilename(), GetTestSource(), 1 );
-			const auto* program = parser.Parse();
-			const auto result = validate_program( program );
+		GT( validate_program ) {
+			auto* gc_space = gse->GetGCSpace();
+			NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
+			const auto* program = parser->Parse( gc_space );
+			const auto* reference_program = gse::tests::GetTestProgram( gc_space );
+			ASSERT_NOLOG( reference_program, "reference program is null" );
+			const auto result = validate_program( program, reference_program );
 			if ( program ) {
 				DELETE( program );
 			}
+			delete reference_program;
 			return result;
 		}
 	);

@@ -34,7 +34,7 @@ void Async::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exec
 		};
 
 		return VALUE( value::Object,, nullptr, properties, "async" );
-	} ), gc_space, ep );
+	} ), ep );
 
 }
 

@@ -19,7 +19,7 @@ void Include::AddToContext( gc::Space* const gc_space, context::Context* ctx, Ex
 		N_GETVALUE( path, 0, String );
 		const auto full_path = ctx->GetScriptInfo().directory + GSE::PATH_SEPARATOR + path;
 		return ctx->GetGSE()->RunScript( GSE_CALL, full_path );
-	} ), gc_space, ep );
+	} ), ep );
 
 }
 

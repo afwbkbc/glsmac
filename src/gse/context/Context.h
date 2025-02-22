@@ -8,7 +8,7 @@
 #include <mutex>
 #include <atomic>
 
-#include "gc/Container.h"
+#include "gc/Object.h"
 
 #include "gse/Types.h"
 #include "gse/value/Types.h"
@@ -30,7 +30,7 @@ namespace context {
 
 class ChildContext;
 
-class Context : public gc::Container {
+class Context : public gc::Object {
 protected:
 	struct var_info_t {
 		Value* value;
@@ -55,9 +55,7 @@ public:
 	void CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
 	void UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
 	void DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
-	void CreateBuiltin( const std::string& name, Value* const value, gc::Space* const gc_space, gse::ExecutionPointer& ep );
-	void PersistValue( Value* const value );
-	void UnpersistValue( Value* const value );
+	void CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep );
 
 	void Execute( const std::function< void() >& f );
 
@@ -69,6 +67,9 @@ public:
 
 	void Clear();
 
+	void GetReachableObjects( std::unordered_set< Object* >& active_objects ) override;
+	virtual void CollectWithDependencies( std::unordered_set< Object* >& active_objects );
+
 	virtual Context* GetParentContext() const = 0;
 	virtual const bool IsTraceable() const = 0;
 	virtual const std::string& GetSourceLine( const size_t line_num ) const = 0;
@@ -76,6 +77,7 @@ public:
 	virtual const script_info_t& GetScriptInfo() const = 0;
 
 protected:
+
 	GSE* m_gse;
 
 	typedef std::unordered_map< std::string, var_info_t > variables_t;
@@ -83,15 +85,9 @@ protected:
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};
 
-	std::unordered_map< const Value*, Value* > m_persisted_values = {};
-
-	void CollectActiveObjects( std::unordered_set< Object* >& active_objects ) override;
-
 	std::atomic< bool > m_is_executing = false;
 
 private:
-
-	std::mutex m_gc_mutex;
 	std::unordered_set< ChildContext* > m_child_contexts = {};
 	std::unordered_set< Value* > m_child_objects = {};
 

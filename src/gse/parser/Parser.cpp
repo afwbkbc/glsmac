@@ -3,12 +3,18 @@
 #include <cstring>
 
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
+
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
 
 namespace gse {
 namespace parser {
 
-Parser::Parser( const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: m_source( source + '\n' )
+Parser::Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num )
+	: gc::Object( gc_space )
+	, m_source( source + '\n' )
 	, m_filename( filename )
 	, m_begin( m_source.c_str() )
 	, m_end( m_source.c_str() + m_source.size() ) {
@@ -22,14 +28,39 @@ Parser::~Parser() {
 	delete m_ep;
 }
 
-const program::Program* Parser::Parse() {
+const program::Program* Parser::Parse( gc::Space* const gc_space ) {
+	ASSERT_NOLOG( !m_is_parsed, "already parsed" );
+	m_is_parsed = true;
+	gc_space->AddRoot( this );
 	source_elements_t elements = {};
 	GetElements( elements );
 	const auto* program = GetProgram( elements );
 	for ( auto& it : elements ) {
 		delete it;
 	}
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		gc_space->ReplaceRoot( this, GetStaticVars( gc_space ) ); // now parser can be destroyed but static vars will last until the end
+	}
 	return program;
+}
+
+Parser::StaticVars::StaticVars( const Parser* parser, gc::Space* const gc_space )
+	: gc::Object( gc_space ) {
+	parser->collect_static_vars( m_static_vars );
+}
+
+void Parser::StaticVars::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	active_objects.insert( m_static_vars.begin(), m_static_vars.end() );
+}
+
+Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) const {
+	return new StaticVars( this, gc_space );
+}
+
+void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	collect_static_vars( active_objects );
 }
 
 const char Parser::get() const {
@@ -275,6 +306,36 @@ const std::string Parser::unpack_backslashes( const std::string& source ) const 
 		result += source.substr( last_pos );
 	}
 	return result;
+}
+
+#define X( _n, _t, _tt, _m ) \
+gse::Value* const _n( const _t& v, gc::Space* const gc_space ) { \
+    std::lock_guard< std::mutex > guard( m_gc_mutex ); \
+    const auto& it = _m.find( v ); \
+    return it != _m.end() \
+        ? it->second \
+        : _m.insert( \
+            { \
+                v, \
+                VALUE( _tt, , v ) \
+            } \
+        ).first->second; \
+}
+X( Parser::static_var_s, std::string, value::String, m_static_vars_s )
+X( Parser::static_var_i, int64_t, value::Int, m_static_vars_i )
+X( Parser::static_var_f, float, value::Float, m_static_vars_f )
+#undef X
+
+void Parser::collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const {
+	static_vars.reserve( static_vars.size() + m_static_vars_s.size() + m_static_vars_f.size() + m_static_vars_i.size() );
+#define X( _m ) \
+    for ( const auto& it : m_static_vars_s ) { \
+        static_vars.insert( (gc::Object*)it.second ); \
+    }
+	X( m_static_vars_s )
+	X( m_static_vars_i )
+	X( m_static_vars_f )
+#undef X
 }
 
 inline void Parser::move() {

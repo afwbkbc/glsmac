@@ -139,11 +139,10 @@ WRAPIMPL_BEGIN( AnimationManager )
 			N_EXPECT_ARGS( 3 );
 			N_GETVALUE( id, 0, String );
 			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
-			N_PERSIST_CALLABLE( on_complete, 2 );
+			N_GET_CALLABLE( on_complete, 2 );
 			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, gc_space, ctx, si, ep ]() {
 				auto ep2 = ep;
 				on_complete->Run( gc_space, ctx, si, ep2, {} );
-				N_UNPERSIST_CALLABLE( on_complete );
 			});
 			if ( errmsg ) {
 				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );

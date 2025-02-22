@@ -173,7 +173,6 @@ _type _type::Unwrap( gse::Value* const value ) { \
 class Value : public gc::Object {
 public:
 	enum type_t : uint8_t {
-		T_NOTHING,
 		T_UNDEFINED,
 		T_NULL,
 		T_BOOL,
@@ -209,6 +208,8 @@ public:
 #undef OP
 
 	const type_t type;
+
+	const std::string GCString() const override;
 
 	Value* const New( const Value* value );
 

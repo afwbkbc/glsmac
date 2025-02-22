@@ -48,7 +48,7 @@ void Bindings::AddToContext( gc::Space* const gc_space, gse::context::Context* c
 		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
 		return VALUE( gse::value::Undefined );
-	} ), gc_space, ep );
+	} ), ep );
 }
 
 void Bindings::RunMainScript() {
@@ -77,7 +77,7 @@ gc::Space* const Bindings::GetGCSpace() const {
 
 gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
 	auto* gc_space = m_gse->GetGCSpace();
-	gse::Value* result = VALUEEXT( gse::value::Undefined, gc_space );
+	gse::Value* result = nullptr;
 	try {
 		{
 			gse::ExecutionPointer ep;
@@ -88,7 +88,7 @@ gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& 
 			game->GetUM()->PushUpdates();
 			game->GetBM()->PushUpdates();
 		}
-		if ( result->type == gse::Value::T_NOTHING ) {
+		if ( !result ) {
 			// return undefined by default
 			return VALUEEXT( gse::value::Undefined, gc_space );
 		}

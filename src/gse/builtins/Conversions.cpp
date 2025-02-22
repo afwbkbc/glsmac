@@ -37,13 +37,13 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
 		return VALUE( value::String,, v->ToString() );
-	} ), gc_space, ep );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GET( v, 0 );
 		return VALUE( value::String,, v->Dump() );
-	} ), gc_space, ep );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_int", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -67,7 +67,7 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 				CONVERSION_ERROR( "Int" );
 		}
 		return VALUE( value::Int,, value );
-	} ), gc_space, ep );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_float", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
@@ -95,11 +95,11 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 				CONVERSION_ERROR( "Float" );
 		}
 		return VALUE( value::Float,, value );
-	} ), gc_space, ep );
+	} ), ep );
 
 	ctx->CreateBuiltin( "to_color", NATIVE_CALL() {
 		N_EXPECT_ARGS_MIN_MAX( 3, 4 );
-		const auto f_err = [ &gc_space, &ctx, &si, &ep ] () {
+		const auto f_err = [ &ctx, &si, &ep ] () {
 			GSE_ERROR( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)" );
 		};
 
@@ -110,7 +110,7 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 				f_err();
 		}
 		return VALUE( value::Undefined );
-	} ), gc_space, ep );
+	} ), ep );
 
 #undef CONVERT_COLOR
 

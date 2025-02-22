@@ -37,7 +37,7 @@ using namespace program;
 namespace parser {
 
 JS::JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: Parser( filename, source, initial_line_num )
+	: Parser( gc_space, filename, source, initial_line_num )
 	, m_gc_space( gc_space ) {}
 
 void JS::GetElements( source_elements_t& elements ) {
@@ -660,15 +660,17 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					next_var_hints = mod_it->second;
 					break;
 				}
-				const auto predef_it = PREDEF_OPERATORS.find( op );
-				if ( predef_it != PREDEF_OPERATORS.end() ) {
-					elements.push_back( new program::Value( ( *it )->m_si, predef_it->second( m_gc_space ) ) );
+				const auto predef_s_it = PREDEF_OPERATORS_S.find( op );
+				if ( predef_s_it != PREDEF_OPERATORS_S.end() ) {
+					ASSERT( PREDEF_OPERATORS.find( predef_s_it->second ) != PREDEF_OPERATORS.end(), "predef operator not found" );
+					const auto p = predef_s_it->second;
+					elements.push_back( new program::Value( ( *it )->m_si, static_var_p( p, m_gc_space, PREDEF_OPERATORS.at( p ) ) ) );
 				}
 				else {
 					elements.push_back( GetOperator( (Operator*)( *it ) ) );
 					if ( op == "return" && ( ( it + 1 == it_end ) || ( *(it + 1))->m_type == SourceElement::ET_DELIMITER ) ) {
 						// return undefined by default
-						elements.push_back( new program::Value( (*it)->m_si, VALUEEXT( value::Undefined, m_gc_space ) ) );
+						elements.push_back( new program::Value( (*it)->m_si, nullptr ) );
 					}
 				}
 				var_hints_allowed = false;
@@ -917,12 +919,12 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 				// maybe it's int?
 				const bool is_float = element->m_name.find( '.' ) != std::string::npos;
 				if ( is_float ) {
-					const auto f = std::stof( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUEEXT( value::Float, m_gc_space, f ) );
+					const auto v = std::stof( element->m_name.c_str() );
+					return new program::Value( element->m_si, static_var_f( v, m_gc_space ) );
 				}
 				else {
 					const auto v = std::stol( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUEEXT( value::Int, m_gc_space, v ) );
+					return new program::Value( element->m_si, static_var_i( v, m_gc_space ) );
 				}
 			}
 			catch ( std::logic_error const& ex ) {
@@ -930,7 +932,8 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 			}
 		}
 		case IDENTIFIER_STRING: {
-			return new program::Value( element->m_si, VALUEEXT( value::String, m_gc_space, element->m_name ) );
+			const auto& v = element->m_name;
+			return new program::Value( element->m_si, static_var_s( v, m_gc_space ) );
 		}
 		default:
 			THROW( "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );
@@ -1110,6 +1113,20 @@ void JS::LogElements( const std::string& label, const source_elements_t::const_i
 
 #undef ELS
 #undef EL
+
+gse::Value* const JS::static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	const auto& it = m_static_vars_p.find( key );
+	return it != m_static_vars_p.end() ? it->second : m_static_vars_p.insert({ key, f( gc_space ) }).first->second;
+}
+
+void JS::collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const {
+	Parser::collect_static_vars( static_vars );
+	static_vars.reserve( static_vars.size() + m_static_vars_p.size() );
+	for ( const auto& it : m_static_vars_p ) {
+		static_vars.insert( it.second );
+	}
+}
 
 }
 }

@@ -15,12 +15,16 @@ namespace gse {
 #define MAX_SLEEP_MS ( 1000 * 3600 )
 
 Async::Async( gc::Space* const gc_space )
-	: m_gc_space( gc_space ) {}
+	: gc::Object( gc_space )
+	, m_gc_space( gc_space ) {}
 
 void Async::Iterate( ExecutionPointer& ep ) {
-	while ( !m_timers.empty() && Now() >= m_timers.begin()->first ) {
+	//auto timers_begin_ptr = GetTimersBeginPtr();
+	m_gc_mutex.lock();
+	while ( !m_timers.empty() && m_timers.begin()->first ) {
 		ProcessTimers( m_timers.begin(), ep );
 	}
+	m_gc_mutex.unlock();
 }
 
 static Async::timer_id_t s_next_id = 0;
@@ -31,34 +35,33 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 		s_next_id = 0;
 	}
 	s_next_id++;
-	auto* subctx = ctx->ForkAndExecute(
-		m_gc_space, GSE_CALL_NOGC, true, [ this, &ms, &si, &ep, &f ]( gse::context::ChildContext* const subctx ) {
-			ValidateMs( ms, m_gc_space, subctx, si, ep );
-			subctx->PersistValue( f );
-		}
-	);
-	const auto time = Now() + ms;
-	m_timers[ time ].insert(
-		{
-			s_next_id,
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex ); // TODO: optimize?
+		ValidateMs( ms, m_gc_space, ctx, si, ep );
+		const auto time = Now() + ms;
+		m_timers[ time ].insert(
 			{
-				ms,
-				f,
-				subctx,
-				si
+				s_next_id,
+				{
+					ms,
+					f,
+					ctx,
+					si
+				}
 			}
-		}
-	);
-	m_timers_ms.insert(
-		{
-			s_next_id,
-			time
-		}
-	);
+		);
+		m_timers_ms.insert(
+			{
+				s_next_id,
+				time
+			}
+		);
+	}
 	return s_next_id;
 }
 
 const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex ); // TODO: optimize?
 	const auto& it = m_timers_ms.find( id );
 	if ( it == m_timers_ms.end() ) {
 		return false;
@@ -67,8 +70,6 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 	ASSERT( m_timers.find( time ) != m_timers.end(), "timers not found" );
 	auto& timers = m_timers.at( time );
 	ASSERT( timers.find( id ) != timers.end(), "timer not found" );
-	const auto& timer = timers.at( id );
-	timer.ctx->UnpersistValue( timer.callable );
 	timers.erase( id );
 	if ( timers.empty() ) {
 		m_timers.erase( time );
@@ -78,16 +79,13 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 }
 
 void Async::StopTimers() {
-	for ( const auto& it : m_timers ) {
-		for ( const auto& it2 : it.second ) {
-			it2.second.ctx->UnpersistValue( it2.second.callable );
-		}
-	}
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	m_timers.clear();
 	m_timers_ms.clear();
 }
 
 void Async::ProcessAndExit( ExecutionPointer& ep ) {
+	m_gc_mutex.lock();
 	while ( !m_timers.empty() ) {
 		const auto& it = m_timers.begin();
 		const auto now = Now();
@@ -99,8 +97,29 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 		if ( sleep_for > 0 ) {
 			std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
 		}
-
 		ProcessTimers( it, ep );
+	}
+	m_gc_mutex.unlock();
+}
+
+void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+
+	// async is reachable
+	active_objects.insert( this );
+
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		// timer callables are reachable
+		for ( const auto& timers : m_timers ) {
+			for ( const auto& timer : timers.second ) {
+				auto* c = timer.second.callable;
+				if ( active_objects.find( c ) == active_objects.end() ) {
+					c->GetReachableObjects( active_objects );
+				}
+				auto* ctx = timer.second.ctx;
+				ASSERT( active_objects.find( ctx ) != active_objects.end(), "callable context not reachable" );
+			}
+		}
 	}
 }
 
@@ -119,7 +138,7 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 	}
 }
 
-void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) {
+void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 
 	for ( const auto& it2 : it->second ) {
@@ -128,33 +147,39 @@ void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) 
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
 		const auto si = timer.si;
+
+		m_gc_mutex.unlock();
+
 		const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
 
 		size_t ms = 0;
 		bool repeat = false;
 
 		const auto& r = result;
-		switch ( r->type ) {
-			case Value::T_NOTHING:
-			case Value::T_UNDEFINED:
-			case Value::T_NULL:
-				break;
-			case Value::T_BOOL: {
-				if ( ( (value::Bool*)r )->value ) {
-					repeat = true;
-					ms = timer.ms;
+		if ( r ) {
+			switch ( r->type ) {
+				case Value::T_UNDEFINED:
+				case Value::T_NULL:
+					break;
+				case Value::T_BOOL: {
+					if ( ( (value::Bool*)r )->value ) {
+						repeat = true;
+						ms = timer.ms;
+					}
+					break;
 				}
-				break;
+				case Value::T_INT: {
+					ms = ( (value::Int*)r )->value;
+					ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
+					repeat = true;
+					break;
+				}
+				default:
+					GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 			}
-			case Value::T_INT: {
-				ms = ( (value::Int*)r )->value;
-				ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
-				repeat = true;
-				break;
-			}
-			default:
-				GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 		}
+
+		m_gc_mutex.lock();
 
 		if ( repeat ) {
 			timers_new[ Now() + ms ].insert(
@@ -169,23 +194,22 @@ void Async::ProcessTimers( const timers_t::iterator& it, ExecutionPointer& ep ) 
 				}
 			);
 		}
-		else {
-			ctx->UnpersistValue( f );
-		}
 		ASSERT( m_timers_ms.find( it2.first ) != m_timers_ms.end(), "related timers_ms entry not found" );
 		m_timers_ms.erase( it2.first );
 	}
 
-	m_timers.erase( it );
-	for ( const auto& it_new : timers_new ) {
-		for ( const auto& timer : it_new.second ) {
-			m_timers[ it_new.first ].insert( timer );
-			m_timers_ms.insert(
-				{
-					timer.first,
-					it_new.first
-				}
-			);
+	{
+		m_timers.erase( it );
+		for ( const auto& it_new : timers_new ) {
+			for ( const auto& timer : it_new.second ) {
+				m_timers[ it_new.first ].insert( timer );
+				m_timers_ms.insert(
+					{
+						timer.first,
+						it_new.first
+					}
+				);
+			}
 		}
 	}
 }

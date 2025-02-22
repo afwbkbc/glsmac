@@ -268,7 +268,7 @@ WRAPIMPL_BEGIN( BaseManager )
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
 
 				if ( arguments.size() > 3 ) {
-					N_PERSIST_CALLABLE( on_spawn, 3 );
+					N_GET_CALLABLE( on_spawn, 3 );
 				}
 
 				return m_game->AddEvent( new event::SpawnBase(

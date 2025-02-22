@@ -52,5 +52,15 @@ void ChildContext::JoinContext() const {
 	}
 }
 
+void ChildContext::CollectWithDependencies( std::unordered_set< Object* >& active_objects ) {
+	Context::CollectWithDependencies( active_objects );
+
+	// parent context is reachable (if not added yet)
+	ASSERT_NOLOG( m_parent_context, "parent context not set" );
+	if ( active_objects.find( m_parent_context ) == active_objects.end() ) {
+		m_parent_context->CollectWithDependencies( active_objects );
+	}
+}
+
 }
 }

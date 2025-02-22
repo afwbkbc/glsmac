@@ -49,6 +49,7 @@ private:
 			const program::Program* const program
 		);
 		~Function();
+		void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 		Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override;
 	private:
 		const Interpreter* runner;

@@ -37,7 +37,7 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 			default: \
 				THROW( "unexpected type: " + a->GetTypeString() ); \
 		} \
-	} ), gc_space, ep );
+	} ), ep );
 	AB( "min", std::min, std::fmin )
 	AB( "max", std::max, std::fmax )
 #undef AB
@@ -47,7 +47,7 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 		N_EXPECT_ARGS( 1 ); \
 		N_GETVALUE( v, 0, _in_type ); \
 		return VALUE( value::_out_type,, std::_func( v ) ); \
-	} ), gc_space, ep );
+	} ), ep );
 	F( floor, Float, Int )
 	F( round, Float, Int )
 	F( ceil, Float, Int )

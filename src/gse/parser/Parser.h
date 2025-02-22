@@ -2,13 +2,17 @@
 
 #include <vector>
 #include <cstdint>
+#include <unordered_map>
 
 #include "common/Common.h"
+#include "gc/Object.h"
 
 #include "gse/Types.h"
 #include "gse/program/Types.h"
 
 namespace gse {
+
+class Value;
 
 namespace program {
 class Program;
@@ -16,12 +20,25 @@ class Program;
 
 namespace parser {
 
-CLASS( Parser, common::Class )
+CLASS2( Parser, common::Class, gc::Object )
 
-	Parser( const std::string& filename, const std::string& source, const size_t initial_line_num );
+	Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser();
 
-	const program::Program* Parse();
+	const program::Program* Parse( gc::Space* const gc_space );
+
+	class StaticVars : public gc::Object {
+	private:
+		friend class Parser;
+		StaticVars( const Parser* parser, gc::Space* const gc_space );
+	public:
+		void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	private:
+		std::unordered_set< gc::Object* > m_static_vars = {};
+	};
+	StaticVars* const GetStaticVars( gc::Space* const gc_space ) const;
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 
 protected:
 
@@ -269,7 +286,17 @@ protected:
 
 	gse::ExecutionPointer* m_ep = nullptr;
 
+#define X( _n, _t ) gse::Value* const _n( const _t& v, gc::Space* const gc_space );
+	X( static_var_s, std::string )
+	X( static_var_i, int64_t )
+	X( static_var_f, float )
+#undef X
+
+	virtual void collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const;
+
 private:
+	bool m_is_parsed = false;
+
 	const std::string m_source;
 	const std::string m_filename;
 
@@ -281,6 +308,11 @@ private:
 
 	inline void move();
 	inline void move_by( const size_t len = 1 );
+
+	std::unordered_map< std::string, gse::Value* > m_static_vars_s = {};
+	std::unordered_map< int64_t, gse::Value* > m_static_vars_i = {};
+	std::unordered_map< float, gse::Value* > m_static_vars_f = {};
+
 };
 
 }

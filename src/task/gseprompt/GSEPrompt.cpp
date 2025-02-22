@@ -132,8 +132,9 @@ void GSEPrompt::ProcessInput() {
 
 	const gse::program::Program* program = nullptr;
 	gse::Value* result = nullptr;
+	auto* gc_space = m_gse->GetGCSpace();
 	try {
-		program = parser->Parse();
+		program = parser->Parse( gc_space );
 		if ( m_is_tty ) {
 			const gse::si_t si = {
 				"",
@@ -149,7 +150,7 @@ void GSEPrompt::ProcessInput() {
 			{
 				gse::ExecutionPointer ep;
 				m_gse_context->ForkAndExecute(
-					m_gse->GetGCSpace(), m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
+					gc_space, m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
 						result = m_runner->Execute( subctx, ep, program );
 						subctx->JoinContext();
 					}

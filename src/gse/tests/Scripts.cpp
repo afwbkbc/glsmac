@@ -20,7 +20,7 @@
 namespace gse {
 namespace tests {
 
-void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
+void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 	const std::string tests_path = util::FS::GeneratePath(
 		{
@@ -51,8 +51,9 @@ void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task 
 		}
 		task->AddTest(
 			"testing " + script,
-			GT( gc_space, script ) {
-
+			GT( script ) {
+				auto* gc_space = gse->GetGCSpace();
+				
 				parser::Parser* parser = nullptr;
 				const runner::Runner* runner = nullptr;
 				const program::Program* program = nullptr;
@@ -64,7 +65,7 @@ void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task 
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
 					mocks::AddMocks( gc_space, context, { script } );
-					program = parser->Parse();
+					program = parser->Parse( gc_space );
 					runner = gse->GetRunner();
 					{
 						ExecutionPointer ep;
@@ -91,9 +92,6 @@ void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task 
 				}
 				if ( runner ) {
 					DELETE( runner );
-				}
-				if ( parser ) {
-					DELETE( parser );
 				}
 
 				return last_error;

@@ -43,8 +43,6 @@ CLASS( GSETests, common::Task )
 	void LogTest( const std::string& text, bool is_debug = false );
 
 private:
-	gse::GSE* m_global_gse = nullptr;
-
 	size_t current_test_index = 0;
 	std::vector< std::pair< std::string, gse_test_t >> m_tests = {};
 

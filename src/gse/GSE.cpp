@@ -21,6 +21,7 @@ GSE::GSE() {
 	NEW( m_gc_space, gc::Space );
 	m_bindings.push_back( &m_builtins );
 	m_async = new Async( m_gc_space );
+	m_gc_space->AddRoot( m_async );
 }
 
 GSE::~GSE() {
@@ -28,10 +29,7 @@ GSE::~GSE() {
 		ExecutionPointer ep;
 		m_async->ProcessAndExit( ep );
 	}
-	delete m_async;
-	for ( auto& it : m_modules ) {
-		DELETE( it.second );
-	}
+	m_gc_space->RemoveRoot( m_async );
 	for ( auto& it : m_include_cache ) {
 		it.second.Cleanup( this );
 	}
@@ -78,6 +76,7 @@ void GSE::AddBindings( Bindings* bindings ) {
 
 context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
 	NEWV( context, context::GlobalContext, this, source_path );
+	m_gc_space->AddRoot( context );
 	m_global_contexts.insert( context );
 	{
 		gse::ExecutionPointer ep;
@@ -85,7 +84,6 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 			it->AddToContext( m_gc_space, context, ep );
 		}
 	}
-	m_gc_space->AddRoot( context );
 	return context;
 }
 
@@ -165,8 +163,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 		}
 #endif
 		const auto parser = GetParser( full_path, source );
-		cache.program = parser->Parse();
-		DELETE( parser );
+		cache.program = parser->Parse( m_gc_space );
 		cache.runner = GetRunner();
 		{
 			cache.result = cache.runner->Execute( cache.context, ep, cache.program );

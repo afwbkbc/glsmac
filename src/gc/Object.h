@@ -1,15 +1,24 @@
 #pragma once
 
 #include <unordered_set>
+#include <mutex>
+#include <string>
 
 namespace gc {
 
+class Space;
+
 class Object {
 public:
-	Object( const bool is_container = false );
+	Object( gc::Space* const gc_space );
 	virtual ~Object() = default;
 
-	const bool m_is_container = false;
+	virtual void GetReachableObjects( std::unordered_set< Object* >& active_objects );
+	virtual const std::string GCString() const;
+
+protected:
+	std::mutex m_gc_mutex; // always use this when changing or collecting reachables
+
 };
 
 }

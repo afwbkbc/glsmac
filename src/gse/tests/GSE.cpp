@@ -13,12 +13,12 @@
 namespace gse {
 namespace tests {
 
-void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
+void AddGSETests( task::gsetests::GSETests* task ) {
 
 	class Sum : public value::Callable {
 	public:
 		Sum( gc::Space* const gc_space )
-			: value::Callable( gc_space, false ) {}
+			: value::Callable( gc_space ) {}
 		Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 			int64_t result = 0;
 			for ( const auto& it : arguments ) {
@@ -39,14 +39,15 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if modules get assigned and run correctly",
-		GT( gc_space ) {
+		GT() {
+			auto* gc_space = gse->GetGCSpace();
 
 			static std::string modules_run_order = "";
 
 			class TestModuleY : public value::Callable {
 			public:
 				TestModuleY( gc::Space* const gc_space )
-					: Callable( gc_space, false ) {}
+					: Callable( gc_space ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'Y';
 					return VALUE( value::Null );
@@ -58,7 +59,7 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 			class TestModuleX : public value::Callable {
 			public:
 				TestModuleX( gc::Space* const gc_space )
-					: Callable( gc_space, false ) {}
+					: Callable( gc_space ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'X';
 					return VALUE( value::Null );
@@ -77,11 +78,13 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if variables are written and read correctly",
-		GT( gc_space ) {
+		GT() {
+			auto* gc_space = gse->GetGCSpace();
+
 			class SetVariables : public value::Callable {
 			public:
 				SetVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space, false )
+					: value::Callable( gc_space )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -104,7 +107,7 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 			class CheckVariables : public value::Callable {
 			public:
 				CheckVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space, false )
+					: value::Callable( gc_space )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -149,21 +152,22 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if methods are defined and called correctly",
-		GT( gc_space ) {
+		GT() {
+			auto* gc_space = gse->GetGCSpace();
 
 			static bool wasTestMethodCalled = false;
 
 			class SetMethods : public value::Callable {
 			public:
 				SetMethods( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space, false )
+					: value::Callable( gc_space )
 					, gse( gse ) {}
 				GSE* gse;
 
 				class TestMethod : public value::Callable {
 				public:
 					TestMethod( gc::Space* const gc_space )
-						: value::Callable( gc_space, false ) {}
+						: value::Callable( gc_space ) {}
 					Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 						wasTestMethodCalled = true;
 						return VALUE( value::Null );
@@ -233,11 +237,13 @@ void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task ) {
 
 	task->AddTest(
 		"test if variables are assigned and reassigned correctly",
-		GT( gc_space ) {
+		GT() {
+			auto* gc_space = gse->GetGCSpace();
+			
 			class SetVariables : public value::Callable {
 			public:
 				SetVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space, false )
+					: value::Callable( gc_space )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {

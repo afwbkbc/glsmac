@@ -1,5 +1,7 @@
 #pragma once
 
+#include "gse/Value.h"
+
 namespace gse {
 namespace value {
 
@@ -18,6 +20,7 @@ public:
 	Array* array;
 	const size_t index;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 };
 
 }

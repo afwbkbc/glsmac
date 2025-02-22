@@ -18,7 +18,7 @@ class Program;
 
 namespace tests {
 
-void AddTests( gc::Space* const gc_space, task::gsetests::GSETests* task );
+void AddTests( task::gsetests::GSETests* task );
 
 const std::string& GetTestFilename();
 const std::string& GetTestSource();

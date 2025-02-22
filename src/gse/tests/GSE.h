@@ -11,7 +11,7 @@ class GSETests;
 namespace gse {
 namespace tests {
 
-void AddGSETests( gc::Space* const gc_space, task::gsetests::GSETests* task );
+void AddGSETests( task::gsetests::GSETests* task );
 
 }
 }
