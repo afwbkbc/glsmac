@@ -34,13 +34,6 @@ void Space::Add( Object* object ) {
 	m_objects_to_add.insert( object );
 }
 
-void Space::Remove( Object* object ) {
-	std::lock_guard< std::mutex > guard( m_objects_to_remove_mutex );
-	//Log( "Removing object: " + std::to_string( (unsigned long)object ) );
-	ASSERT( m_objects_to_remove.find( object ) == m_objects_to_remove.end(), "object " + std::to_string( (unsigned long)object ) + " already pending removal" );
-	m_objects_to_remove.insert( object );
-}
-
 void Space::AddRoot( Container* object ) {
 	{
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );

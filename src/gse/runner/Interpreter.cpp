@@ -41,8 +41,13 @@
 #include "gse/value/Range.h"
 #include "gse/value/LoopControl.h"
 #include "gse/value/Exception.h"
-#include "gse/value/Undefined.h"
 #include "gse/ExecutionPointer.h"
+
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+#include "engine/Engine.h"
+#include "config/Config.h"
+#include "gc/Space.h"
+#endif
 
 namespace gse {
 
@@ -52,7 +57,11 @@ using namespace value;
 namespace runner {
 
 Interpreter::Interpreter( gc::Space* const gc_space )
-	: Runner( gc_space ) {}
+	: Runner( gc_space ) {
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+	m_aggressive_gc = g_engine->GetConfig()->HasDebugFlag( config::Config::DF_AGGRESSIVE_GC );
+#endif
+}
 
 gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer& ep, const Program* program ) const {
 	return EvaluateScope( ctx, ep, program->body );
@@ -100,6 +109,9 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement ) const {
 	bool returnflag = false;
 	const auto result = EvaluateExpression( ctx, ep, statement->body, &returnflag );
+	if ( m_aggressive_gc ) {
+		m_gc_space->Collect();
+	}
 	if ( returnflag ) {
 		return result;
 	}

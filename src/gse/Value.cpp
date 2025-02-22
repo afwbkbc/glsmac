@@ -555,7 +555,7 @@ Value::Value( gc::Space* const gc_space, const type_t type )
 	, m_gc_space( gc_space ) {
 
 	// TODO: uncomment this and track reachable variables correctly
-	// m_gc_space->Add( this );
+	//m_gc_space->Add( this );
 }
 
 }

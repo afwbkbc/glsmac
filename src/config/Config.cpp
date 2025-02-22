@@ -296,6 +296,11 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"aggressive-gc", "Runs garbage collection after every statement", AH( this ) {
+			m_debug_flags |= DF_AGGRESSIVE_GC;
+		}
+	);
+	m_manager->AddRule(
 		"quiet", "Do not output debug logs to console", AH( this ) {
 			m_debug_flags |= DF_QUIET;
 		}

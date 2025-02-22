@@ -51,7 +51,7 @@ void AddScriptsTests( gc::Space* const gc_space, task::gsetests::GSETests* task 
 		}
 		task->AddTest(
 			"testing " + script,
-			GT( &gc_space, script ) {
+			GT( gc_space, script ) {
 
 				parser::Parser* parser = nullptr;
 				const runner::Runner* runner = nullptr;

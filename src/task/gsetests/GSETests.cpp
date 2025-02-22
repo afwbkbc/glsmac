@@ -16,8 +16,8 @@ namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
-	gse::GSE gse;
-	auto* gc_space = gse.GetGCSpace();
+	m_global_gse = new gse::GSE();
+	auto* gc_space = m_global_gse->GetGCSpace();
 	ASSERT( !gse::tests::g_test_program, "test program already set" );
 	gse::tests::g_test_program = gse::tests::GetTestProgram( gc_space );
 	Log( "Loading tests" );
@@ -37,6 +37,7 @@ void GSETests::Stop() {
 	ASSERT( gse::tests::g_test_program, "test program not set" );
 	delete gse::tests::g_test_program;
 	gse::tests::g_test_program = nullptr;
+	delete m_global_gse;
 }
 
 void GSETests::Iterate() {

@@ -5,6 +5,12 @@
 
 #include "common/Common.h"
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+namespace gse::runner {
+class Interpreter;
+}
+#endif
+
 namespace gc {
 
 class GC;
@@ -17,7 +23,6 @@ CLASS( Space, common::Class )
 	~Space();
 
 	void Add( Object* object );
-	void Remove( Object* object );
 	void AddRoot( Container* object );
 	void RemoveRoot( Container* object );
 
@@ -39,6 +44,9 @@ private:
 
 private:
 	friend class GC;
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	friend class gse::runner::Interpreter;
+#endif
 	const bool Collect(); // true if anything was gced, false otherwise
 
 };

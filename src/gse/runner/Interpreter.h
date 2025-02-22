@@ -35,6 +35,10 @@ CLASS( Interpreter, Runner )
 
 private:
 
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+	bool m_aggressive_gc = false;
+#endif
+
 	class Function : public value::Callable {
 	public:
 		Function(
