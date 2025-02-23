@@ -170,7 +170,7 @@ void Context::Clear() {
 void Context::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 
-	if ( true || m_is_executing ) {
+	if ( m_is_executing ) {
 		CollectWithDependencies( active_objects );
 
 		for ( const auto& child : m_child_contexts ) {
