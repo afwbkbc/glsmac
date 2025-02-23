@@ -20,12 +20,16 @@ public:
 
 	static const type_t GetType() { return Value::T_CALLABLE; }
 
-	Callable( gc::Space* const gc_space )
-		: Value( gc_space, GetType() ) {}
+	Callable( gc::Space* const gc_space, context::Context* const ctx );
 
 	virtual ~Callable() = default;
 
 	virtual Value* Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+
+private:
+	context::Context* const m_ctx = nullptr;
 
 };
 

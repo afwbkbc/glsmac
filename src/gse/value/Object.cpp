@@ -93,6 +93,12 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& active_obje
 		m_ctx->CollectWithDependencies( active_objects );
 	}
 
+	// properties are reachable
+	for ( const auto& v : value ) {
+		if ( active_objects.find( v.second ) == active_objects.end() ) {
+			v.second->GetReachableObjects( active_objects );
+		}
+	}
 }
 
 context::ChildContext* const Object::GetContext() const {

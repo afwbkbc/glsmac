@@ -218,8 +218,6 @@ public:
 
 	const type_t type = T_UNDEFINED;
 
-	const std::string GCString() const override;
-
 	Value* const New( const Value* value );
 
 	static void Serialize( types::Buffer* buf, Value* const type );

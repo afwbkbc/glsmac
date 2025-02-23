@@ -5,8 +5,8 @@
 namespace gse {
 namespace callable {
 
-Native::Native( gc::Space* const gc_space, const executor_t& executor )
-	: Callable( gc_space )
+Native::Native( gc::Space* const gc_space, context::Context* const ctx, const executor_t& executor )
+	: Callable( gc_space, ctx )
 	, m_executor( executor ) {
 	//
 }

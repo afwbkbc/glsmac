@@ -8,6 +8,7 @@
 #include "gse/value/Int.h"
 #include "gse/context/ChildContext.h"
 #include "Exception.h"
+#include "util/Time.h"
 
 namespace gse {
 
@@ -19,12 +20,13 @@ Async::Async( gc::Space* const gc_space )
 	, m_gc_space( gc_space ) {}
 
 void Async::Iterate( ExecutionPointer& ep ) {
-	//auto timers_begin_ptr = GetTimersBeginPtr();
-	m_gc_mutex.lock();
-	while ( !m_timers.empty() && m_timers.begin()->first ) {
-		ProcessTimers( m_timers.begin(), ep );
+	if ( !m_is_stopping ) {
+		m_gc_mutex.lock();
+		while ( !m_timers.empty() && m_timers.begin()->first ) {
+			ProcessTimers( m_timers.begin(), ep );
+		}
+		m_gc_mutex.unlock();
 	}
-	m_gc_mutex.unlock();
 }
 
 static Async::timer_id_t s_next_id = 0;
@@ -38,7 +40,7 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 	{
 		std::lock_guard< std::mutex > guard( m_gc_mutex ); // TODO: optimize?
 		ValidateMs( ms, m_gc_space, ctx, si, ep );
-		const auto time = Now() + ms;
+		const auto time = util::Time::Now() + ms;
 		m_timers[ time ].insert(
 			{
 				s_next_id,
@@ -85,10 +87,13 @@ void Async::StopTimers() {
 }
 
 void Async::ProcessAndExit( ExecutionPointer& ep ) {
+	m_is_stopping = true;
+	m_process_timers_mutex.lock(); // wait for anything processing timers to finish
+	m_process_timers_mutex.unlock();
 	m_gc_mutex.lock();
 	while ( !m_timers.empty() ) {
 		const auto& it = m_timers.begin();
-		const auto now = Now();
+		const auto now = util::Time::Now();
 		const auto sleep_for = it->first > now
 			? it->first - now
 			: 0;
@@ -123,12 +128,6 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objec
 	}
 }
 
-const uint64_t Async::Now() const {
-	return std::chrono::duration_cast< std::chrono::milliseconds >(
-		std::chrono::system_clock::now().time_since_epoch()
-	).count();
-}
-
 void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 	if ( ms < 0 ) {
 		GSE_ERROR( EC.OPERATION_FAILED, "Timeout can't be negative: " + std::to_string( ms ) );
@@ -139,6 +138,8 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 }
 
 void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
+	std::lock_guard< std::mutex > guard( m_process_timers_mutex );
+
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 
 	for ( const auto& it2 : it->second ) {
@@ -182,7 +183,7 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 		m_gc_mutex.lock();
 
 		if ( repeat ) {
-			timers_new[ Now() + ms ].insert(
+			timers_new[ util::Time::Now() + ms ].insert(
 				{
 					it2.first,
 					{

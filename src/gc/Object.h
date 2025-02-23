@@ -14,7 +14,6 @@ public:
 	virtual ~Object() = default;
 
 	virtual void GetReachableObjects( std::unordered_set< Object* >& active_objects );
-	virtual const std::string GCString() const;
 
 protected:
 	std::mutex m_gc_mutex; // always use this when changing or collecting reachables

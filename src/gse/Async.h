@@ -2,6 +2,7 @@
 
 #include <map>
 #include <vector>
+#include <atomic>
 
 #include "common/Common.h"
 #include "gc/Object.h"
@@ -34,6 +35,8 @@ CLASS2( Async, common::Class, gc::Object )
 private:
 
 	gc::Space* const m_gc_space = nullptr;
+	std::atomic< bool > m_is_stopping = false;
+	std::mutex m_process_timers_mutex;
 
 	struct timer_t {
 		size_t ms;
@@ -46,7 +49,6 @@ private:
 	timers_t m_timers = {};
 	std::map< timer_id_t, uint64_t > m_timers_ms = {};
 
-	const uint64_t Now() const;
 	void ValidateMs( const int64_t ms, GSE_CALLABLE ) const;
 	void ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep );
 };

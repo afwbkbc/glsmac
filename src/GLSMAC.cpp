@@ -274,7 +274,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	} catch ( const std::runtime_error& e ) {
 		gse::value::object_properties_t args = {
 			{
-				"set_smacpath", VALUE( gse::callable::Native,, [ this ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments )  {
+				"set_smacpath", NATIVE_CALL( this ) {
 					N_EXPECT_ARGS( 1 );
 					N_GETVALUE( path, 0, String );
 					S_Init( GSE_CALL, path );

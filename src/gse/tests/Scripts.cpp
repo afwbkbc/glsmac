@@ -53,7 +53,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 			"testing " + script,
 			GT( script ) {
 				auto* gc_space = gse->GetGCSpace();
-				
+
 				parser::Parser* parser = nullptr;
 				const runner::Runner* runner = nullptr;
 				const program::Program* program = nullptr;
@@ -82,16 +82,11 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
 
-				if ( context ) {
-					ExecutionPointer ep;
-					gse->GetAsync()->ProcessAndExit( ep );
-					context->Clear();
-				}
 				if ( program ) {
-					DELETE( program );
+					//DELETE( program ); // TMP
 				}
 				if ( runner ) {
-					DELETE( runner );
+					//DELETE( runner );
 				}
 
 				return last_error;

@@ -231,7 +231,7 @@ WRAPIMPL_BEGIN( TileManager )
 				SendTileLockRequest( tile_positions, [ this, gc_space, on_complete, tile_positions, ctx, si, ep ]() {
 					auto ep2 = ep;
 					on_complete->Run( gc_space, ctx, si, ep2, {
-						VALUE( gse::callable::Native,, [ this, tile_positions ](
+						VALUE( gse::callable::Native,, ctx, [ this, tile_positions ](
 							GSE_CALLABLE,
 							const gse::value::function_arguments_t& arguments
 						)  {

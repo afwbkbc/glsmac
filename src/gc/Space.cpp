@@ -1,8 +1,12 @@
 #include "Space.h"
 
+#include <thread>
+#include <chrono>
+
 #include "engine/Engine.h"
 #include "GC.h"
 #include "Object.h"
+#include "util/Time.h"
 
 namespace gc {
 
@@ -11,13 +15,10 @@ Space::Space() {
 }
 
 Space::~Space() {
-	Log( "SPACE BEFORE REMOVE" );
 	g_engine->GetGC()->RemoveSpace( this );
-	Log( "SPACE AFTER REMOVE" );
 	m_collect_mutex.lock(); // wait for any ongoing collects to finish
 	m_is_destroying = true;
 	m_collect_mutex.unlock();
-	Log( "SPACE AFTER REMOVE WAIT" );
 	{
 		// remove root objects
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
@@ -30,6 +31,9 @@ Space::~Space() {
 	while ( !m_objects.empty() || !m_pending_objects.empty() || !m_objects_to_add.empty() ) {
 		Log( std::to_string( m_objects.size() ) + " objects are still reachable" );
 		while ( Collect() ) {}
+		if ( !m_pending_objects.empty() ) {
+			std::this_thread::sleep_for( std::chrono::milliseconds( GC::NEW_OBJECT_PROTECTION_TIME_MS ) );
+		}
 	}
 	Log( "All objects have been destroyed." );
 }
@@ -37,8 +41,9 @@ Space::~Space() {
 void Space::Add( Object* object ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
 	std::lock_guard< std::mutex > guard( m_objects_to_add_mutex );
-	Log( "Adding object: " + object->GCString() );
-	ASSERT( m_objects_to_add.find( object ) == m_objects_to_add.end(), "object " + object->GCString() + " already pending addition" );
+	Log( "Adding object: " + std::to_string( (unsigned long)object ) );
+	ASSERT( m_objects.find( object ) == m_objects.end(), "object " + std::to_string( (unsigned long)object ) + " already exists" );
+	ASSERT( m_objects_to_add.find( object ) == m_objects_to_add.end(), "object " + std::to_string( (unsigned long)object ) + " already pending addition" );
 	m_objects_to_add.insert( object );
 }
 
@@ -47,8 +52,8 @@ void Space::AddRoot( Object* object ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
 	{
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
-		Log( "Adding root object: " + object->GCString() );
-		ASSERT( m_root_objects.find( object ) == m_root_objects.end(), "root object " + object->GCString() + " already exists" );
+		Log( "Adding root object: " + std::to_string( (unsigned long)object ) );
+		ASSERT( m_root_objects.find( object ) == m_root_objects.end(), "root object " + std::to_string( (unsigned long)object ) + " already exists" );
 		m_root_objects.insert( object );
 	}
 }
@@ -57,8 +62,8 @@ void Space::RemoveRoot( Object* object ) {
 	//std::lock_guard< std::mutex > guard2( m_collect_mutex );
 	if ( !m_is_destroying ) { // if destroying then all root objects will be removed anyway
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
-		Log( "Removing root object: " + object->GCString() );
-		ASSERT( m_root_objects.find( object ) != m_root_objects.end(), "root object " + object->GCString() + " not found" );
+		Log( "Removing root object: " + std::to_string( (unsigned long)object ) );
+		ASSERT( m_root_objects.find( object ) != m_root_objects.end(), "root object " + std::to_string( (unsigned long)object ) + " not found" );
 		m_root_objects.erase( object );
 	}
 }
@@ -66,9 +71,9 @@ void Space::RemoveRoot( Object* object ) {
 void Space::ReplaceRoot( Object* from, Object* to ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
 	std::lock_guard< std::mutex > guard( m_root_objects_mutex );
-	Log( "Replacing root object: " + from->GCString() + " -> " + to->GCString() );
-	ASSERT( m_root_objects.find( from ) != m_root_objects.end(), "root object " + from->GCString() + " not found" );
-	ASSERT( m_root_objects.find( to ) == m_root_objects.end(), "root object " + to->GCString() + " already exists" );
+	Log( "Replacing root object: " + std::to_string( (unsigned long)from ) + " -> " + std::to_string( (unsigned long)to ) );
+	ASSERT( m_root_objects.find( from ) != m_root_objects.end(), "root object " + std::to_string( (unsigned long)from ) + " not found" );
+	ASSERT( m_root_objects.find( to ) == m_root_objects.end(), "root object " + std::to_string( (unsigned long)to ) + " already exists" );
 	m_root_objects.erase( from );
 	m_root_objects.insert( to );
 }
@@ -87,12 +92,6 @@ const bool Space::Collect() {
 		}
 	}
 
-	// TMP
-	for ( const auto& object : m_objects ) {
-		Log( "OBJECT PTR: " + std::to_string( (unsigned long)object ) );
-		Log( "OBJECT STRING: " + object->GCString() );
-	}
-
 	bool anything_removed = false;
 	std::unordered_set< Object* > removed_objects = {};
 	for ( const auto& object : m_objects ) {
@@ -100,7 +99,6 @@ const bool Space::Collect() {
 		if ( it == m_reachable_objects_tmp.end() ) {
 			ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long)object ) + " was already removed" );
 			Log( "Destroying unreachable object: " + std::to_string( (unsigned long)object ) );
-			Log( "Object GCString(): " + object->GCString() );
 			delete object;
 			anything_removed = true;
 			removed_objects.insert( object );
@@ -116,21 +114,21 @@ const bool Space::Collect() {
 		for ( const auto& object : removed_objects ) {
 			ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
 			m_objects.erase( object );
-			//m_pending_objects.erase( object );
-			//m_objects_to_add.erase( object );
-			//m_root_objects.erase( object );
 		}
 
 	}
 
 	// add pending objects to collectable objects
+	const auto now = util::Time::Now();
 	if ( !m_pending_objects.empty() ) {
-		for ( const auto& object : m_pending_objects ) {
-			if ( removed_objects.find( object ) == removed_objects.end() ) {
-				m_objects.insert( object );
+		const auto pending_objects = m_pending_objects;
+		for ( const auto& it : pending_objects ) {
+			ASSERT_NOLOG( removed_objects.find( it.first ) == removed_objects.end(), "pending object already removed" );
+			if ( now - it.second >= GC::NEW_OBJECT_PROTECTION_TIME_MS ) {
+				m_objects.insert( it.first );
+				m_pending_objects.erase( it.first );
 			}
 		}
-		m_pending_objects.clear();
 	}
 
 	// add new objects to pending objects
@@ -139,13 +137,17 @@ const bool Space::Collect() {
 		if ( !m_objects_to_add.empty() ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 			for ( const auto& object : m_objects_to_add ) {
-				ASSERT( m_objects.find( object ) == m_objects.end(), "object " + object->GCString() + " already added" );
+				ASSERT( m_objects.find( object ) == m_objects.end(), "object " + std::to_string( (unsigned long)object ) + " already added" );
 			}
 #endif
 			for ( const auto& object : m_objects_to_add ) {
-				if ( removed_objects.find( object ) == removed_objects.end() ) {
-					m_pending_objects.insert( object );
-				}
+				ASSERT_NOLOG( removed_objects.find( object ) == removed_objects.end(), "object to be added already removed" );
+				m_pending_objects.insert(
+					{
+						object,
+						now
+					}
+				);
 			}
 			m_objects_to_add.clear();
 		}

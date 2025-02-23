@@ -7,5 +7,6 @@ SET( SRC ${SRC}
 	${PWD}/ArrayRef.cpp
 	${PWD}/ArrayRangeRef.cpp
 	${PWD}/ValueRef.cpp
+	${PWD}/Callable.cpp
 
 	PARENT_SCOPE )

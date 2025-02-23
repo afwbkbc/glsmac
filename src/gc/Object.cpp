@@ -12,8 +12,4 @@ void Object::GetReachableObjects( std::unordered_set< Object* >& active_objects 
 	active_objects.insert( this );
 }
 
-const std::string Object::GCString() const {
-	return std::to_string( (unsigned long)this );
-}
-
 }

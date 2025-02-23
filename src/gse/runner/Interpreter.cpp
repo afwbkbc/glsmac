@@ -1127,7 +1127,7 @@ Interpreter::Function::Function(
 	const std::vector< std::string >& parameters,
 	const Program* const program
 )
-	: value::Callable( gc_space )
+	: value::Callable( gc_space, context )
 	, runner( runner )
 	, context( context )
 	, parameters( parameters )
@@ -1158,7 +1158,6 @@ gse::Value* Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t
 	gse::Value* result = nullptr;
 	context->ForkAndExecute(
 		GSE_CALL, true, [ this, &arguments, &si, &ep, &result ]( context::ChildContext* const subctx ) {
-
 			for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
 				subctx->CreateVariable( parameters[ i ], arguments[ i ], si, ep );
 			}

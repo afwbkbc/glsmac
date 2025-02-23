@@ -402,10 +402,6 @@ const bool Value::operator>=( const Value& other ) const {
 #undef DEFAULT_COMPARE
 #undef DEFAULT_COMPARE_NE
 
-const std::string Value::GCString() const {
-	return gc::Object::GCString() + "( " + ToString() + " )";
-}
-
 Value* const Value::New( const Value* value ) {
 	auto* gc_space = value->m_gc_space;
 	ASSERT_NOLOG( gc_space, "value gc space is null" );

@@ -10,7 +10,7 @@
 namespace gse {
 namespace callable {
 
-#define NATIVE_CALL( ... ) VALUE( gse::callable::Native,, [ __VA_ARGS__ ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value*
+#define NATIVE_CALL( ... ) VALUE( gse::callable::Native,, ctx, [ __VA_ARGS__ ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value*
 
 // TODO: refactor these
 #define N_ARGS \
@@ -132,7 +132,7 @@ class Native : public value::Callable {
 public:
 	typedef std::function< Value*( GSE_CALLABLE, const value::function_arguments_t& arguments ) > executor_t;
 	Native() = delete;
-	Native( gc::Space* const gc_space, const executor_t& executor );
+	Native( gc::Space* const gc_space, context::Context* const ctx, const executor_t& executor );
 	virtual Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override;
 
 private:

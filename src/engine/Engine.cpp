@@ -106,7 +106,7 @@ Engine::Engine(
 	m_threads.push_back( t_network );
 
 	NEWV( t_gc, common::Thread, "GC" );
-	t_gc->SetIPS( 1 );
+	t_gc->SetIPS( gc::GC::COLLECTS_PER_SECOND );
 	NEW( m_gc, gc::GC );
 	t_gc->AddModule( m_gc );
 	m_threads.push_back( t_gc );

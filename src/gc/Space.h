@@ -3,6 +3,8 @@
 #include <mutex>
 #include <atomic>
 #include <unordered_set>
+#include <unordered_map>
+#include <chrono>
 
 #include "common/Common.h"
 
@@ -34,7 +36,7 @@ private:
 	std::unordered_set< Object* > m_objects_to_add = {};
 
 	// objects that were just created and have temporary protection because they need time to be assigned somewhere to become reachable
-	std::unordered_set< Object* > m_pending_objects = {};
+	std::unordered_map< Object*, uint64_t > m_pending_objects = {};
 
 	// objects that are already collectable
 	std::unordered_set< Object* > m_objects = {};

@@ -23,7 +23,7 @@ void Async::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exec
 			{
 				"stop",
 				// recursive NATIVE_CALL doesn't work
-				new gse::callable::Native( gc_space, [ timer_id ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) {
+				new gse::callable::Native( gc_space, ctx, [ timer_id ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) {
 					N_EXPECT_ARGS( 0 );
 					if ( !ctx->GetGSE()->GetAsync()->StopTimer( timer_id ) ) {
 						GSE_ERROR( EC.OPERATION_FAILED, "Timer is already stopped" );

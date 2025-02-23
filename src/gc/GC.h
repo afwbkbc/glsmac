@@ -15,6 +15,9 @@ class Space;
 
 CLASS( GC, common::Module )
 
+	static constexpr uint16_t COLLECTS_PER_SECOND = 1;
+	static constexpr uint16_t NEW_OBJECT_PROTECTION_TIME_MS = 1500; // new objects won't be removed until they are older than this
+
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;

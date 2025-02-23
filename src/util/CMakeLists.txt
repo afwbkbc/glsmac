@@ -12,5 +12,6 @@ SET( SRC ${SRC}
 	${PWD}/ConfigManager.cpp
 	${PWD}/String.cpp
 	${PWD}/LogHelper.cpp
+	${PWD}/Time.cpp
 
 	PARENT_SCOPE )

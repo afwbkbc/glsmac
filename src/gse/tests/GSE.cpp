@@ -17,8 +17,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 	class Sum : public value::Callable {
 	public:
-		Sum( gc::Space* const gc_space )
-			: value::Callable( gc_space ) {}
+		Sum( gc::Space* const gc_space, context::Context* const ctx )
+			: value::Callable( gc_space, ctx ) {}
 		Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 			int64_t result = 0;
 			for ( const auto& it : arguments ) {
@@ -46,26 +46,26 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 			class TestModuleY : public value::Callable {
 			public:
-				TestModuleY( gc::Space* const gc_space )
-					: Callable( gc_space ) {}
+				TestModuleY( gc::Space* const gc_space, context::Context* const ctx )
+					: Callable( gc_space, ctx ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'Y';
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_y, TestModuleY, gc_space );
+			NEWV( test_module_y, TestModuleY, gc_space, ctx );
 			gse->AddModule( "test_module_y", test_module_y );
 
 			class TestModuleX : public value::Callable {
 			public:
-				TestModuleX( gc::Space* const gc_space )
-					: Callable( gc_space ) {}
+				TestModuleX( gc::Space* const gc_space, context::Context* const ctx )
+					: Callable( gc_space, ctx ) {}
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 					modules_run_order += 'X';
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_x, TestModuleX, gc_space );
+			NEWV( test_module_x, TestModuleX, gc_space, ctx );
 			gse->AddModule( "test_module_x", test_module_x );
 
 			gse->Run();
@@ -83,8 +83,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 			class SetVariables : public value::Callable {
 			public:
-				SetVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space )
+				SetVariables( gc::Space* const gc_space, GSE* gse, context::Context* const ctx )
+					: value::Callable( gc_space, ctx )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -100,14 +100,14 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gc_space, gse );
+			NEWV( set_variables, SetVariables, gc_space, gse, ctx );
 			gse->AddModule( "set_variables", set_variables );
 
 			static std::string errmsg = "";
 			class CheckVariables : public value::Callable {
 			public:
-				CheckVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space )
+				CheckVariables( gc::Space* const gc_space, GSE* gse, context::Context* const ctx )
+					: value::Callable( gc_space, ctx )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -140,7 +140,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( check_variables, CheckVariables, gc_space, gse );
+			NEWV( check_variables, CheckVariables, gc_space, gse, ctx );
 			gse->AddModule( "check_variables", check_variables );
 
 			gse->Run();
@@ -159,15 +159,15 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 			class SetMethods : public value::Callable {
 			public:
-				SetMethods( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space )
+				SetMethods( gc::Space* const gc_space, GSE* gse, context::Context* const ctx )
+					: value::Callable( gc_space, ctx )
 					, gse( gse ) {}
 				GSE* gse;
 
 				class TestMethod : public value::Callable {
 				public:
-					TestMethod( gc::Space* const gc_space )
-						: value::Callable( gc_space ) {}
+					TestMethod( gc::Space* const gc_space, context::Context* const ctx )
+						: value::Callable( gc_space, ctx ) {}
 					Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
 						wasTestMethodCalled = true;
 						return VALUE( value::Null );
@@ -175,12 +175,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 				};
 
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
-					gse->SetGlobal( "test_method", VALUE( TestMethod ) );
-					gse->SetGlobal( "sum", VALUE( Sum ) );
+					gse->SetGlobal( "test_method", VALUE( TestMethod, , ctx ) );
+					gse->SetGlobal( "sum", VALUE( Sum, , ctx ) );
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_methods, SetMethods, gc_space, gse );
+			NEWV( set_methods, SetMethods, gc_space, gse, ctx );
 			gse->AddModule( "set_methods", set_methods );
 
 			gse->Run();
@@ -242,8 +242,8 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 			class SetVariables : public value::Callable {
 			public:
-				SetVariables( gc::Space* const gc_space, GSE* gse )
-					: value::Callable( gc_space )
+				SetVariables( gc::Space* const gc_space, GSE* gse, context::Context* const ctx )
+					: value::Callable( gc_space, ctx )
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
@@ -271,7 +271,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 
 					auto properties = value::object_properties_t{
 						{ "property_int", val3 },
-						{ "property_sum",    VALUE( Sum ) },
+						{ "property_sum",    VALUE( Sum, , ctx ) },
 						{ "property_string", VALUE( value::String, , "STRING" ) },
 					};
 					gse->SetGlobal( "testvar_obj3", VALUEEXT( value::Object, GSE_CALL, properties ) );
@@ -281,7 +281,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gc_space, gse );
+			NEWV( set_variables, SetVariables, gc_space, gse, ctx );
 			gse->AddModule( "set_variables", set_variables );
 
 			gse->Run();
