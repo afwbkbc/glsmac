@@ -51,13 +51,25 @@ Parser::StaticVars::StaticVars( const Parser* parser, gc::Space* const gc_space 
 }
 
 void Parser::StaticVars::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	GC_DEBUG_BEGIN( "StaticVars" );
+
+	// object is reachable
+	GC_DEBUG( "this", this );
+	active_objects.insert( this );
+
 	// static variables are reachable
+	GC_DEBUG_BEGIN( "static_vars" );
 	for ( const auto& object : m_static_vars ) {
 		if ( active_objects.find( object ) == active_objects.end() ) {
 			object->GetReachableObjects( active_objects );
 		}
+		else {
+			GC_DEBUG( "ref", object );
+		}
 	}
-	//active_objects.insert( m_static_vars.begin(), m_static_vars.end() );
+	GC_DEBUG_END();
+
+	GC_DEBUG_END();
 }
 
 Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) const {
@@ -65,15 +77,29 @@ Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) con
 }
 
 void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	GC_DEBUG_BEGIN( "Parser" );
+
 	m_gc_mutex.lock();
 	std::unordered_set< gse::Value* > static_vars = {};
 	collect_static_vars( static_vars );
 	m_gc_mutex.unlock();
+
+	// parser is reachable
+	GC_DEBUG( "this", this );
+	active_objects.insert( this );
+
+	GC_DEBUG_BEGIN( "static_vars" );
 	for ( const auto& object : static_vars ) {
 		if ( active_objects.find( object ) == active_objects.end() ) {
 			object->GetReachableObjects( active_objects );
 		}
+		else {
+			GC_DEBUG( "ref", object );
+		}
 	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_END();
 }
 
 const char Parser::get() const {

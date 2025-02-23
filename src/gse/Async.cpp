@@ -91,6 +91,7 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	m_process_timers_mutex.lock(); // wait for anything processing timers to finish
 	m_process_timers_mutex.unlock();
 	m_gc_mutex.lock();
+	Log( "PROCESSANDEXIT BEGIN" );
 	while ( !m_timers.empty() ) {
 		const auto& it = m_timers.begin();
 		const auto now = util::Time::Now();
@@ -100,32 +101,45 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 
 		//Log( "Waiting for " + std::to_string( sleep_for ) + "ms" );
 		if ( sleep_for > 0 ) {
+			m_gc_mutex.unlock();
 			std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
+			m_gc_mutex.lock();
 		}
 		ProcessTimers( it, ep );
 	}
 	m_gc_mutex.unlock();
+	Log( "PROCESSANDEXIT END" );
 }
 
 void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+	GC_DEBUG_BEGIN( "Async" );
 
 	// async is reachable
+	GC_DEBUG( "this", this );
 	active_objects.insert( this );
 
 	{
 		std::lock_guard< std::mutex > guard( m_gc_mutex );
+
 		// timer callables are reachable
+		GC_DEBUG_BEGIN( "timer_callables" );
 		for ( const auto& timers : m_timers ) {
 			for ( const auto& timer : timers.second ) {
 				auto* c = timer.second.callable;
 				if ( active_objects.find( c ) == active_objects.end() ) {
 					c->GetReachableObjects( active_objects );
 				}
+				else {
+					GC_DEBUG( "ref", c );
+				}
 				auto* ctx = timer.second.ctx;
 				ASSERT( active_objects.find( ctx ) != active_objects.end(), "callable context not reachable" );
 			}
 		}
+		GC_DEBUG_END();
 	}
+
+	GC_DEBUG_END();
 }
 
 void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {

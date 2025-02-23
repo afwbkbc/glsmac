@@ -12,6 +12,7 @@ class GC;
 namespace gc {
 
 class Space;
+class Object;
 
 CLASS( GC, common::Module )
 
@@ -21,6 +22,14 @@ CLASS( GC, common::Module )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	static void DebugLock();
+	static void DebugBegin( const std::string& what );
+	static void DebugEntry( const std::string& what, gc::Object* const object );
+	static void DebugEnd();
+	static void DebugUnlock();
+#endif
 
 private:
 	std::mutex m_spaces_mutex;

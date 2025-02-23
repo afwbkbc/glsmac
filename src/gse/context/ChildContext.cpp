@@ -53,13 +53,20 @@ void ChildContext::JoinContext() const {
 }
 
 void ChildContext::CollectWithDependencies( std::unordered_set< Object* >& active_objects ) {
+	GC_DEBUG_BEGIN( "ChildContext" );
 	Context::CollectWithDependencies( active_objects );
 
 	// parent context is reachable (if not added yet)
+	GC_DEBUG_BEGIN( "parent_context" );
 	ASSERT_NOLOG( m_parent_context, "parent context not set" );
 	if ( active_objects.find( m_parent_context ) == active_objects.end() ) {
 		m_parent_context->CollectWithDependencies( active_objects );
 	}
+	else {
+		GC_DEBUG( "ref", m_parent_context );
+	}
+	GC_DEBUG_END();
+	GC_DEBUG_END();
 }
 
 }

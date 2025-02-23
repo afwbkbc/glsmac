@@ -82,23 +82,42 @@ void Object::Unlink() {
 }
 
 void Object::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	GC_DEBUG_BEGIN( "Object" );
 
 	// object is reachable
+	GC_DEBUG( "this", this );
 	active_objects.insert( this );
 
 	// internal object context is reachable
 	ASSERT_NOLOG( m_ctx, "object ctx not set" );
+	GC_DEBUG_BEGIN( "internal_context" );
 	if ( active_objects.find( m_ctx ) == active_objects.end() ) {
 		m_ctx->CollectWithDependencies( active_objects );
 	}
-
-	// properties are reachable
-	for ( const auto& v : value ) {
-		if ( active_objects.find( v.second ) == active_objects.end() ) {
-			v.second->GetReachableObjects( active_objects );
-		}
+	else {
+		GC_DEBUG( "ref", m_ctx );
 	}
+	GC_DEBUG_END();
+
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+		// properties are reachable
+		GC_DEBUG_BEGIN( "properties" );
+		for ( const auto& v : value ) {
+			GC_DEBUG_BEGIN( v.first );
+			if ( active_objects.find( v.second ) == active_objects.end() ) {
+				v.second->GetReachableObjects( active_objects );
+			}
+			else {
+				GC_DEBUG( "ref", v.second );
+			}
+			GC_DEBUG_END();
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
 }
 
 context::ChildContext* const Object::GetContext() const {

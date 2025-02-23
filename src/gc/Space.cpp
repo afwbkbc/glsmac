@@ -41,7 +41,7 @@ Space::~Space() {
 void Space::Add( Object* object ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
 	std::lock_guard< std::mutex > guard( m_objects_to_add_mutex );
-	Log( "Adding object: " + std::to_string( (unsigned long)object ) );
+	//Log( "Adding object: " + std::to_string( (unsigned long)object ) );
 	ASSERT( m_objects.find( object ) == m_objects.end(), "object " + std::to_string( (unsigned long)object ) + " already exists" );
 	ASSERT( m_objects_to_add.find( object ) == m_objects_to_add.end(), "object " + std::to_string( (unsigned long)object ) + " already pending addition" );
 	m_objects_to_add.insert( object );
@@ -83,13 +83,16 @@ const bool Space::Collect() {
 	{
 		std::lock_guard< std::mutex > guard2( m_root_objects_mutex );
 		ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
-		for ( const auto& object : m_root_objects ) { // prevent deletion of root objects
-			m_reachable_objects_tmp.insert( object );
-		}
+		GC_DEBUG_LOCK();
 		Log( "Collecting from " + std::to_string( m_root_objects.size() ) + " root objects" );
 		for ( const auto& object : m_root_objects ) {
+			ASSERT_NOLOG( m_reachable_objects_tmp.find( object ) == m_reachable_objects_tmp.end(), "root already added" );
+			GC_DEBUG_BEGIN( "Root" );
+			m_reachable_objects_tmp.insert( object );
 			object->GetReachableObjects( m_reachable_objects_tmp );
+			GC_DEBUG_END();
 		}
+		GC_DEBUG_UNLOCK();
 	}
 
 	bool anything_removed = false;
