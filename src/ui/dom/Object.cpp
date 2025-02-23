@@ -89,7 +89,7 @@ Object::~Object() {
 	}
 };
 
-gse::Value* const Object::Wrap( gc::Space* const gc_space, const bool dynamic ) {
+gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
 		};
@@ -102,7 +102,7 @@ gse::Value* const Object::Wrap( gc::Space* const gc_space, const bool dynamic ) 
 			);
 		}
 		m_wrapobj = new gse::value::Object(
-			gc_space, nullptr, properties, m_tag, this, dynamic
+			GSE_CALL, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
 		);

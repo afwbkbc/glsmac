@@ -51,15 +51,15 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 	m_resource_idx.push_back( resource->m_id );
 }
 
-const map::tile::yields_t ResourceManager::GetYields( gc::Space* const gc_space, map::tile::Tile* tile, slot::Slot* slot ) {
+const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
 	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", {
 			{
 				"tile",
-				tile->Wrap( gc_space )
+				tile->Wrap( GSE_CALL, gc_space )
 			},
 			{
 				"player",
-				slot->Wrap( gc_space )
+				slot->Wrap( GSE_CALL, gc_space )
 			},
 		}
 	);
@@ -143,7 +143,7 @@ WRAPIMPL_BEGIN( ResourceManager )
 							},
 						}
 					);
-					return m_game->AddEvent( new event::DefineResource( m_game->GetSlotNum(), resource ) );
+					return m_game->AddEvent( GSE_CALL, new event::DefineResource( m_game->GetSlotNum(), resource ) );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported resource type: " + type );

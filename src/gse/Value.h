@@ -6,6 +6,8 @@
 
 #include "gc/Object.h"
 
+#include "gse/Types.h"
+
 namespace gc {
 class Space;
 }
@@ -15,6 +17,10 @@ class Buffer;
 }
 
 namespace gse {
+
+namespace context {
+class Context;
+}
 
 #define GSE_ERROR( _type, _text ) throw gse::Exception( _type, _text, GSE_CALL_NOGC );
 
@@ -38,26 +44,26 @@ namespace gse {
     static const gse::value::Object::object_class_t WRAP_CLASS;
 #define WRAPDEFS_PTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( gc::Space* const gc_space, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
     static _type* Unwrap( gse::Value* const value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( gc::Space* const gc_space, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
     static _type* Unwrap( gse::Value* const value ); \
     static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ); \
-    void OnWrapSet( const std::string& property_name );
+    void OnWrapSet( GSE_CALLABLE, const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( gc::Space* const gc_space, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
     static _type Unwrap( gse::Value* const value );
 #define WRAPIMPL_CLASS( _type ) \
     const gse::value::Object::object_class_t _type::WRAP_CLASS = #_type;
 #define WRAPIMPL_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    gse::Value* const _type::Wrap( gc::Space* const gc_space, const bool dynamic ) {
+    gse::Value* const _type::Wrap( GSE_CALLABLE, const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    gse::Value* const _type::Wrap( gc::Space* const gc_space, const bool dynamic ) {
+    gse::Value* const _type::Wrap( GSE_CALLABLE, const bool dynamic ) {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     const gse::value::object_properties_t properties = {
@@ -103,28 +109,28 @@ namespace gse {
     },
 
 #define WRAPIMPL_PROPS_EXTEND( _parent ) \
-    const auto wrapped_parent = _parent::Wrap( gc_space ); \
+    const auto wrapped_parent = _parent::Wrap( GSE_CALL ); \
     const auto& wrapped_parent_props = ( (gse::value::Object*)wrapped_parent )->value; \
     properties.insert( wrapped_parent_props.begin(), wrapped_parent_props.end() );
 #define WRAPIMPL_END_PTR() \
-    return VALUE( gse::value::Object,, nullptr, properties, WRAP_CLASS, this ); \
+    return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS, this ); \
 }
 #define WRAPIMPL_DYNAMIC_SETTERS( _type ) \
     }; \
-    return VALUE( gse::value::Object,, nullptr, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
+    return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
 } \
 void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) { \
     auto* obj = (_type*)wrapobj; \
     if ( !obj ) {}
 #define WRAPIMPL_END_NOPTR( _type ) \
-    return VALUE( gse::value::Object,, nullptr, properties, WRAP_CLASS ); \
+    return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS ); \
 }
 #define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
     else { \
         GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property does not exist" ); \
     } \
 } \
-void _type::OnWrapSet( const std::string& property_name ) {
+void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
 #define WRAPIMPL_DYNAMIC_END() \
 }
 #define WRAPIMPL_GET( _key, _type, _property ) \
@@ -136,7 +142,7 @@ void _type::OnWrapSet( const std::string& property_name ) {
     { \
         _key, \
         NATIVE_CALL( this ) { \
-            return _property->Wrap( gc_space ); \
+            return _property->Wrap( GSE_CALL ); \
         }) \
     },
 
@@ -146,7 +152,7 @@ void _type::OnWrapSet( const std::string& property_name ) {
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString() ); \
         } \
         obj->_property = ((gse::value::_type*)value)->value; \
-        obj->OnWrapSet( _key ); \
+        obj->OnWrapSet( GSE_CALL, _key ); \
     }
 
 #define UNWRAPIMPL_PTR( _type ) \
@@ -172,6 +178,9 @@ _type _type::Unwrap( gse::Value* const value ) { \
 
 class Value : public gc::Object {
 public:
+
+	virtual ~Value() = default;
+
 	enum type_t : uint8_t {
 		T_UNDEFINED,
 		T_NULL,
@@ -207,14 +216,14 @@ public:
 	OP( >= )
 #undef OP
 
-	const type_t type;
+	const type_t type = T_UNDEFINED;
 
 	const std::string GCString() const override;
 
 	Value* const New( const Value* value );
 
 	static void Serialize( types::Buffer* buf, Value* const type );
-	static Value* Unserialize( gc::Space* const gc_space, types::Buffer* buf );
+	static Value* Unserialize( GSE_CALLABLE, types::Buffer* buf );
 
 protected:
 	Value( gc::Space* const gc_space, const type_t type );

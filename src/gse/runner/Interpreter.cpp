@@ -293,7 +293,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 						// TODO: check move to parser
 						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f->ToString(), ctx, it->second->m_si, ep );
 					}
-
+					auto si = e.si;
 					auto* func = (Function*)f;
 					const auto result = func->Run(
 						m_gc_space,
@@ -301,7 +301,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 						it->second->m_si,
 						ep,
 						{
-							VALUE( value::Exception, , e, e.GetStackTrace() )
+							VALUEEXT( value::Exception, GSE_CALL, e, e.GetStackTrace() )
 						}
 					);
 					return result;
@@ -496,7 +496,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
-					return VALUE( value::Object, , nullptr, properties );
+					auto si = expression->m_si;
+					return VALUEEXT( value::Object, GSE_CALL, properties );
 				}
 			MATH_OP_END()
 		}
@@ -598,7 +599,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
-					return VALUE( value::Object, , nullptr, properties );
+					auto si = expression->m_si;
+					return VALUEEXT( value::Object, GSE_CALL, properties );
 				}
 			MATH_OP_END()
 		}
@@ -893,20 +895,17 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 		}
 		case Operand::OT_OBJECT: {
 			gse::Value* result = nullptr;
-			ctx->ForkAndExecute(
-				gc_space, ctx, operand->m_si, ep, false, [ this, &gc_space, &result, &operand, &ep, &ctx ]( context::ChildContext* const subctx ) {
-					result = VALUE( value::Object, , subctx, object_properties_t{} );
-					auto& properties = ( (value::Object*)result )->value;
-					subctx->CreateConst( "this", VALUE( gse::ValueRef, , result ), operand->m_si, ep );
-					const auto* obj = (program::Object*)operand;
-					for ( const auto& it : obj->ordered_properties ) {
-						if ( it.first == "this" ) {
-							throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
-						}
-						properties.insert_or_assign( it.first, EvaluateExpression( subctx, ep, it.second )->Clone() );
-					}
+			const auto* obj = (program::Object*)operand;
+			for ( const auto& it : obj->ordered_properties ) {
+				if ( it.first == "this" ) {
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
 				}
-			);
+			}
+			result = VALUE( value::Object, , ctx, obj->m_si, ep, object_properties_t{} );
+			auto& properties = ( (value::Object*)result )->value;
+			for ( const auto& it : obj->ordered_properties ) {
+				properties.insert_or_assign( it.first, EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second )->Clone() );
+			}
 			return result;
 		}
 		case Operand::OT_SCOPE: {

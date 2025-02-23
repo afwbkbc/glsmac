@@ -71,7 +71,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const v
 	const auto& it = m_callbacks.find( event );
 	Value* result = VALUE( gse::value::Undefined );
 	if ( it != m_callbacks.end() ) {
-		auto e = VALUE( gse::value::Object, , nullptr, args );
+		auto e = VALUEEXT( gse::value::Object, GSE_CALL, args );
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
 		for ( const auto& it2 : callbacks ) {
 			const auto& cb = it2.second.callable;

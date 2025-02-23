@@ -14,7 +14,7 @@ UncompleteTurn::UncompleteTurn( const size_t initiator_slot, const size_t turn_i
 	//
 }
 
-const std::string* UncompleteTurn::Validate( Game* game ) const {
+const std::string* UncompleteTurn::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( game->GetTurnId() != m_turn_id ) {
 		return Error( "Turn ID mismatch" );
 	}
@@ -24,7 +24,7 @@ const std::string* UncompleteTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const UncompleteTurn::Apply( Game* game ) const {
+gse::Value* const UncompleteTurn::Apply( GSE_CALLABLE, Game* game ) const {
 	game->UncompleteTurn( m_initiator_slot );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

@@ -31,7 +31,7 @@ SpawnUnit::SpawnUnit(
 	//
 }
 
-const std::string* SpawnUnit::Validate( Game* game ) const {
+const std::string* SpawnUnit::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( !game->GetUM() ) {
 		return Error( "Game is not initialized properly" );
 	}
@@ -41,7 +41,7 @@ const std::string* SpawnUnit::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const SpawnUnit::Apply( Game* game ) const {
+gse::Value* const SpawnUnit::Apply( GSE_CALLABLE, Game* game ) const {
 	auto* um = game->GetUM();
 	ASSERT_NOLOG( um, "um is null" );
 	auto* def = um->GetUnitDef( m_unit_def );
@@ -51,6 +51,7 @@ gse::Value* const SpawnUnit::Apply( Game* game ) const {
 	auto& owner = game->GetState()->m_slots->GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
 	auto* unit = new unit::Unit(
+		GSE_CALL,
 		um,
 		unit::Unit::GetNextId(),
 		def,
@@ -61,8 +62,8 @@ gse::Value* const SpawnUnit::Apply( Game* game ) const {
 		m_health,
 		false
 	);
-	game->GetUM()->SpawnUnit( unit );
-	return unit->Wrap( game->GetGCSpace() );
+	game->GetUM()->SpawnUnit( GSE_CALL, unit );
+	return unit->Wrap( GSE_CALL );
 }
 
 TS_BEGIN( SpawnUnit )

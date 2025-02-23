@@ -18,7 +18,7 @@ DefineAnimation::DefineAnimation( const size_t initiator_slot, animation::Def* d
 	//
 }
 
-const std::string* DefineAnimation::Validate( Game* game ) const {
+const std::string* DefineAnimation::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define animations" );
 	}
@@ -28,7 +28,7 @@ const std::string* DefineAnimation::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const DefineAnimation::Apply( Game* game ) const {
+gse::Value* const DefineAnimation::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetAM()->DefineAnimation( m_def );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

@@ -51,7 +51,13 @@ Parser::StaticVars::StaticVars( const Parser* parser, gc::Space* const gc_space 
 }
 
 void Parser::StaticVars::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
-	active_objects.insert( m_static_vars.begin(), m_static_vars.end() );
+	// static variables are reachable
+	for ( const auto& object : m_static_vars ) {
+		if ( active_objects.find( object ) == active_objects.end() ) {
+			object->GetReachableObjects( active_objects );
+		}
+	}
+	//active_objects.insert( m_static_vars.begin(), m_static_vars.end() );
 }
 
 Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) const {
@@ -59,8 +65,15 @@ Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) con
 }
 
 void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	collect_static_vars( active_objects );
+	m_gc_mutex.lock();
+	std::unordered_set< gse::Value* > static_vars = {};
+	collect_static_vars( static_vars );
+	m_gc_mutex.unlock();
+	for ( const auto& object : static_vars ) {
+		if ( active_objects.find( object ) == active_objects.end() ) {
+			object->GetReachableObjects( active_objects );
+		}
+	}
 }
 
 const char Parser::get() const {
@@ -326,11 +339,11 @@ X( Parser::static_var_i, int64_t, value::Int, m_static_vars_i )
 X( Parser::static_var_f, float, value::Float, m_static_vars_f )
 #undef X
 
-void Parser::collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const {
+void Parser::collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const {
 	static_vars.reserve( static_vars.size() + m_static_vars_s.size() + m_static_vars_f.size() + m_static_vars_i.size() );
 #define X( _m ) \
     for ( const auto& it : m_static_vars_s ) { \
-        static_vars.insert( (gc::Object*)it.second ); \
+        static_vars.insert( it.second ); \
     }
 	X( m_static_vars_s )
 	X( m_static_vars_i )

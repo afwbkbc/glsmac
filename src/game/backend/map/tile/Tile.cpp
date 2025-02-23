@@ -167,7 +167,7 @@ const std::string Tile::ToString() const {
 #define GETN( _n ) \
 { \
 	"get_" #_n, \
-	NATIVE_CALL( this ) { return _n->Wrap( gc_space ); } ) \
+	NATIVE_CALL( this ) { return _n->Wrap( GSE_CALL ); } ) \
 }
 
 WRAPIMPL_BEGIN( Tile )
@@ -234,7 +234,7 @@ WRAPIMPL_BEGIN( Tile )
 				N_EXPECT_ARGS( 0 );
 				gse::value::array_elements_t result = {};
 				for ( const auto& n : neighbours ) {
-					result.push_back( n->Wrap( gc_space ) );
+					result.push_back( n->Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, result );
 			})
@@ -245,7 +245,7 @@ WRAPIMPL_BEGIN( Tile )
 				N_EXPECT_ARGS( 0 );
 				gse::value::array_elements_t result = {};
 				for ( auto& it : units ) {
-					result.push_back( it.second->Wrap( gc_space ) );
+					result.push_back( it.second->Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, result );
 			} )
@@ -255,7 +255,7 @@ WRAPIMPL_BEGIN( Tile )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				if ( base ) {
-					return base->Wrap( gc_space );
+					return base->Wrap( GSE_CALL );
 				}
 				else {
 					return VALUE( gse::value::Null );

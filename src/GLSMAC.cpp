@@ -146,7 +146,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 	WRAPIMPL_PROPS
 		{
 			"ui",
-			m_ui->Wrap( gc_space, true )
+			m_ui->Wrap( GSE_CALL, true )
 		},
 		{
 			"run",
@@ -376,13 +376,15 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	AsyncLoad( "Initializing game state", [ this ] {
-		m_state = new game::backend::State( m_gc_space, this );
-		TriggerObject( this, "configure_state", {
-			{
-				"fm",
-				m_state->GetFM()->Wrap( m_gc_space, true ),
-			}
-		} );
+		m_state = new game::backend::State( m_gc_space, m_ctx, this );
+		m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+			TriggerObject( this, "configure_state", {
+				{
+					"fm",
+					m_state->GetFM()->Wrap( GSE_CALL, true ),
+				}
+			} );
+		});
 	}, on_complete );
 }
 
@@ -427,7 +429,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	TriggerObject( this, "configure_game", {
 		{
 			"game",
-			game->Wrap( m_gc_space, true ),
+			game->Wrap( GSE_CALL, true ),
 		}
 	} );
 
@@ -450,7 +452,7 @@ void GLSMAC::RunMain() {
 		for ( const auto& main : m_main_callables ) {
 			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 			gse::ExecutionPointer ep;
-			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space ) } );
+			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space, m_ctx, {}, ep ) } );
 		}
 	} catch ( const gse::Exception& e ) {
 		util::LogHelper::Println( e.ToString() );

@@ -6,10 +6,9 @@
 namespace gse {
 namespace value {
 
-Exception::Exception( gc::Space* const gc_space, const gse::Exception& exception, const std::vector< std::string >& stacktrace )
+Exception::Exception( GSE_CALLABLE, const gse::Exception& exception, const std::vector< std::string >& stacktrace )
 	: Object(
-	gc_space,
-	nullptr,
+	GSE_CALL,
 	{
 		{
 			"type",

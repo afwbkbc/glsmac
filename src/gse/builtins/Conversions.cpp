@@ -28,9 +28,9 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 	if ( arguments.size() == 4 ) { \
 		N_GETVALUE( a, 3, _type ); \
 	    if ( a < _min || a > _max ) GSE_ERROR( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ) ); \
-		return _constructor( r, g, b, a ).Wrap( gc_space ); \
+		return _constructor( r, g, b, a ).Wrap( GSE_CALL ); \
 	} \
-	return _constructor( r, g, b ).Wrap( gc_space ); \
+	return _constructor( r, g, b ).Wrap( GSE_CALL ); \
 }
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {

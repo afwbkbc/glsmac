@@ -81,7 +81,7 @@ void BaseManager::DefinePop( base::PopDef* pop_def ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-void BaseManager::SpawnBase( base::Base* base ) {
+void BaseManager::SpawnBase( GSE_CALLABLE, base::Base* base ) {
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_bases.push_back( base );
 		return;
@@ -130,7 +130,7 @@ void BaseManager::SpawnBase( base::Base* base ) {
 		state->TriggerObject( this, "base_spawn",{
 			{
 				"base",
-				base->Wrap( m_game->GetGCSpace() )
+				base->Wrap( GSE_CALL )
 			},
 		});
 	}
@@ -142,9 +142,9 @@ const std::map< size_t, Base* >& BaseManager::GetBases() const {
 	return m_bases;
 }
 
-void BaseManager::ProcessUnprocessed() {
+void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	for ( auto& it : m_unprocessed_bases ) {
-		SpawnBase( it );
+		SpawnBase( GSE_CALL, it );
 	}
 	m_unprocessed_bases.clear();
 }
@@ -251,7 +251,7 @@ WRAPIMPL_BEGIN( BaseManager )
 					flags |= base::PopDef::PF_TILE_WORKER;
 				}
 
-				return m_game->AddEvent( new event::DefinePop(
+				return m_game->AddEvent( GSE_CALL, new event::DefinePop(
 					m_game->GetSlotNum(),
 					new base::PopDef( id, name, rh, rp, flags )
 				) );
@@ -271,7 +271,7 @@ WRAPIMPL_BEGIN( BaseManager )
 					N_GET_CALLABLE( on_spawn, 3 );
 				}
 
-				return m_game->AddEvent( new event::SpawnBase(
+				return m_game->AddEvent( GSE_CALL, new event::SpawnBase(
 					m_game->GetSlotNum(),
 					owner->GetIndex(),
 					tile->coord.x,
@@ -304,7 +304,7 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
 }
 
-void BaseManager::Unserialize( types::Buffer& buf ) {
+void BaseManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
@@ -325,7 +325,7 @@ void BaseManager::Unserialize( types::Buffer& buf ) {
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnBase( base::Base::Unserialize( b, m_game ) );
+		SpawnBase( GSE_CALL, base::Base::Unserialize( b, m_game ) );
 	}
 
 	base::Base::SetNextId( buf.ReadInt() );

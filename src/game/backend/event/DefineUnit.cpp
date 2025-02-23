@@ -14,16 +14,16 @@ DefineUnit::DefineUnit( const size_t initiator_slot, unit::Def* def )
 	//
 }
 
-const std::string* DefineUnit::Validate( Game* game ) const {
+const std::string* DefineUnit::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define units" );
 	}
 	return Ok();
 }
 
-gse::Value* const DefineUnit::Apply( Game* game ) const {
+gse::Value* const DefineUnit::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetUM()->DefineUnit( m_def );
-	return m_def->Wrap( game->GetGCSpace() );
+	return m_def->Wrap( GSE_CALL );
 }
 
 TS_BEGIN( DefineUnit )

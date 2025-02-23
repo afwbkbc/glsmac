@@ -180,7 +180,7 @@ WRAPIMPL_BEGIN( Slot )
 		},
 		{
 			"faction",
-			player->GetFaction()->Wrap( gc_space )
+			player->GetFaction()->Wrap( GSE_CALL, gc_space )
 		},
 	};
 WRAPIMPL_END_PTR()

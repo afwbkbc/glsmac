@@ -19,14 +19,14 @@ UnlockTiles::UnlockTiles(
 	//
 }
 
-const std::string* UnlockTiles::Validate( Game* game ) const {
+const std::string* UnlockTiles::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to unlock tiles" );
 	}
 	return ValidateTilePositions( game, true, m_lock_owner_slot );
 }
 
-gse::Value* const UnlockTiles::Apply( Game* game ) const {
+gse::Value* const UnlockTiles::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetTM()->UnlockTiles( m_lock_owner_slot, m_tile_positions );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

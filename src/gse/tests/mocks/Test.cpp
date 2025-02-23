@@ -56,6 +56,7 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 		{
 			"get_current_time_nano",
 			NATIVE_CALL() {
+
 				return VALUE( value::Int,, std::chrono::time_point_cast< std::chrono::nanoseconds >( std::chrono::system_clock::now() ).time_since_epoch().count() );
 			} )
 		},
@@ -86,7 +87,7 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 	};
 	{
 		ExecutionPointer ep;
-		ctx->CreateVariable( "test", VALUE( value::Object,, nullptr, mocks ), {}, ep );
+		ctx->CreateVariable( "test", VALUE( value::Object,, ctx, {}, ep, mocks ), {}, ep );
 	}
 }
 

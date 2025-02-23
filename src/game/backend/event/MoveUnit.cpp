@@ -16,7 +16,7 @@ MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const bac
 	, m_unit_id( unit_id )
 	, m_direction( direction ) {}
 
-const std::string* MoveUnit::Validate( Game* game ) const {
+const std::string* MoveUnit::Validate( GSE_CALLABLE, Game* game ) const {
 	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
@@ -37,10 +37,10 @@ const std::string* MoveUnit::Validate( Game* game ) const {
 		return Error( "Destination tile is locked" );
 	}
 
-	return game->GetUM()->MoveUnitValidate( unit, dst_tile );
+	return game->GetUM()->MoveUnitValidate( GSE_CALL, unit, dst_tile );
 }
 
-void MoveUnit::Resolve( Game* game ) {
+void MoveUnit::Resolve( GSE_CALLABLE, Game* game ) {
 	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
 	auto* src_tile = unit->GetTile();
@@ -48,14 +48,14 @@ void MoveUnit::Resolve( Game* game ) {
 	auto* dst_tile = src_tile->GetNeighbour( m_direction );
 	ASSERT_NOLOG( dst_tile, "dst tile not set" );
 
-	m_resolutions = game->GetUM()->MoveUnitResolve( unit, dst_tile );
+	m_resolutions = game->GetUM()->MoveUnitResolve( GSE_CALL, unit, dst_tile );
 }
 
-gse::Value* const MoveUnit::Apply( Game* game ) const {
+gse::Value* const MoveUnit::Apply( GSE_CALLABLE, Game* game ) const {
 	auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	ASSERT_NOLOG( unit, "unit not found" );
 	ASSERT_NOLOG( m_resolutions, "resolutions is null" );
-	game->GetUM()->MoveUnitApply( unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
+	game->GetUM()->MoveUnitApply( GSE_CALL, unit, unit->GetTile()->GetNeighbour( m_direction ), m_resolutions );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
@@ -74,12 +74,12 @@ void MoveUnit::Serialize( types::Buffer& buf, const MoveUnit* event ) {
 	buf.WriteString( b.ToString() );
 }
 
-MoveUnit* MoveUnit::Unserialize( gc::Space* const gc_space, types::Buffer& buf, const size_t initiator_slot ) {
+MoveUnit* MoveUnit::Unserialize( GSE_CALLABLE, types::Buffer& buf, const size_t initiator_slot ) {
 	const auto unit_id = buf.ReadInt();
 	const auto direction = (map::tile::direction_t)buf.ReadInt();
 	auto* result = new MoveUnit( initiator_slot, unit_id, direction );
 	types::Buffer b( buf.ReadString() );
-	result->m_resolutions = gse::Value::Unserialize( gc_space, &b );
+	result->m_resolutions = gse::Value::Unserialize( GSE_CALL, &b );
 	return result;
 }
 

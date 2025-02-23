@@ -15,14 +15,14 @@ DefinePop::DefinePop( const size_t initiator_slot, base::PopDef* pop_def )
 	//
 }
 
-const std::string* DefinePop::Validate( Game* game ) const {
+const std::string* DefinePop::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define units" );
 	}
 	return Ok();
 }
 
-gse::Value* const DefinePop::Apply( Game* game ) const {
+gse::Value* const DefinePop::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetBM()->DefinePop( m_pop_def );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

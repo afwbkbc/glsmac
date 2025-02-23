@@ -15,7 +15,7 @@ CompleteTurn::CompleteTurn( const size_t initiator_slot, const size_t turn_id )
 	//
 }
 
-const std::string* CompleteTurn::Validate( Game* game ) const {
+const std::string* CompleteTurn::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( game->GetTurnId() != m_turn_id ) {
 		return Error( "Turn ID mismatch ( " + std::to_string( game->GetTurnId() ) + " != " + std::to_string( m_turn_id ) + " )" );
 	}
@@ -25,8 +25,8 @@ const std::string* CompleteTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const CompleteTurn::Apply( Game* game ) const {
-	game->CompleteTurn( m_initiator_slot );
+gse::Value* const CompleteTurn::Apply( GSE_CALLABLE, Game* game ) const {
+	game->CompleteTurn( GSE_CALL, m_initiator_slot );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 

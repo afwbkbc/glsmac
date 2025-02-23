@@ -18,11 +18,11 @@ RequestTileLocks::RequestTileLocks(
 	//
 }
 
-const std::string* RequestTileLocks::Validate( Game* game ) const {
+const std::string* RequestTileLocks::Validate( GSE_CALLABLE, Game* game ) const {
 	return ValidateTilePositions( game, false );
 }
 
-gse::Value* const RequestTileLocks::Apply( Game* game ) const {
+gse::Value* const RequestTileLocks::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetTM()->RequestTileLocks( m_initiator_slot, m_tile_positions );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

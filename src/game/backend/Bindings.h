@@ -38,6 +38,7 @@ public:
 	void RunMain();
 
 	gc::Space* const GetGCSpace() const;
+	gse::context::Context* const GetContext() const;
 
 	gse::Value* const Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
 

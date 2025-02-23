@@ -35,12 +35,16 @@ class Slots;
 
 CLASS2( State, common::Class, gse::Wrappable )
 
-	State( gc::Space* const gc_space, GLSMAC* glsmac );
+	State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac );
 	virtual ~State();
 
 	void SetGame( Game* game );
 	void UnsetGame();
 	Game* GetGame() const;
+
+	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
+
+	void WithGSE( const gse_func_t& f );
 
 	settings::Settings m_settings = {};
 	slot::Slots* m_slots;
@@ -79,7 +83,9 @@ CLASS2( State, common::Class, gse::Wrappable )
 	const types::Buffer Serialize() const;
 	void Unserialize( types::Buffer buf );
 
-	gc::Space* m_gc_space = nullptr; // not const yet because in legacy ui it will be set by bindings
+	// not const yet because in legacy ui these will be set by bindings
+	gc::Space* m_gc_space = nullptr;
+	gse::context::Context* m_ctx = nullptr;
 
 private:
 

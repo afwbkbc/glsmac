@@ -31,7 +31,8 @@ const exception_ec_t EC = {
 Exception::Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE_NOGC )
 	: types::Exception( class_name, reason )
 	, class_name( class_name )
-	, reason( reason ) {
+	, reason( reason )
+	, si( si ) {
 	ep.WithSI(
 		si, [ this, &ep, &ctx, &si ]() {
 			const auto& st = ep.GetStackTrace();

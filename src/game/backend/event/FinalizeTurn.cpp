@@ -14,7 +14,7 @@ FinalizeTurn::FinalizeTurn( const size_t initiator_slot )
 	//
 }
 
-const std::string* FinalizeTurn::Validate( Game* game ) const {
+const std::string* FinalizeTurn::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Turn can only be finalized by master" );
 	}
@@ -24,8 +24,8 @@ const std::string* FinalizeTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const FinalizeTurn::Apply( Game* game ) const {
-	game->FinalizeTurn();
+gse::Value* const FinalizeTurn::Apply( GSE_CALLABLE, Game* game ) const {
+	game->FinalizeTurn( GSE_CALL );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 

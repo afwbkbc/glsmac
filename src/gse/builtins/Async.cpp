@@ -33,7 +33,7 @@ void Async::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exec
 			}
 		};
 
-		return VALUE( value::Object,, nullptr, properties, "async" );
+		return VALUEEXT( value::Object, GSE_CALL, properties, "async" );
 	} ), ep );
 
 }

@@ -108,52 +108,58 @@ void TileManager::ProcessTileLockRequests() {
 			const auto tile_lock_requests = m_tile_lock_requests;
 			m_tile_lock_requests.clear();
 			const auto slot_num = m_game->GetSlotNum();
-			for ( const auto& req : tile_lock_requests ) {
-				const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();
-				if ( slot_state != slot::Slot::SS_PLAYER ) {
-					// player disconnected?
-					Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( slot_state ) + ")" );
-					continue;
-				}
-				auto it = m_tile_locks.find( req.initiator_slot );
-				if ( it == m_tile_locks.end() ) {
-					it = m_tile_locks.insert(
-						{
-							req.initiator_slot,
-							{}
-						}
-					).first;
-				}
-				auto& locks = it->second;
-				if ( req.is_lock ) {
-					// lock
-					Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-					locks.push_back( TileLock{ req.tile_positions } );
-					auto e = new event::LockTiles( slot_num, req.tile_positions, req.initiator_slot );
-					e->SetDestinationSlot( req.initiator_slot );
-					m_game->AddEvent( e );
-				}
-				else {
-					// unlock
-					bool found = false;
-					for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
-						if ( locks_it->Matches( req.tile_positions ) ) {
-							found = true;
-							Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-							locks.erase( locks_it );
-							if ( locks.empty() ) {
-								m_tile_locks.erase( it );
+			if ( !tile_lock_requests.empty() ) {
+				m_game->GetState()->WithGSE(
+					[ this, &tile_lock_requests, &state, &slot_num ]( GSE_CALLABLE ) {
+						for ( const auto& req : tile_lock_requests ) {
+							const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();
+							if ( slot_state != slot::Slot::SS_PLAYER ) {
+								// player disconnected?
+								Log( "Skipping tile locks/unlocks for slot " + std::to_string( req.initiator_slot ) + " (invalid slot state: " + std::to_string( slot_state ) + ")" );
+								continue;
 							}
-							auto e = new event::UnlockTiles( slot_num, req.tile_positions, req.initiator_slot );
-							e->SetDestinationSlot( req.initiator_slot );
-							m_game->AddEvent( e );
-							break;
+							auto it = m_tile_locks.find( req.initiator_slot );
+							if ( it == m_tile_locks.end() ) {
+								it = m_tile_locks.insert(
+									{
+										req.initiator_slot,
+										{}
+									}
+								).first;
+							}
+							auto& locks = it->second;
+							if ( req.is_lock ) {
+								// lock
+								Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+								locks.push_back( TileLock{ req.tile_positions } );
+								auto e = new event::LockTiles( slot_num, req.tile_positions, req.initiator_slot );
+								e->SetDestinationSlot( req.initiator_slot );
+								m_game->AddEvent( GSE_CALL, e );
+							}
+							else {
+								// unlock
+								bool found = false;
+								for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
+									if ( locks_it->Matches( req.tile_positions ) ) {
+										found = true;
+										Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+										locks.erase( locks_it );
+										if ( locks.empty() ) {
+											m_tile_locks.erase( it );
+										}
+										auto e = new event::UnlockTiles( slot_num, req.tile_positions, req.initiator_slot );
+										e->SetDestinationSlot( req.initiator_slot );
+										m_game->AddEvent( GSE_CALL, e );
+										break;
+									}
+								}
+								if ( !found ) {
+									Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+								}
+							}
 						}
 					}
-					if ( !found ) {
-						Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
-					}
-				}
+				);
 			}
 		}
 	}
@@ -207,7 +213,7 @@ WRAPIMPL_BEGIN( TileManager )
 				if ( x % 2 != y % 2 ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
-				return m->GetTile( x, y )->Wrap( gc_space );
+				return m->GetTile( x, y )->Wrap( GSE_CALL, gc_space );
 			} )
 		},
 		{

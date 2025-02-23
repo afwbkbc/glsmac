@@ -43,6 +43,7 @@ public:
 
 	const std::string class_name;
 	const std::string reason;
+	const si_t si;
 
 	const stacktrace_t& GetStackTrace() const;
 	const std::string ToString() const;

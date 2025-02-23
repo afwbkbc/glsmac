@@ -16,14 +16,14 @@ DefineResource::DefineResource( const size_t initiator_slot, resource::Resource*
 	//
 }
 
-const std::string* DefineResource::Validate( Game* game ) const {
+const std::string* DefineResource::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define resources" );
 	}
 	return Ok();
 }
 
-gse::Value* const DefineResource::Apply( Game* game ) const {
+gse::Value* const DefineResource::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetRM()->DefineResource( m_resource );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

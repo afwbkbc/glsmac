@@ -31,6 +31,7 @@ public:
 	static const void SetNextId( const size_t id );
 
 	Unit(
+		GSE_CALLABLE,
 		UnitManager* um,
 		const size_t id,
 		Def* def,
@@ -58,10 +59,10 @@ public:
 
 	const std::string& GetMoraleString() const;
 
-	void SetTile( map::tile::Tile* tile );
+	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, UnitManager* um );
+	static Unit* Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um );
 
 	WRAPDEFS_DYNAMIC( Unit );
 

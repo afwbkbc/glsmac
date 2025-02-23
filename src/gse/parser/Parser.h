@@ -34,7 +34,7 @@ CLASS2( Parser, common::Class, gc::Object )
 	public:
 		void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 	private:
-		std::unordered_set< gc::Object* > m_static_vars = {};
+		std::unordered_set< gse::Value* > m_static_vars = {};
 	};
 	StaticVars* const GetStaticVars( gc::Space* const gc_space ) const;
 
@@ -292,7 +292,7 @@ protected:
 	X( static_var_f, float )
 #undef X
 
-	virtual void collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const;
+	virtual void collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const;
 
 private:
 	bool m_is_parsed = false;

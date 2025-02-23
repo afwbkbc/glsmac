@@ -233,7 +233,11 @@ void Client::ProcessEvent( const network::Event& event ) {
 							if ( m_on_game_event_validate && m_on_game_event_apply ) {
 								auto buf = types::Buffer( packet.data.str );
 								std::vector< backend::event::Event* > game_events = {};
-								backend::event::Event::UnserializeMultiple( GetGCSpace(), buf, game_events );
+								m_state->WithGSE(
+									[ &buf, &game_events ]( GSE_CALLABLE ) {
+										backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+									}
+								);
 								for ( const auto& game_event : game_events ) {
 									Log( "Got game event: " + game_event->ToString() );
 									m_on_game_event_validate( game_event );

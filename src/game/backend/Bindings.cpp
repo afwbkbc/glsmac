@@ -61,11 +61,13 @@ void Bindings::RunMainScript() {
 
 void Bindings::RunMain() {
 	auto* gc_space = m_gse->GetGCSpace();
+	auto si = m_si_internal;
+	auto* ctx = m_gse_context;
+	gse::ExecutionPointer ep;
 	ASSERT_NOLOG( gc_space, "gc space is null" );
 	for ( const auto& main : m_main_callables ) {
 		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
-		auto gm = m_state->Wrap( gc_space );
-		gse::ExecutionPointer ep;
+		auto gm = m_state->Wrap( GSE_CALL, gc_space );
 		((gse::value::Callable*)main)->Run( gc_space, m_gse_context, m_si_internal, ep, { gm });
 	}
 }
@@ -73,6 +75,11 @@ void Bindings::RunMain() {
 gc::Space* const Bindings::GetGCSpace() const {
 	ASSERT_NOLOG( m_gse, "gse not set" );
 	return m_gse->GetGCSpace();
+}
+
+gse::context::Context* const Bindings::GetContext() const {
+	ASSERT_NOLOG( m_gse_context, "gse context not set" );
+	return m_gse_context;
 }
 
 gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {

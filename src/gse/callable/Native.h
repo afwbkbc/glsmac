@@ -136,7 +136,7 @@ public:
 	virtual Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override;
 
 private:
-	const executor_t m_executor;
+	const executor_t m_executor = nullptr;
 };
 
 }

@@ -264,7 +264,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
-		return obj->Wrap( gc_space, true );
+		return obj->Wrap( GSE_CALL, true );
 	} ) );
 }
 

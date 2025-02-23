@@ -11,8 +11,9 @@
 namespace game {
 namespace backend {
 
-State::State( gc::Space* const gc_space, GLSMAC* glsmac )
+State::State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac )
 	: m_gc_space( gc_space )
+	, m_ctx( ctx )
 	, m_glsmac( glsmac )
 	, m_slots( new slot::Slots( this ) ) {
 	NEW( m_fm, faction::FactionManager );
@@ -33,14 +34,16 @@ void State::SetGame( Game* game ) {
 	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
-	TriggerObject(
-		this, "start", {
-			{
-				"game",
-				m_game->Wrap( game->GetGCSpace() )
+	WithGSE( [ this ]( GSE_CALLABLE ){
+		TriggerObject(
+			this, "start", {
+				{
+					"game",
+					m_game->Wrap( GSE_CALL )
+				}
 			}
-		}
-	);
+		);
+	});
 }
 
 void State::UnsetGame() {
@@ -50,6 +53,11 @@ void State::UnsetGame() {
 
 Game* State::GetGame() const {
 	return m_game;
+}
+
+void State::WithGSE( const gse_func_t& f ) {
+	gse::ExecutionPointer ep;
+	f( m_gc_space, m_ctx, {}, ep );
 }
 
 void State::Iterate() {
@@ -121,6 +129,7 @@ void State::InitBindings() {
 		Log( "Initializing bindings" );
 		m_bindings = new Bindings( this );
 		m_gc_space = m_bindings->GetGCSpace();
+		m_ctx = m_bindings->GetContext();
 		try {
 			m_bindings->RunMainScript();
 		}
@@ -195,7 +204,7 @@ WRAPIMPL_BEGIN( State )
 	WRAPIMPL_PROPS
 		{
 			"fm",
-			m_fm->Wrap( gc_space, true )
+			m_fm->Wrap( GSE_CALL, true )
 		},
 	};
 WRAPIMPL_END_PTR()

@@ -126,7 +126,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 						duration_ms,
 						sound
 					);
-					return m_game->AddEvent( new event::DefineAnimation( m_game->GetSlotNum(), def ) );
+					return m_game->AddEvent( GSE_CALL, new event::DefineAnimation( m_game->GetSlotNum(), def ) );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );

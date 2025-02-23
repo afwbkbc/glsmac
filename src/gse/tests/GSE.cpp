@@ -239,7 +239,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 		"test if variables are assigned and reassigned correctly",
 		GT() {
 			auto* gc_space = gse->GetGCSpace();
-			
+
 			class SetVariables : public value::Callable {
 			public:
 				SetVariables( gc::Space* const gc_space, GSE* gse )
@@ -260,9 +260,9 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					VALUE_SET( value::Int, val3, 20 ); // this should not update testvar_second
 					gse->SetGlobal( "testvar_third", val3 );
 
-					gse->SetGlobal( "testvar_obj1", VALUE( value::Object, , nullptr ) );
+					gse->SetGlobal( "testvar_obj1", VALUEEXT( value::Object, GSE_CALL ) );
 
-					auto obj2 = VALUE( value::Object, , nullptr );
+					auto obj2 = VALUEEXT( value::Object, GSE_CALL );
 					auto data2 = VALUE_DATA( value::Object, obj2 );
 					data2->Set( "property_int", VALUE( value::Int, , 555 ), GSE_CALL );
 					data2->Set( "property_bool", VALUE( value::Bool, , false ), GSE_CALL );
@@ -274,7 +274,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 						{ "property_sum",    VALUE( Sum ) },
 						{ "property_string", VALUE( value::String, , "STRING" ) },
 					};
-					gse->SetGlobal( "testvar_obj3", VALUE( value::Object, , nullptr, properties ) );
+					gse->SetGlobal( "testvar_obj3", VALUEEXT( value::Object, GSE_CALL, properties ) );
 
 					VALUE_SET( value::Int, val3, 30 ); // this should update testvar_third and testvar_obj3.property_int
 

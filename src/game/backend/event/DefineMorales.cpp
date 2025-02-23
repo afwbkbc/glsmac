@@ -15,14 +15,14 @@ DefineMorales::DefineMorales( const size_t initiator_slot, unit::MoraleSet* mora
 	//
 }
 
-const std::string* DefineMorales::Validate( Game* game ) const {
+const std::string* DefineMorales::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to define units" );
 	}
 	return Ok();
 }
 
-gse::Value* const DefineMorales::Apply( Game* game ) const {
+gse::Value* const DefineMorales::Apply( GSE_CALLABLE, Game* game ) const {
 	game->GetUM()->DefineMoraleSet( m_moraleset );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

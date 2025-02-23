@@ -343,19 +343,19 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( const gse::Exception& e );
-	gse::Value* const AddEvent( event::Event* event );
+	gse::Value* const AddEvent( GSE_CALLABLE, event::Event* event );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
 	const bool IsTurnChecksumValid( const util::crc32::crc_t checksum ) const;
-	void CompleteTurn( const size_t slot_num );
+	void CompleteTurn( GSE_CALLABLE, const size_t slot_num );
 	void UncompleteTurn( const size_t slot_num );
-	void FinalizeTurn();
+	void FinalizeTurn( GSE_CALLABLE );
 	void AdvanceTurn( const size_t turn_id );
 
-	void GlobalFinalizeTurn();
-	void GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum );
-	void GlobalAdvanceTurn();
+	void GlobalFinalizeTurn( GSE_CALLABLE );
+	void GlobalProcessTurnFinalized( GSE_CALLABLE, const size_t slot_num, const util::crc32::crc_t checksum );
+	void GlobalAdvanceTurn( GSE_CALLABLE );
 
 	faction::Faction* GetFaction( const std::string& id ) const;
 
@@ -369,12 +369,12 @@ public:
 
 private:
 
-	void ValidateEvent( event::Event* event );
-	gse::Value* const ProcessEvent( event::Event* event );
+	void ValidateEvent( GSE_CALLABLE, event::Event* event );
+	gse::Value* const ProcessEvent( GSE_CALLABLE, event::Event* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
-	void UpdateYields( map::tile::Tile* tile ) const;
+	void UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const;
 
 	map::tile::TileManager* m_tm = nullptr;
 	resource::ResourceManager* m_rm = nullptr;

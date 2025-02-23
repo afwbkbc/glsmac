@@ -41,10 +41,10 @@ public:
 	virtual ~Event() = default;
 
 	static const types::Buffer Serialize( const Event* event );
-	static Event* Unserialize( gc::Space* const gc_space, types::Buffer& buf );
+	static Event* Unserialize( GSE_CALLABLE, types::Buffer& buf );
 
 	static const types::Buffer SerializeMultiple( const std::vector< Event* >& events );
-	static void UnserializeMultiple( gc::Space* gc_space, types::Buffer& buf, std::vector< Event* >& events_out );
+	static void UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< Event* >& events_out );
 
 	static const bool IsBroadcastable( const event_type_t type );
 
@@ -55,9 +55,9 @@ public:
 	const bool IsProcessableBy( const uint8_t destination_slot ) const;
 	const bool IsSendableTo( const uint8_t destination_slot ) const;
 
-	virtual const std::string* Validate( Game* game ) const = 0;
-	virtual void Resolve( Game* game ) {};
-	virtual gse::Value* const Apply( Game* game ) const = 0;
+	virtual const std::string* Validate( GSE_CALLABLE, Game* game ) const = 0;
+	virtual void Resolve( GSE_CALLABLE, Game* game ) {};
+	virtual gse::Value* const Apply( GSE_CALLABLE, Game* game ) const = 0;
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	bool m_is_validated = false;

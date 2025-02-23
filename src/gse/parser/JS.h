@@ -595,7 +595,7 @@ private:
 	gse::Value* const static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f );
 	std::unordered_map< predef_op_t, gse::Value* > m_static_vars_p = {};
 
-	void collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const override;
+	void collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const override;
 
 };
 

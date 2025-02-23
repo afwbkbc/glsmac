@@ -30,6 +30,7 @@ const void Unit::SetNextId( const size_t id ) {
 }
 
 Unit::Unit(
+	GSE_CALLABLE,
 	UnitManager* um,
 	const size_t id,
 	Def* def,
@@ -52,7 +53,7 @@ Unit::Unit(
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
-	SetTile( tile );
+	SetTile( GSE_CALL, tile );
 }
 
 const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
@@ -66,7 +67,7 @@ const std::string& Unit::GetMoraleString() const {
 	return m_def->m_moraleset->m_morale_values.at( m_morale ).m_name;
 }
 
-void Unit::SetTile( map::tile::Tile* tile ) {
+void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 	if ( m_tile ) {
 		m_tile->units.erase( m_id );
 	}
@@ -78,7 +79,7 @@ void Unit::SetTile( map::tile::Tile* tile ) {
 		}
 	);
 	m_tile = tile;
-	m_um->RefreshUnit( this );
+	m_um->RefreshUnit( GSE_CALL, this );
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {
@@ -95,7 +96,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* um ) {
+Unit* Unit::Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
 	ASSERT_NOLOG( um, "um is null" );
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
@@ -108,7 +109,7 @@ Unit* Unit::Unserialize( types::Buffer& buf, UnitManager* um ) {
 	const auto morale = (morale_t)buf.ReadInt();
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
-	return new Unit( um, id, def, slot, tile, movement, morale, health, moved_this_turn );
+	return new Unit( GSE_CALL, um, id, def, slot, tile, movement, morale, health, moved_this_turn );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )
@@ -130,7 +131,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			if ( tile != m_tile ) {
-				SetTile( tile );
+				SetTile( GSE_CALL, tile );
 			}
 			return VALUE( gse::value::Undefined );
 		} )
@@ -141,7 +142,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_GET_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_um->MoveUnitToTile( this, tile, [ on_complete, gc_space, ctx, si, ep ]() {
+			const auto* errmsg = m_um->MoveUnitToTile( GSE_CALL, this, tile, [ on_complete, gc_space, ctx, si, ep ]() {
 				auto ep2 = ep;
 				on_complete->Run( gc_space, ctx, si, ep2, {} );
 			});
@@ -159,7 +160,7 @@ WRAPIMPL_DYNAMIC_SETTERS( Unit )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )
 	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
 	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around
-	m_um->RefreshUnit( this );
+	m_um->RefreshUnit( GSE_CALL, this );
 WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Unit )

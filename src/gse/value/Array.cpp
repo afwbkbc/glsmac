@@ -75,11 +75,11 @@ Value* const Array::GetRangeRef( const std::optional< size_t > from, const std::
 	return VALUEEXT( ArrayRangeRef, m_gc_space, this, from, to );
 }
 
-Value* const Array::FromVector( gc::Space* const gc_space, const std::vector< Wrappable* >* data, const bool dynamic ) {
+Value* const Array::FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* data, const bool dynamic ) {
 	array_elements_t elements = {};
 	elements.reserve( data->size() );
 	for ( const auto& el : *data ) {
-		elements.push_back( el->Wrap( gc_space, dynamic ) );
+		elements.push_back( el->Wrap( GSE_CALL, dynamic ) );
 	}
 	return VALUE( Array, , elements );
 }

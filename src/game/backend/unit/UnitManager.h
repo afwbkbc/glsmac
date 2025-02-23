@@ -37,34 +37,34 @@ public:
 	void Clear();
 	void DefineMoraleSet( MoraleSet* moraleset );
 	void DefineUnit( Def* def );
-	void SpawnUnit( Unit* unit );
-	void DespawnUnit( const size_t unit_id );
-	void SkipUnitTurn( const size_t unit_id );
+	void SpawnUnit( GSE_CALLABLE, Unit* unit );
+	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
+	void SkipUnitTurn( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;
 	Unit* GetUnit( const size_t id ) const;
 	Def* GetUnitDef( const std::string& name ) const;
 	const std::map< size_t, Unit* >& GetUnits() const;
 
-	void ProcessUnprocessed();
+	void ProcessUnprocessed( GSE_CALLABLE );
 	void PushUpdates();
 
 	WRAPDEFS_PTR( UnitManager )
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( types::Buffer& buf );
+	void Unserialize( GSE_CALLABLE, types::Buffer& buf );
 
 public:
 	// TODO: limit access
 	typedef std::function< void() > cb_oncomplete;
-	const std::string* MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile );
-	gse::Value* const MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile );
-	void MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions );
-	const std::string* MoveUnitToTile( Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
-	const std::string* AttackUnitValidate( Unit* attacker, Unit* defender );
-	gse::Value* const AttackUnitResolve( Unit* attacker, Unit* defender );
-	void AttackUnitApply( Unit* attacker, Unit* defender, gse::Value* const resolutions );
-	void RefreshUnit( const Unit* unit );
+	const std::string* MoveUnitValidate( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile );
+	gse::Value* const MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile );
+	void MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions );
+	const std::string* MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
+	const std::string* AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender );
+	gse::Value* const AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender );
+	void AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions );
+	void RefreshUnit( GSE_CALLABLE, const Unit* unit );
 
 private:
 	Game* m_game = nullptr;

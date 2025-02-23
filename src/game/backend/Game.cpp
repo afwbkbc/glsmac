@@ -341,9 +341,11 @@ void Game::Iterate() {
 					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-					for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
-						UpdateYields( tile );
-					}
+					m_state->WithGSE([ this ]( GSE_CALLABLE ) {
+						for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
+							UpdateYields( GSE_CALL, tile );
+						}
+					});
 					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
 
 					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
@@ -400,43 +402,49 @@ void Game::Iterate() {
 
 						HideLoader();
 
-						m_um->ProcessUnprocessed();
-						m_bm->ProcessUnprocessed();
+						auto* gc_space = m_state->m_gc_space;
 
-						for ( auto& it : m_unprocessed_events ) {
-							ASSERT( m_connection, "connection not set" );
-							try {
-								ValidateEvent( it );
-							}
-							catch ( const InvalidEvent& e ) {
-								for ( auto& it2 : m_unprocessed_events ) {
-									delete it2;
+						m_state->WithGSE([ this, &f_init_failed ]( GSE_CALLABLE ) {
+							m_um->ProcessUnprocessed( GSE_CALL );
+							m_bm->ProcessUnprocessed( GSE_CALL );
+
+							for ( auto& it : m_unprocessed_events ) {
+								ASSERT( m_connection, "connection not set" );
+								try {
+									ValidateEvent( GSE_CALL, it );
 								}
-								m_unprocessed_events.clear();
-								throw e;
+								catch ( const InvalidEvent& e ) {
+									for ( auto& it2 : m_unprocessed_events ) {
+										delete it2;
+									}
+									m_unprocessed_events.clear();
+									throw e;
+								}
 							}
-						}
-						for ( auto& it : m_unprocessed_events ) {
-							ProcessEvent( it );
-						}
-						m_unprocessed_events.clear();
+							for ( auto& it : m_unprocessed_events ) {
+								ProcessEvent( GSE_CALL, it );
+							}
+							m_unprocessed_events.clear();
+							if ( m_state->IsMaster() ) {
+								try {
+									m_state->TriggerObject(
+										this, "start", {
+											{
+												"game",
+												Wrap( GSE_CALL )
+											},
+										}
+									);
+								}
+								catch ( const gse::Exception& e ) {
+									Log( (std::string)"Initialization failed: " + e.ToString() );
+									f_init_failed( e.what() );
+								}
+								GlobalAdvanceTurn( GSE_CALL );
+							}
+							CheckTurnComplete();
 
-						if ( m_state->IsMaster() ) {
-							try {
-								m_state->TriggerObject( this, "start", {
-									{
-										"game",
-										Wrap( GetGCSpace() )
-									},
-								});
-							}
-							catch ( const gse::Exception& e ) {
-								Log( (std::string)"Initialization failed: " + e.ToString() );
-								f_init_failed( e.what() );
-							}
-							GlobalAdvanceTurn();
-						}
-						CheckTurnComplete();
+						});
 
 					}
 				}
@@ -508,27 +516,27 @@ WRAPIMPL_BEGIN( Game )
 		},
 		{
 			"random",
-			m_random->Wrap( gc_space )
+			m_random->Wrap( GSE_CALL, gc_space )
 		},
 		{
 			"tm",
-			m_tm->Wrap( gc_space )
+			m_tm->Wrap( GSE_CALL, gc_space )
 		},
 		{
 			"rm",
-			m_rm->Wrap( gc_space )
+			m_rm->Wrap( GSE_CALL, gc_space )
 		},
 		{
 			"um",
-			m_um->Wrap( gc_space )
+			m_um->Wrap( GSE_CALL, gc_space )
 		},
 		{
 			"bm",
-			m_bm->Wrap( gc_space ),
+			m_bm->Wrap( GSE_CALL, gc_space ),
 		},
 		{
 			"am",
-			m_am->Wrap( gc_space )
+			m_am->Wrap( GSE_CALL, gc_space )
 		},
 		{
 		"message",
@@ -550,7 +558,7 @@ WRAPIMPL_BEGIN( Game )
 					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
 						continue; // skip
 					}
-					elements.push_back( slot.Wrap( gc_space ) );
+					elements.push_back( slot.Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, elements );
 			} )
@@ -729,22 +737,24 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			const std::string* errmsg = nullptr;
 			event::Event* event = nullptr;
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			event = event::Event::Unserialize( GetGCSpace(), buf );
-			if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
-				errmsg = new std::string( "Turn not active" );
-			}
-			else {
-				errmsg = event->Validate( this );
-			}
-			if ( errmsg ) {
-				// log and do nothing
-				Log( "Event declined: " + *errmsg );
-				delete errmsg;
-				delete event;
-			}
-			else {
-				AddEvent( event );
-			}
+			m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
+				event = event::Event::Unserialize( GSE_CALL, buf );
+				if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
+					errmsg = new std::string( "Turn not active" );
+				}
+				else {
+					errmsg = event->Validate( GSE_CALL, this );
+				}
+				if ( errmsg ) {
+					// log and do nothing
+					Log( "Event declined: " + *errmsg );
+					delete errmsg;
+					delete event;
+				}
+				else {
+					AddEvent( GSE_CALL, event );
+				}
+			});
 			break;
 		}
 		default: {
@@ -850,14 +860,14 @@ void Game::OnGSEError( const gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-gse::Value* const Game::AddEvent( event::Event* event ) {
+gse::Value* const Game::AddEvent( GSE_CALLABLE, event::Event* event ) {
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );
 	}
 	if ( m_state->IsMaster() ) {
 		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
-		return ProcessEvent( event );
+		return ProcessEvent( GSE_CALL, event );
 	}
 	return VALUEEXT( gse::value::Undefined, GetGCSpace() );
 }
@@ -882,7 +892,7 @@ const bool Game::IsTurnChecksumValid( const util::crc32::crc_t checksum ) const 
 	return m_turn_checksum == checksum;
 }
 
-void Game::CompleteTurn( const size_t slot_num ) {
+void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
 	const auto& slot = m_state->m_slots->GetSlot( slot_num );
 	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
@@ -905,7 +915,7 @@ void Game::CompleteTurn( const size_t slot_num ) {
 			}
 		}
 		if ( is_turn_complete ) {
-			GlobalFinalizeTurn();
+			GlobalFinalizeTurn( GSE_CALL );
 		}
 	}
 }
@@ -927,9 +937,9 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 	}
 }
 
-void Game::FinalizeTurn() {
+void Game::FinalizeTurn( GSE_CALLABLE ) {
 	m_turn_checksum = m_current_turn.FinalizeAndChecksum();
-	AddEvent( new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
+	AddEvent( GSE_CALL, new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
@@ -944,34 +954,40 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		AddFrontendRequest( fr );
 	}
 
-	for ( auto& it : m_um->GetUnits() ) {
-		auto* unit = it.second;
-		m_state->TriggerObject( m_um, "unit_turn", {
-			{
-				"unit",
-				unit->Wrap( gc_space, true )
-			},
-		});
-		unit->m_moved_this_turn = false;
-		m_um->RefreshUnit( unit );
-	}
-
-	for ( auto& it : m_bm->GetBases() ) {
-		auto* base = it.second;
-		m_state->TriggerObject( m_bm, "base_turn", {
-			{
-				"base",
-				base->Wrap( gc_space, true )
-			},
-		});
-		m_bm->RefreshBase( base );
-	}
-
-	m_state->TriggerObject( this, "turn", {
-		{
-			"game",
-			Wrap( gc_space )
+	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+		for ( auto& it : m_um->GetUnits() ) {
+			auto* unit = it.second;
+			m_state->TriggerObject(
+				m_um, "unit_turn", {
+					{
+						"unit",
+						unit->Wrap( GSE_CALL, true )
+					},
+				}
+			);
+			unit->m_moved_this_turn = false;
+			m_um->RefreshUnit( GSE_CALL, unit );
 		}
+
+		for ( auto& it : m_bm->GetBases() ) {
+			auto* base = it.second;
+			m_state->TriggerObject(
+				m_bm, "base_turn", {
+					{
+						"base",
+						base->Wrap( GSE_CALL, true )
+					},
+				}
+			);
+			m_bm->RefreshBase( base );
+		}
+
+		m_state->TriggerObject( this, "turn", {
+			{
+				"game",
+					Wrap( GSE_CALL )
+			}
+		});
 	});
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
@@ -990,15 +1006,15 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 }
 
-void Game::GlobalFinalizeTurn() {
+void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 	ASSERT( m_current_turn.IsActive(), "current turn not active" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
 	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
-	AddEvent( new event::FinalizeTurn( m_slot_num ) );
+	AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
 }
 
-void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum ) {
+void Game::GlobalProcessTurnFinalized( GSE_CALLABLE, const size_t slot_num, const util::crc32::crc_t checksum ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 	ASSERT( m_turn_checksum == checksum, "turn checksum mismatch" );
 	ASSERT( m_verified_turn_checksum_slots.find( slot_num ) == m_verified_turn_checksum_slots.end(), "duplicate turn finalization from " + std::to_string( slot_num ) );
@@ -1016,12 +1032,12 @@ void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32:
 	}
 
 	if ( is_turn_finalized ) {
-		GlobalAdvanceTurn();
+		GlobalAdvanceTurn( GSE_CALL );
 	}
 }
 
 static size_t s_turn_id = 0;
-void Game::GlobalAdvanceTurn() {
+void Game::GlobalAdvanceTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 
 	// reset some states
@@ -1030,7 +1046,7 @@ void Game::GlobalAdvanceTurn() {
 	m_turn_checksum = 0;
 
 	Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
-	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
+	AddEvent( GSE_CALL, new event::AdvanceTurn( m_slot_num, s_turn_id ) );
 }
 
 faction::Faction* Game::GetFaction( const std::string& id ) const {
@@ -1065,9 +1081,9 @@ gc::Space* const Game::GetGCSpace() const {
 	return m_state->m_gc_space;
 }
 
-void Game::ValidateEvent( event::Event* event ) {
+void Game::ValidateEvent( GSE_CALLABLE, event::Event* event ) {
 	if ( !event->m_is_validated ) {
-		const auto* errmsg = event->Validate( this );
+		const auto* errmsg = event->Validate( GSE_CALL, this );
 		if ( errmsg ) {
 			InvalidEvent err( *errmsg, event );
 			delete errmsg;
@@ -1078,20 +1094,20 @@ void Game::ValidateEvent( event::Event* event ) {
 	}
 }
 
-gse::Value* const Game::ProcessEvent( event::Event* event ) {
+gse::Value* const Game::ProcessEvent( GSE_CALLABLE, event::Event* event ) {
 	if ( m_state->IsMaster() ) { // TODO: validate in either case?
-		ValidateEvent( event );
+		ValidateEvent( GSE_CALL, event );
 	}
 
 	ASSERT( event->m_is_validated, "event was not validated" );
 
 	if ( m_state->IsMaster() ) {
 		// things like random outcomes must be resolved on server only
-		event->Resolve( this );
+		event->Resolve( GSE_CALL, this );
 	}
 
 	m_current_turn.AddEvent( event );
-	return event->Apply( this );
+	return event->Apply( GSE_CALL, this );
 }
 
 const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
@@ -1109,9 +1125,9 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
-void Game::UpdateYields( map::tile::Tile* tile ) const {
+void Game::UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const {
 	tile->yields = m_rm->GetYields(
-		GetGCSpace(),
+		GSE_CALL,
 		tile,
 		m_slot
 	);
@@ -1131,11 +1147,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	auto* gc_space = GetGCSpace();
 
-	m_state->TriggerObject( this, "configure", {
-		{
-			"game",
-			Wrap( gc_space )
-		},
+	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+		m_state->TriggerObject( this, "configure", {
+			{
+				"game",
+				Wrap( GSE_CALL )
+			},
+		});
 	});
 
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
@@ -1287,7 +1305,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
 			if ( m_game_state == GS_RUNNING ) {
-				ValidateEvent( event );
+				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+					ValidateEvent( GSE_CALL, event );
+				} );
 			}
 			else {
 				m_unprocessed_events.push_back( event );
@@ -1300,7 +1320,9 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
 			if ( m_game_state == GS_RUNNING ) {
-				ProcessEvent( event );
+				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+					ProcessEvent( GSE_CALL, event );
+				});
 			}
 		};
 
@@ -1412,36 +1434,40 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						const auto ec = m_map->LoadFromBuffer( b );
 						if ( ec == map::Map::EC_NONE ) {
 
-							// resources
-							{
-								auto ub = types::Buffer( buf.ReadString() );
-								m_rm->Unserialize( ub );
-							}
+							m_state->WithGSE( [ this, &buf ]( GSE_CALLABLE ) {
 
-							// units
-							{
-								auto ub = types::Buffer( buf.ReadString() );
-								m_um->Unserialize( ub );
-							}
+								// resources
+								{
+									auto ub = types::Buffer( buf.ReadString() );
+									m_rm->Unserialize( ub );
+								}
 
-							// bases
-							{
-								auto bb = types::Buffer( buf.ReadString() );
-								m_bm->Unserialize( bb );
-							}
+								// units
+								{
+									auto ub = types::Buffer( buf.ReadString() );
+									m_um->Unserialize( GSE_CALL, ub );
+								}
 
-							// animations
-							{
-								auto ab = types::Buffer( buf.ReadString() );
-								m_am->Unserialize( ab );
-							}
+								// bases
+								{
+									auto bb = types::Buffer( buf.ReadString() );
+									m_bm->Unserialize( GSE_CALL, bb );
+								}
 
-							// get turn info
-							const auto turn_id = buf.ReadInt();
-							if ( turn_id > 0 ) {
-								Log( "Received turn ID: " + std::to_string( turn_id ) );
-								AdvanceTurn( turn_id );
-							}
+								// animations
+								{
+									auto ab = types::Buffer( buf.ReadString() );
+									m_am->Unserialize( ab );
+								}
+
+								// get turn info
+								const auto turn_id = buf.ReadInt();
+								if ( turn_id > 0 ) {
+									Log( "Received turn ID: " + std::to_string( turn_id ) );
+									AdvanceTurn( turn_id );
+								}
+
+							});
 
 							m_game_state = GS_INITIALIZING;
 						}

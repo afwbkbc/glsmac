@@ -15,14 +15,14 @@ AdvanceTurn::AdvanceTurn( const size_t initiator_slot, const size_t turn_id )
 	//
 }
 
-const std::string* AdvanceTurn::Validate( Game* game ) const {
+const std::string* AdvanceTurn::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Turn can only be advanced by master" );
 	}
 	return Ok();
 }
 
-gse::Value* const AdvanceTurn::Apply( Game* game ) const {
+gse::Value* const AdvanceTurn::Apply( GSE_CALLABLE, Game* game ) const {
 	game->AdvanceTurn( m_turn_id );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }

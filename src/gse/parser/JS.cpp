@@ -1120,7 +1120,7 @@ gse::Value* const JS::static_var_p( const predef_op_t& key, gc::Space* gc_space,
 	return it != m_static_vars_p.end() ? it->second : m_static_vars_p.insert({ key, f( gc_space ) }).first->second;
 }
 
-void JS::collect_static_vars( std::unordered_set< gc::Object* >& static_vars ) const {
+void JS::collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const {
 	Parser::collect_static_vars( static_vars );
 	static_vars.reserve( static_vars.size() + m_static_vars_p.size() );
 	for ( const auto& it : m_static_vars_p ) {

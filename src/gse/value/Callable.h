@@ -23,7 +23,7 @@ public:
 	Callable( gc::Space* const gc_space )
 		: Value( gc_space, GetType() ) {}
 
-	virtual ~Callable() {}
+	virtual ~Callable() = default;
 
 	virtual Value* Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
 

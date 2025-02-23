@@ -16,7 +16,7 @@ AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_
 	, m_attacker_unit_id( attacker_unit_id )
 	, m_defender_unit_id( defender_unit_id ) {}
 
-const std::string* AttackUnit::Validate( Game* game ) const {
+const std::string* AttackUnit::Validate( GSE_CALLABLE, Game* game ) const {
 	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	if ( !attacker ) {
 		return Error( "Attacker unit not found" );
@@ -34,25 +34,25 @@ const std::string* AttackUnit::Validate( Game* game ) const {
 	if ( defender->GetTile()->IsLocked() ) {
 		return Error( "Attacker tile is locked" );
 	}
-	return game->GetUM()->AttackUnitValidate( attacker, defender );
+	return game->GetUM()->AttackUnitValidate( GSE_CALL, attacker, defender );
 }
 
-void AttackUnit::Resolve( Game* game ) {
+void AttackUnit::Resolve( GSE_CALLABLE, Game* game ) {
 	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
 	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
 
-	m_resolutions = game->GetUM()->AttackUnitResolve( attacker, defender );
+	m_resolutions = game->GetUM()->AttackUnitResolve( GSE_CALL, attacker, defender );
 }
 
-gse::Value* const AttackUnit::Apply( Game* game ) const {
+gse::Value* const AttackUnit::Apply( GSE_CALLABLE, Game* game ) const {
 	auto* attacker = game->GetUM()->GetUnit( m_attacker_unit_id );
 	ASSERT_NOLOG( attacker, "attacker unit not found" );
 	auto* defender = game->GetUM()->GetUnit( m_defender_unit_id );
 	ASSERT_NOLOG( defender, "defender unit not found" );
 	ASSERT_NOLOG( m_resolutions, "resolutions is null" );
-	game->GetUM()->AttackUnitApply( attacker, defender, m_resolutions );
+	game->GetUM()->AttackUnitApply( GSE_CALL, attacker, defender, m_resolutions );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 
@@ -71,12 +71,12 @@ void AttackUnit::Serialize( types::Buffer& buf, const AttackUnit* event ) {
 	buf.WriteString( b.ToString() );
 }
 
-AttackUnit* AttackUnit::Unserialize( gc::Space* const gc_space, types::Buffer& buf, const size_t initiator_slot ) {
+AttackUnit* AttackUnit::Unserialize( GSE_CALLABLE, types::Buffer& buf, const size_t initiator_slot ) {
 	const auto attacker_unit_id = buf.ReadInt();
 	const auto defender_unit_id = buf.ReadInt();
 	auto* result = new AttackUnit( initiator_slot, attacker_unit_id, defender_unit_id );
 	types::Buffer b( buf.ReadString() );
-	result->m_resolutions = gse::Value::Unserialize( gc_space, &b );
+	result->m_resolutions = gse::Value::Unserialize( GSE_CALL, &b );
 	return result;
 }
 

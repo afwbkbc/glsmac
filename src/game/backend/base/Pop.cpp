@@ -58,7 +58,7 @@ WRAPIMPL_BEGIN( Pop )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				ASSERT_NOLOG( m_base, "pop has no base" );
-				return m_base->Wrap( gc_space );
+				return m_base->Wrap( GSE_CALL, gc_space );
 			} )
 		},
 	};

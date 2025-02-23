@@ -8,6 +8,7 @@
 
 #include "Types.h"
 #include "gse/Types.h"
+#include "gse/ExecutionPointer.h"
 
 namespace gse {
 
@@ -29,7 +30,7 @@ public:
 	static const type_t GetType() { return Value::T_OBJECT; }
 
 	typedef void (wrapsetter_t)( Wrappable*, const std::string&, Value* const, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
-	Object( gc::Space* const gc_space, context::ChildContext* const ctx, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
+	Object( GSE_CALLABLE, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );
 	~Object();
 
 	Value* const Get( const object_key_t& key );
@@ -46,8 +47,13 @@ public:
 	Wrappable* wrapobj;
 	wrapsetter_t* wrapsetter;
 
+	context::ChildContext* const GetContext() const;
+
 private:
-	context::ChildContext* const m_ctx;
+	friend class gse::Value; // to be able to copy objects
+	context::ChildContext* m_ctx = nullptr;
+	const si_t m_si = {};
+	const gse::ExecutionPointer m_ep = {};
 };
 
 }

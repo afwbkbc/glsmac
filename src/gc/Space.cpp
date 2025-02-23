@@ -11,11 +11,13 @@ Space::Space() {
 }
 
 Space::~Space() {
-	{
-		std::lock_guard< std::mutex > guard( m_collect_mutex ); // block all collections
-		m_is_destroying = true;
-		g_engine->GetGC()->RemoveSpace( this );
-	}
+	Log( "SPACE BEFORE REMOVE" );
+	g_engine->GetGC()->RemoveSpace( this );
+	Log( "SPACE AFTER REMOVE" );
+	m_collect_mutex.lock(); // wait for any ongoing collects to finish
+	m_is_destroying = true;
+	m_collect_mutex.unlock();
+	Log( "SPACE AFTER REMOVE WAIT" );
 	{
 		// remove root objects
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
@@ -24,19 +26,12 @@ Space::~Space() {
 		//}
 		m_root_objects.clear();
 	}
+	// collect until there's nothing to collect
 	while ( !m_objects.empty() || !m_pending_objects.empty() || !m_objects_to_add.empty() ) {
+		Log( std::to_string( m_objects.size() ) + " objects are still reachable" );
 		while ( Collect() ) {}
 	}
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	{
-		if ( !m_objects.empty() ) {
-			Log( "WARNING: " + std::to_string( m_objects.size() ) + " objects are still reachable!" );
-		}
-		else {
-			Log( "All objects have been destroyed." );
-		}
-	}
-#endif
+	Log( "All objects have been destroyed." );
 }
 
 void Space::Add( Object* object ) {
@@ -48,6 +43,7 @@ void Space::Add( Object* object ) {
 }
 
 void Space::AddRoot( Object* object ) {
+	//std::lock_guard< std::mutex > guard2( m_collect_mutex );
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
 	{
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
@@ -58,6 +54,7 @@ void Space::AddRoot( Object* object ) {
 }
 
 void Space::RemoveRoot( Object* object ) {
+	//std::lock_guard< std::mutex > guard2( m_collect_mutex );
 	if ( !m_is_destroying ) { // if destroying then all root objects will be removed anyway
 		std::lock_guard< std::mutex > guard( m_root_objects_mutex );
 		Log( "Removing root object: " + object->GCString() );
@@ -81,8 +78,8 @@ const bool Space::Collect() {
 	{
 		std::lock_guard< std::mutex > guard2( m_root_objects_mutex );
 		ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
-		for ( const auto* object : m_root_objects ) { // prevent deletion of root objects
-			m_reachable_objects_tmp.insert( (Object*)object );
+		for ( const auto& object : m_root_objects ) { // prevent deletion of root objects
+			m_reachable_objects_tmp.insert( object );
 		}
 		Log( "Collecting from " + std::to_string( m_root_objects.size() ) + " root objects" );
 		for ( const auto& object : m_root_objects ) {
@@ -90,12 +87,20 @@ const bool Space::Collect() {
 		}
 	}
 
+	// TMP
+	for ( const auto& object : m_objects ) {
+		Log( "OBJECT PTR: " + std::to_string( (unsigned long)object ) );
+		Log( "OBJECT STRING: " + object->GCString() );
+	}
+
 	bool anything_removed = false;
 	std::unordered_set< Object* > removed_objects = {};
 	for ( const auto& object : m_objects ) {
 		const auto& it = m_reachable_objects_tmp.find( object );
 		if ( it == m_reachable_objects_tmp.end() ) {
-			Log( "Destroying unreachable object: " + object->GCString() );
+			ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long)object ) + " was already removed" );
+			Log( "Destroying unreachable object: " + std::to_string( (unsigned long)object ) );
+			Log( "Object GCString(): " + object->GCString() );
 			delete object;
 			anything_removed = true;
 			removed_objects.insert( object );

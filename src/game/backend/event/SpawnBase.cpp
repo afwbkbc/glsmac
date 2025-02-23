@@ -31,7 +31,7 @@ SpawnBase::SpawnBase(
 	//
 }
 
-const std::string* SpawnBase::Validate( Game* game ) const {
+const std::string* SpawnBase::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( !game->GetBM() ) {
 		return Error( "Game is not initialized properly" );
 	}
@@ -41,7 +41,7 @@ const std::string* SpawnBase::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const SpawnBase::Apply( Game* game ) const {
+gse::Value* const SpawnBase::Apply( GSE_CALLABLE, Game* game ) const {
 
 	auto& owner = game->GetState()->m_slots->GetSlot( m_owner_slot );
 	auto* tile = game->GetMap()->GetTile( m_pos_x, m_pos_y );
@@ -58,9 +58,9 @@ gse::Value* const SpawnBase::Apply( Game* game ) const {
 
 	auto* bm = game->GetBM();
 	ASSERT_NOLOG( bm, "bm is null" );
-	bm->SpawnBase( base );
+	bm->SpawnBase( GSE_CALL, base );
 
-	return base->Wrap( game->GetGCSpace() );
+	return base->Wrap( GSE_CALL, game->GetGCSpace() );
 }
 
 TS_BEGIN( SpawnBase )

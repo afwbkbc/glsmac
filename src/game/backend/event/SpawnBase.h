@@ -18,8 +18,8 @@ public:
 		const std::string& name
 	);
 
-	const std::string* Validate( Game* game ) const override;
-	gse::Value* const Apply( Game* game ) const override;
+	const std::string* Validate( GSE_CALLABLE, Game* game ) const override;
+	gse::Value* const Apply( GSE_CALLABLE, Game* game ) const override;
 	TS_DEF()
 
 private:

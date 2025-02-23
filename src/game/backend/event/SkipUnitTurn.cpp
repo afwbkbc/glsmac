@@ -16,7 +16,7 @@ SkipUnitTurn::SkipUnitTurn( const size_t initiator_slot, const size_t unit_id )
 	//
 }
 
-const std::string* SkipUnitTurn::Validate( Game* game ) const {
+const std::string* SkipUnitTurn::Validate( GSE_CALLABLE, Game* game ) const {
 	const auto* unit = game->GetUM()->GetUnit( m_unit_id );
 	if ( !unit ) {
 		return Error( "Unit not found" );
@@ -37,8 +37,8 @@ const std::string* SkipUnitTurn::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const SkipUnitTurn::Apply( Game* game ) const {
-	game->GetUM()->SkipUnitTurn( m_unit_id );
+gse::Value* const SkipUnitTurn::Apply( GSE_CALLABLE, Game* game ) const {
+	game->GetUM()->SkipUnitTurn( GSE_CALL, m_unit_id );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 

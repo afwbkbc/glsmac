@@ -337,7 +337,11 @@ void Server::ProcessEvent( const network::Event& event ) {
 						ASSERT( m_on_game_event_apply, "m_on_game_event_apply is not set" );
 						auto buf = types::Buffer( packet.data.str );
 						std::vector< event::Event* > game_events = {};
-						event::Event::UnserializeMultiple( GetGCSpace(), buf, game_events );
+						m_state->WithGSE(
+							[ &buf, &game_events ]( GSE_CALLABLE ) {
+								event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+							}
+						);
 						const size_t slot = m_state->GetCidSlots().at( event.cid );
 						std::vector< event::Event* > broadcastable_events = {};
 						std::vector< event::Event* > valid_events = {};

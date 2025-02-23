@@ -171,7 +171,7 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 	}
 }
 
-gse::Value* const Class::Wrap( gc::Space* const gc_space, const bool dynamic ) {
+gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	gse::value::object_properties_t properties = {
 		{
 			"extend",
@@ -179,7 +179,7 @@ gse::Value* const Class::Wrap( gc::Space* const gc_space, const bool dynamic ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( name, 0, String );
 				SetParentClass( GSE_CALL, name );
-				return Wrap( gc_space, true );
+				return Wrap( GSE_CALL, true );
 			} )
 		},
 		{
@@ -188,7 +188,7 @@ gse::Value* const Class::Wrap( gc::Space* const gc_space, const bool dynamic ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( properties, 0, Object );
 				SetProperties( GSE_CALL, properties );
-				return Wrap( gc_space, true );
+				return Wrap( GSE_CALL, true );
 			} )
 		},
 		{
@@ -205,7 +205,7 @@ gse::Value* const Class::Wrap( gc::Space* const gc_space, const bool dynamic ) {
 					names.push_back( ((gse::value::String*)v)->value );
 				}
 				UnsetProperties( GSE_CALL, names );
-				return Wrap( gc_space, true );
+				return Wrap( GSE_CALL, true );
 			} )
 		},
 	};
@@ -219,11 +219,11 @@ gse::Value* const Class::Wrap( gc::Space* const gc_space, const bool dynamic ) {
 	}
 	if ( m_is_master ) {
 		for ( const auto& c : m_subclasses ) {
-			properties.insert({ s_modifier_to_name.at( c.first ), c.second->Wrap( gc_space, dynamic ) });
+			properties.insert({ s_modifier_to_name.at( c.first ), c.second->Wrap( GSE_CALL, dynamic ) });
 		}
 	}
 	return new gse::value::Object(
-		gc_space, nullptr, properties, "class", this, dynamic
+		GSE_CALL, properties, "class", this, dynamic
 			? &Class::WrapSetStatic
 			: nullptr
 	);

@@ -436,7 +436,8 @@ Value* const Value::New( const Value* value ) {
 			for ( const auto& it : obj->value ) {
 				properties.insert_or_assign( it.first, it.second->Clone() );
 			}
-			return VALUE( value::Object, , nullptr, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
+			auto ep = obj->m_ep;
+			return VALUE( value::Object, , (context::Context*)obj->m_ctx, obj->m_si, ep, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
 		}
 		case T_CALLABLE:
 			return this; // ?????
@@ -506,7 +507,7 @@ void Value::Serialize( types::Buffer* buf, Value* const value ) {
 	}
 }
 
-Value* Value::Unserialize( gc::Space* const gc_space, types::Buffer* buf ) {
+Value* Value::Unserialize( GSE_CALLABLE, types::Buffer* buf ) {
 	type_t type = (type_t)buf->ReadInt();
 	switch ( type ) {
 		case T_UNDEFINED:
@@ -526,7 +527,7 @@ Value* Value::Unserialize( gc::Space* const gc_space, types::Buffer* buf ) {
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
-				elements.push_back( Value::Unserialize( gc_space, buf ) );
+				elements.push_back( Value::Unserialize( GSE_CALL, buf ) );
 			}
 			return VALUE( value::Array, , elements );
 		}
@@ -538,11 +539,11 @@ Value* Value::Unserialize( gc::Space* const gc_space, types::Buffer* buf ) {
 				properties.insert(
 					{
 						k,
-						Value::Unserialize( gc_space, buf )
+						Value::Unserialize( GSE_CALL, buf )
 					}
 				);
 			}
-			return VALUE( value::Object, , nullptr, properties );
+			return VALUEEXT( value::Object, GSE_CALL, properties );
 		}
 		default:
 			THROW( "invalid/unsupported type for unserialization: " + GetTypeStringStatic( type ) );

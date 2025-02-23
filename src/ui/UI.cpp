@@ -86,7 +86,7 @@ WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
 			{
 				"root",
-				m_root->Wrap( gc_space, true )
+				m_root->Wrap( GSE_CALL, true )
 			},
 			{
 				"class",
@@ -128,7 +128,7 @@ WRAPIMPL_BEGIN( UI )
 						// passing parent class or properties in constructor works only if class didn't exist yet
 						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
 					}
-					return it->second->Wrap( gc_space, true );
+					return it->second->Wrap( GSE_CALL, true );
 				} )
 			},
 		};

@@ -14,8 +14,8 @@ public:
 		const size_t nothing = 0
 	);
 
-	const std::string* Validate( Game* game ) const override;
-	gse::Value* const Apply( Game* game ) const override;
+	const std::string* Validate( GSE_CALLABLE, Game* game ) const override;
+	gse::Value* const Apply( GSE_CALLABLE, Game* game ) const override;
 
 private:
 	friend class Event;

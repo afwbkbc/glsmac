@@ -5,21 +5,31 @@
 #include "Exception.h"
 
 #include "gse/Wrappable.h"
+#include "gse/context/Context.h"
+#include "ValueRef.h"
 #include "gse/context/ChildContext.h"
 
 namespace gse {
 namespace value {
 
-Object::Object( gc::Space* const gc_space, context::ChildContext* const ctx, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
+Object::Object( GSE_CALLABLE, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
 	: Value( gc_space, GetType() )
-	, m_ctx( ctx )
 	, value( initial_value )
 	, object_class( object_class )
 	, wrapobj( wrapobj )
-	, wrapsetter( wrapsetter ) {
-	if ( wrapobj ) {
-		wrapobj->Link( this );
-	}
+	, wrapsetter( wrapsetter )
+	, m_si( si )
+	, m_ep( ep ) {
+	ASSERT_NOLOG( ctx, "object ctx is null" );
+	ctx->ForkAndExecute(
+		GSE_CALL, false, [ this, &gc_space, &si, &ep, &wrapobj ]( context::ChildContext* const subctx ) {
+			m_ctx = subctx;
+			m_ctx->CreateConst( "this", VALUE( value::ValueRef, , this ), si, ep );
+			if ( wrapobj ) {
+				wrapobj->Link( this );
+			}
+		}
+	);
 }
 
 Object::~Object() {
@@ -39,8 +49,8 @@ Value* const Object::Get( const object_key_t& key ) {
 
 void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
-	
-	const bool has_value = new_value->type != T_UNDEFINED;
+
+	const bool has_value = new_value && new_value->type != T_UNDEFINED;
 	const auto it = value.find( key );
 	if (
 		( has_value && ( it == value.end() || new_value != it->second ) ) ||
@@ -83,6 +93,10 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& active_obje
 		m_ctx->CollectWithDependencies( active_objects );
 	}
 
+}
+
+context::ChildContext* const Object::GetContext() const {
+	return m_ctx;
 }
 
 }

@@ -15,15 +15,15 @@ DespawnUnit::DespawnUnit( const size_t initiator_slot, const size_t unit_id )
 	//
 }
 
-const std::string* DespawnUnit::Validate( Game* game ) const {
+const std::string* DespawnUnit::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( m_initiator_slot != 0 ) {
 		return Error( "Only master is allowed to despawn units" );
 	}
 	return Ok();
 }
 
-gse::Value* const DespawnUnit::Apply( Game* game ) const {
-	game->GetUM()->DespawnUnit( m_unit_id );
+gse::Value* const DespawnUnit::Apply( GSE_CALLABLE, Game* game ) const {
+	game->GetUM()->DespawnUnit( GSE_CALL, m_unit_id );
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
 

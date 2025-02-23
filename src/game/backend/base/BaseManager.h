@@ -38,17 +38,17 @@ public:
 	PopDef* GetPopDef( const std::string& id ) const;
 	Base* GetBase( const size_t id ) const;
 	void DefinePop( base::PopDef* pop_def );
-	void SpawnBase( base::Base* base );
+	void SpawnBase( GSE_CALLABLE, base::Base* base );
 
 	const std::map< size_t, Base* >& GetBases() const;
 
-	void ProcessUnprocessed();
+	void ProcessUnprocessed( GSE_CALLABLE );
 	void PushUpdates();
 
 	WRAPDEFS_PTR( BaseManager )
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( types::Buffer& buf );
+	void Unserialize( GSE_CALLABLE, types::Buffer& buf );
 
 	void RefreshBase( const base::Base* base );
 

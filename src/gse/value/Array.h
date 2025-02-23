@@ -4,6 +4,7 @@
 #include <optional>
 
 #include "gse/Value.h"
+#include "gse/context/Context.h"
 
 #include "Types.h"
 
@@ -31,7 +32,7 @@ public:
 
 	array_elements_t value = {};
 
-	static Value* const FromVector( gc::Space* const gc_space, const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
+	static Value* const FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
 

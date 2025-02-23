@@ -90,7 +90,7 @@ WRAPIMPL_BEGIN( FactionManager )
 					{ "land", VALUE( gse::value::Array,, land_names ) },
 					{ "water", VALUE( gse::value::Array,, water_names ) },
 				};
-				return VALUE( gse::value::Object,, nullptr, properties );
+				return VALUEEXT( gse::value::Object, GSE_CALL, properties );
 			} )
 			},
 			{
@@ -100,15 +100,15 @@ WRAPIMPL_BEGIN( FactionManager )
 				N_GETVALUE( filename, 0, String );
 				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
 				const auto properties = gse::value::object_properties_t{
-					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap( gc_space ) },
-					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap( gc_space ) },
-					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap( gc_space ) },
-					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap( gc_space ) },
-					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap( gc_space ) },
-					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap( gc_space ) },
-					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap( gc_space ) },
+					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap( GSE_CALL ) },
+					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap( GSE_CALL ) },
+					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap( GSE_CALL ) },
+					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap( GSE_CALL ) },
+					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap( GSE_CALL ) },
+					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap( GSE_CALL ) },
+					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap( GSE_CALL ) },
 				};
-				return VALUE( gse::value::Object,, nullptr, properties );
+				return VALUEEXT( gse::value::Object, GSE_CALL, properties );
 			} )
 		},
 		{
@@ -189,7 +189,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				}
 
 				Add( faction );
-				return faction->Wrap( gc_space );
+				return faction->Wrap( GSE_CALL, gc_space );
 			} )
 		},
 		{

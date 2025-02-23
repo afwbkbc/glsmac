@@ -15,7 +15,7 @@ TurnFinalized::TurnFinalized( const size_t initiator_slot, const util::crc32::cr
 	//
 }
 
-const std::string* TurnFinalized::Validate( Game* game ) const {
+const std::string* TurnFinalized::Validate( GSE_CALLABLE, Game* game ) const {
 	if ( game->GetState()->IsMaster() ) {
 		if ( game->IsTurnActive() ) {
 			return Error( "Got finalize response but turn is still active" );
@@ -27,9 +27,9 @@ const std::string* TurnFinalized::Validate( Game* game ) const {
 	return Ok();
 }
 
-gse::Value* const TurnFinalized::Apply( Game* game ) const {
+gse::Value* const TurnFinalized::Apply( GSE_CALLABLE, Game* game ) const {
 	if ( game->GetState()->IsMaster() ) {
-		game->GlobalProcessTurnFinalized( m_initiator_slot, m_checksum );
+		game->GlobalProcessTurnFinalized( GSE_CALL, m_initiator_slot, m_checksum );
 	}
 	return VALUEEXT( gse::value::Undefined, game->GetGCSpace() );
 }
