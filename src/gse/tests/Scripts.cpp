@@ -82,11 +82,13 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
 
+				gse->Finish();
+
 				if ( program ) {
-					//DELETE( program ); // TMP
+					DELETE( program );
 				}
 				if ( runner ) {
-					//DELETE( runner );
+					DELETE( runner );
 				}
 
 				return last_error;

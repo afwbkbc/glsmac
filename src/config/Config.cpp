@@ -296,8 +296,13 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"aggressive-gc", "Runs garbage collection after every statement", AH( this ) {
-			m_debug_flags |= DF_AGGRESSIVE_GC;
+		"verbose-gc", "Output extra logs from garbage collector (spammy!)", AH( this ) {
+			m_debug_flags |= DF_VERBOSE_GC;
+		}
+	);
+	m_manager->AddRule(
+		"no-gc", "Disable garbage collection (will leak memory!)", AH( this ) {
+			m_debug_flags != DF_NO_GC;
 		}
 	);
 	m_manager->AddRule(

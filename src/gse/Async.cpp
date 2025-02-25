@@ -91,7 +91,6 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	m_process_timers_mutex.lock(); // wait for anything processing timers to finish
 	m_process_timers_mutex.unlock();
 	m_gc_mutex.lock();
-	Log( "PROCESSANDEXIT BEGIN" );
 	while ( !m_timers.empty() ) {
 		const auto& it = m_timers.begin();
 		const auto now = util::Time::Now();
@@ -108,7 +107,6 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 		ProcessTimers( it, ep );
 	}
 	m_gc_mutex.unlock();
-	Log( "PROCESSANDEXIT END" );
 }
 
 void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {

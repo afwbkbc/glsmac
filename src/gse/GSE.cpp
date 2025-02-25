@@ -8,7 +8,6 @@
 #include "program/Program.h"
 #include "util/FS.h"
 #include "gc/Space.h"
-#include "gc/GC.h"
 #include "Async.h"
 #include "ExecutionPointer.h"
 
@@ -25,10 +24,7 @@ GSE::GSE() {
 }
 
 GSE::~GSE() {
-	{
-		ExecutionPointer ep;
-		m_async->ProcessAndExit( ep );
-	}
+	Finish();
 	m_gc_space->RemoveRoot( m_async );
 	for ( auto& it : m_include_cache ) {
 		it.second.Cleanup( this );
@@ -51,6 +47,13 @@ void GSE::Iterate() {
 	catch ( const std::exception& e ) {
 		Log( e.what() );
 		throw;
+	}
+}
+
+void GSE::Finish() {
+	{
+		ExecutionPointer ep;
+		m_async->ProcessAndExit( ep );
 	}
 }
 

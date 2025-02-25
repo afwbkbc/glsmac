@@ -51,6 +51,8 @@ CLASS( GSE, common::Class )
 
 	void Iterate();
 
+	void Finish();
+
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
 	runner::Runner* GetRunner() const;
 

@@ -161,11 +161,6 @@ void Scene::Update() {
 		}
 	}
 
-	// remove missing actors
-	for ( const auto& o : actors_to_remove ) {
-		int a = 5;
-	}
-
 	for ( auto it = actors_to_remove.rbegin() ; it != actors_to_remove.rend() ; it++ ) {
 		auto& o = *it;
 		Actor* gl_actor = o->GetDstObject< Actor >();

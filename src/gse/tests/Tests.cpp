@@ -231,7 +231,7 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 		);
 	};
 
-	static const auto* program = new Program(
+	const auto* program = new Program(
 		new Scope(
 			SI( 3, 1, 132, 21 ),
 			{

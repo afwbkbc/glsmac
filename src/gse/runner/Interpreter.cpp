@@ -56,38 +56,38 @@ using namespace value;
 namespace runner {
 
 Interpreter::Interpreter( gc::Space* const gc_space )
-	: Runner( gc_space ) {
-#if defined( DEBUG ) || defined ( FASTDEBUG )
-	m_aggressive_gc = g_engine->GetConfig()->HasDebugFlag( config::Config::DF_AGGRESSIVE_GC );
-#endif
-}
+	: Runner( gc_space ) {}
 
 gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer& ep, const Program* program ) const {
 	return EvaluateScope( ctx, ep, program->body );
 }
 
-gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope ) const {
+gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope, bool* returnflag ) const {
 	gse::Value* result = nullptr;
 
 	ctx->ForkAndExecute(
 		m_gc_space, ctx, scope->m_si, ep, false,
-		[ this, &scope, &ep, &result ]( gse::context::ChildContext* const subctx ) {
+		[ this, &scope, &ep, &result, &returnflag ]( gse::context::ChildContext* const subctx ) {
 
 			for ( const auto& it : scope->body ) {
+				bool return_flag = false;
 				switch ( it->control_type ) {
 					case Control::CT_STATEMENT: {
-						result = EvaluateStatement( subctx, ep, (Statement*)it );
+						result = EvaluateStatement( subctx, ep, (Statement*)it, &return_flag );
 						break;
 					}
 					case Control::CT_CONDITIONAL: {
-						result = EvaluateConditional( subctx, ep, (Conditional*)it );
+						result = EvaluateConditional( subctx, ep, (Conditional*)it, false, &return_flag );
 						break;
 					}
 					default:
 						THROW( "unexpected control type: " + it->Dump() );
 				}
-				if ( result ) {
+				if ( return_flag ) {
 					// got return statement
+					if ( returnflag ) {
+						*returnflag = true;
+					}
 					break;
 				}
 			}
@@ -103,31 +103,27 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 	return result;
 }
 
-gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement ) const {
-	bool returnflag = false;
-	const auto result = EvaluateExpression( ctx, ep, statement->body, &returnflag );
-	if ( m_aggressive_gc ) {
-		m_gc_space->Collect();
-	}
-	if ( returnflag ) {
+gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement, bool* returnflag ) const {
+	ASSERT_NOLOG( returnflag, "statement returnflag ptr not set" );
+	ASSERT_NOLOG( !*returnflag, "statement but returnflag is already true" );
+	const auto result = EvaluateExpression( ctx, ep, statement->body, returnflag );
+	if ( *returnflag ) {
 		auto* gc_space = m_gc_space;
-		return result
-			? result
-			: VALUE( value::Undefined );
+		return result;
 	}
 	return nullptr;
 }
 
-gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested ) const {
+gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested, bool* returnflag ) const {
 	auto* gc_space = m_gc_space;
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
 			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
-				return EvaluateScope( ctx, ep, c->body );
+				return EvaluateScope( ctx, ep, c->body, returnflag );
 			}
 			else if ( c->els ) {
-				return EvaluateConditional( ctx, ep, c->els, true );
+				return EvaluateConditional( ctx, ep, c->els, true, returnflag );
 			}
 			else {
 				return nullptr;
@@ -140,10 +136,10 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 			}
 			const auto* c = (ElseIf*)conditional;
 			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
-				return EvaluateScope( ctx, ep, c->body );
+				return EvaluateScope( ctx, ep, c->body, returnflag );
 			}
 			else if ( c->els ) {
-				return EvaluateConditional( ctx, ep, c->els, true );
+				return EvaluateConditional( ctx, ep, c->els, true, returnflag );
 			}
 			else {
 				return nullptr;
@@ -155,7 +151,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				throw gse::Exception( EC.PARSE_ERROR, "Unexpected else without if", ctx, conditional->m_si, ep );
 			}
 			const auto* c = (Else*)conditional;
-			return EvaluateScope( ctx, ep, c->body );
+			return EvaluateScope( ctx, ep, c->body, returnflag );
 		}
 		case Conditional::CT_WHILE: {
 			const auto* c = (While*)conditional;
@@ -163,12 +159,12 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 			bool need_break = false;
 			bool need_clear = false;
 			while ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
-				result = EvaluateScope( ctx, ep, c->body );
+				result = EvaluateScope( ctx, ep, c->body, returnflag );
 				CheckBreakCondition( result, &need_break, &need_clear );
 				if ( need_clear ) {
 					result = nullptr;
 				}
-				if ( need_break ) {
+				if ( need_break || ( returnflag && *returnflag ) ) {
 					break;
 				}
 			}
@@ -183,17 +179,17 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				case ForCondition::FCT_EXPRESSIONS: {
 					const auto* condition = (ForConditionExpressions*)c->condition;
 					bool return_flag = false;
-					EvaluateExpression( ctx, ep, condition->init );
+					EvaluateExpression( ctx, ep, condition->init, returnflag );
 					while ( EvaluateBool( ctx, ep, condition->check ) ) {
 						result = EvaluateScope( ctx, ep, c->body );
 						CheckBreakCondition( result, &need_break, &need_clear );
-						if ( need_break ) {
+						if ( need_break || ( returnflag && *returnflag ) ) {
 							if ( need_clear ) {
 								result = nullptr;
 							}
 							break;
 						}
-						EvaluateExpression( ctx, ep, condition->iterate );
+						EvaluateExpression( ctx, ep, condition->iterate, returnflag );
 					}
 					break;
 				}
@@ -201,7 +197,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					const auto* condition = (ForConditionInOf*)c->condition;
 					const auto target = Deref( ctx, condition->m_si, ep, EvaluateExpression( ctx, ep, condition->expression ) );
 					ctx->ForkAndExecute(
-						m_gc_space, ctx, condition->m_si, ep, false, [ this, &gc_space, &target, &condition, &result, &ep, &c, &need_break, &need_clear ]( gse::context::ChildContext* const subctx ) {
+						m_gc_space, ctx, condition->m_si, ep, false, [ this, &gc_space, &target, &condition, &result, &ep, &c, &need_break, &need_clear, &returnflag ]( gse::context::ChildContext* const subctx ) {
 
 							switch ( target->type ) {
 								case gse::Value::T_ARRAY: {
@@ -210,10 +206,10 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 										case ForConditionInOf::FIC_IN: {
 											for ( size_t i = 0 ; i < arr->value.size() ; i++ ) {
 												subctx->CreateConst( condition->variable->name, VALUE( Int, , i ), condition->m_si, ep );
-												result = EvaluateScope( subctx, ep, c->body );
+												result = EvaluateScope( subctx, ep, c->body, returnflag );
 												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
-												if ( need_break ) {
+												if ( need_break || ( returnflag && *returnflag ) ) {
 													if ( need_clear ) {
 														result = nullptr;
 													}
@@ -225,10 +221,10 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 										case ForConditionInOf::FIC_OF: {
 											for ( const auto& v : arr->value ) {
 												subctx->CreateConst( condition->variable->name, v, condition->m_si, ep );
-												result = EvaluateScope( subctx, ep, c->body );
+												result = EvaluateScope( subctx, ep, c->body, returnflag );
 												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
 												CheckBreakCondition( result, &need_break, &need_clear );
-												if ( need_break ) {
+												if ( need_break || ( returnflag && *returnflag ) ) {
 													if ( need_clear ) {
 														result = nullptr;
 													}
@@ -253,9 +249,9 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 												? VALUE( String, , v.first )
 												: v.second, condition->m_si, ep
 										);
-										result = EvaluateScope( subctx, ep, c->body );
+										result = EvaluateScope( subctx, ep, c->body, returnflag );
 										subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
-										if ( result ) {
+										if ( returnflag && *returnflag ) {
 											break;
 										}
 									}
@@ -272,14 +268,18 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					THROW( "unexpected for condition type: " + std::to_string( c->condition->for_type ) );
 			}
 			if ( result && result->type == gse::Value::T_LOOPCONTROL ) {
-				return nullptr; // we don't want to break out from parent scope
+				// we don't want to break out from parent scope
+				if ( returnflag ) {
+					*returnflag = false;
+				}
+				return nullptr;
 			}
 			return result;
 		}
 		case Conditional::CT_TRY: {
 			const auto* c = (Try*)conditional;
 			try {
-				return EvaluateScope( ctx, ep, c->body );
+				return EvaluateScope( ctx, ep, c->body, returnflag );
 			}
 			catch ( const gse::Exception& e ) {
 				const auto* h = c->handlers->handlers;
@@ -288,9 +288,9 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					it = h->properties.find( "" ); // check for default handler too
 				}
 				if ( it != h->properties.end() ) {
-					const auto f = EvaluateExpression( ctx, ep, it->second );
+					const auto f = EvaluateExpression( ctx, ep, it->second, returnflag );
 					if ( f->type != gse::Value::T_CALLABLE ) {
-						// TODO: check move to parser
+						// TODO: move check to parser
 						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f->ToString(), ctx, it->second->m_si, ep );
 					}
 					auto si = e.si;

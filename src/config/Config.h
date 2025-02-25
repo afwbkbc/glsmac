@@ -53,7 +53,8 @@ CLASS( Config, common::Module )
 		DF_GSE_TESTS_SCRIPT = 1 << 4,
 		DF_GSE_PROMPT_JS = 1 << 5,
 		DF_NOPINGS = 1 << 6,
-		DF_AGGRESSIVE_GC = 1 << 7,
+		DF_VERBOSE_GC = 1 << 7,
+		DF_NO_GC = 1 << 8,
 #ifdef DEBUG
 		DF_MAPDUMP = 1 << 7,
 		DF_MEMORYDEBUG = 1 << 8,

@@ -35,10 +35,6 @@ CLASS( Interpreter, Runner )
 
 private:
 
-#if defined( DEBUG ) || defined ( FASTDEBUG )
-	bool m_aggressive_gc = false;
-#endif
-
 	class Function : public value::Callable {
 	public:
 		Function(
@@ -58,9 +54,9 @@ private:
 		const program::Program* const program;
 	};
 
-	Value* const EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const program::Scope* scope ) const;
-	Value* const EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const program::Statement* statement ) const;
-	Value* const EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const program::Conditional* conditional, bool is_nested = false ) const;
+	Value* const EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const program::Scope* scope, bool* returnflag = nullptr ) const;
+	Value* const EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const program::Statement* statement, bool* returnflag = nullptr ) const;
+	Value* const EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const program::Conditional* conditional, bool is_nested, bool* returnflag = nullptr ) const;
 	Value* const EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const program::Expression* expression, bool* returnflag = nullptr ) const;
 	Value* const EvaluateOperand( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand ) const;
 	const std::string EvaluateString( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand ) const;

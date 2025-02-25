@@ -368,7 +368,7 @@ X( Parser::static_var_f, float, value::Float, m_static_vars_f )
 void Parser::collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const {
 	static_vars.reserve( static_vars.size() + m_static_vars_s.size() + m_static_vars_f.size() + m_static_vars_i.size() );
 #define X( _m ) \
-    for ( const auto& it : m_static_vars_s ) { \
+    for ( const auto& it : _m ) { \
         static_vars.insert( it.second ); \
     }
 	X( m_static_vars_s )

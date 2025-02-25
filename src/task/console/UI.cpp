@@ -154,10 +154,6 @@ void UI::ShowConsole() {
 							data
 						};
 						e.m_flags |= ::ui_legacy::event::EF_MOUSE;
-						if ( e.m_type == ::ui_legacy::event::EV_MOUSE_DOWN ) {
-							int a = 5;
-							a++;
-						}
 						m_history->ProcessEvent( &e );
 						return true;
 					}, ui_legacy::UI::GH_BEFORE

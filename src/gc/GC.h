@@ -17,13 +17,18 @@ class Object;
 CLASS( GC, common::Module )
 
 	static constexpr uint16_t COLLECTS_PER_SECOND = 1;
-	static constexpr uint16_t NEW_OBJECT_PROTECTION_TIME_MS = 1500; // new objects won't be removed until they are older than this
+
+	// new objects won't be removed until they are older than this
+	// this is important so that temporary variables such as those returned by function are not destroyed in the middle of processing
+	// TODO: improve
+	static constexpr uint16_t NEW_OBJECT_PROTECTION_TIME_MS = 200;
 
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
+	static const bool IsDebugEnabled();
 	static void DebugLock();
 	static void DebugBegin( const std::string& what );
 	static void DebugEntry( const std::string& what, gc::Object* const object );

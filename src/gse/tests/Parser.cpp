@@ -281,8 +281,8 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 		const auto control = VALIDATOR( Control, &errmsg, &statement, &conditional, &si ) {
-			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( a->control_type == b->control_type, "controls have different types ( " + a->Dump() + " != " + b->Dump() + " )" );
+			VALIDATE( si, a->m_si, b->m_si );
 			switch ( a->control_type ) {
 				case Control::CT_CONDITIONAL: {
 					VALIDATE( conditional, (Conditional*)a, (Conditional*)b );
@@ -322,7 +322,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			const auto* program = parser->Parse( gc_space );
 			const auto* reference_program = gse::tests::GetTestProgram( gc_space );
 			ASSERT_NOLOG( reference_program, "reference program is null" );
-			const auto result = validate_program( program, reference_program );
+			const auto result = validate_program( reference_program, program );
 			if ( program ) {
 				DELETE( program );
 			}
