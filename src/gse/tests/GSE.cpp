@@ -9,6 +9,7 @@
 #include "gse/value/Object.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace gse {
 namespace tests {
@@ -53,8 +54,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_y, TestModuleY, gc_space, ctx );
-			gse->AddModule( "test_module_y", test_module_y );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( test_module_y, TestModuleY, gc_space, ctx );
+					gse->AddModule( "test_module_y", test_module_y );
+				}
+			);
 
 			class TestModuleX : public value::Callable {
 			public:
@@ -65,8 +70,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( test_module_x, TestModuleX, gc_space, ctx );
-			gse->AddModule( "test_module_x", test_module_x );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( test_module_x, TestModuleX, gc_space, ctx );
+					gse->AddModule( "test_module_x", test_module_x );
+				}
+			);
 
 			gse->Run();
 
@@ -100,8 +109,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gc_space, gse, ctx );
-			gse->AddModule( "set_variables", set_variables );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( set_variables, SetVariables, gc_space, gse, ctx );
+					gse->AddModule( "set_variables", set_variables );
+				}
+			);
 
 			static std::string errmsg = "";
 			class CheckVariables : public value::Callable {
@@ -111,7 +124,7 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					, gse( gse ) {}
 				GSE* gse;
 				Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override {
-					const auto validate = [ this ]() -> std::string {
+					const auto validate = [ this ]() -> const std::string {
 						Value* t;
 
 #define CHECK( _varname, _expected_type ) \
@@ -140,8 +153,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( check_variables, CheckVariables, gc_space, gse, ctx );
-			gse->AddModule( "check_variables", check_variables );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( check_variables, CheckVariables, gc_space, gse, ctx );
+					gse->AddModule( "check_variables", check_variables );
+				}
+			);
 
 			gse->Run();
 
@@ -180,8 +197,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_methods, SetMethods, gc_space, gse, ctx );
-			gse->AddModule( "set_methods", set_methods );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( set_methods, SetMethods, gc_space, gse, ctx );
+					gse->AddModule( "set_methods", set_methods );
+				}
+			);
 
 			gse->Run();
 
@@ -204,34 +225,44 @@ void AddGSETests( task::gsetests::GSETests* task ) {
         GT_ASSERT( result->value == _expected_value, "wrong result value: " + std::to_string( result->value ) ); \
     }
 
-			{ // test test_method()
-				GETMETHOD( "test_method" );
-				GT_ASSERT( !wasTestMethodCalled, "method should have not be called yet" );
-				GETRESULT( {}, Value::T_NULL, value::Null );
-				GT_ASSERT( wasTestMethodCalled, "method should have been called" );
-			}
-			{ // test sum()
-				GETMETHOD( "sum" );
-				CHECKRESULT( {}, Value::T_INT, value::Int, 0 );
-				CHECKRESULT( { VALUE( value::Int, , 3 ) }, Value::T_INT, value::Int, 3 );
-				std::vector< Value* > args = {
-					VALUE( value::Int, , 2 ),
-					VALUE( value::Int, , 5 ),
-				};
-				CHECKRESULT( args, Value::T_INT, value::Int, 7 );
-				args = {
-					VALUE( value::Int, , 11 ),
-					VALUE( value::Int, , 22 ),
-					VALUE( value::Int, , 33 ),
-				};
-				CHECKRESULT( args, Value::T_INT, value::Int, 66 );
-			}
+			const auto& run_tests = [ &gse, &gc_space ]() -> std::string {
+				{ // test test_method()
+					GETMETHOD( "test_method" );
+					GT_ASSERT( !wasTestMethodCalled, "method should have not be called yet" );
+					GETRESULT( {}, Value::T_NULL, value::Null );
+					GT_ASSERT( wasTestMethodCalled, "method should have been called" );
+				}
+				{ // test sum()
+					GETMETHOD( "sum" );
+					CHECKRESULT( {}, Value::T_INT, value::Int, 0 );
+					CHECKRESULT( { VALUE( value::Int, , 3 ) }, Value::T_INT, value::Int, 3 );
+					std::vector< Value* > args = {
+						VALUE( value::Int, , 2 ),
+						VALUE( value::Int, , 5 ),
+					};
+					CHECKRESULT( args, Value::T_INT, value::Int, 7 );
+					args = {
+						VALUE( value::Int, , 11 ),
+						VALUE( value::Int, , 22 ),
+						VALUE( value::Int, , 33 ),
+					};
+					CHECKRESULT( args, Value::T_INT, value::Int, 66 );
+				}
+				GT_OK();
+			};
 
 #undef GETMETHOD
 #undef GETRESULT
 #undef CHECKRESULT
 
-			GT_OK();
+			std::string result = "";
+			gc_space->Accumulate(
+				[ &run_tests, &result ]() {
+					result = run_tests();
+				}
+			);
+
+			return result;
 		}
 	);
 
@@ -281,8 +312,12 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			NEWV( set_variables, SetVariables, gc_space, gse, ctx );
-			gse->AddModule( "set_variables", set_variables );
+			gc_space->Accumulate(
+				[ &gc_space, &ctx, &gse ]() {
+					NEWV( set_variables, SetVariables, gc_space, gse, ctx );
+					gse->AddModule( "set_variables", set_variables );
+				}
+			);
 
 			gse->Run();
 
@@ -303,16 +338,26 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 			GT_ASSERT( VALUE_GET( value::Int, obj3.at( "property_int" ) ) == 30 );
 			GT_ASSERT( VALUE_GET( value::String, obj3.at( "property_string" ) ) == "STRING" );
 			const auto sum = VALUE_DATA( value::Callable, obj3.at( "property_sum" ) );
-			std::vector< Value* > args = {
-				VALUE( value::Int, , 2 ),
-				VALUE( value::Int, , 5 ),
-			};
-			{
-				ExecutionPointer ep;
-				GT_ASSERT( VALUE_GET( value::Int, sum->Run( gc_space, nullptr, {}, ep, args ) ) == 7 );
-			}
 
-			GT_OK();
+			const auto run_tests = [ &gse, &gc_space, &sum ]() -> const std::string {
+				std::vector< Value* > args = {
+					VALUE( value::Int, , 2 ),
+					VALUE( value::Int, , 5 ),
+				};
+				{
+					ExecutionPointer ep;
+					GT_ASSERT( VALUE_GET( value::Int, sum->Run( gc_space, nullptr, {}, ep, args ) ) == 7 );
+				}
+				GT_OK();
+			};
+
+			std::string result = "";
+			gc_space->Accumulate(
+				[ &run_tests, &result ]() {
+					result = run_tests();
+				}
+			);
+			return result;
 		}
 	);
 

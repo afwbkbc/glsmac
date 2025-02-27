@@ -9,6 +9,7 @@
 #include "gse/context/ChildContext.h"
 #include "Exception.h"
 #include "util/Time.h"
+#include "gc/Space.h"
 
 namespace gse {
 
@@ -163,34 +164,38 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 
 		m_gc_mutex.unlock();
 
-		const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
-
 		size_t ms = 0;
 		bool repeat = false;
+		m_gc_space->Accumulate(
+			[ this, &ctx, &ep, &si, &f, &timer, &repeat, &ms ]() {
 
-		const auto& r = result;
-		if ( r ) {
-			switch ( r->type ) {
-				case Value::T_UNDEFINED:
-				case Value::T_NULL:
-					break;
-				case Value::T_BOOL: {
-					if ( ( (value::Bool*)r )->value ) {
-						repeat = true;
-						ms = timer.ms;
+				const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
+
+				const auto& r = result;
+				if ( r ) {
+					switch ( r->type ) {
+						case Value::T_UNDEFINED:
+						case Value::T_NULL:
+							break;
+						case Value::T_BOOL: {
+							if ( ( (value::Bool*)r )->value ) {
+								repeat = true;
+								ms = timer.ms;
+							}
+							break;
+						}
+						case Value::T_INT: {
+							ms = ( (value::Int*)r )->value;
+							ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
+							repeat = true;
+							break;
+						}
+						default:
+							GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 					}
-					break;
 				}
-				case Value::T_INT: {
-					ms = ( (value::Int*)r )->value;
-					ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
-					repeat = true;
-					break;
-				}
-				default:
-					GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
 			}
-		}
+		);
 
 		m_gc_mutex.lock();
 

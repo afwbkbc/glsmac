@@ -28,19 +28,14 @@ Parser::~Parser() {
 	delete m_ep;
 }
 
-const program::Program* Parser::Parse( gc::Space* const gc_space ) {
+const program::Program* Parser::Parse() {
 	ASSERT_NOLOG( !m_is_parsed, "already parsed" );
 	m_is_parsed = true;
-	gc_space->AddRoot( this );
 	source_elements_t elements = {};
 	GetElements( elements );
 	const auto* program = GetProgram( elements );
 	for ( auto& it : elements ) {
 		delete it;
-	}
-	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
-		gc_space->ReplaceRoot( this, GetStaticVars( gc_space ) ); // now parser can be destroyed but static vars will last until the end
 	}
 	return program;
 }

@@ -8,7 +8,7 @@
 #include "gse/runner/Interpreter.h"
 #include "gse/ExecutionPointer.h"
 #include "gse/program/Program.h"
-
+#include "gc/Space.h"
 #include "mocks/Mocks.h"
 
 #include "util/String.h"
@@ -28,27 +28,32 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 		GT( expected_output ) {
 			auto* gc_space = gse->GetGCSpace();
 
-			runner::Interpreter interpreter( gc_space );
+			gc_space->Accumulate(
+				[ &gse, &gc_space ]() {
 
-			context::GlobalContext* context = gse->CreateGlobalContext();
-			context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
-			mocks::AddMocks( gc_space, context, {} );
+					NEWV( interpreter, runner::Interpreter, gc_space );
 
-			gse->LogCaptureStart();
-			const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
-			ASSERT_NOLOG( test_program, "test program is null" );
-			try {
-				ExecutionPointer ep;
-				interpreter.Execute( context, ep, test_program );
-			}
-			catch ( const std::runtime_error& e ) {
-				delete test_program;
-				context->Clear();
-				throw;
-			}
-			delete test_program;
-			context->Clear();
+					context::GlobalContext* context = gse->CreateGlobalContext();
+					context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
+					mocks::AddMocks( gc_space, context, {} );
 
+					gse->LogCaptureStart();
+					const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
+					ASSERT_NOLOG( test_program, "test program is null" );
+					try {
+						ExecutionPointer ep;
+						interpreter->Execute( context, ep, test_program );
+					}
+					catch ( const std::runtime_error& e ) {
+						delete test_program;
+						context->Clear();
+						throw;
+					}
+					delete test_program;
+					context->Clear();
+
+				}
+			);
 			const auto actual_output = gse->LogCaptureStopGet();
 
 			VALIDATE();

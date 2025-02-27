@@ -134,7 +134,7 @@ void GSEPrompt::ProcessInput() {
 	gse::Value* result = nullptr;
 	auto* gc_space = m_gse->GetGCSpace();
 	try {
-		program = parser->Parse( gc_space );
+		program = parser->Parse();
 		if ( m_is_tty ) {
 			const gse::si_t si = {
 				"",
@@ -179,7 +179,6 @@ void GSEPrompt::ProcessInput() {
 		util::LogHelper::Println( "" );
 	}
 
-	DELETE( parser );
 	if ( program ) {
 		// can't delete here because program may have contained some functions that are still bound to context
 		// TODO: think how to deal with it

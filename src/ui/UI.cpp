@@ -39,7 +39,7 @@ UI::UI( GSE_CALLABLE )
 
 	g_engine->GetGraphics()->AddScene( m_scene );
 	m_root = new dom::Root( GSE_CALL, this );
-	Resize();
+	Resize();	
 
 	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
 		if ( event.type == input::EV_MOUSE_MOVE ) {

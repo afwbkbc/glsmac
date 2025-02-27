@@ -3,6 +3,8 @@
 #include <stack>
 #include <functional>
 
+#include "gc/Space.h"
+
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/String.h"
@@ -160,7 +162,10 @@ void JS::GetElements( source_elements_t& elements ) {
 #endif
 
 const program::Program* JS::GetProgram( const source_elements_t& elements ) {
-	NEWV( program, program::Program, GetScope( elements.begin(), elements.end() ), true );
+	program::Program* program;
+	m_gc_space->Accumulate( [ this, &program, &elements ](){
+		NEW( program, program::Program, GetScope( elements.begin(), elements.end() ), true );
+	});
 	return program;
 }
 

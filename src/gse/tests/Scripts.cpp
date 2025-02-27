@@ -14,7 +14,7 @@
 #include "util/FS.h"
 #include "util/String.h"
 #include "gse/ExecutionPointer.h"
-
+#include "gc/Space.h"
 #include "engine/Engine.h"
 
 namespace gse {
@@ -65,11 +65,15 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
 					mocks::AddMocks( gc_space, context, { script } );
-					program = parser->Parse( gc_space );
+					program = parser->Parse();
 					runner = gse->GetRunner();
 					{
 						ExecutionPointer ep;
-						runner->Execute( context, ep, program );
+						gc_space->Accumulate(
+							[ &runner, &context, &ep, &program ]() {
+								runner->Execute( context, ep, program );
+							}
+						);
 					}
 				}
 				catch ( Exception& e ) {
@@ -86,9 +90,6 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 
 				if ( program ) {
 					DELETE( program );
-				}
-				if ( runner ) {
-					DELETE( runner );
 				}
 
 				return last_error;

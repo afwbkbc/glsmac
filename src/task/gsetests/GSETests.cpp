@@ -7,6 +7,7 @@
 #include "gse/program/Program.h"
 #include "util/LogHelper.h"
 #include "gse/context/GlobalContext.h"
+#include "gc/Space.h"
 
 namespace gse::tests {
 const gse::program::Program* GetTestProgram( gc::Space* const gc_space );
@@ -36,7 +37,12 @@ void GSETests::Iterate() {
 		const auto& it = m_tests[ current_test_index++ ];
 		LogTest( "  " + it.first + "..." );
 		gse::GSE gse;
-		auto* ctx = gse.CreateGlobalContext();
+		gse::context::GlobalContext* ctx;
+		gse.GetGCSpace()->Accumulate(
+			[ &gse, &ctx ]() {
+				ctx = gse.CreateGlobalContext();
+			}
+		);
 		const auto errmsg = it.second( &gse, ctx );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;

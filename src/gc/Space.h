@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <chrono>
+#include <functional>
 
 #include "common/Common.h"
 
@@ -18,34 +19,32 @@ namespace gc {
 
 class GC;
 class Object;
+class Root;
 
 CLASS( Space, common::Class )
 
-	Space();
+	Space( Root* const root );
 	~Space();
 
-	void AddRoot( Object* object );
-	void RemoveRoot( Object* object );
-	void ReplaceRoot( Object* from, Object* to ); // atomic
+	void Accumulate( const std::function< void() >& f );
 
 private:
+	// if true - it means space is about to be destroyed and doing final cleanups/collects
 	std::atomic< bool > m_is_destroying = false;
 
-	// objects to add to pending
-	std::mutex m_objects_to_add_mutex;
-	std::unordered_set< Object* > m_objects_to_add = {};
+	// object that is queried for reachability (recursive), not collectable and must be deleted manually after space
+	Root* const m_root_object = {};
 
-	// objects that were just created and have temporary protection because they need time to be assigned somewhere to become reachable
-	std::unordered_map< Object*, uint64_t > m_pending_objects = {};
+	std::atomic< bool > m_is_accumulating = false;
+	// objects that have been accumulated but won't be collected until accumulator function finishes (that allows for temp values to move and assign where needed)
+	std::mutex m_accumulation_mutex;
+	std::unordered_set< Object* > m_accumulated_objects = {};
 
 	// objects that are already collectable
+	std::mutex m_objects_mutex;
 	std::unordered_set< Object* > m_objects = {};
 
-	// objects that are queried for reachability (recursive), they return sets of reachable objects. not collectable until manually removed
-	std::mutex m_root_objects_mutex;
-	std::unordered_set< Object* > m_root_objects = {};
-
-	// thread-safety of collection logic
+	// thread-safety of collection logic, to make sure only one thread can run collection of this space at any given time
 	std::mutex m_collect_mutex;
 
 	// to avoid reallocations

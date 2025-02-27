@@ -25,7 +25,7 @@ CLASS2( Parser, common::Class, gc::Object )
 	Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser();
 
-	const program::Program* Parse( gc::Space* const gc_space );
+	const program::Program* Parse();
 
 	class StaticVars : public gc::Object {
 	private:

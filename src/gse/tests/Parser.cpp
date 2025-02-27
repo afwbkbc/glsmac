@@ -318,15 +318,20 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 		"test if JS parser produces valid output",
 		GT( validate_program ) {
 			auto* gc_space = gse->GetGCSpace();
-			NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
-			const auto* program = parser->Parse( gc_space );
-			const auto* reference_program = gse::tests::GetTestProgram( gc_space );
-			ASSERT_NOLOG( reference_program, "reference program is null" );
-			const auto result = validate_program( reference_program, program );
-			if ( program ) {
-				DELETE( program );
-			}
-			delete reference_program;
+			std::string result = "";
+			gc_space->Accumulate(
+				[ &gc_space, &validate_program, &result ]() {
+					NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
+					const auto* program = parser->Parse();
+					const auto* reference_program = gse::tests::GetTestProgram( gc_space );
+					ASSERT_NOLOG( reference_program, "reference program is null" );
+					result = validate_program( reference_program, program );
+					if ( program ) {
+						DELETE( program );
+					}
+					delete reference_program;
+				}
+			);
 			return result;
 		}
 	);

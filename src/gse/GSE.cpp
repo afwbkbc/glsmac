@@ -16,22 +16,30 @@ namespace gse {
 // scripts must be cross-platform
 const char GSE::PATH_SEPARATOR = '/';
 
-GSE::GSE() {
-	NEW( m_gc_space, gc::Space );
+GSE::GSE()
+	: gc::Root() {
+	NEW( m_gc_space, gc::Space, this );
 	m_bindings.push_back( &m_builtins );
-	m_async = new Async( m_gc_space );
-	m_gc_space->AddRoot( m_async );
+	m_gc_space->Accumulate(
+		[ this ]() {
+			m_async = new Async( m_gc_space );
+		}
+	);
 }
 
 GSE::~GSE() {
 	Finish();
-	m_gc_space->RemoveRoot( m_async );
 	for ( auto& it : m_include_cache ) {
 		it.second.Cleanup( this );
 	}
-	for ( const auto& context : m_global_contexts ) {
-		m_gc_space->RemoveRoot( context );
-	}
+
+	// make everything unreachable so that gc could clean it
+	m_global_contexts.clear();
+	m_parsers.clear();
+	m_runner = nullptr;
+	m_async = nullptr;
+	m_modules.clear();
+
 	delete m_gc_space;
 }
 
@@ -57,20 +65,44 @@ void GSE::Finish() {
 	}
 }
 
-parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) const {
+parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) {
 	parser::Parser* parser = nullptr;
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
-	ASSERT( extensions.size() == 2 && extensions[ 0 ] == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
-	if ( extensions[ 1 ] == ".js" ) {
-		NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
+	ASSERT( extensions.size() == 2 && extensions.at( 0 ) == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
+	const auto& ext = extensions.at( 1 );
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		auto it = m_parsers.find( filename );
+		if ( it == m_parsers.end() ) {
+			m_gc_space->Accumulate(
+				[ this, &ext, &parser, &filename, &source, &initial_line_num, &it ]() {
+					if ( ext == ".js" ) {
+						NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
+					}
+					ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
+					it = m_parsers.insert(
+						{
+							filename,
+							parser
+						}
+					).first;
+				}
+			);
+		}
+		return it->second;
 	}
-	ASSERT( parser, "could not find parser for '.gls" + extensions[ 1 ] + "' extension" );
-	return parser;
 }
 
-runner::Runner* GSE::GetRunner() const {
-	NEWV( runner, runner::Interpreter, m_gc_space );
-	return runner;
+runner::Runner* GSE::GetRunner() {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	if ( !m_runner ) {
+		m_gc_space->Accumulate(
+			[ this ]() {
+				NEW( m_runner, runner::Interpreter, m_gc_space );
+			}
+		);
+	}
+	return m_runner;
 }
 
 void GSE::AddBindings( Bindings* bindings ) {
@@ -78,19 +110,27 @@ void GSE::AddBindings( Bindings* bindings ) {
 }
 
 context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path ) {
-	NEWV( context, context::GlobalContext, this, source_path );
-	m_gc_space->AddRoot( context );
-	m_global_contexts.insert( context );
-	{
-		gse::ExecutionPointer ep;
-		for ( const auto& it : m_bindings ) {
-			it->AddToContext( m_gc_space, context, ep );
+	context::GlobalContext* context;
+	m_gc_space->Accumulate(
+		[ this, &context, &source_path ]() {
+			NEW( context, context::GlobalContext, this, source_path );
+			{
+				std::lock_guard< std::mutex > guard( m_gc_mutex );
+				m_global_contexts.insert( context );
+				{
+					gse::ExecutionPointer ep;
+					for ( const auto& it : m_bindings ) {
+						it->AddToContext( m_gc_space, context, ep );
+					}
+				}
+			}
 		}
-	}
+	);
 	return context;
 }
 
 void GSE::AddModule( const std::string& path, value::Callable* module ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
 	if ( m_modules.find( path ) != m_modules.end() ) {
 		ExecutionPointer ep;
 		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {}, ep ); // ?
@@ -104,15 +144,21 @@ void GSE::Run() {
 	Log( "GSE started" );
 
 	// execute all modules in loading order
+	std::unordered_map< std::string, value::Callable* >::const_iterator it;
 	for ( auto& i : m_modules_order ) {
-		auto it = m_modules.find( i );
-		ASSERT( it != m_modules.end(), "required module missing: " + i );
-		Log( "Executing module: " + it->first );
-		NEWV( context, context::GlobalContext, this, {} );
 		{
-			ExecutionPointer ep;
-			it->second->Run( m_gc_space, context, {}, ep, {} );
+			std::lock_guard< std::mutex > guard( m_gc_mutex );
+			it = m_modules.find( i );
+			ASSERT( it != m_modules.end(), "required module missing: " + i );
 		}
+		Log( "Executing module: " + it->first );
+		auto* context = CreateGlobalContext();
+		m_gc_space->Accumulate(
+			[ this, &it, &context ]() {
+				ExecutionPointer ep;
+				it->second->Run( m_gc_space, context, {}, ep, {} );
+			}
+		);
 	}
 
 	Log( "GSE finished" );
@@ -166,7 +212,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 		}
 #endif
 		const auto parser = GetParser( full_path, source );
-		cache.program = parser->Parse( m_gc_space );
+		cache.program = parser->Parse();
 		cache.runner = GetRunner();
 		{
 			cache.result = cache.runner->Execute( cache.context, ep, cache.program );
@@ -219,21 +265,85 @@ gc::Space* const GSE::GetGCSpace() const {
 	return m_gc_space;
 }
 
+void GSE::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	// runner is reachable
+	GC_DEBUG_BEGIN( "runner" );
+	if ( m_runner ) {
+		if ( active_objects.find( m_runner ) == active_objects.end() ) {
+			m_runner->GetReachableObjects( active_objects );
+		}
+		else {
+			GC_DEBUG( "ref", m_runner );
+		}
+	}
+	GC_DEBUG_END();
+
+	// parsers are reachable
+	GC_DEBUG_BEGIN( "parsers" );
+	for ( const auto& it : m_parsers ) {
+		const auto& parser = it.second;
+		if ( active_objects.find( parser ) == active_objects.end() ) {
+			parser->GetReachableObjects( active_objects );
+		}
+		else {
+			GC_DEBUG( "ref", parser );
+		}
+	}
+	GC_DEBUG_END();
+
+	// global contexts are reachable
+	GC_DEBUG_BEGIN( "global_contexts" );
+	for ( const auto& context : m_global_contexts ) {
+		if ( active_objects.find( context ) == active_objects.end() ) {
+			context->GetReachableObjects( active_objects );
+		}
+		else {
+			GC_DEBUG( "ref", context );
+		}
+	}
+	GC_DEBUG_END();
+
+	// async is reachable
+	GC_DEBUG_BEGIN( "async" );
+	if ( m_async ) {
+		if ( active_objects.find( m_async ) == active_objects.end() ) {
+			m_async->GetReachableObjects( active_objects );
+		}
+		else {
+			GC_DEBUG( "ref", m_async );
+		}
+	}
+	GC_DEBUG_END();
+
+	// modules are reachable
+	GC_DEBUG_BEGIN( "modules" );
+	for ( const auto& it : m_modules ) {
+		const auto& module = it.second;
+		if ( active_objects.find( module ) == active_objects.end() ) {
+			module->GetReachableObjects( active_objects );
+		}
+		else {
+			GC_DEBUG( "ref", module );
+		}
+	}
+	GC_DEBUG_END();
+
+}
+
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 	{
 		if ( context ) {
 			context->Clear();
 			context = nullptr;
 		}
-		result = nullptr;
 		if ( program ) {
 			DELETE( program );
 			program = nullptr;
 		}
-		if ( runner ) {
-			DELETE( runner );
-			runner = nullptr;
-		}
+		runner = nullptr;
+		result = nullptr;
 	}
 }
 

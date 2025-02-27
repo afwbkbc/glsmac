@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/Common.h"
+#include "gc/Object.h"
 
 namespace gc {
 class Space;
@@ -21,7 +22,7 @@ class Program;
 
 namespace runner {
 
-CLASS( Runner, common::Class )
+CLASS2( Runner, common::Class, gc::Object )
 
 	Runner( gc::Space* const gc_space );
 

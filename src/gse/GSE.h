@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "common/Common.h"
+#include "gc/Root.h"
 
 #include "Types.h"
 
@@ -43,7 +44,7 @@ class Callable;
 
 class Async;
 
-CLASS( GSE, common::Class )
+CLASS2( GSE, common::Class, gc::Root )
 	GSE();
 	virtual ~GSE();
 
@@ -53,8 +54,8 @@ CLASS( GSE, common::Class )
 
 	void Finish();
 
-	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 ) const;
-	runner::Runner* GetRunner() const;
+	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 );
+	runner::Runner* GetRunner();
 
 	void AddBindings( Bindings* bindings );
 
@@ -74,6 +75,8 @@ CLASS( GSE, common::Class )
 
 	gc::Space* const GetGCSpace() const;
 
+	void GetReachableObjects( std::unordered_set< Object* >& active_objects ) override;
+
 #if defined ( DEBUG ) || defined( FASTDEBUG )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
@@ -85,6 +88,8 @@ private:
 
 	gc::Space* m_gc_space = nullptr;
 	std::unordered_set< context::GlobalContext* > m_global_contexts = {};
+	std::unordered_map< std::string, parser::Parser* > m_parsers = {}; // extension, parser
+	runner::Runner* m_runner = nullptr;
 
 	const std::unordered_set< std::string > m_supported_extensions = {
 		".gls.js",
