@@ -35,7 +35,7 @@ class Faction;
 class State;
 }
 
-CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
+CLASS4( GLSMAC, common::Class, gse::Bindings, gse::Wrappable, gc::Root )
 	GLSMAC();
 	~GLSMAC();
 
@@ -48,6 +48,8 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	void HideLoader();
 
 	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
 	gse::GSE* m_gse = nullptr;

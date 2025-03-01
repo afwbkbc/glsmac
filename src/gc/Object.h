@@ -4,6 +4,15 @@
 #include <mutex>
 #include <string>
 
+#define REACHABLE_EXT( _var, _method ) \
+    if ( reachable_objects.find( _var ) == reachable_objects.end() ) { \
+        (_var)->_method( reachable_objects ); \
+    } \
+    else { \
+        GC_DEBUG( "ref", _var ); \
+}
+#define GC_REACHABLE( _var ) REACHABLE_EXT( _var, GetReachableObjects )
+
 #if ( defined( DEBUG ) || defined( FASTDEBUG ) )
 #include "GC.h"
 #define GC_LOG( _what ) \
@@ -33,7 +42,7 @@ public:
 	Object( gc::Space* const gc_space );
 	virtual ~Object() = default;
 
-	virtual void GetReachableObjects( std::unordered_set< Object* >& active_objects );
+	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects );
 
 protected:
 	std::mutex m_gc_mutex; // always use this when changing or collecting reachables

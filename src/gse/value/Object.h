@@ -40,7 +40,7 @@ public:
 
 	void Unlink();
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 	object_properties_t value;
 	const object_class_t object_class;

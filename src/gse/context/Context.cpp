@@ -167,60 +167,35 @@ void Context::Clear() {
 	}
 }
 
-void Context::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
+void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 
-	if ( true || m_is_executing ) {
-		CollectWithDependencies( active_objects );
+	if ( m_is_executing ) {
+		CollectWithDependencies( reachable_objects );
 
 		GC_DEBUG_BEGIN( "child_contexts" );
 		for ( const auto& child : m_child_contexts ) {
-			//ASSERT_NOLOG( child->m_is_executing, "context is executing but child isn't" );
-			if ( active_objects.find( child ) == active_objects.end() ) {
-				child->GetReachableObjects( active_objects );
-			}
-			else {
-				GC_DEBUG( "ref", child );
-			}
+			ASSERT_NOLOG( child->m_is_executing, "context is executing but child isn't" );
+			GC_REACHABLE( child );
 		}
 		GC_DEBUG_END();
 	}
 
 }
 
-void Context::CollectWithDependencies( std::unordered_set< Object* >& active_objects ) {
+void Context::CollectWithDependencies( std::unordered_set< Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "Context" );
 
 	GC_DEBUG( "this", this );
-	// context is reachable
-	active_objects.insert( this );
+	
+	reachable_objects.insert( this );
 
 	GC_DEBUG_BEGIN( "variables" );
 	// all variables are reachable
 	for ( const auto& v : m_variables ) {
 		GC_DEBUG_BEGIN( v.first );
-		auto* variable = v.second.value;
-		if ( active_objects.find( variable ) == active_objects.end() ) {
-			variable->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", variable );
-		}
+		GC_REACHABLE( v.second.value );
 		GC_DEBUG_END();
-	}
-	GC_DEBUG_END();
-
-	// all ref contexts are reachable
-	GC_DEBUG_BEGIN( "ref_contexts" );
-	for ( const auto& c : m_ref_contexts ) {
-		auto* context = c.second;
-		if ( active_objects.find( context ) == active_objects.end() ) {
-			//ASSERT_NOLOG( context->m_is_executing, "ref context not executing" );
-			context->CollectWithDependencies( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", context );
-		}
 	}
 	GC_DEBUG_END();
 

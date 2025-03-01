@@ -223,7 +223,7 @@ const types::Vec3 Buffer::ReadVec3() {
 	return val;
 }
 
-void Buffer::WriteColor( const Color val ) {
+void Buffer::WriteColor( const Color& val ) {
 	WriteImpl( T_COLOR, (const char*)&val.value, sizeof( val.value ) );
 }
 

@@ -26,7 +26,7 @@ public:
 
 	void JoinContext() const;
 
-	void CollectWithDependencies( std::unordered_set< Object* >& active_objects ) override;
+	void CollectWithDependencies( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
 	Context* m_parent_context; // scope parent

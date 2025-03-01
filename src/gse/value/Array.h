@@ -34,7 +34,7 @@ public:
 
 	static Value* const FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* data, const bool dynamic = false ); // be careful
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
 	void ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const;

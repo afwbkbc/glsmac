@@ -253,8 +253,10 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* valu
 			}
 		}
 		m_properties.insert_or_assign( name, value );
-		for ( const auto& obj : m_wrapobjs ) {
-			obj->value.insert_or_assign( name, value );
+		{
+			for ( const auto& obj : m_wrapobjs ) {
+				obj->value.insert_or_assign( name, value );
+			}
 		}
 		for ( const auto& cls : m_child_classes ) {
 			cls->SetPropertyFromParent( GSE_CALL, name, value );
@@ -283,6 +285,11 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 	const auto& it = m_properties.find( name );
 	if ( it != m_properties.end() ) {
 		m_properties.erase( it );
+		{
+			for ( const auto& obj : m_wrapobjs ) {
+				obj->value.erase( name );
+			}
+		}
 		for ( const auto& cls : m_child_classes ) {
 			cls->UnsetPropertyFromParent( GSE_CALL, name );
 		}

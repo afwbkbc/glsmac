@@ -84,24 +84,18 @@ Value* const Array::FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* d
 	return VALUE( Array, , elements );
 }
 
-void Array::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+void Array::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "Array" );
 
-	// array is reachable
 	GC_DEBUG( "this", this );
-	active_objects.insert( this );
+	reachable_objects.insert( this );
 
 	{
 		std::lock_guard< std::mutex > guard( m_gc_mutex );
 		// elements are reachable
 		GC_DEBUG_BEGIN( "elements" );
 		for ( const auto& v : value ) {
-			if ( active_objects.find( v ) == active_objects.end() ) {
-				v->GetReachableObjects( active_objects );
-			}
-			else {
-				GC_DEBUG( "ref", v );
-			}
+			GC_REACHABLE( v );
 		}
 		GC_DEBUG_END();
 	}

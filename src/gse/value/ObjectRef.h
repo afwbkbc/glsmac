@@ -20,7 +20,7 @@ public:
 	value::Object* object;
 	const std::string key;
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 };
 
 }

@@ -9,8 +9,9 @@ Cache::Cache( const std::string& name )
 }
 
 Cache::~Cache() {
-	if ( !m_cache_children.empty() ) {
-		Log( "WARNING: some cache children still exist" );
+	// detach children
+	for ( const auto& child : m_cache_children ) {
+		child->SetCacheParent( nullptr );
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "task/game/Game.h"
 #include "scheduler/Scheduler.h"
 #include "util/LogHelper.h"
+#include "gc/Space.h"
 
 #include "ui/UI.h"
 
@@ -29,7 +30,9 @@
 
 static GLSMAC* s_glsmac = nullptr;
 
-GLSMAC::GLSMAC() {
+GLSMAC::GLSMAC()
+	: gc::Root() {
+
 	// there can only be one GLSMAC
 	ASSERT( !s_glsmac, "GLSMAC already defined" );
 	s_glsmac = this;
@@ -38,6 +41,7 @@ GLSMAC::GLSMAC() {
 
 	// scripting stuff
 	NEW( m_gse, gse::GSE );
+	m_gse->AddRootObject( this );
 	m_gse->AddBindings( this );
 	m_ctx = m_gse->CreateGlobalContext();
 	m_gc_space = m_gse->GetGCSpace();
@@ -56,22 +60,25 @@ GLSMAC::GLSMAC() {
 
 	{
 		gse::ExecutionPointer ep;
-
 		// global objects
-		NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
+		m_gc_space->Accumulate( [ this, &ep ]() {
+			NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
+		});
 
 		// run main(s)
-		m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
-		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-			m_gse->RunScript(
-				m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
-					{
-						mod_path,
-						"main"
-					}
-				)
-			);
-		}
+		m_gc_space->Accumulate( [ this, &ep, &entry_script ]() {
+			m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
+			for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+				m_gse->RunScript(
+					m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
+						{
+							mod_path,
+							"main"
+						}
+					)
+				);
+			}
+		});
 	}
 }
 
@@ -101,8 +108,10 @@ GLSMAC::~GLSMAC() {
 	m_gse->GetAsync()->StopTimers();
 
 	{
-		gse::ExecutionPointer ep;
-		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
+		m_gc_space->Accumulate( [ this ](){
+			gse::ExecutionPointer ep;
+			m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
+		});
 	}
 
 	DELETE( m_gse );
@@ -247,6 +256,14 @@ void GLSMAC::HideLoader() {
 gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
 	gse::ExecutionPointer ep;
 	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, args );
+}
+
+void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+	GC_DEBUG_BEGIN("ui");
+	GC_REACHABLE( m_ui );
+	GC_DEBUG_END();
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
@@ -451,8 +468,10 @@ void GLSMAC::RunMain() {
 	try {
 		for ( const auto& main : m_main_callables ) {
 			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
-			gse::ExecutionPointer ep;
-			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space, m_ctx, {}, ep ) } );
+			m_gc_space->Accumulate( [ this, &main ] (){
+				gse::ExecutionPointer ep;
+				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space, m_ctx, {}, ep ) } );
+			});
 		}
 	} catch ( const gse::Exception& e ) {
 		util::LogHelper::Println( e.ToString() );

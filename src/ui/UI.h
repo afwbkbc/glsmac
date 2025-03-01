@@ -5,6 +5,7 @@
 
 #include "common/Common.h"
 #include "gse/Wrappable.h"
+#include "gc/Object.h"
 
 #include "Types.h"
 
@@ -31,7 +32,7 @@ class Object;
 
 class Class;
 
-CLASS2( UI, common::Class, gse::Wrappable )
+CLASS3( UI, common::Class, gse::Wrappable, gc::Object )
 
 	UI( GSE_CALLABLE );
 	~UI();
@@ -41,6 +42,7 @@ CLASS2( UI, common::Class, gse::Wrappable )
 	WRAPDEFS_PTR( UI );
 
 	scene::Scene* const m_scene = nullptr;
+	gc::Space* const m_gc_space = nullptr;
 
 	const types::mesh::coord_t ClampX( const coord_t& x ) const;
 	const types::mesh::coord_t ClampY( const coord_t& y ) const;
@@ -51,6 +53,8 @@ CLASS2( UI, common::Class, gse::Wrappable )
 	const types::Vec2< ssize_t >& GetLastMousePosition() const;
 
 	void Destroy( GSE_CALLABLE );
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
 	friend class dom::Object;
@@ -73,6 +77,10 @@ private:
 	void Resize();
 
 	std::unordered_map< const dom::Object*, f_iterable_t > m_iterables = {};
+
+private:
+	friend class dom::Object;
+	gc::Space* const GetGCSpace() const;
 };
 
 }

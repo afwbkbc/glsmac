@@ -97,7 +97,15 @@ void Container::Embed( Object* object, const bool is_visible ) {
 	m_embedded_objects.push_back( { object, is_visible } );
 }
 
-Container::~Container() {}
+Container::~Container() {
+	// detach from children in case they live longer
+	for ( const auto& object : m_children ) {
+		object.second->Detach();
+	}
+	for ( const auto& object : m_embedded_objects ) {
+		object.first->Detach();
+	}
+}
 
 void Container::UpdateMouseOver( GSE_CALLABLE ) {
 	const auto& mouse_coords = m_ui->GetLastMousePosition();
@@ -185,6 +193,32 @@ void Container::Destroy( GSE_CALLABLE ) {
 	Area::Destroy( GSE_CALL );
 }
 
+void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	GC_DEBUG_BEGIN( "Container" );
+
+	reachable_objects.insert( this );
+
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+		// children are reachable
+		GC_DEBUG_BEGIN( "children" );
+		for ( const auto& it : m_children ) {
+			GC_REACHABLE( it.second );
+		}
+		GC_DEBUG_END();
+
+		// embedded objects are reachable
+		GC_DEBUG_BEGIN( "embedded_objects" );
+		for ( const auto& it : m_embedded_objects ) {
+			GC_REACHABLE( it.first );
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
+}
+
 #define FORWARD_CALL( _method, ... ) \
 	auto forward_it = m_forwarded_properties.find( key ); \
 	if ( forward_it != m_forwarded_properties.end() ) { \
@@ -268,11 +302,11 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 	} ) );
 }
 
-void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const {
+void Container::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) {
 	FORWARD_CALL( OnPropertyChange,, value )
 }
 
-void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
+void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 	FORWARD_CALL( OnPropertyRemove )
 }
 

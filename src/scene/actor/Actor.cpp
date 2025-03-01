@@ -85,9 +85,11 @@ const Actor::render_flag_t Actor::GetRenderFlags() const {
 }
 
 void Actor::SetCacheParent( Cache* const cache_parent ) {
-	ASSERT( !m_cache_parent, "cache parent already set" );
+	ASSERT( !m_cache_parent || !cache_parent, "cache parent already set" );
 	m_cache_parent = cache_parent;
-	m_cache_parent->AddCacheChild( this );
+	if ( m_cache_parent ) {
+		m_cache_parent->AddCacheChild( this );
+	}
 }
 
 const Cache* const Actor::GetCacheParent() const {

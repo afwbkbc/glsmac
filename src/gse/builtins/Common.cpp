@@ -19,13 +19,13 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 	ctx->CreateBuiltin( "typeof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
-		return VALUE( value::String,, v->GetTypeString() );
+		return VALUE( value::String,, v ? v->GetTypeString() : "Undefined" );
 	} ), ep );
 
 	ctx->CreateBuiltin( "classof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
-		if ( v->type == Value::T_OBJECT ) {
+		if ( v && v->type == Value::T_OBJECT ) {
 			return VALUE( value::String,, ( ( value::Object*)v )->object_class );
 		}
 		return VALUE( value::Undefined );
@@ -35,6 +35,9 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
 		size_t size = 0;
+		if ( !v ) {
+			GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of Undefined" );
+		}
 		switch ( v->type ) {
 			case Value::T_ARRAY: {
 				size = ((value::Array*)v)->value.size();
@@ -49,6 +52,9 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 	ctx->CreateBuiltin("is_defined", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
+		if ( !v ) {
+			return VALUE( gse::value::Bool,, false );
+		}
 		switch ( v->type ) {
 			case Value::T_UNDEFINED:
 				return VALUE( gse::value::Bool,, false );
@@ -61,21 +67,23 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
 		bool is_empty = true;
-		switch ( v->type ) {
-			case Value::T_STRING: {
-				is_empty = ((value::String*)v)->value.empty();
-				break;
+		if ( v ) {
+			switch ( v->type ) {
+				case Value::T_STRING: {
+					is_empty = ( (value::String*)v )->value.empty();
+					break;
+				}
+				case Value::T_ARRAY: {
+					is_empty = ( (value::Array*)v )->value.empty();
+					break;
+				}
+				case Value::T_OBJECT: {
+					is_empty = ( (value::Object*)v )->value.empty();
+					break;
+				}
+				default:
+					GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString() );
 			}
-			case Value::T_ARRAY: {
-				is_empty = ((value::Array*)v)->value.empty();
-				break;
-			}
-			case Value::T_OBJECT: {
-				is_empty = ((value::Object*)v)->value.empty();
-				break;
-			}
-			default:
-				GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of " + v->GetTypeString() + ": " + v->ToString() );
 		}
 		return VALUE( value::Bool,, is_empty );
 	} ), ep );

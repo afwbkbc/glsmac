@@ -10,11 +10,11 @@ Object::Object( gc::Space* const gc_space ) {
 	}
 }
 
-void Object::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
+void Object::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "gc::Object" );
 
 	GC_DEBUG( "this", this );
-	active_objects.insert( this );
+	reachable_objects.insert( this );
 
 	GC_DEBUG_END();
 }

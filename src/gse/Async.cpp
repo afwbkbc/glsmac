@@ -23,7 +23,7 @@ Async::Async( gc::Space* const gc_space )
 void Async::Iterate( ExecutionPointer& ep ) {
 	if ( !m_is_stopping ) {
 		m_gc_mutex.lock();
-		while ( !m_timers.empty() && m_timers.begin()->first ) {
+		while ( !m_timers.empty() && util::Time::Now() >= m_timers.begin()->first ) {
 			ProcessTimers( m_timers.begin(), ep );
 		}
 		m_gc_mutex.unlock();
@@ -110,12 +110,11 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	m_gc_mutex.unlock();
 }
 
-void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "Async" );
 
-	// async is reachable
 	GC_DEBUG( "this", this );
-	active_objects.insert( this );
+	reachable_objects.insert( this );
 
 	{
 		std::lock_guard< std::mutex > guard( m_gc_mutex );
@@ -124,15 +123,8 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& active_objec
 		GC_DEBUG_BEGIN( "timer_callables" );
 		for ( const auto& timers : m_timers ) {
 			for ( const auto& timer : timers.second ) {
-				auto* c = timer.second.callable;
-				if ( active_objects.find( c ) == active_objects.end() ) {
-					c->GetReachableObjects( active_objects );
-				}
-				else {
-					GC_DEBUG( "ref", c );
-				}
-				auto* ctx = timer.second.ctx;
-				ASSERT( active_objects.find( ctx ) != active_objects.end(), "callable context not reachable" );
+				GC_REACHABLE( timer.second.callable );
+				ASSERT( reachable_objects.find( timer.second.ctx ) != reachable_objects.end(), "callable context not reachable" );
 			}
 		}
 		GC_DEBUG_END();

@@ -67,8 +67,8 @@ public:
 
 	void Clear();
 
-	void GetReachableObjects( std::unordered_set< Object* >& active_objects ) override;
-	virtual void CollectWithDependencies( std::unordered_set< Object* >& active_objects );
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
+	virtual void CollectWithDependencies( std::unordered_set< Object* >& reachable_objects );
 
 	virtual Context* GetParentContext() const = 0;
 	virtual const bool IsTraceable() const = 0;

@@ -1138,22 +1138,18 @@ Interpreter::Function::~Function() {
 	delete program;
 }
 
-void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+
 	GC_DEBUG_BEGIN( "Function" );
 
 	// function is reachable
 	GC_DEBUG( "this", this );
-	active_objects.insert( this );
+	reachable_objects.insert( this );
 
-	// function owner context is reachable
 	ASSERT_NOLOG( context, "function ctx not set" );
 	GC_DEBUG_BEGIN( "owner_context" );
-	if ( active_objects.find( context ) == active_objects.end() ) {
-		context->CollectWithDependencies( active_objects );
-	}
-	else {
-		GC_DEBUG( "ref", context );
-	}
+	REACHABLE_EXT( context, CollectWithDependencies );
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();

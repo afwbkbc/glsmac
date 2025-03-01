@@ -106,36 +106,46 @@ void Prepare::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapStat
 
 		// full color by default
 		ts->layers[ lt ].colors = {
-			types::Color{
-				1.0,
-				1.0,
-				1.0,
-				1.0
-			},
-			types::Color{
-				1.0,
-				1.0,
-				1.0,
-				1.0
-			},
-			types::Color{
-				1.0,
-				1.0,
-				1.0,
-				1.0
-			},
-			types::Color{
-				1.0,
-				1.0,
-				1.0,
-				1.0
-			},
-			types::Color{
-				1.0,
-				1.0,
-				1.0,
-				1.0
-			},
+			std::move(
+				types::Color{
+					1.0,
+					1.0,
+					1.0,
+					1.0
+				}
+			),
+			std::move(
+				types::Color{
+					1.0,
+					1.0,
+					1.0,
+					1.0
+				}
+			),
+			std::move(
+				types::Color{
+					1.0,
+					1.0,
+					1.0,
+					1.0
+				}
+			),
+			std::move(
+				types::Color{
+					1.0,
+					1.0,
+					1.0,
+					1.0
+				}
+			),
+			std::move(
+				types::Color{
+					1.0,
+					1.0,
+					1.0,
+					1.0
+				}
+			),
 		};
 
 		ts->layers[ lt ].texture_stretch_at_edges = false;

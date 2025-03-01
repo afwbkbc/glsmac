@@ -51,7 +51,6 @@ CLASS2( GSE, common::Class, gc::Root )
 	static const char PATH_SEPARATOR;
 
 	void Iterate();
-
 	void Finish();
 
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 );
@@ -69,13 +68,14 @@ CLASS2( GSE, common::Class, gc::Root )
 	void SetGlobal( const std::string& identifier, Value* variable );
 	Value* const GetGlobal( const std::string& identifier );
 
+	void AddRootObject( gc::Root* const object );
+	void RemoveRootObject( gc::Root* const object );
+
 	context::Context* GetContextByPath( const std::string& path ) const;
-
 	Async* GetAsync();
-
 	gc::Space* const GetGCSpace() const;
 
-	void GetReachableObjects( std::unordered_set< Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 #if defined ( DEBUG ) || defined( FASTDEBUG )
 
@@ -98,6 +98,8 @@ private:
 	std::unordered_map< std::string, value::Callable* > m_modules = {};
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value* > m_globals = {};
+
+	std::unordered_set< gc::Root* > m_root_objects = {};
 
 	std::vector< Bindings* > m_bindings = {};
 	builtins::Builtins m_builtins = {};

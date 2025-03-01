@@ -26,7 +26,7 @@ public:
 
 	virtual Value* Run( GSE_CALLABLE, const function_arguments_t& arguments ) = 0;
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:
 	context::Context* const m_ctx = nullptr;

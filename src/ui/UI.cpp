@@ -8,11 +8,14 @@
 #include "input/Input.h"
 #include "Class.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace ui {
 
 UI::UI( GSE_CALLABLE )
-	: m_scene(new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ) ){
+	: gc::Object( gc_space )
+	, m_gc_space( gc_space )
+	, m_scene(new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ) ){
 
 	m_clamp.x.SetRange(
 		{
@@ -39,7 +42,7 @@ UI::UI( GSE_CALLABLE )
 
 	g_engine->GetGraphics()->AddScene( m_scene );
 	m_root = new dom::Root( GSE_CALL, this );
-	Resize();	
+	Resize();
 
 	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
 		if ( event.type == input::EV_MOUSE_MOVE ) {
@@ -49,8 +52,10 @@ UI::UI( GSE_CALLABLE )
 			};
 		}
 		try {
-			gse::ExecutionPointer ep;
-			m_root->ProcessEvent( GSE_CALL, event );
+			m_gc_space->Accumulate( [ this, &ctx, &gc_space, &si, &event ] () {
+				gse::ExecutionPointer ep;
+				m_root->ProcessEvent( GSE_CALL, event );
+			});
 		}
 		catch ( const gse::Exception& e ) {
 			const auto msg = e.ToString();
@@ -187,7 +192,27 @@ const types::Vec2< ssize_t >& UI::GetLastMousePosition() const {
 
 void UI::Destroy( GSE_CALLABLE ) {
 	m_root->Destroy( GSE_CALL );
-	delete this;
+}
+
+void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	GC_DEBUG_BEGIN( "UI" );
+
+	reachable_objects.insert( this );
+
+	GC_REACHABLE( m_root );
+
+	{
+		std::lock_guard< std::mutex > guard( m_gc_mutex );
+
+		GC_DEBUG_BEGIN( "wrapobjs" );
+		for ( const auto& obj : m_wrapobjs ) {
+			GC_REACHABLE( obj );
+		}
+		GC_DEBUG_END();
+
+	}
+
+	GC_DEBUG_END();
 }
 
 void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
@@ -198,6 +223,10 @@ void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
 void UI::RemoveIterable( const dom::Object* const obj ) {
 	ASSERT( m_iterables.find( obj ) != m_iterables.end(), "iterable not found" );
 	m_iterables.erase( obj );
+}
+
+gc::Space* const UI::GetGCSpace() const {
+	return m_gc_space;
 }
 
 }

@@ -11,21 +11,14 @@ Callable::Callable( gc::Space* const gc_space, context::Context* ctx )
 	ASSERT_NOLOG( ctx, "callable ctx is null" );
 }
 
-void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) {
+void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "Callable" );
 
-	// callable is reachable
 	GC_DEBUG( "this", this );
-	active_objects.insert( this );
+	reachable_objects.insert( this );
 
-	// owner context is reachable
 	GC_DEBUG_BEGIN( "owner_context" );
-	if ( active_objects.find( m_ctx ) == active_objects.end() ) {
-		m_ctx->CollectWithDependencies( active_objects );
-	}
-	else {
-		GC_DEBUG( "ref", m_ctx );
-	}
+	REACHABLE_EXT( m_ctx, CollectWithDependencies );
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();

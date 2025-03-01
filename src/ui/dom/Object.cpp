@@ -20,7 +20,9 @@ namespace dom {
 static std::atomic< id_t > s_next_id = 0;
 
 Object::Object( DOM_ARGS_T )
-	: m_ui( ui )
+	: gc::Object( ui->GetGCSpace() )
+	, m_ui( ui )
+	, m_gc_space( ui->GetGCSpace() )
 	, m_tag( "$" + tag )
 	, m_id( ++s_next_id )
 	, m_parent( parent )
@@ -78,16 +80,7 @@ Object::Object( DOM_ARGS_T )
 	} ) );
 }
 
-Object::~Object() {
-	Hide();
-	if ( m_is_iterable_set ) {
-		m_ui->RemoveIterable( this );
-	}
-	for ( const auto& actor : m_actors ) {
-		m_ui->m_scene->RemoveActor( actor );
-		delete actor;
-	}
-};
+Object::~Object() {};
 
 gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	if ( !m_wrapobj ) {
@@ -158,8 +151,15 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 }
 
 void Object::Destroy( GSE_CALLABLE ) {
+	Hide();
 	SetClasses( GSE_CALL, {} );
-	delete this;
+	if ( m_is_iterable_set ) {
+		m_ui->RemoveIterable( this );
+	}
+	for ( const auto& actor : m_actors ) {
+		m_ui->m_scene->RemoveActor( actor );
+		delete actor;
+	}
 }
 
 void Object::Show() {
@@ -315,23 +315,30 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 	}
 }
 
-void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const {
+void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) {
 	const auto& def = m_property_defs.find( key );
 	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
 	if ( value->type != def->second.type ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
 	}
-	for ( const auto& obj : m_wrapobjs ) {
-		obj->value.insert_or_assign( key, value );
+	{
+		for ( const auto& obj : m_wrapobjs ) {
+			obj->value.insert_or_assign( key, value );
+		}
 	}
 	if ( def->second.f_on_set ) {
 		def->second.f_on_set( GSE_CALL, value );
 	}
 }
 
-void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
+void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 	const auto& def = m_property_defs.find( key );
 	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
+	{
+		for ( const auto& obj : m_wrapobjs ) {
+			obj->value.erase( key );
+		}
+	}
 	if ( def->second.f_on_unset ) {
 		def->second.f_on_unset( GSE_CALL );
 	}
@@ -395,6 +402,11 @@ void Object::InitProperties( GSE_CALLABLE ) {
 		const auto& v = it.second;
 		OnPropertyChange( GSE_CALL, it.first, v );
 	}
+}
+
+void Object::Detach() {
+	ASSERT_NOLOG( m_parent, "parent not set" );
+	m_parent = nullptr;
 }
 
 void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value ) {

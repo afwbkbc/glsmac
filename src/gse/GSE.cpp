@@ -39,6 +39,7 @@ GSE::~GSE() {
 	m_runner = nullptr;
 	m_async = nullptr;
 	m_modules.clear();
+	m_root_objects.clear();
 
 	delete m_gc_space;
 }
@@ -248,6 +249,18 @@ Value* const GSE::GetGlobal( const std::string& identifier ) {
 	}
 }
 
+void GSE::AddRootObject( gc::Root* const object ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	ASSERT_NOLOG( m_root_objects.find( object ) == m_root_objects.end(), "root object already exists" );
+	m_root_objects.insert( object );
+}
+
+void GSE::RemoveRootObject( gc::Root* const object ) {
+	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	ASSERT_NOLOG( m_root_objects.find( object ) != m_root_objects.end(), "root object not found" );
+	m_root_objects.erase( object );
+}
+
 context::Context* GSE::GetContextByPath( const std::string& path ) const {
 	const auto& it = m_include_cache.find( path );
 	if ( it != m_include_cache.end() ) {
@@ -265,68 +278,46 @@ gc::Space* const GSE::GetGCSpace() const {
 	return m_gc_space;
 }
 
-void GSE::GetReachableObjects( std::unordered_set< Object* >& active_objects ) {
+void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	std::lock_guard< std::mutex > guard( m_gc_mutex );
 
-	// runner is reachable
 	GC_DEBUG_BEGIN( "runner" );
 	if ( m_runner ) {
-		if ( active_objects.find( m_runner ) == active_objects.end() ) {
-			m_runner->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", m_runner );
-		}
+		GC_REACHABLE( m_runner );
 	}
 	GC_DEBUG_END();
 
 	// parsers are reachable
 	GC_DEBUG_BEGIN( "parsers" );
 	for ( const auto& it : m_parsers ) {
-		const auto& parser = it.second;
-		if ( active_objects.find( parser ) == active_objects.end() ) {
-			parser->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", parser );
-		}
+		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
 
 	// global contexts are reachable
 	GC_DEBUG_BEGIN( "global_contexts" );
 	for ( const auto& context : m_global_contexts ) {
-		if ( active_objects.find( context ) == active_objects.end() ) {
-			context->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", context );
-		}
+		GC_REACHABLE( context );
 	}
 	GC_DEBUG_END();
 
-	// async is reachable
 	GC_DEBUG_BEGIN( "async" );
 	if ( m_async ) {
-		if ( active_objects.find( m_async ) == active_objects.end() ) {
-			m_async->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", m_async );
-		}
+		GC_REACHABLE( m_async );
 	}
 	GC_DEBUG_END();
 
 	// modules are reachable
 	GC_DEBUG_BEGIN( "modules" );
 	for ( const auto& it : m_modules ) {
-		const auto& module = it.second;
-		if ( active_objects.find( module ) == active_objects.end() ) {
-			module->GetReachableObjects( active_objects );
-		}
-		else {
-			GC_DEBUG( "ref", module );
-		}
+		GC_REACHABLE( it.second );
+	}
+	GC_DEBUG_END();
+
+	// root objects are reachable
+	GC_DEBUG_BEGIN( "root_objects" );
+	for ( const auto& object : m_root_objects ) {
+		GC_REACHABLE( object );
 	}
 	GC_DEBUG_END();
 

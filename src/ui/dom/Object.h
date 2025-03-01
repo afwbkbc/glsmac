@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "gse/Wrappable.h"
+#include "gc/Object.h"
 #include "gse/value/Object.h"
 
 #include "ui/Types.h"
@@ -42,7 +43,7 @@ typedef uint64_t id_t;
 
 class Container;
 
-class Object : public gse::Wrappable {
+class Object : public gse::Wrappable, public gc::Object {
 public:
 
 	Object( DOM_ARGS_T );
@@ -52,7 +53,7 @@ public:
 	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 
 	const std::string m_tag;
-	Container* const m_parent;
+	Container* m_parent;
 	const id_t m_id;
 
 	virtual geometry::Geometry* const GetGeometry() const;
@@ -74,6 +75,7 @@ protected:
 	void UpdateProperty( const std::string& name, gse::Value* const v );
 
 	UI* const m_ui;
+	gc::Space* const m_gc_space;
 	const properties_t m_initial_properties;
 
 	enum property_flag_t : uint8_t {
@@ -93,8 +95,8 @@ protected:
 	const bool TryParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 	void ParseColor( GSE_CALLABLE, const std::string& str, types::Color& color ) const;
 
-	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const;
-	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const;
+	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value );
+	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key );
 
 	virtual void WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& event_data ) const;
 
@@ -141,6 +143,9 @@ private:
 
 	virtual void InitAndValidate( GSE_CALLABLE );
 	void InitProperties( GSE_CALLABLE );
+
+	// in case parent is gc-ed before children
+	void Detach();
 
 protected:
 	friend class ui::Class;

@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <functional>
+#include <thread>
 
 #include "common/Common.h"
 
@@ -35,7 +36,10 @@ private:
 	// object that is queried for reachability (recursive), not collectable and must be deleted manually after space
 	Root* const m_root_object = {};
 
-	std::atomic< bool > m_is_accumulating = false;
+	// to track accumulating threads
+	std::mutex m_accumulations_mutex;
+	std::unordered_set< std::thread::id > m_accumulations = {};
+
 	// objects that have been accumulated but won't be collected until accumulator function finishes (that allows for temp values to move and assign where needed)
 	std::mutex m_accumulation_mutex;
 	std::unordered_set< Object* > m_accumulated_objects = {};

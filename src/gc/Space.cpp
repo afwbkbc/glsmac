@@ -29,8 +29,11 @@ Space::~Space() {
 		while ( !m_objects.empty() ) {
 			GC_LOG( std::to_string( m_objects.size() ) + " objects are still reachable" );
 			m_objects_mutex.unlock();
-			if ( m_is_accumulating ) {
-				Log( "WARNING: space is destroying but still accumulating" );
+			{
+				std::lock_guard< std::mutex > guard( m_accumulations_mutex );
+				if ( !m_accumulations.empty() ) {
+					Log( "WARNING: space is destroying but still accumulating in " + std::to_string( m_accumulations.size() ) + " thread(s)" );
+				}
 			}
 			while ( Collect() ) {}
 			m_objects_mutex.lock();
@@ -45,21 +48,37 @@ Space::~Space() {
 
 void Space::Add( Object* object ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
-	if ( !m_is_accumulating ) {
-		ASSERT_NOLOG( m_is_accumulating, "not accumulating" );
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	{
+		std::lock_guard< std::mutex > guard( m_accumulations_mutex );
+		if ( m_accumulations.find( std::this_thread::get_id() ) == m_accumulations.end() ) {
+			ASSERT_NOLOG( m_accumulations.find( std::this_thread::get_id() ) != m_accumulations.end(), "GC not in accumulation mode" );
+		}
 	}
+#endif
 	//GC_LOG( "Adding object: " + std::to_string( (unsigned long)object ) );
 	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long)object ) + " already exists" );
 	m_accumulated_objects.insert( object );
 }
 
 void Space::Accumulate( const std::function< void() >& f ) {
-	if ( m_is_accumulating ) { // recursive accumulate, nothing to do
+	bool is_accumulating;
+	const auto tid = std::this_thread::get_id();
+	{
+		std::lock_guard< std::mutex > guard( m_accumulations_mutex );
+		is_accumulating = m_accumulations.find( tid ) != m_accumulations.end();
+	}
+	if ( is_accumulating ) { // recursive accumulate, nothing to do
 		f();
 	}
 	else { // top accumulate, need to do full logic
-		const auto& cleanup = [ this ]() {
-			m_is_accumulating = false;
+		std::lock_guard< std::mutex > guard( m_accumulation_mutex );
+		const auto& commit = [ this, &tid ]() {
+			{
+				std::lock_guard< std::mutex > guard( m_accumulations_mutex );
+				ASSERT_NOLOG( m_accumulations.find( tid ) != m_accumulations.end(), "accumulations thread not found" );
+				m_accumulations.erase( tid );
+			}
 			if ( !m_accumulated_objects.empty() ) {
 				std::lock_guard< std::mutex > guard2( m_objects_mutex );
 				GC_LOG( "Accumulated " + std::to_string( m_accumulated_objects.size() ) + " objects" );
@@ -67,17 +86,20 @@ void Space::Accumulate( const std::function< void() >& f ) {
 				m_accumulated_objects.clear();
 			}
 		};
-		std::lock_guard< std::mutex > guard( m_accumulation_mutex );
 		ASSERT_NOLOG( m_accumulated_objects.empty(), "accumulated objects not empty" );
-		m_is_accumulating = true;
+		{
+			std::lock_guard< std::mutex > guard2( m_accumulations_mutex );
+			ASSERT_NOLOG( m_accumulations.find( tid ) == m_accumulations.end(), "accumulations thread already exists" );
+			m_accumulations.insert( tid );
+		}
 		try {
 			f();
 		}
 		catch ( const std::exception& e ) {
-			cleanup();
+			commit();
 			throw;
 		}
-		cleanup();
+		commit();
 	}
 }
 

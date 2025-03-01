@@ -32,13 +32,13 @@ CLASS2( Parser, common::Class, gc::Object )
 		friend class Parser;
 		StaticVars( const Parser* parser, gc::Space* const gc_space );
 	public:
-		void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+		void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 	private:
 		std::unordered_set< gse::Value* > m_static_vars = {};
 	};
 	StaticVars* const GetStaticVars( gc::Space* const gc_space ) const;
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 protected:
 

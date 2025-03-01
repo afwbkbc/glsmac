@@ -20,7 +20,7 @@ public:
 	Array* array;
 	const size_t index;
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& active_objects ) override;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 };
 
 }

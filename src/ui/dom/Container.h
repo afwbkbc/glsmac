@@ -32,6 +32,8 @@ public:
 
 	void Destroy( GSE_CALLABLE ) override;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
 protected:
 
 	virtual ~Container();
@@ -44,8 +46,8 @@ protected:
 
 	void Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f );
 
-	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) const override;
-	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const override;
+	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) override;
+	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) override;
 
 private:
 	friend class Root;

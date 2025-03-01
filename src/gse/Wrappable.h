@@ -37,6 +37,7 @@ public:
 	Value* const Trigger( GSE_CALLABLE, const std::string& event, const value::object_properties_t& args, const std::optional< Value::type_t > expected_return_type = {} );
 
 protected:
+	// TODO: wrapobjs mutex
 	std::unordered_set< value::Object* > m_wrapobjs = {};
 
 private:

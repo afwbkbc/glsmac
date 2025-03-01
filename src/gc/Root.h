@@ -9,7 +9,7 @@ public:
 	Root()
 		: Object( nullptr ) {}
 
-	virtual void GetReachableObjects( std::unordered_set< Object* >& active_objects ) = 0;
+	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) = 0;
 
 };
 
