@@ -128,6 +128,8 @@ public:
 	void Show();
 	void Hide();
 
+	void Detach();
+
 protected:
 
 	virtual void UpdateImpl() = 0;
@@ -140,7 +142,7 @@ private:
 
 	void Update();
 
-	Geometry* const m_parent;
+	Geometry* m_parent;
 	std::unordered_set< Geometry* > m_children = {};
 
 	enum stick_bits_t : uint8_t {

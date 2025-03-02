@@ -154,19 +154,12 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 		}
 		default: {}
 	}
-	ASSERT_NOLOG( !m_is_processing_children_events, "already processing children events" );
-	m_is_processing_children_events = true;
 	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
 		const auto& child = it->second;
 		if ( child->ProcessEvent( GSE_CALL, event ) ) {
-			m_is_processing_children_events = false;
-			ProcessPendingDeletes( GSE_CALL );
 			return true;
 		}
 	}
-	ASSERT_NOLOG( m_is_processing_children_events, "not processing children events" );
-	m_is_processing_children_events = false;
-	ProcessPendingDeletes( GSE_CALL );
 	auto result = Area::ProcessEvent( GSE_CALL, event );
 	if (
 		( event.flags & input::EF_MOUSE ) &&
@@ -179,14 +172,11 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 }
 
 void Container::Destroy( GSE_CALLABLE ) {
-	ASSERT_NOLOG( !m_is_processing_children_events, "destruction is requested but still processing events" );
 	ASSERT_NOLOG( !m_processing_mouse_overs, "destruction is requested but still processing mouseovers" );
-	ASSERT_NOLOG( m_children_to_remove.empty(), "destruction is requested but still has pending children removals" );
 	const auto children = m_children;
 	for ( const auto& it : children ) {
 		RemoveChild( GSE_CALL,it.second );
 	}
-	ASSERT_NOLOG( m_children_to_remove.empty(), "destruction is requested but got pending children removals" );
 	ASSERT_NOLOG( m_children.empty(), "destruction is requested but was unable to remove all children" );
 	ASSERT_NOLOG( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
 
@@ -328,14 +318,6 @@ void Container::InitAndValidate( GSE_CALLABLE ) {
 	InitProperties( GSE_CALL );
 }
 
-void Container::ProcessPendingDeletes( GSE_CALLABLE ) {
-	for ( const auto& obj : m_children_to_remove ) {
-		ASSERT_NOLOG( !m_is_processing_children_events, "can't process pending deletes within event processing" );
-		RemoveChild( GSE_CALL, obj );
-	}
-	m_children_to_remove.clear();
-}
-
 void Container::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
 	// check if property was set by any of previous classes with higher modifier
 	for ( const auto& c : m_classes ) {
@@ -377,19 +359,12 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 }
 
 void Container::RemoveChild( GSE_CALLABLE, Object* obj ) {
-	const bool can_delete_immediately = !m_is_processing_children_events;
-	if ( can_delete_immediately ) {
-		ASSERT_NOLOG( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
-		m_children.erase( obj->m_id );
-		if ( m_mouse_over_object == obj ) {
-			SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
-		}
-		obj->Destroy( GSE_CALL );
+	ASSERT_NOLOG( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
+	m_children.erase( obj->m_id );
+	if ( m_mouse_over_object == obj ) {
+		SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
 	}
-	else {
-		ASSERT_NOLOG( m_children_to_remove.find( obj ) == m_children_to_remove.end(), "child already queued for deletion" );
-		m_children_to_remove.insert( obj );
-	}
+	obj->Destroy( GSE_CALL );
 }
 
 }

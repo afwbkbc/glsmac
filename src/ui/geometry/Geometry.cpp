@@ -23,6 +23,9 @@ Geometry::~Geometry() {
 	if ( m_parent ) {
 		m_parent->m_children.erase( this );
 	}
+	for ( const auto& child : m_children ) {
+		child->Detach();
+	}
 }
 
 Rectangle* Geometry::AsRectangle() const {
@@ -193,6 +196,11 @@ void Geometry::Hide() {
 		m_is_visible = false;
 		NeedUpdate();
 	}
+}
+
+void Geometry::Detach() {
+	ASSERT_NOLOG( m_parent, "parent not set" );
+	m_parent = nullptr;
 }
 
 void Geometry::Update() {

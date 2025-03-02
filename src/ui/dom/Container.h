@@ -52,16 +52,11 @@ protected:
 private:
 	friend class Root;
 
-	bool m_is_processing_children_events = false;
-
 	std::map< id_t, Object* > m_children = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::map< std::string, std::pair< Object*, std::string > > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;
-
-	std::unordered_set< Object* > m_children_to_remove = {};
-	void ProcessPendingDeletes( GSE_CALLABLE );
 
 protected:
 	friend class ui::Class;

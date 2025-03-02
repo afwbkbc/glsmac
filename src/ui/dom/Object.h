@@ -110,6 +110,7 @@ private:
 	std::unordered_set< input::event_type_t > m_supported_events = {};
 
 	bool m_is_initialized = false;
+	bool m_is_destroyed = false;
 
 	struct property_def_t {
 		gse::Value::type_t type;
