@@ -949,11 +949,22 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				else {
 					Log( errmsg );
 				}
-				g_engine->GetUI()->ShowError(
-					errmsg, UH( f_exit, errmsg ) {
-						f_exit( errmsg );
-					}
-				);
+				if ( m_glsmac ) {
+					// new ui
+					m_glsmac->ShowError(
+						errmsg, UH( f_exit, errmsg ) {
+							f_exit( errmsg );
+						}
+					);
+				}
+				else {
+					// legacy ui
+					g_engine->GetUI()->ShowError(
+						errmsg, UH( f_exit, errmsg ) {
+							f_exit( errmsg );
+						}
+					);
+				}
 			}
 		}
 		case FrontendRequest::FR_GLOBAL_MESSAGE: {

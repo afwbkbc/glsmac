@@ -43,6 +43,7 @@
 #include "base/PopDef.h"
 #include "base/Base.h"
 #include "animation/AnimationManager.h"
+#include "gc/Space.h"
 
 namespace game {
 namespace backend {
@@ -428,12 +429,12 @@ void Game::Iterate() {
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
-										this, "start", {
+										this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 											{
 												"game",
 												Wrap( GSE_CALL )
 											},
-										}
+										}; }
 									);
 								}
 								catch ( const gse::Exception& e ) {
@@ -711,10 +712,13 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
 			try {
+				auto* gc_space = GetGCSpace();
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							m_am->FinishAnimation( r.data.animation_finished.animation_id );
+							gc_space->Accumulate( [ this, &r ] () {
+								m_am->FinishAnimation( r.data.animation_finished.animation_id );
+							});
 							break;
 						}
 						default:
@@ -958,12 +962,12 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			m_state->TriggerObject(
-				m_um, "unit_turn", {
+				m_um, "unit_turn", ARGS_F( &ctx, gc_space, &si, &ep, &unit ) {
 					{
 						"unit",
 						unit->Wrap( GSE_CALL, true )
 					},
-				}
+				}; }
 			);
 			unit->m_moved_this_turn = false;
 			m_um->RefreshUnit( GSE_CALL, unit );
@@ -972,22 +976,22 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_bm->GetBases() ) {
 			auto* base = it.second;
 			m_state->TriggerObject(
-				m_bm, "base_turn", {
+				m_bm, "base_turn", ARGS_F( &ctx, gc_space, &si, &ep, &base ) {
 					{
 						"base",
 						base->Wrap( GSE_CALL, true )
 					},
-				}
+				}; }
 			);
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( this, "turn", {
+		m_state->TriggerObject( this, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
-					Wrap( GSE_CALL )
+				Wrap( GSE_CALL )
 			}
-		});
+		}; } );
 	});
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
@@ -1148,12 +1152,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	auto* gc_space = GetGCSpace();
 
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-		m_state->TriggerObject( this, "configure", {
+		m_state->TriggerObject( this, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
 			},
-		});
+		}; } );
 	});
 
 	ASSERT( m_pending_frontend_requests, "pending events not set" );

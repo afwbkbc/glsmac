@@ -14,6 +14,10 @@
 #include "Exception.h"
 #include "Value.h"
 
+#define _ARGS_F( ... ) [ __VA_ARGS__ ]( gse::value::object_properties_t& out_args )
+#define ARGS_F( ... ) _ARGS_F( __VA_ARGS__ ) { out_args =
+#define ARGS( _args ) _ARGS_F( &_args ) { out_args = _args; }
+
 namespace gse {
 
 namespace value {
@@ -34,7 +38,9 @@ public:
 	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
 
 	const bool HasHandlers( const std::string& event ) const;
-	Value* const Trigger( GSE_CALLABLE, const std::string& event, const value::object_properties_t& args, const std::optional< Value::type_t > expected_return_type = {} );
+	typedef std::function< void( value::object_properties_t& args ) > f_args_t;
+
+	Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} );
 
 protected:
 	// TODO: wrapobjs mutex

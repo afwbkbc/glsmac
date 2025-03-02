@@ -207,7 +207,7 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		if ( HasHandlers( event_type ) ) {
 			gse::value::object_properties_t event_data = {};
 			WrapEvent( gc_space, event, event_data );
-			const auto result = Trigger( GSE_CALL, event_type, event_data, gse::Value::T_BOOL );
+			const auto result = Trigger( GSE_CALL, event_type, ARGS( event_data ), gse::Value::T_BOOL );
 			return ( (gse::value::Bool*)result )->value;
 		}
 	}

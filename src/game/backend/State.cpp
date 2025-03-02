@@ -7,6 +7,7 @@
 #include "game/backend/slot/Slots.h"
 #include "Player.h"
 #include "GLSMAC.h"
+#include "gc/Space.h"
 
 namespace game {
 namespace backend {
@@ -36,12 +37,12 @@ void State::SetGame( Game* game ) {
 	};
 	WithGSE( [ this ]( GSE_CALLABLE ){
 		TriggerObject(
-			this, "start", {
+			this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 				{
 					"game",
 					m_game->Wrap( GSE_CALL )
 				}
-			}
+			}; }
 		);
 	});
 }
@@ -56,8 +57,10 @@ Game* State::GetGame() const {
 }
 
 void State::WithGSE( const gse_func_t& f ) {
-	gse::ExecutionPointer ep;
-	f( m_gc_space, m_ctx, {}, ep );
+	m_gc_space->Accumulate( [ this, &f ]() {
+		gse::ExecutionPointer ep;
+		f( m_gc_space, m_ctx, {}, ep );
+	});
 }
 
 void State::Iterate() {
@@ -189,14 +192,14 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-gse::Value* const State::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
+gse::Value* const State::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
 	if ( m_glsmac ) {
 		// new ui
-		return m_glsmac->TriggerObject( object, event, args );
+		return m_glsmac->TriggerObject( object, event, f_args );
 	}
 	else {
 		// legacy
-		return m_bindings->Trigger( object, event, args );
+		return m_bindings->Trigger( object, event, f_args );
 	}
 }
 

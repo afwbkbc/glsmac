@@ -139,8 +139,11 @@ void GLSMAC::Iterate() {
 			m_load_thread.load()->join();
 			delete m_load_thread;
 			m_load_thread = nullptr;
-			HideLoader();
-			m_f_after_load();
+			ASSERT_NOLOG( m_f_after_load, "m_f_after_load not set" );
+			m_gc_space->Accumulate( [ this ](){
+				HideLoader();
+				m_f_after_load();
+			});
 			m_f_after_load = nullptr;
 		}
 	}
@@ -230,7 +233,7 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		TriggerObject( this, "loader_show", {} );
+		TriggerObject( this, "loader_show" );
 	}
 	UpdateLoaderText();
 }
@@ -249,13 +252,18 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		TriggerObject( this, "loader_hide", {} );
+		TriggerObject( this, "loader_hide" );
 	}
 }
 
-gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
+void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
+	Log( text );
+	TriggerObject( this, "error_popup" );
+}
+
+gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
 	gse::ExecutionPointer ep;
-	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, args );
+	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, f_args );
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -302,7 +310,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		if ( path.has_value() ) {
 			args.insert({ "last_failed_path", VALUE( gse::value::String,, path.value() ) } );
 		}
-		Trigger( GSE_CALL, "smacpath_prompt", args );
+		Trigger( GSE_CALL, "smacpath_prompt", ARGS( args ) );
 		return;
 	}
 	if ( path.has_value() ) {
@@ -344,16 +352,15 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "intro", {
+	Trigger( GSE_CALL, "intro", ARGS_F( &ctx, gc_space, this ) {
 		{
-			"mainmenu",
-			NATIVE_CALL( this ) {
+			"mainmenu", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				S_MainMenu( GSE_CALL );
 				return VALUE( gse::value::Undefined );
 			} )
 		}
-	} );
+	}; } );
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
@@ -368,11 +375,11 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	TriggerObject( this, "loader_text", {
+	TriggerObject( this, "loader_text", ARGS_F( this, &text ) {
 		{
 			"text", VALUEEXT( gse::value::String, m_gc_space, text )
 		}
-	} );
+	}; } );
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
@@ -395,12 +402,12 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 	AsyncLoad( "Initializing game state", [ this ] {
 		m_state = new game::backend::State( m_gc_space, m_ctx, this );
 		m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-			TriggerObject( this, "configure_state", {
+			TriggerObject( this, "configure_state", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 				{
 					"fm",
 					m_state->GetFM()->Wrap( GSE_CALL, true ),
 				}
-			} );
+			}; } );
 		});
 	}, on_complete );
 }
@@ -443,18 +450,16 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 	auto* game = g_engine->GetGame();
 	ASSERT_NOLOG( game, "game not set" );
-	TriggerObject( this, "configure_game", {
+	TriggerObject( this, "configure_game", ARGS_F( &ctx, gc_space, &si, &ep, &game ) {
 		{
 			"game",
 			game->Wrap( GSE_CALL, true ),
 		}
-	} );
+	}; } );
 
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		TriggerObject( this, "game", {
-
-		} );
+		TriggerObject( this, "game" );
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
 		THROW( "TODO: cancel" );

@@ -82,13 +82,13 @@ gse::context::Context* const Bindings::GetContext() const {
 	return m_gse_context;
 }
 
-gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args ) {
+gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
 	auto* gc_space = m_gse->GetGCSpace();
 	gse::Value* result = nullptr;
 	try {
 		{
 			gse::ExecutionPointer ep;
-			result = object->Trigger( gc_space, m_gse_context, m_si_internal, ep, event, args );
+			result = object->Trigger( gc_space, m_gse_context, m_si_internal, ep, event, f_args );
 		}
 		auto* game = m_state->GetGame();
 		if ( game ) {

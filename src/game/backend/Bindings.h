@@ -40,7 +40,8 @@ public:
 	gc::Space* const GetGCSpace() const;
 	gse::context::Context* const GetContext() const;
 
-	gse::Value* const Trigger( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
+	typedef std::function< void( gse::value::object_properties_t& args ) > f_args_t;
+	gse::Value* const Trigger( gse::Wrappable* object, const std::string& event, const f_args_t& f_args );
 
 	State* GetState() const;
 	Game* GetGame( GSE_CALLABLE ) const;

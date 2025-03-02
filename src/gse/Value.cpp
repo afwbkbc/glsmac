@@ -455,57 +455,65 @@ Value* const Value::New( const Value* value ) {
 }
 
 void Value::Serialize( types::Buffer* buf, Value* const value ) {
-	buf->WriteInt( value->type );
-	switch ( value->type ) {
-		case T_UNDEFINED:
-			break;
-		case T_NULL:
-			break;
-		case T_BOOL: {
-			buf->WriteBool( ( (value::Bool*)value )->value );
-			break;
-		}
-		case T_INT: {
-			buf->WriteInt( ( (value::Int*)value )->value );
-			break;
-		}
-		case T_FLOAT: {
-			buf->WriteFloat( ( (value::Float*)value )->value );
-			break;
-		}
-		case T_STRING: {
-			buf->WriteString( ( (value::String*)value )->value );
-			break;
-		}
-		case T_ARRAY: {
-			const auto& elements = ( (value::Array*)value )->value;
-			buf->WriteInt( elements.size() );
-			for ( const auto& e : elements ) {
-				Value::Serialize( buf, e );
+	buf->WriteInt(
+		value
+			? value->type
+			: T_NULLPTR
+	);
+	if ( value ) {
+		switch ( value->type ) {
+			case T_UNDEFINED:
+				break;
+			case T_NULL:
+				break;
+			case T_BOOL: {
+				buf->WriteBool( ( (value::Bool*)value )->value );
+				break;
 			}
-			break;
-		}
-		case T_OBJECT: {
-			const auto* obj = (value::Object*)value;
-			ASSERT_NOLOG( obj->object_class.empty(), "serialization of custom object classes is not supported" );
-			ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
-			ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
-			const auto& properties = obj->value;
-			buf->WriteInt( properties.size() );
-			for ( const auto& p : properties ) {
-				buf->WriteString( p.first );
-				Value::Serialize( buf, p.second );
+			case T_INT: {
+				buf->WriteInt( ( (value::Int*)value )->value );
+				break;
 			}
-			break;
+			case T_FLOAT: {
+				buf->WriteFloat( ( (value::Float*)value )->value );
+				break;
+			}
+			case T_STRING: {
+				buf->WriteString( ( (value::String*)value )->value );
+				break;
+			}
+			case T_ARRAY: {
+				const auto& elements = ( (value::Array*)value )->value;
+				buf->WriteInt( elements.size() );
+				for ( const auto& e : elements ) {
+					Value::Serialize( buf, e );
+				}
+				break;
+			}
+			case T_OBJECT: {
+				const auto* obj = (value::Object*)value;
+				ASSERT_NOLOG( obj->object_class.empty(), "serialization of custom object classes is not supported" );
+				ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
+				ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+				const auto& properties = obj->value;
+				buf->WriteInt( properties.size() );
+				for ( const auto& p : properties ) {
+					buf->WriteString( p.first );
+					Value::Serialize( buf, p.second );
+				}
+				break;
+			}
+			default:
+				THROW( "invalid/unsupported type for serialization: " + value->GetTypeString() );
 		}
-		default:
-			THROW( "invalid/unsupported type for serialization: " + value->GetTypeString() );
 	}
 }
 
 Value* Value::Unserialize( GSE_CALLABLE, types::Buffer* buf ) {
 	type_t type = (type_t)buf->ReadInt();
 	switch ( type ) {
+		case T_NULLPTR:
+			return nullptr;
 		case T_UNDEFINED:
 			return VALUE( value::Undefined );
 		case T_NULL:

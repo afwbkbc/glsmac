@@ -106,12 +106,12 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_spawn",{
+		state->TriggerObject( this, "unit_spawn", ARGS_F( &ctx, gc_space, &si, &ep, &unit, this ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL, m_game->GetGCSpace() )
 			},
-		});
+		}; } );
 	}
 }
 
@@ -135,12 +135,12 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_despawn", {
+		state->TriggerObject( this, "unit_despawn", ARGS_F( &ctx, gc_space, &si, &ep, &unit ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL )
 			}
-		});
+		}; } );
 	}
 
 	delete unit;
@@ -490,7 +490,7 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 }
 
 const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &dst_tile ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL )
@@ -503,7 +503,7 @@ const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map:
 			"dst_tile",
 			dst_tile->Wrap( GSE_CALL )
 		},
-	});
+	}; } );
 	switch ( result->type ) {
 		case gse::Value::T_NULL:
 		case gse::Value::T_UNDEFINED:
@@ -516,7 +516,7 @@ const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map:
 }
 
 gse::Value* const UnitManager::MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", {
+	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &dst_tile ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL )
@@ -529,7 +529,7 @@ gse::Value* const UnitManager::MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::t
 			"dst_tile",
 			dst_tile->Wrap( GSE_CALL )
 		},
-	});
+	}; } );
 }
 
 void UnitManager::MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions ) {
@@ -546,7 +546,7 @@ void UnitManager::MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	m_game->GetState()->TriggerObject( this, "unit_move_apply", {
+	m_game->GetState()->TriggerObject( this, "unit_move_apply", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &src_tile, &dst_tile, &resolutions ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL, true )
@@ -563,7 +563,7 @@ void UnitManager::MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_
 			"resolutions",
 			resolutions
 		}
-	});
+	}; } );
 }
 
 const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
@@ -595,7 +595,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 }
 
 const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -604,7 +604,7 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 			"defender",
 			defender->Wrap( GSE_CALL )
 		},
-	});
+	}; } );
 	switch ( result->type ) {
 		case gse::Value::T_NULL:
 		case gse::Value::T_UNDEFINED:
@@ -617,7 +617,7 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 }
 
 gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", {
+	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -626,12 +626,12 @@ gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, 
 			"defender",
 			defender->Wrap( GSE_CALL )
 		},
-	});
+	}; } );
 }
 
 void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
-	state->TriggerObject( this, "unit_attack_apply",{
+	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender, &resolutions ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL, true )
@@ -644,7 +644,7 @@ void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender,
 			"resolutions",
 			resolutions
 		}
-	});
+	}; } );
 	if ( attacker->m_health <= 0.0f ) {
 		if ( state->IsMaster() ) {
 			m_game->AddEvent( GSE_CALL, new event::DespawnUnit( m_game->GetSlotNum(), attacker->m_id ) );

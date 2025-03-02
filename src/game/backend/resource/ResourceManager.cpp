@@ -52,17 +52,16 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 }
 
 const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", {
-			{
-				"tile",
-				tile->Wrap( GSE_CALL, gc_space )
-			},
-			{
-				"player",
-				slot->Wrap( GSE_CALL, gc_space )
-			},
-		}
-	);
+	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", ARGS_F( &ctx, gc_space, &si, &ep, &tile, &slot ) {
+		{
+			"tile",
+			tile->Wrap( GSE_CALL, gc_space )
+		},
+		{
+			"player",
+			slot->Wrap( GSE_CALL, gc_space )
+		},
+	}; } );
 	if ( result->type != gse::Value::T_OBJECT ) {
 		THROW( "unexpected return type: expected Object, got " + result->GetTypeString() );
 	}

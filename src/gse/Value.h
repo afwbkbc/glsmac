@@ -99,11 +99,11 @@ class Context;
             N_EXPECT_ARGS_MIN_MAX( 1, 2 ); \
             N_GETVALUE( event, 0, String ); \
             if ( arguments.size() == 2 ) { \
-                N_GETVALUE( args, 1, Object ); \
-                return Trigger( GSE_CALL, event, args ); \
+                N_GETVALUE( a, 1, Object ); \
+                return Trigger( GSE_CALL, event, ARGS( a ) ); \
             } \
             else { \
-                return Trigger( GSE_CALL, event, {} ); \
+                return Trigger( GSE_CALL, event ); \
             } \
         } ) \
     },
@@ -182,6 +182,7 @@ public:
 	virtual ~Value() = default;
 
 	enum type_t : uint8_t {
+		T_NULLPTR, // special type only for serialization/deserialization
 		T_UNDEFINED,
 		T_NULL,
 		T_BOOL,

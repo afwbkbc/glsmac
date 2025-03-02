@@ -47,7 +47,9 @@ CLASS4( GLSMAC, common::Class, gse::Bindings, gse::Wrappable, gc::Root )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
-	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const gse::value::object_properties_t& args );
+	void ShowError( const std::string& text, const std::function< void() >& on_close );
+
+	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
