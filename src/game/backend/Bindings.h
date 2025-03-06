@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "gse/Types.h"
 #include "gse/value/Types.h"
