@@ -36,10 +36,10 @@ jobs:
         run: |
           mkdir scanbuild
           cd scanbuild
-          scan-build-19 cmake ..
+          scan-build-19 --force-analyze-debug-code cmake ..
       - name: make
         working-directory: ./scanbuild
-        run: scan-build-19 -o scanbuild-report make -j6 | tee scanbuild-output.txt
+        run: scan-build-19 --force-analyze-debug-code -o scanbuild-report make -j6 | tee scanbuild-output.txt
       - id: pack
         working-directory: ./scanbuild
         run: |
