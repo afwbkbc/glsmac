@@ -7,6 +7,11 @@ namespace util {
 
 static std::mutex s_cout_mutex;
 
+void LogHelper::Print( const std::string& text ) {
+	std::lock_guard< std::mutex > guard( s_cout_mutex );
+	std::cout << text;
+}
+
 void LogHelper::Println( const std::string& text ) {
 	std::lock_guard< std::mutex > guard( s_cout_mutex );
 	std::cout << text << std::endl;

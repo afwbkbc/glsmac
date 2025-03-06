@@ -23,27 +23,21 @@
 #include "gse/parser/Parser.h"
 #include "gse/program/Program.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace task {
 namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
 	: m_syntax( syntax )
-	, m_is_tty( isatty( fileno( stdin ) ) )
-	, m_gse( new gse::GSE() ) {
+	, m_is_tty( isatty( fileno( stdin ) ) ) {}
 
-}
-
-GSEPrompt::~GSEPrompt() {
-	if ( m_gse_context ) {
-		delete m_gse_context;
-	}
-	delete m_gse;
-}
+GSEPrompt::~GSEPrompt() {}
 
 void GSEPrompt::Start() {
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
-
+	m_gse = new gse::GSE();
+	m_gc_space = m_gse->GetGCSpace();
 	m_runner = m_gse->GetRunner();
 	if ( m_is_tty ) {
 		m_runner->EnableScopeContextJoins();
@@ -63,9 +57,15 @@ void GSEPrompt::Stop() {
 	}
 	m_programs.clear();
 	m_gse_context = nullptr;
-	delete m_runner;
 	m_runner = nullptr;
 	m_input.clear();
+	if ( m_gse_context ) {
+		delete m_gse_context;
+		m_gse_context = nullptr;
+	}
+	delete m_gse;
+	m_gse = nullptr;
+	m_gc_space = nullptr;
 }
 
 void GSEPrompt::Iterate() {
@@ -112,80 +112,82 @@ void GSEPrompt::Iterate() {
 
 void GSEPrompt::PrintPrompt() {
 	if ( m_is_tty ) {
-		util::LogHelper::Println( m_syntax + "> " );
+		util::LogHelper::Print( m_syntax + "> " );
 		util::LogHelper::Flush();
 	}
 }
 
 void GSEPrompt::ProcessInput() {
-	std::string source = m_input;
 
-	if ( m_is_tty ) {
-		m_lines_count++;
-	}
+	m_gc_space->Accumulate(
+		[ this ]() {
+			std::string source = m_input;
 
-	auto* parser = m_gse->GetParser(
-		"<STDIN>.gls." + m_syntax, source, m_is_tty
-			? m_lines_count
-			: 1
-	);
+			if ( m_is_tty ) {
+				m_lines_count++;
+			}
+			auto* parser = m_gse->CreateParser(
+				"<STDIN>.gls." + m_syntax, source, m_is_tty
+					? m_lines_count
+					: 1
+			);
 
-	const gse::program::Program* program = nullptr;
-	gse::Value* result = nullptr;
-	auto* gc_space = m_gse->GetGCSpace();
-	try {
-		program = parser->Parse();
-		if ( m_is_tty ) {
-			const gse::si_t si = {
-				"",
-				{
-					m_lines_count,
-					1
-				},
-				{
-					m_lines_count,
-					1
-				}
-			};
-			{
-				gse::ExecutionPointer ep;
-				m_gse_context->ForkAndExecute(
-					gc_space, m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
-						result = m_runner->Execute( subctx, ep, program );
-						subctx->JoinContext();
+			const gse::program::Program* program = nullptr;
+			gse::Value* result = nullptr;
+			try {
+				program = parser->Parse();
+				if ( m_is_tty ) {
+					const gse::si_t si = {
+						"",
+						{
+							m_lines_count,
+							1
+						},
+						{
+							m_lines_count,
+							1
+						}
+					};
+					{
+						gse::ExecutionPointer ep;
+						m_gse_context->ForkAndExecute(
+							m_gc_space, m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
+								result = m_runner->Execute( subctx, ep, program );
+								subctx->JoinContext();
+							}
+						);
 					}
-				);
+				}
+				else {
+					m_gse_context->Execute(
+						[ this, &result, &program ] {
+							gse::ExecutionPointer ep;
+							result = m_runner->Execute( m_gse_context, ep, program );
+						}
+					);
+				}
+				if ( result ) {
+					util::LogHelper::Println( result->Dump() );
+				}
+			}
+			catch ( const gse::Exception& e ) {
+				util::LogHelper::Println( e.ToString() );
+			}
+			catch ( std::runtime_error& e ) {
+				util::LogHelper::Println( (std::string)"Internal error: " + e.what() );
+			}
+			if ( m_is_tty ) {
+				util::LogHelper::Println( "" );
+			}
+
+			if ( program ) {
+				// can't delete here because program may have contained some functions that are still bound to context
+				// TODO: think how to deal with it
+				//DELETE( program );
+				m_programs.push_back( program );
 			}
 		}
-		else {
-			m_gse_context->Execute(
-				[ this, &result, &program ] {
-					gse::ExecutionPointer ep;
-					result = m_runner->Execute( m_gse_context, ep, program );
-				}
-			);
-		}
-
-		ASSERT_NOLOG( result, "result is null" );
-		util::LogHelper::Println( result->Dump() );
-	}
-	catch ( const gse::Exception& e ) {
-		util::LogHelper::Println( e.ToString() );
-	}
-	catch ( std::runtime_error& e ) {
-		util::LogHelper::Println( (std::string)"Internal error: " + e.what() );
-	}
-	if ( m_is_tty ) {
-		util::LogHelper::Println( "" );
-	}
-
-	if ( program ) {
-		// can't delete here because program may have contained some functions that are still bound to context
-		// TODO: think how to deal with it
-		//DELETE( program );
-		m_programs.push_back( program );
-	}
-
+	);
 	m_input.clear();
 }
 

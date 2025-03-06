@@ -2,11 +2,19 @@
 
 #include "common/Task.h"
 
+namespace gc {
+class Space;
+}
+
 namespace gse {
 class GSE;
 
 namespace context {
 class GlobalContext;
+}
+
+namespace parser {
+class Parser;
 }
 
 namespace runner {
@@ -36,15 +44,17 @@ private:
 
 	const bool m_is_tty;
 
-	gse::GSE* m_gse;
+	gse::GSE* m_gse = nullptr;
+	gc::Space* m_gc_space = nullptr;
+	gse::parser::Parser* m_parser = nullptr;
 	gse::context::GlobalContext* m_gse_context = nullptr;
 	gse::runner::Runner* m_runner;
 
-	fd_set fds;
-	int maxfd;
-	fd_set rfds;
-	struct timeval tv;
-	int retval, len;
+	fd_set fds = {};
+	int maxfd = 0;
+	fd_set rfds = {};
+	struct timeval tv = {};
+	int retval = 0, len = 0;
 	char buff[255] = { 0 };
 
 	size_t m_lines_count = 0;

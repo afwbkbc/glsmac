@@ -53,6 +53,7 @@ CLASS2( GSE, common::Class, gc::Root )
 	void Iterate();
 	void Finish();
 
+	parser::Parser* CreateParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 );
 	parser::Parser* GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num = 1 );
 	runner::Runner* GetRunner();
 

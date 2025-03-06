@@ -66,21 +66,29 @@ void GSE::Finish() {
 	}
 }
 
-parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) {
+parser::Parser* GSE::CreateParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) {
 	parser::Parser* parser = nullptr;
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions.at( 0 ) == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	const auto& ext = extensions.at( 1 );
+
+	if ( ext == ".js" ) {
+		NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
+	}
+	
+	ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
+	return parser;
+}
+
+parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) {
+	parser::Parser* parser = nullptr;
 	{
 		std::lock_guard< std::mutex > guard( m_gc_mutex );
 		auto it = m_parsers.find( filename );
 		if ( it == m_parsers.end() ) {
 			m_gc_space->Accumulate(
-				[ this, &ext, &parser, &filename, &source, &initial_line_num, &it ]() {
-					if ( ext == ".js" ) {
-						NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
-					}
-					ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
+				[ this, &parser, &filename, &source, &initial_line_num, &it ]() {
+					parser = CreateParser( filename, source, initial_line_num );
 					it = m_parsers.insert(
 						{
 							filename,
