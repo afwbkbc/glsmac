@@ -111,9 +111,9 @@ public:
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
-		meshtex_t unit;
-		meshtex_t badge;
-		meshtex_t healthbar;
+		meshtex_t unit = {};
+		meshtex_t badge = {};
+		meshtex_t healthbar = {};
 	};
 	const render_data_t& GetRenderData() const;
 
@@ -171,7 +171,7 @@ private:
 
 	util::Scroller< types::Vec3 > m_mover;
 
-	Unit::meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
+	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 };
 
 }

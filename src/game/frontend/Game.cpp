@@ -101,6 +101,15 @@ void Game::Start() {
 
 	}
 
+	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
+
+	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
+	NEW( m_itm, text::InstancedTextManager, m_ism );
+	NEW( m_fm, faction::FactionManager, this );
+	NEW( m_tm, tile::TileManager, this );
+	NEW( m_um, unit::UnitManager, this );
+	NEW( m_bm, base::BaseManager, this );
+
 	ShowLoader(
 		"Starting game", LCH( this ) {
 			CancelGame();
@@ -114,6 +123,42 @@ void Game::Stop() {
 
 	if ( m_is_initialized ) {
 		Deinitialize();
+	}
+
+	if ( m_um ) {
+		DELETE( m_um );
+		m_um = nullptr;
+	}
+
+	if ( m_bm ) {
+		DELETE( m_bm );
+		m_bm = nullptr;
+	}
+
+	if ( m_tm ) {
+		DELETE( m_tm );
+		m_tm = nullptr;
+	}
+
+	if ( m_fm ) {
+		DELETE( m_fm );
+		m_fm = nullptr;
+	}
+
+	if ( m_itm ) {
+		DELETE( m_itm );
+		m_itm = nullptr;
+	}
+
+	if ( m_ism ) {
+		DELETE( m_ism );
+		m_ism = nullptr;
+	}
+
+	if ( m_world_scene ) {
+		g_engine->GetGraphics()->RemoveScene( m_world_scene );
+		DELETE( m_world_scene );
+		m_world_scene = nullptr;
 	}
 
 	auto* game = g_engine->GetGame();
@@ -344,34 +389,34 @@ void Game::Iterate() {
 		}
 	}
 
-	// poll backend for frontend requests
-	if ( m_mt_ids.get_frontend_requests ) {
-		auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
-		if ( response.result != backend::R_NONE ) {
-			ASSERT( response.result == backend::R_SUCCESS, "unexpected frontend requests response" );
-			m_mt_ids.get_frontend_requests = 0;
-			const auto* requests = response.data.get_frontend_requests.requests;
-			if ( requests ) {
-				//Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
+	if ( m_is_initialized ) { // do not check anything else if still starting or error
 
-				for ( const auto& request : *requests ) {
-					ProcessRequest( &request );
-					if ( m_on_game_exit ) {
-						break; // exiting game
+		// poll backend for frontend requests
+		if ( m_mt_ids.get_frontend_requests ) {
+			auto response = game->MT_GetResponse( m_mt_ids.get_frontend_requests );
+			if ( response.result != backend::R_NONE ) {
+				ASSERT( response.result == backend::R_SUCCESS, "unexpected frontend requests response" );
+				m_mt_ids.get_frontend_requests = 0;
+				const auto* requests = response.data.get_frontend_requests.requests;
+				if ( requests ) {
+					//Log( "got " + std::to_string( requests->size() ) + " frontend requests" );
+
+					for ( const auto& request : *requests ) {
+						ProcessRequest( &request );
+						if ( m_on_game_exit ) {
+							break; // exiting game
+						}
 					}
 				}
-			}
-			game->MT_DestroyResponse( response );
-			if ( !m_on_game_exit ) {
-				m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+				game->MT_DestroyResponse( response );
+				if ( !m_on_game_exit ) {
+					m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+				}
 			}
 		}
-	}
-	else {
-		m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
-	}
-
-	if ( m_is_initialized ) { // do not check anything else if error
+		else {
+			m_mt_ids.get_frontend_requests = game->MT_GetFrontendRequests();
+		}
 
 		// check if previous backend requests were sent successfully
 		if ( m_mt_ids.send_backend_requests ) {
@@ -871,6 +916,10 @@ void Game::ShowBottomBar() {
 	}
 }
 
+const bool Game::IsInitialized() const {
+	return m_is_initialized;
+}
+
 void Game::DefineSlot(
 	const size_t slot_index,
 	faction::Faction* faction
@@ -996,17 +1045,19 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			bool is_turn_active = m_turn_status == backend::turn::TS_TURN_ACTIVE || m_turn_status == backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
-				if ( m_is_turn_active ) {
-					/*const auto* previously_selected_unit = m_selected_unit;
-					m_selected_unit = nullptr;
-					if ( previously_selected_unit ) {
-						RenderTile( previously_selected_unit->GetTile() );
-					}*/ // ???????
-					m_um->SelectNextUnitOrSwitchToTileSelection();
-				}
-				else {
-					DeselectTileOrUnit();
-					//GetTileAtCoords( backend::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
+				if ( m_is_initialized ) {
+					if ( m_is_turn_active ) {
+						/*const auto* previously_selected_unit = m_selected_unit;
+						m_selected_unit = nullptr;
+						if ( previously_selected_unit ) {
+							RenderTile( previously_selected_unit->GetTile() );
+						}*/ // ???????
+						m_um->SelectNextUnitOrSwitchToTileSelection();
+					}
+					else {
+						DeselectTileOrUnit();
+						//GetTileAtCoords( backend::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
+					}
 				}
 			}
 			break;
@@ -1270,15 +1321,15 @@ void Game::Initialize(
 
 	Log( "Initializing game" );
 
-	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
-
+/*
+ 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
 	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
 	NEW( m_itm, text::InstancedTextManager, m_ism );
 	NEW( m_fm, faction::FactionManager, this );
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
-
+*/
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();
@@ -1846,7 +1897,7 @@ void Game::Deinitialize() {
 		DELETE( it.second );
 	}
 	m_actors_map.clear();
-
+/*
 	if ( m_fm ) {
 		DELETE( m_fm );
 		m_fm = nullptr;
@@ -1881,7 +1932,7 @@ void Game::Deinitialize() {
 		g_engine->GetGraphics()->RemoveScene( m_world_scene );
 		m_world_scene = nullptr;
 	}
-
+*/
 #define x( _obj ) \
     if ( _obj ) { \
         DELETE( _obj ); \

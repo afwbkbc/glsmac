@@ -39,6 +39,7 @@ public:
 	static std::vector< size_t > GetUnitsOrder( const std::unordered_map< size_t, unit::Unit* >& units );
 
 	Tile( const types::Vec2< size_t >& coords );
+	~Tile();
 
 	const bool IsWater() const;
 

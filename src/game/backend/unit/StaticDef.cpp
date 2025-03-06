@@ -6,6 +6,10 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 
+#include "engine/Engine.h"
+#include "game/backend/Game.h"
+#include "UnitManager.h"
+
 namespace game {
 namespace backend {
 namespace unit {
@@ -76,9 +80,11 @@ void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	Render::Serialize( buf, def->m_render );
 }
 
-StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const MoraleSet* moraleset, const std::string& name ) {
+StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const std::string& moraleset_name, const std::string& name ) {
 	const auto movement_type = (movement_type_t)buf.ReadInt();
 	const auto movement_per_turn = buf.ReadFloat();
+	const auto* moraleset = g_engine->GetGame()->GetUM()->GetMoraleSet( moraleset_name );
+	ASSERT_NOLOG( moraleset, "could not find morale set: " + moraleset_name );
 	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
 

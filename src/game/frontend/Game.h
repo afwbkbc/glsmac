@@ -251,6 +251,8 @@ CLASS( Game, common::Module )
 	void HideBottomBar();
 	void ShowBottomBar();
 
+	const bool IsInitialized() const;
+
 private:
 
 	task::game::Game* m_task = nullptr;

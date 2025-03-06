@@ -11,9 +11,7 @@ namespace frontend {
 namespace sprite {
 
 InstancedSpriteManager::InstancedSpriteManager( scene::Scene* scene )
-	: m_scene( scene ) {
-
-}
+	: m_scene( scene ) {}
 
 InstancedSpriteManager::~InstancedSpriteManager() {
 	for ( auto& sprite : m_instanced_sprites ) {
@@ -139,7 +137,6 @@ InstancedSprite* InstancedSpriteManager::GetRepaintedInstancedSprite( const std:
 				}
 			}
 		).first;
-
 	}
 	return &it->second;
 }
@@ -150,6 +147,7 @@ void InstancedSpriteManager::RemoveInstancedSpriteByKey( const std::string& key 
 	Log( "Removing instanced sprite: " + key );
 	const auto& sprite = it->second;
 	m_scene->RemoveActor( sprite.actor );
+	DELETE( sprite.actor );
 	m_instanced_sprites.erase( it );
 }
 
@@ -159,6 +157,7 @@ void InstancedSpriteManager::RemoveRepaintedInstancedSpriteByKey( const std::str
 	Log( "Removing instanced sprite: " + key );
 	const auto& sprite = it->second;
 	m_scene->RemoveActor( sprite.actor );
+	DELETE( sprite.actor );
 	m_repainted_instanced_sprites.erase( it );
 }
 

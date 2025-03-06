@@ -28,6 +28,16 @@ public:
 		ProcessRequests();
 	}
 
+	virtual void Stop() {
+		std::lock_guard< std::mutex > guard( m_mt_states_mutex );
+		for ( const auto& state : m_mt_states ) {
+			ASSERT_NOLOG( !state.second.is_processing, "mt request still processing" );
+			DestroyRequest( state.second.request );
+			DestroyResponse( state.second.response );
+		}
+		m_mt_states.clear();
+	}
+
 	// use these to pass data from/to other threads
 	mt_id_t MT_CreateRequest( const REQUEST_TYPE& data ) {
 		mt_state_t state = {};

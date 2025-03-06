@@ -97,7 +97,7 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 
 	auto* tile = unit->GetTile();
 
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + tile->ToString() );
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ( " + unit->m_def->m_id + " ) at " + tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	m_units.insert_or_assign( unit->m_id, unit );
@@ -317,7 +317,7 @@ WRAPIMPL_BEGIN( UnitManager )
 						N_GETPROP( sprite_cx, render_def, "cx", Int );
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
-						const auto* moraleset = m_game->GetUM()->GetMoraleSet( morale );
+						const auto* moraleset = GetMoraleSet( morale );
 						if ( !moraleset ) {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
 						}

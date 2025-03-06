@@ -44,7 +44,7 @@ private:
 	friend class Def;
 
 	static void Serialize( types::Buffer& buf, const StaticDef* def );
-	static StaticDef* Unserialize( types::Buffer& buf, const std::string& id, const MoraleSet* moraleset, const std::string& name );
+	static StaticDef* Unserialize( types::Buffer& buf, const std::string& id, const std::string& moraleset_name, const std::string& name );
 
 };
 

@@ -57,9 +57,9 @@ Base::Base(
 	, m_is_owned( is_owned )
 	, m_is_guarded( !m_tile->GetUnits().empty() )
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
-	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
-	m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+	UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
 }
 
@@ -67,6 +67,12 @@ Base::~Base() {
 	Hide();
 	m_tile->UnsetBase( this );
 	delete m_render.name_sprite;
+	if ( m_render_data.base.mesh ) {
+		DELETE( m_render_data.base.mesh );
+	}
+	if ( m_render_data.badge.mesh ) {
+		DELETE( m_render_data.badge.mesh );
+	}
 }
 
 const size_t Base::GetId() const {
@@ -112,9 +118,9 @@ void Base::Show() {
 
 		if ( m_render.badge.pops_count != m_pops.size() ) {
 			m_render.badge.pops_count = m_pops.size();
-			m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+			UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 			m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
-			m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+			UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		}
 
 		const auto& c = m_render.coords;
@@ -164,7 +170,7 @@ void Base::Update() {
 		}
 		m_is_guarded = is_guarded;
 		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_pops.size(), m_is_guarded );
-		m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+		UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
 		}
@@ -294,7 +300,7 @@ void Base::HideBadge() {
 	m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
 }
 
-Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
+void Base::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(
@@ -320,10 +326,11 @@ Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 		},
 		0.8f
 	);
-	return {
-		mesh,
-		texture,
-	};
+	if ( meshtex.mesh ) {
+		DELETE( meshtex.mesh );
+	}
+	meshtex.mesh = mesh;
+	meshtex.texture = texture;
 }
 
 }

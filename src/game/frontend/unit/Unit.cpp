@@ -60,15 +60,24 @@ Unit::Unit(
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
-	m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
-	m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
-	m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.unit, GetSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.badge, GetBadgeSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.healthbar, GetBadgeHealthbarSprite()->instanced_sprite );
 	m_tile->AddUnit( this );
 }
 
 Unit::~Unit() {
 	Hide();
 	m_tile->RemoveUnit( this );
+	if ( m_render_data.unit.mesh ) {
+		DELETE( m_render_data.unit.mesh );
+	}
+	if ( m_render_data.badge.mesh ) {
+		DELETE( m_render_data.badge.mesh );
+	}
+	if ( m_render_data.healthbar.mesh ) {
+		DELETE( m_render_data.healthbar.mesh );
+	}
 }
 
 const size_t Unit::GetId() const {
@@ -282,9 +291,9 @@ void Unit::Refresh() {
 			}
 		}
 		// TODO: cache/optimize
-		m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
-		m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
-		m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.unit, GetSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.badge, GetBadgeSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.healthbar, GetBadgeHealthbarSprite()->instanced_sprite );
 		if ( is_badge_visible ) {
 			ShowBadge();
 		}
@@ -454,7 +463,7 @@ const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }
 
-Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
+void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(
@@ -480,10 +489,11 @@ Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 		},
 		0.8f
 	);
-	return {
-		mesh,
-		texture,
-	};
+	if ( meshtex.mesh ) {
+		DELETE( meshtex.mesh );
+	}
+	meshtex.mesh = mesh;
+	meshtex.texture = texture;
 }
 
 void Unit::SetRenderCoords( const types::Vec3& coords ) {

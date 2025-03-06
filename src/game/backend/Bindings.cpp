@@ -16,6 +16,7 @@
 #include "config/Config.h"
 #include "game/backend/State.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace game {
 namespace backend {
@@ -52,24 +53,29 @@ void Bindings::AddToContext( gc::Space* const gc_space, gse::context::Context* c
 }
 
 void Bindings::RunMainScript() {
-	gse::ExecutionPointer ep;
-	m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, m_entry_script );
-	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-		m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
-	}
+	auto* gc_space = m_gse->GetGCSpace();
+	gc_space->Accumulate( [ this ]( ) {
+		gse::ExecutionPointer ep;
+		m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, m_entry_script );
+		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+			m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
+		}
+	});
 }
 
 void Bindings::RunMain() {
 	auto* gc_space = m_gse->GetGCSpace();
-	auto si = m_si_internal;
-	auto* ctx = m_gse_context;
-	gse::ExecutionPointer ep;
-	ASSERT_NOLOG( gc_space, "gc space is null" );
-	for ( const auto& main : m_main_callables ) {
-		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
-		auto gm = m_state->Wrap( GSE_CALL, gc_space );
-		((gse::value::Callable*)main)->Run( gc_space, m_gse_context, m_si_internal, ep, { gm });
-	}
+	gc_space->Accumulate( [ this, &gc_space ]( ) {
+		auto si = m_si_internal;
+		auto* ctx = m_gse_context;
+		gse::ExecutionPointer ep;
+		ASSERT_NOLOG( gc_space, "gc space is null" );
+		for ( const auto& main : m_main_callables ) {
+			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
+			auto gm = m_state->Wrap( GSE_CALL, gc_space );
+			( (gse::value::Callable*)main )->Run( gc_space, m_gse_context, m_si_internal, ep, { gm } );
+		}
+	});
 }
 
 gc::Space* const Bindings::GetGCSpace() const {

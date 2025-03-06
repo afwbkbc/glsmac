@@ -84,8 +84,8 @@ public:
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
-		meshtex_t base;
-		meshtex_t badge;
+		meshtex_t base = {};
+		meshtex_t badge = {};
 	};
 	const render_data_t& GetRenderData() const;
 
@@ -137,7 +137,7 @@ private:
 	void ShowBadge();
 	void HideBadge();
 
-	meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
+	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 };
 
 }

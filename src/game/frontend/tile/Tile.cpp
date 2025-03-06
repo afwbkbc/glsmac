@@ -31,8 +31,12 @@ std::vector< size_t > Tile::GetUnitsOrder( const std::unordered_map< size_t, uni
 }
 
 Tile::Tile( const types::Vec2< size_t >& coords )
-	: m_coords( coords ) {
+	: m_coords( coords ) {}
 
+Tile::~Tile() {
+	for ( const auto& mesh : m_render_data.preview_meshes ) {
+		DELETE( mesh );
+	}
 }
 
 const bool Tile::IsWater() const {

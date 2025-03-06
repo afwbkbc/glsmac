@@ -36,6 +36,9 @@ BaseManager::~BaseManager() {
 	for ( const auto& it : m_popdefs ) {
 		delete it.second;
 	}
+	for ( const auto& it : m_slot_badges ) {
+		delete it.second;
+	}
 }
 
 base::Base* BaseManager::GetBaseById( const size_t id ) const {
