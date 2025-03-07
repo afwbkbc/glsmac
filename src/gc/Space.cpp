@@ -56,8 +56,8 @@ void Space::Add( Object* object ) {
 		}
 	}
 #endif
-	//GC_LOG( "Adding object: " + std::to_string( (unsigned long)object ) );
-	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long)object ) + " already exists" );
+	//GC_LOG( "Adding object: " + std::to_string( (unsigned long long)object ) );
+	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " already exists" );
 	m_accumulated_objects.insert( object );
 }
 
@@ -120,9 +120,9 @@ const bool Space::Collect() {
 		for ( const auto& object : m_objects ) {
 			const auto& it = m_reachable_objects_tmp.find( object );
 			if ( it == m_reachable_objects_tmp.end() ) {
-				ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long)object ) + " was already removed" );
+				ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " was already removed" );
 #if defined( DEBUG ) || defined( FASTDEBUG )
-				GC_LOG( "Destroying unreachable object: " + std::to_string( (unsigned long)object ) );
+				GC_LOG( "Destroying unreachable object: " + std::to_string( (unsigned long long)object ) );
 #endif
 				delete object;
 				anything_removed = true;

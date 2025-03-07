@@ -3,6 +3,8 @@
 #include <map>
 #include <unordered_set>
 
+#include "env/Env.h"
+
 #include "gse/Wrappable.h"
 #include "gc/Object.h"
 #include "gse/value/Object.h"

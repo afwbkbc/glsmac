@@ -302,7 +302,7 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"no-gc", "Disable garbage collection (will leak memory!)", AH( this ) {
-			m_debug_flags != DF_NO_GC;
+			m_debug_flags |= DF_NO_GC;
 		}
 	);
 	m_manager->AddRule(

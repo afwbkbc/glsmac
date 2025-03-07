@@ -74,7 +74,4 @@ bool System::IsGDBAvailable() {
 
 }
 
-}
-
 #endif
-

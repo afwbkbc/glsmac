@@ -59,7 +59,7 @@ void GC::DebugBegin( const std::string& what ) {
 
 void GC::DebugEntry( const std::string& what, gc::Object* const object ) {
 	if ( IsDebugEnabled() ) {
-		util::LogHelper::Println( std::string( s_gc_debug_offset * 2, ' ' ) + what + ": " + std::to_string( (unsigned long)object ) );
+		util::LogHelper::Println( std::string( s_gc_debug_offset * 2, ' ' ) + what + ": " + std::to_string( (unsigned long long)object ) );
 	}
 }
 
