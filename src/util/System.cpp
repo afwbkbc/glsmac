@@ -68,9 +68,9 @@ bool System::IsGDBAvailable() {
 #else
 	util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 	return false;
-}
-
 #endif
+
+}
 
 }
 
