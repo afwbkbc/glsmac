@@ -88,7 +88,7 @@ gse::context::Context* const Bindings::GetContext() const {
 	return m_gse_context;
 }
 
-gse::Value* const Bindings::Trigger( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
+gse::Value* const Bindings::Trigger( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
 	auto* gc_space = m_gse->GetGCSpace();
 	gse::Value* result = nullptr;
 	try {

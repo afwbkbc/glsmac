@@ -15,18 +15,18 @@ void GC::Start() {
 }
 
 void GC::Stop() {
-
+	TriggerDeleteAfter( DA_RENDER );
 }
 
 void GC::Iterate() {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	ASSERT_NOLOG( g_engine, "engine not set" );
-	static const bool s_no_gc = !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_NO_GC );
+	static const bool s_no_gc = g_engine->GetConfig()->HasDebugFlag( config::Config::DF_NO_GC );
 	if ( s_no_gc ) {
 		return;
 	}
 #endif
-	std::lock_guard< std::mutex > guard( m_spaces_mutex );
+	std::lock_guard guard( m_spaces_mutex );
 	for ( const auto& gc_space : m_spaces ) {
 		gc_space->Collect();
 	}
@@ -78,18 +78,34 @@ void GC::DebugUnlock() {
 	}
 }
 
+void GC::DeleteAfter( void* const what, const delete_after_t after ) {
+	std::lock_guard guard( m_delete_after_mutex );
+	m_delete_after[ after ].push_back( what );
+}
+
 #endif
 
 void GC::AddSpace( Space* const gc_space ) {
-	std::lock_guard< std::mutex > guard( m_spaces_mutex );
+	std::lock_guard guard( m_spaces_mutex );
 	ASSERT( m_spaces.find( gc_space ) == m_spaces.end(), "gc space already added" );
 	m_spaces.insert( gc_space );
 }
 
 void GC::RemoveSpace( Space* const gc_space ) {
-	std::lock_guard< std::mutex > guard( m_spaces_mutex );
+	std::lock_guard guard( m_spaces_mutex );
 	ASSERT( m_spaces.find( gc_space ) != m_spaces.end(), "gc space not found" );
 	m_spaces.erase( gc_space );
+}
+
+void GC::TriggerDeleteAfter( const delete_after_t after ) {
+	std::lock_guard guard( m_delete_after_mutex );
+	const auto& it = m_delete_after.find( after );
+	if ( it != m_delete_after.end() ) {
+		for ( const auto& what : it->second ) {
+			delete what;
+		}
+		it->second.clear();
+	}
 }
 
 }

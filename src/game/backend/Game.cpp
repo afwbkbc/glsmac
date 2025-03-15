@@ -177,15 +177,6 @@ void Game::Start() {
 		m_random->SetState( config->GetQuickstartSeed() );
 	}
 
-	// init map editor
-	NEW( m_map_editor, map_editor::MapEditor, this );
-
-	NEW( m_tm, map::tile::TileManager, this );
-	NEW( m_rm, resource::ResourceManager, this );
-	NEW( m_um, unit::UnitManager, this );
-	NEW( m_bm, base::BaseManager, this );
-	NEW( m_am, animation::AnimationManager, this );
-
 }
 
 void Game::Stop() {
@@ -429,7 +420,7 @@ void Game::Iterate() {
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
-										this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+										m_state, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 											{
 												"game",
 												Wrap( GSE_CALL )
@@ -459,9 +450,15 @@ void Game::Iterate() {
 		Log( (std::string)e.what() );
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
-	m_um->PushUpdates();
-	m_bm->PushUpdates();
-	m_tm->ProcessTileLockRequests();
+	if ( m_um ) {
+		m_um->PushUpdates();
+	}
+	if ( m_bm ) {
+		m_bm->PushUpdates();
+	}
+	if ( m_tm ) {
+		m_tm->ProcessTileLockRequests();
+	}
 }
 
 Random* Game::GetRandom() const {
@@ -986,7 +983,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( this, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		m_state->TriggerObject( m_state, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1151,8 +1148,22 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 	auto* gc_space = GetGCSpace();
 
+	// init map editor
+	NEW( m_map_editor, map_editor::MapEditor, this );
+
+	ASSERT_NOLOG( !m_tm, "tm not null" );
+	NEW( m_tm, map::tile::TileManager, this );
+	ASSERT_NOLOG( !m_rm, "rm not null" );
+	NEW( m_rm, resource::ResourceManager, this );
+	ASSERT_NOLOG( !m_um, "um not null" );
+	NEW( m_um, unit::UnitManager, this );
+	ASSERT_NOLOG( !m_bm, "bm not null" );
+	NEW( m_bm, base::BaseManager, this );
+	ASSERT_NOLOG( !m_am, "am not null" );
+	NEW( m_am, animation::AnimationManager, this );
+
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-		m_state->TriggerObject( this, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		m_state->TriggerObject( m_state, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1519,11 +1530,26 @@ void Game::ResetGame() {
 	}
 	m_unprocessed_events.clear();
 
-	m_tm->Clear();
-	m_rm->Clear();
-	m_um->Clear();
-	m_bm->Clear();
-	m_am->Clear();
+	if ( m_tm ) {
+		DELETE( m_tm );
+		m_tm = nullptr;
+	}
+	if ( m_rm ) {
+		DELETE( m_rm );
+		m_rm = nullptr;
+	}
+	if ( m_um ) {
+		DELETE( m_um );
+		m_um = nullptr;
+	}
+	if ( m_bm ) {
+		DELETE( m_bm );
+		m_bm = nullptr;
+	}
+	if ( m_am ) {
+		DELETE( m_am );
+		m_am = nullptr;
+	}
 
 	if ( m_map ) {
 		Log( "Resetting map" );
@@ -1575,6 +1601,9 @@ void Game::CheckTurnComplete() {
 		AddFrontendRequest( fr );
 	}
 }
+
+Game::Interface::Interface( gc::Space* const gc_space )
+	: gse::GCWrappable( gc_space ) {}
 
 const bool Game::IsRunning() const {
 	return m_game_state == GS_RUNNING;

@@ -12,6 +12,7 @@
 #include "routine/World.h"
 #include "FBO.h"
 #include "types/texture/Texture.h"
+#include "gc/GC.h"
 
 namespace graphics {
 namespace opengl {
@@ -194,6 +195,8 @@ void OpenGL::Stop() {
 	}
 	m_shader_programs.clear();
 
+	ProcessPendingUnloads();
+
 	for ( auto& texture : m_textures ) {
 		glDeleteTextures( 1, &texture.second.obj );
 	}
@@ -209,6 +212,8 @@ void OpenGL::Stop() {
 }
 
 void OpenGL::Iterate() {
+	std::lock_guard guard( m_render_mutex );
+
 	Lock();
 
 	Graphics::Iterate();
@@ -233,9 +238,13 @@ void OpenGL::Iterate() {
 		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
 
+	ProcessPendingUnloads();
+
 	Unlock();
 
 	DEBUG_STAT_INC( frames_rendered );
+
+	g_engine->GetGC()->TriggerDeleteAfter( gc::GC::DA_RENDER );
 }
 
 void OpenGL::AddScene( scene::Scene* scene ) {
@@ -544,11 +553,11 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 }
 
 void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
+	std::lock_guard guard( m_texture_objs_to_unload_mutex );
 	m_textures_map::iterator it = m_textures.find( texture );
 	if ( it != m_textures.end() ) {
-		//Log("Unloading texture '" + texture->m_name + "'");
-		glActiveTexture( GL_TEXTURE0 );
-		glDeleteTextures( 1, &it->second.obj );
+		//Log( "Unloading texture '" + texture->m_name + "'" );
+		m_texture_objs_to_unload.push_back( it->second.obj );
 		m_textures.erase( it );
 	}
 }
@@ -644,6 +653,11 @@ const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2
 	};
 }
 
+void OpenGL::NoRender( const std::function< void() >& f ) {
+	std::lock_guard guard( m_render_mutex );
+	f();
+}
+
 void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 
 	if (
@@ -728,6 +742,15 @@ void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
 	// also don't let them go below 2 or something will assert/crash
 	m_viewport_size.x = ( width + 1 ) / 2 * 2;
 	m_viewport_size.y = ( height + 1 ) / 2 * 2;
+}
+
+void OpenGL::ProcessPendingUnloads() {
+	std::lock_guard guard( m_texture_objs_to_unload_mutex );
+	for ( const auto& obj : m_texture_objs_to_unload ) {
+		glActiveTexture( GL_TEXTURE0 );
+		glDeleteTextures( 1, &obj );
+	}
+	m_texture_objs_to_unload.clear();
 }
 
 }

@@ -12,10 +12,9 @@ Callable::Callable( gc::Space* const gc_space, context::Context* ctx )
 }
 
 void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	GC_DEBUG_BEGIN( "Callable" );
+	Value::GetReachableObjects( reachable_objects );
 
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
+	GC_DEBUG_BEGIN( "Callable" );
 
 	GC_DEBUG_BEGIN( "owner_context" );
 	REACHABLE_EXT( m_ctx, CollectWithDependencies );

@@ -30,7 +30,17 @@ const si_t& ChildContext::GetSI() const {
 }
 
 const Context::script_info_t& ChildContext::GetScriptInfo() const {
-	return m_parent_context->GetScriptInfo();
+	if ( m_parent_context ) {
+		return m_parent_context->GetScriptInfo();
+	}
+	else {
+		static const Context::script_info_t s_empty_script_info = {
+			"",
+			"",
+			""
+		};
+		return s_empty_script_info;
+	}
 }
 
 const bool ChildContext::IsTraceable() const {
@@ -38,7 +48,13 @@ const bool ChildContext::IsTraceable() const {
 }
 
 const std::string& ChildContext::GetSourceLine( const size_t line_num ) const {
-	return m_parent_context->GetSourceLine( line_num );
+	if ( m_parent_context ) {
+		return m_parent_context->GetSourceLine( line_num );
+	}
+	else {
+		static const std::string s_empty = "";
+		return s_empty;
+	}
 }
 
 void ChildContext::Detach() {
@@ -56,10 +72,12 @@ void ChildContext::CollectWithDependencies( std::unordered_set< Object* >& reach
 	GC_DEBUG_BEGIN( "ChildContext" );
 	Context::CollectWithDependencies( reachable_objects );
 
-	GC_DEBUG_BEGIN( "parent_context" );
-	ASSERT_NOLOG( m_parent_context, "parent context not set" );
-	REACHABLE_EXT( m_parent_context, CollectWithDependencies );
-	GC_DEBUG_END();
+	if ( m_parent_context ) { // could have been detached
+		GC_DEBUG_BEGIN( "parent_context" );
+		REACHABLE_EXT( m_parent_context, CollectWithDependencies );
+		GC_DEBUG_END();
+	}
+
 	GC_DEBUG_END();
 }
 

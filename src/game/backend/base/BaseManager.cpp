@@ -23,7 +23,8 @@ namespace backend {
 namespace base {
 
 BaseManager::BaseManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 

@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <functional>
 
+#include "gse/GCWrappable.h"
+
 #include "common/Common.h"
 
 #include "network/Types.h"
@@ -33,7 +35,7 @@ namespace slot {
 class Slots;
 }
 
-CLASS2( State, common::Class, gse::Wrappable )
+CLASS2( State, common::Class, gse::GCWrappable )
 
 	State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac );
 	virtual ~State();
@@ -76,7 +78,7 @@ CLASS2( State, common::Class, gse::Wrappable )
 
 	faction::FactionManager* GetFM() const;
 
-	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args );
+	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args );
 
 	WRAPDEFS_PTR( State )
 

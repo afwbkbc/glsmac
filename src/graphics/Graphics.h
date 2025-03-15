@@ -65,6 +65,8 @@ CLASS( Graphics, common::Module )
 	void Lock();
 	void Unlock();
 
+	virtual void NoRender( const std::function< void() >& f );
+
 protected:
 
 	// make sure to call this at initialization and after every resize

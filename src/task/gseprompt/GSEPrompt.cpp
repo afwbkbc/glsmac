@@ -35,8 +35,10 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 GSEPrompt::~GSEPrompt() {}
 
 void GSEPrompt::Start() {
+	std::lock_guard guard( m_gc_mutex );
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 	m_gse = new gse::GSE();
+	m_gse->AddRootObject( this );
 	m_gc_space = m_gse->GetGCSpace();
 	m_runner = m_gse->GetRunner();
 	if ( m_is_tty ) {
@@ -51,18 +53,15 @@ void GSEPrompt::Start() {
 }
 
 void GSEPrompt::Stop() {
+	std::lock_guard guard( m_gc_mutex );
 	Log( "Exiting GSE prompt" );
 	for ( const auto& it : m_programs ) {
 		delete ( it );
 	}
+	m_input.clear();
 	m_programs.clear();
 	m_gse_context = nullptr;
 	m_runner = nullptr;
-	m_input.clear();
-	if ( m_gse_context ) {
-		delete m_gse_context;
-		m_gse_context = nullptr;
-	}
 	delete m_gse;
 	m_gse = nullptr;
 	m_gc_space = nullptr;
@@ -70,6 +69,7 @@ void GSEPrompt::Stop() {
 
 void GSEPrompt::Iterate() {
 	if ( m_is_running ) {
+		m_gse->Iterate();
 		FD_ZERO( &rfds );
 		FD_SET( 0, &rfds );
 		retval = select( 1, &rfds, NULL, NULL, &tv );
@@ -108,6 +108,22 @@ void GSEPrompt::Iterate() {
 			PrintPrompt();
 		}
 	}
+}
+
+void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	std::lock_guard guard( m_gc_mutex );
+
+	GC_DEBUG_BEGIN( "GSEPrompt" );
+
+	if ( m_parser ) {
+		GC_REACHABLE( m_parser );
+	}
+
+	if ( m_runner ) {
+		GC_REACHABLE( m_runner );
+	}
+
+	GC_DEBUG_END();
 }
 
 void GSEPrompt::PrintPrompt() {

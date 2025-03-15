@@ -2,7 +2,7 @@
 
 #include "common/Common.h"
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -29,7 +29,7 @@ class MoraleSet;
 class Def;
 class Unit;
 
-CLASS2( UnitManager, common::Class, gse::Wrappable )
+CLASS2( UnitManager, common::Class, gse::GCWrappable )
 public:
 	UnitManager( Game* game );
 	~UnitManager();

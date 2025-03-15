@@ -33,6 +33,8 @@ static GLSMAC* s_glsmac = nullptr;
 GLSMAC::GLSMAC()
 	: gc::Root() {
 
+	std::lock_guard guard( m_gc_mutex );
+
 	// there can only be one GLSMAC
 	ASSERT( !s_glsmac, "GLSMAC already defined" );
 	s_glsmac = this;
@@ -59,14 +61,13 @@ GLSMAC::GLSMAC()
 	;
 
 	{
-		gse::ExecutionPointer ep;
-		// global objects
-		m_gc_space->Accumulate( [ this, &ep ]() {
-			NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
-		});
+		m_gc_space->Accumulate( [ this, &entry_script ]() {
+			gse::ExecutionPointer ep;
 
-		// run main(s)
-		m_gc_space->Accumulate( [ this, &ep, &entry_script ]() {
+			// global objects
+			NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
+
+			// run main(s)
 			m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
 			for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
 				m_gse->RunScript(
@@ -107,12 +108,10 @@ GLSMAC::~GLSMAC() {
 
 	m_gse->GetAsync()->StopTimers();
 
-	{
-		m_gc_space->Accumulate( [ this ](){
-			gse::ExecutionPointer ep;
-			m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
-		});
-	}
+	m_gc_space->Accumulate( [ this ](){
+		gse::ExecutionPointer ep;
+		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
+	});
 
 	DELETE( m_gse );
 
@@ -156,6 +155,7 @@ void GLSMAC::Iterate() {
 
 WRAPIMPL_BEGIN( GLSMAC )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"ui",
 			m_ui->Wrap( GSE_CALL, true )
@@ -233,7 +233,7 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		TriggerObject( this, "loader_show" );
+		TriggerObject( m_ui, "loader_show" );
 	}
 	UpdateLoaderText();
 }
@@ -252,13 +252,13 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		TriggerObject( this, "loader_hide" );
+		TriggerObject( m_ui, "loader_hide" );
 	}
 }
 
 void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
 	Log( text );
-	TriggerObject( this, "error_popup" );
+	TriggerObject( m_ui, "error_popup" );
 }
 
 gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
@@ -267,7 +267,7 @@ gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::stri
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN("ui");
 	GC_REACHABLE( m_ui );
@@ -310,7 +310,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		if ( path.has_value() ) {
 			args.insert({ "last_failed_path", VALUE( gse::value::String,, path.value() ) } );
 		}
-		Trigger( GSE_CALL, "smacpath_prompt", ARGS( args ) );
+		TriggerObject( m_ui, "smacpath_prompt", ARGS( args ) );
 		return;
 	}
 	if ( path.has_value() ) {
@@ -352,7 +352,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "intro", ARGS_F( &ctx, gc_space, this ) {
+	TriggerObject( m_ui, "intro", ARGS_F( &ctx, gc_space, this ) {
 		{
 			"mainmenu", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -364,18 +364,18 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "mainmenu_show", {} );
+	TriggerObject( this, "mainmenu_show", {} );
 }
 
 void GLSMAC::S_Game( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "mainmenu_hide", {} );
+	TriggerObject( this, "mainmenu_hide", {} );
 	m_game->Start();
 }
 
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	TriggerObject( this, "loader_text", ARGS_F( this, &text ) {
+	TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
 		{
 			"text", VALUEEXT( gse::value::String, m_gc_space, text )
 		}
@@ -400,14 +400,16 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	AsyncLoad( "Initializing game state", [ this ] {
-		m_state = new game::backend::State( m_gc_space, m_ctx, this );
-		m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-			TriggerObject( this, "configure_state", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
-				{
-					"fm",
-					m_state->GetFM()->Wrap( GSE_CALL, true ),
-				}
-			}; } );
+		m_gc_space->Accumulate( [ this ]() {
+			m_state = new game::backend::State( m_gc_space, m_ctx, this );
+			m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+				TriggerObject( this, "configure_state", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+					{
+						"fm",
+						m_state->GetFM()->Wrap( GSE_CALL, true ),
+					}
+				}; } );
+			});
 		});
 	}, on_complete );
 }
@@ -459,7 +461,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		TriggerObject( this, "game" );
+		TriggerObject( this, "start_game" );
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
 		THROW( "TODO: cancel" );
@@ -475,7 +477,9 @@ void GLSMAC::RunMain() {
 			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 			m_gc_space->Accumulate( [ this, &main ] (){
 				gse::ExecutionPointer ep;
-				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, { Wrap( m_gc_space, m_ctx, {}, ep ) } );
+				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
+					Wrap( m_gc_space, m_ctx, {}, ep )
+				} );
 			});
 		}
 	} catch ( const gse::Exception& e ) {

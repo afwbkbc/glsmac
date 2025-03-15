@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
@@ -84,6 +85,8 @@ CLASS( OpenGL, Graphics )
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
 	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
+	void NoRender( const std::function< void() >& f );
+
 protected:
 	struct {
 		std::string title;
@@ -129,6 +132,13 @@ private:
 	} m_px_to_gl_clamp = {};
 
 	void UpdateViewportSize( const size_t width, const size_t height );
+
+	// unload requests can be done from multiple threads but actual unloading done from main one
+	std::mutex m_texture_objs_to_unload_mutex;
+	std::vector< GLuint > m_texture_objs_to_unload = {};
+	void ProcessPendingUnloads();
+
+	std::mutex m_render_mutex;
 };
 
 }

@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <map>
 #include <optional>
+#include <functional>
 
 #include "value/Types.h"
 #include "value/Int.h"
@@ -13,10 +14,6 @@
 #include "callable/Native.h"
 #include "Exception.h"
 #include "Value.h"
-
-#define _ARGS_F( ... ) [ __VA_ARGS__ ]( gse::value::object_properties_t& out_args )
-#define ARGS_F( ... ) _ARGS_F( __VA_ARGS__ ) { out_args =
-#define ARGS( _args ) _ARGS_F( &_args ) { out_args = _args; }
 
 namespace gse {
 
@@ -34,19 +31,17 @@ public:
 	void Unlink( value::Object* wrapobj );
 
 	typedef uint16_t callback_id_t;
-	const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback );
-	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
-
-	const bool HasHandlers( const std::string& event ) const;
 	typedef std::function< void( value::object_properties_t& args ) > f_args_t;
-
-	Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} );
+	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback );
+	virtual void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
+	virtual const bool HasHandlers( const std::string& event );
+	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} );
 
 protected:
 	// TODO: wrapobjs mutex
 	std::unordered_set< value::Object* > m_wrapobjs = {};
 
-private:
+protected:
 	struct callback_t {
 		Value* const callable;
 		context::Context* ctx;

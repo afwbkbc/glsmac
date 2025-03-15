@@ -39,7 +39,7 @@ Object::~Object() {
 }
 
 Value* const Object::Get( const object_key_t& key ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	const auto& it = value.find( key );
 	return it != value.end()
@@ -48,7 +48,7 @@ Value* const Object::Get( const object_key_t& key ) {
 }
 
 void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	const bool has_value = new_value && new_value->type != T_UNDEFINED;
 	const auto it = value.find( key );
@@ -84,10 +84,9 @@ void Object::Unlink() {
 }
 
 void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	GC_DEBUG_BEGIN( "Object" );
+	Value::GetReachableObjects( reachable_objects );
 
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
+	GC_DEBUG_BEGIN( "Object" );
 
 	ASSERT_NOLOG( m_ctx, "object ctx not set" );
 	GC_DEBUG_BEGIN( "internal_context" );
@@ -95,7 +94,7 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	GC_DEBUG_END();
 
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 
 		GC_DEBUG_BEGIN( "properties" );
 		for ( const auto& v : value ) {

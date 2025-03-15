@@ -27,7 +27,7 @@ Text::Text( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		GSE_CALL, "text", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+		GSE_CALL, "text", gse::Value::T_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetText( ( (gse::value::String*)v )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -36,7 +36,7 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "transform", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+		GSE_CALL, "transform", gse::Value::T_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& value = ( (gse::value::String*)v )->value;
 			if ( value == "lowercase" ) {
 				SetTransform( T_LOWERCASE );
@@ -54,7 +54,7 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "color", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "color", gse::Value::T_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			types::Color color = {};
 			ParseColor( GSE_CALL, ( (gse::value::String*)v )->value, color );

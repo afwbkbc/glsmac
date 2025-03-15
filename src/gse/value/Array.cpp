@@ -13,7 +13,7 @@ Array::Array( gc::Space* const gc_space, array_elements_t initial_value )
 	, value( initial_value ) {}
 
 Value* const Array::Get( const size_t index ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	return ( index < value.size() )
 		? value[ index ]
@@ -21,7 +21,7 @@ Value* const Array::Get( const size_t index ) {
 }
 
 Value* const Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	ValidateFromTo( from, to );
 	return VALUEEXT( value::Array, m_gc_space, std::vector(
@@ -37,14 +37,14 @@ Value* const Array::GetSubArray( const std::optional< size_t > from, const std::
 }
 
 void Array::Set( const size_t index, Value* const new_value ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	ASSERT_NOLOG( index < value.size(), "index out of bounds" );
 	value[ index ] = new_value;
 }
 
 const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, Value* const new_subarray ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	ValidateFromTo( from, to );
 	ASSERT_NOLOG( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
@@ -62,7 +62,7 @@ const void Array::SetSubArray( const std::optional< size_t > from, const std::op
 }
 
 void Array::Append( Value* const new_value ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	value.push_back( new_value );
 }
@@ -85,13 +85,12 @@ Value* const Array::FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* d
 }
 
 void Array::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	Value::GetReachableObjects( reachable_objects );
+
 	GC_DEBUG_BEGIN( "Array" );
 
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
-
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 		// elements are reachable
 		GC_DEBUG_BEGIN( "elements" );
 		for ( const auto& v : value ) {

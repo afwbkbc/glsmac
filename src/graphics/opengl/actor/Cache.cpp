@@ -31,7 +31,6 @@ Cache::~Cache() {
 	glDeleteBuffers( 1, &m_ibo );
 	glDeleteBuffers( 1, &m_vbo );
 	if ( m_texture ) {
-		m_opengl->UnloadTexture( m_texture );
 		delete m_texture;
 	}
 	delete m_mesh;

@@ -65,16 +65,14 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					parser = gse->GetParser( script, source );
 					context = gse->CreateGlobalContext( script );
 					mocks::AddMocks( gc_space, context, { script } );
-					program = parser->Parse();
 					runner = gse->GetRunner();
-					{
-						ExecutionPointer ep;
-						gc_space->Accumulate(
-							[ &runner, &context, &ep, &program ]() {
-								runner->Execute( context, ep, program );
-							}
-						);
-					}
+					ExecutionPointer ep;
+					gc_space->Accumulate(
+						[ &runner, &context, &ep, &program, &parser ]() {
+							program = parser->Parse();
+							runner->Execute( context, ep, program );
+						}
+					);
 				}
 				catch ( Exception& e ) {
 					last_error = e.ToString();

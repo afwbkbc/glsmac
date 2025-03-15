@@ -27,7 +27,8 @@ namespace backend {
 namespace unit {
 
 UnitManager::UnitManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 

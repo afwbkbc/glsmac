@@ -17,6 +17,7 @@ SET( SRC ${SRC}
 	${PWD}/ExecutionPointer.cpp
 	${PWD}/Exception.cpp
 	${PWD}/Wrappable.cpp
+	${PWD}/GCWrappable.cpp
 	${PWD}/Async.cpp
 
 )

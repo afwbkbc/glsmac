@@ -3,7 +3,9 @@ return (m) => {
 	let loader = null;
 	let loadertext = null;
 
-	m.glsmac.ui.class('smac-loader').set({
+	let ui = m.glsmac.ui;
+
+	ui.class('smac-loader').set({
 		width: 300,
 		height: 120,
 		background: 'interface.pcx:crop(86, 353, 109, 376)',
@@ -19,13 +21,13 @@ return (m) => {
 		title: 'Loading',
 	});
 
-	m.glsmac.ui.class('smac-loader-text').set({
+	ui.class('smac-loader-text').set({
 		align: 'center',
 		color: 'rgb(109, 126, 178)',
 		font: 'arialnb.ttf:21',
 	});
 
-	m.glsmac.on('loader_show', (e) => {
+	ui.on('loader_show', (e) => {
 		if (loader == null) {
 			loader = m.root.window({
 				class: 'smac-loader',
@@ -37,13 +39,13 @@ return (m) => {
 
 	});
 
-	m.glsmac.on('loader_text', (e) => {
+	ui.on('loader_text', (e) => {
 		if (loader != null) {
 			loadertext.text = e.text;
 		}
 	});
 
-	m.glsmac.on('loader_hide', (e) => {
+	ui.on('loader_hide', (e) => {
 		if (loader != null) {
 			loader.remove();
 			loader = null;

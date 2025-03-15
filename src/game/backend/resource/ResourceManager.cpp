@@ -14,7 +14,8 @@ namespace backend {
 namespace resource {
 
 ResourceManager::ResourceManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 

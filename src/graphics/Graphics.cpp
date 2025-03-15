@@ -75,4 +75,8 @@ void Graphics::Unlock() {
 	m_render_lock.unlock();
 }
 
+void Graphics::NoRender( const std::function< void() >& f ) {
+	f();
+}
+
 }

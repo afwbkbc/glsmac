@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "common/MTModule.h"
+#include "gse/GCWrappable.h"
 
 #include "Types.h"
 #include "game/backend/map/Types.h"
@@ -421,6 +422,12 @@ private:
 
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
+
+	class Interface : public gse::GCWrappable {
+	public:
+		Interface( gc::Space* const gc_space );
+	};
+	Interface* m_interface = nullptr;
 
 private:
 	friend class map::tile::TileManager;

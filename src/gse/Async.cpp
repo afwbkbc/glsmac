@@ -39,7 +39,7 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 	}
 	s_next_id++;
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex ); // TODO: optimize?
+		std::lock_guard guard( m_gc_mutex ); // TODO: optimize?
 		ValidateMs( ms, m_gc_space, ctx, si, ep );
 		const auto time = util::Time::Now() + ms;
 		m_timers[ time ].insert(
@@ -64,7 +64,7 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 }
 
 const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex ); // TODO: optimize?
+	std::lock_guard guard( m_gc_mutex ); // TODO: optimize?
 	const auto& it = m_timers_ms.find( id );
 	if ( it == m_timers_ms.end() ) {
 		return false;
@@ -82,7 +82,7 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 }
 
 void Async::StopTimers() {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	m_timers.clear();
 	m_timers_ms.clear();
 }
@@ -111,13 +111,12 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 }
 
 void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gc::Object::GetReachableObjects( reachable_objects );
+
 	GC_DEBUG_BEGIN( "Async" );
 
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
-
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 
 		// timer callables are reachable
 		GC_DEBUG_BEGIN( "timer_callables" );
@@ -143,7 +142,7 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 }
 
 void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
-	std::lock_guard< std::mutex > guard( m_process_timers_mutex );
+	std::lock_guard guard( m_process_timers_mutex );
 
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 

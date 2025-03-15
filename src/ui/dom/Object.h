@@ -5,7 +5,7 @@
 
 #include "env/Env.h"
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gc/Object.h"
 #include "gse/value/Object.h"
 
@@ -45,7 +45,7 @@ typedef uint64_t id_t;
 
 class Container;
 
-class Object : public gse::Wrappable, public gc::Object {
+class Object : public gse::GCWrappable {
 public:
 
 	Object( DOM_ARGS_T );
@@ -66,6 +66,8 @@ public:
 
 	virtual void Show();
 	virtual void Hide();
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 protected:
 

@@ -20,7 +20,7 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 	ForwardProperty( GSE_CALL, "background", m_surface );
 
 	Property(
-		GSE_CALL, "border", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "border", gse::Value::T_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& str = ( (gse::value::String*)v )->value;
 

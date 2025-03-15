@@ -67,7 +67,8 @@ class Context;
 #define WRAPIMPL_DYNAMIC_GETTERS( _type ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     const gse::value::object_properties_t properties = {
-#define WRAPIMPL_PROPS gse::value::object_properties_t properties = { \
+#define WRAPIMPL_PROPS gse::value::object_properties_t properties = {
+#define WRAPIMPL_TRIGGERS \
     { \
         "on", \
         NATIVE_CALL( this ) { \

@@ -45,7 +45,7 @@ public:
 	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects );
 
 protected:
-	std::mutex m_gc_mutex; // always use this when changing or collecting reachables
+	std::recursive_mutex m_gc_mutex; // always use this when changing or collecting reachables
 
 };
 

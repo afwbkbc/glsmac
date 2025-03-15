@@ -22,7 +22,7 @@ Surface::Surface( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		GSE_CALL, "background", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "background", gse::Value::T_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& str = ( (gse::value::String*)v )->value;
 			if ( str.empty() ) {

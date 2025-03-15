@@ -28,7 +28,7 @@ Button::Button( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "is_ok", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "is_ok", gse::Value::T_BOOL, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			m_is_ok = ( (gse::value::Bool*)v )->value;
 		},
@@ -37,7 +37,7 @@ Button::Button( DOM_ARGS )
 		}
 	);
 	Property(
-		GSE_CALL, "is_cancel", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "is_cancel", gse::Value::T_BOOL, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			m_is_cancel = ( (gse::value::Bool*)v )->value;
 		},

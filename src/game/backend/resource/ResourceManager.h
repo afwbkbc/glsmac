@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "common/Common.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 #include "game/backend/map/tile/Types.h"
@@ -26,7 +26,7 @@ namespace resource {
 
 class Resource;
 
-CLASS2( ResourceManager, common::Class, gse::Wrappable )
+CLASS2( ResourceManager, common::Class, gse::GCWrappable )
 
 	ResourceManager( Game* game );
 	~ResourceManager();

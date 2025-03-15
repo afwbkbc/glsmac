@@ -104,7 +104,7 @@ void Loader::Start() {
 	m_ui->AddIterativeObject(
 		this, UH( this ) {
 			if ( m_loading_text_change.is_changed ) {
-				std::lock_guard< std::mutex > guard( m_loading_text_change.mutex );
+				std::lock_guard guard( m_loading_text_change.mutex );
 				m_loading_text = m_loading_text_change.value;
 				m_loading_text_change.is_changed = false;
 			}
@@ -151,7 +151,7 @@ void Loader::Cancel() {
 }
 
 void Loader::SetText( const std::string& loading_text ) {
-	std::lock_guard< std::mutex > guard( m_loading_text_change.mutex );
+	std::lock_guard guard( m_loading_text_change.mutex );
 	if ( loading_text != m_loading_text_change.value ) {
 		m_loading_text_change.value = loading_text;
 		m_loading_text_change.is_changed = true;

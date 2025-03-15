@@ -18,7 +18,7 @@ SDL2::SDL2() {
 }
 
 SDL2::~SDL2() {
-	std::lock_guard< std::mutex > guard( m_actors_mutex );
+	std::lock_guard guard( m_actors_mutex );
 	for ( auto& actor : m_actors ) {
 		DELETE( actor.second );
 	}
@@ -96,7 +96,7 @@ void SDL2::AddActor( scene::actor::Sound* actor ) {
 		return;
 	}
 
-	std::lock_guard< std::mutex > guard( m_actors_mutex );
+	std::lock_guard guard( m_actors_mutex );
 
 	// check if same sound was double-added (can happen if two popups close at same time, for example)
 	// in this case we'll ignore second sound to avoid volume spike
@@ -118,7 +118,7 @@ void SDL2::RemoveActor( scene::actor::Sound* actor ) {
 		return;
 	}
 
-	std::lock_guard< std::mutex > guard( m_actors_mutex );
+	std::lock_guard guard( m_actors_mutex );
 
 	Log( "Removing sound actor " + actor->GetName() );
 	auto it = m_actors.find( actor );
@@ -133,7 +133,7 @@ void SDL2::Mix( Uint8* stream, int len ) {
 
 	memset( ptr( m_mix_buffer, 0, m_mix_buffer_size ), 0, m_mix_buffer_size );
 	{
-		std::lock_guard< std::mutex > guard( m_actors_mutex );
+		std::lock_guard guard( m_actors_mutex );
 
 		for ( auto& actor : m_actors ) {
 			if ( actor.second->IsActive() ) {

@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 
-#include "gse/Wrappable.h"
-#include "gse/value/Object.h"
+#include "gse/GCWrappable.h"
+#include "gc/Object.h"
 
 #include "Types.h"
 
@@ -17,9 +17,9 @@ namespace dom {
 class Object;
 }
 
-class Class : public gse::Wrappable {
+class Class : public gse::GCWrappable {
 public:
-	Class( const UI* const ui, const std::string& name, const bool is_master );
+	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master );
 	~Class();
 
 	const std::string& GetName() const;
@@ -36,6 +36,8 @@ public:
 	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
 	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
 private:
 	const UI* const m_ui;
 	const std::string m_name;
@@ -44,6 +46,7 @@ private:
 	properties_t m_local_properties = {};
 	properties_t m_properties = {};
 
+	void SetPropertyNoLock( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetPropertyFromParent( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetPropertiesFromParent( GSE_CALLABLE );

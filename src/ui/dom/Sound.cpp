@@ -32,7 +32,7 @@ Sound::Sound( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "sound", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "sound", gse::Value::T_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& value = ( (gse::value::String*)v )->value;
 			auto* sound = g_engine->GetSoundLoader()->LoadCustomSound( value );
@@ -47,7 +47,7 @@ Sound::Sound( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "autoplay", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "autoplay", gse::Value::T_BOOL, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetAutoPlay( ( (gse::value::Bool*)v )->value );
 		},
@@ -57,7 +57,7 @@ Sound::Sound( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "repeat", gse::Value::T_BOOL, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "repeat", gse::Value::T_BOOL, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetRepeatable( ( (gse::value::Bool*)v )->value );
 		},
@@ -67,7 +67,7 @@ Sound::Sound( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "volume", gse::Value::T_FLOAT, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "volume", gse::Value::T_FLOAT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetVolume( ( (gse::value::Float*)v )->value );
 		},
@@ -77,7 +77,7 @@ Sound::Sound( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "delay", gse::Value::T_INT, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "delay", gse::Value::T_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetStartDelay( ( (gse::value::Int*)v )->value );
 		},
@@ -88,12 +88,12 @@ Sound::Sound( DOM_ARGS )
 
 	Method( GSE_CALL, "play", NATIVE_CALL( this ) {
 		Play();
-		return VALUE( gse::value::Undefined );
+		return nullptr;
 	} ) );
 
 	Method( GSE_CALL, "stop", NATIVE_CALL( this ) {
 		Stop();
-		return VALUE( gse::value::Undefined );
+		return nullptr;
 	} ) );
 
 }

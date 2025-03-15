@@ -162,10 +162,7 @@ void JS::GetElements( source_elements_t& elements ) {
 #endif
 
 const program::Program* JS::GetProgram( const source_elements_t& elements ) {
-	program::Program* program;
-	m_gc_space->Accumulate( [ this, &program, &elements ](){
-		NEW( program, program::Program, GetScope( elements.begin(), elements.end() ), true );
-	});
+	NEWV( program, program::Program, GetScope( elements.begin(), elements.end() ), true );
 	return program;
 }
 
@@ -1120,7 +1117,7 @@ void JS::LogElements( const std::string& label, const source_elements_t::const_i
 #undef EL
 
 gse::Value* const JS::static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	const auto& it = m_static_vars_p.find( key );
 	return it != m_static_vars_p.end() ? it->second : m_static_vars_p.insert({ key, f( gc_space ) }).first->second;
 }

@@ -38,7 +38,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	});
 
 	Property(
-		GSE_CALL, "overflow", gse::Value::T_STRING, VALUE( gse::value::Undefined ), PF_NONE,
+		GSE_CALL, "overflow", gse::Value::T_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& value = ((gse::value::String*)v)->value;
 			if ( value == "visible" ) {
@@ -50,7 +50,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 			else {
 				GSE_ERROR( gse::EC.UI_ERROR, "Invalid overflow value. Expected: visible or hidden, got: " + value );
 			};
-			return VALUE( gse::value::Undefined );
+			return nullptr;
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_geometry->SetOverflowAllowed( true );
@@ -72,7 +72,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		for ( const auto& it : children ) {
 			RemoveChild( GSE_CALL,it.second );
 		}
-		return VALUE( gse::value::Undefined );
+		return nullptr;
 	} ) );
 
 }
@@ -184,12 +184,12 @@ void Container::Destroy( GSE_CALLABLE ) {
 }
 
 void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	Object::GetReachableObjects( reachable_objects );
+
 	GC_DEBUG_BEGIN( "Container" );
 
-	reachable_objects.insert( this );
-
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 
 		// children are reachable
 		GC_DEBUG_BEGIN( "children" );
@@ -225,8 +225,9 @@ void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CA
 	if ( forward_it != m_forwarded_properties.end() ) {
 		if ( value->type == gse::Value::T_UNDEFINED && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
-				const auto it = c->GetProperties().find( key );
-				if ( it != c->GetProperties().end() ) {
+				const auto& properties = c->GetProperties();
+				const auto it = properties.find( key );
+				if ( it != properties.end() ) {
 					forward_it->second.first->WrapSet( forward_it->second.second, it->second, GSE_CALL );
 					return;
 				}

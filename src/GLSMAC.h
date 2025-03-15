@@ -16,6 +16,10 @@
 
 #include "util/Timer.h"
 
+namespace gse {
+class GCWrappable;
+}
+
 namespace ui {
 class UI;
 }
@@ -49,6 +53,7 @@ CLASS4( GLSMAC, common::Class, gse::Bindings, gse::Wrappable, gc::Root )
 
 	void ShowError( const std::string& text, const std::function< void() >& on_close );
 
+	typedef std::function< void( gse::value::object_properties_t& args ) > f_args_t;
 	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;

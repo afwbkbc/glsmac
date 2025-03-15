@@ -18,7 +18,7 @@ std::vector< std::string > s_console_prelog = {};
 void Console::Start() {
 #ifdef DEBUG
 	{
-		std::lock_guard< std::mutex > guard( s_console_mutex );
+		std::lock_guard guard( s_console_mutex );
 		ASSERT( !s_console, "console already set" );
 	}
 #endif
@@ -34,7 +34,7 @@ void Console::Start() {
 	ui->AddObject( m_ui );
 
 	{
-		std::lock_guard< std::mutex > guard( s_console_mutex );
+		std::lock_guard guard( s_console_mutex );
 		s_console = this;
 		for ( const auto& text : s_console_prelog ) {
 			s_console->m_ui->Log( text );
@@ -45,7 +45,7 @@ void Console::Start() {
 
 void Console::Stop() {
 	{
-		std::lock_guard< std::mutex > guard( s_console_mutex );
+		std::lock_guard guard( s_console_mutex );
 		ASSERT( s_console, "console not set" );
 		s_console = nullptr;
 	}
@@ -60,7 +60,7 @@ void Console::Stop() {
 }
 
 void Console::Log( const std::string& text ) {
-	std::lock_guard< std::mutex > guard( s_console_mutex );
+	std::lock_guard guard( s_console_mutex );
 	if ( s_console ) {
 		s_console->m_ui->Log( text );
 	}

@@ -13,7 +13,7 @@
 namespace ui {
 
 UI::UI( GSE_CALLABLE )
-	: gc::Object( gc_space )
+	: gse::GCWrappable( gc_space )
 	, m_gc_space( gc_space )
 	, m_scene(new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ) ){
 
@@ -69,11 +69,6 @@ UI::~UI() {
 
 	g_engine->GetInput()->RemoveHandler( this );
 
-	for ( const auto& it : m_classes ) {
-		Log( "Destroying UI class: " + it.first );
-		delete it.second;
-	}
-
 	g_engine->GetGraphics()->RemoveScene( m_scene );
 	DELETE( m_scene );
 
@@ -89,6 +84,7 @@ void UI::Iterate() {
 
 WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 			{
 				"root",
 				m_root->Wrap( GSE_CALL, true )
@@ -101,7 +97,7 @@ WRAPIMPL_BEGIN( UI )
 					auto it = m_classes.find( name );
 					if ( it == m_classes.end() ) {
 						Log( "Creating UI class: " + name );
-						it = m_classes.insert({ name, new ui::Class( this, name, true ) }).first;
+						it = m_classes.insert({ name, new ui::Class( gc_space, this, name, true ) }).first;
 						if ( arguments.size() >= 2 ) {
 							const gse::value::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;
@@ -195,21 +191,20 @@ void UI::Destroy( GSE_CALLABLE ) {
 }
 
 void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	GC_DEBUG_BEGIN( "UI" );
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
-	reachable_objects.insert( this );
+	GC_DEBUG_BEGIN( "UI" );
 
 	GC_REACHABLE( m_root );
 
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 
-		GC_DEBUG_BEGIN( "wrapobjs" );
-		for ( const auto& obj : m_wrapobjs ) {
-			GC_REACHABLE( obj );
+		GC_DEBUG_BEGIN( "classes" );
+		for ( const auto& it : m_classes ) {
+			GC_REACHABLE( it.second );
 		}
 		GC_DEBUG_END();
-
 	}
 
 	GC_DEBUG_END();

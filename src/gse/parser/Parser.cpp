@@ -46,12 +46,11 @@ Parser::StaticVars::StaticVars( const Parser* parser, gc::Space* const gc_space 
 }
 
 void Parser::StaticVars::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	gc::Object::GetReachableObjects( reachable_objects );
+
+	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "StaticVars" );
-
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
 
 	// static variables are reachable
 	GC_DEBUG_BEGIN( "static_vars" );
@@ -68,23 +67,21 @@ Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) con
 }
 
 void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	gc::Object::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "Parser" );
 
-	m_gc_mutex.lock();
 	std::unordered_set< gse::Value* > static_vars = {};
 	collect_static_vars( static_vars );
-	m_gc_mutex.unlock();
 
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
-
-	GC_DEBUG_BEGIN( "static_vars" );
-	for ( const auto& var : static_vars ) {
-		GC_REACHABLE( var );
+	{
+		std::lock_guard guard( m_gc_mutex );
+		GC_DEBUG_BEGIN( "static_vars" );
+		for ( const auto& var : static_vars ) {
+			GC_REACHABLE( var );
+		}
+		GC_DEBUG_END();
 	}
-	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
@@ -336,7 +333,7 @@ const std::string Parser::unpack_backslashes( const std::string& source ) const 
 
 #define X( _n, _t, _tt, _m ) \
 gse::Value* const _n( const _t& v, gc::Space* const gc_space ) { \
-    std::lock_guard< std::mutex > guard( m_gc_mutex ); \
+    std::lock_guard guard( m_gc_mutex ); \
     const auto& it = _m.find( v ); \
     return it != _m.end() \
         ? it->second \

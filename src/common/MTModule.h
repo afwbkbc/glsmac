@@ -29,7 +29,7 @@ public:
 	}
 
 	virtual void Stop() {
-		std::lock_guard< std::mutex > guard( m_mt_states_mutex );
+		std::lock_guard guard( m_mt_states_mutex );
 		for ( const auto& state : m_mt_states ) {
 			ASSERT_NOLOG( !state.second.is_processing, "mt request still processing" );
 			DestroyRequest( state.second.request );

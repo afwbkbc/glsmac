@@ -28,7 +28,7 @@ Input::Input( DOM_ARGS )
 		GSE_CALL, "value", gse::Value::T_STRING, VALUE( gse::value::String, , "" ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetValue( GSE_CALL, ( (gse::value::String*)v )->value );
-			return VALUE( gse::value::Undefined );
+			return nullptr;
 		}
 	);
 

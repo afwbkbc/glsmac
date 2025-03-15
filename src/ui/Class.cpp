@@ -18,26 +18,21 @@ static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_n
 	{ CM_ACTIVE, "_active" },
 };
 
-Class::Class( const UI* const ui, const std::string& name, const bool is_master )
-	: m_ui( ui )
+Class::Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master )
+	: gse::GCWrappable( gc_space )
+	, m_ui( ui )
 	, m_name( name )
 	, m_is_master( is_master ) {
 	if ( m_is_master ) {
 		m_subclasses = {
-			{ CM_HOVER, new Class( ui, name + "._hover", false ) },
-			{ CM_ACTIVE, new Class( ui, name + "._active", false ) },
-			{ CM_FOCUS, new Class( ui, name + "._focus", false ) },
+			{ CM_HOVER, new Class( gc_space, ui, name + "._hover", false ) },
+			{ CM_ACTIVE, new Class( gc_space, ui, name + "._active", false ) },
+			{ CM_FOCUS, new Class( gc_space, ui, name + "._focus", false ) },
 		};
 	}
 }
 
-Class::~Class() {
-	if ( m_is_master ) {
-		for ( const auto& it : m_subclasses ) {
-			delete it.second;
-		}
-	}
-}
+Class::~Class() {}
 
 const std::string& Class::GetName() const {
 	return m_name;
@@ -62,18 +57,20 @@ const std::pair< gse::Value*, class_modifier_t > Class::GetProperty( const std::
 	}
 
 	// search in own properties
-	const auto& it = m_properties.find( key );
-	if ( it != m_properties.end() ) {
-		v.first = it->second;
-		v.second = CM_NONE;
-		return v;
+	{
+		const auto& it = m_properties.find( key );
+		if ( it != m_properties.end() ) {
+			v.first = it->second;
+			v.second = CM_NONE;
+			return v;
+		}
 	}
 
 	// nothing found
 	return v;
 }
 
-const properties_t& Class::GetProperties() const {
+const properties_t&  Class::GetProperties() const {
 	return m_properties;
 }
 
@@ -145,23 +142,24 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 		const auto& cls = m_subclasses.at( modifier );
 		m_subclasses.at( modifier )->RemoveObject( GSE_CALL, object );
 		for ( const auto& p : cls->m_properties ) {
-			gse::Value* v = VALUE( gse::value::Undefined );
+			gse::Value* v = nullptr;
 			// check if this property exists outside of subclass
 			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
-				const auto& pp = m_subclasses.at( *it )->m_properties;
-				const auto& it_p = pp.find( p.first );
-				if ( it_p != pp.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
-					v = it_p->second;
-					break;
+				if ( *it == modifier ) {
+					const auto& it_p = m_subclasses.at( *it )->m_properties.find( p.first );
+					if ( it_p != cls->m_properties.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+						v = it_p->second;
+						break;
+					}
 				}
 			}
-			if ( v->type == gse::Value::T_UNDEFINED ) {
+			if ( !v ) {
 				const auto& it_p = m_properties.find( p.first );
 				if ( it_p != m_properties.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
 					v = it_p->second;
 				}
 			}
-			if ( v->type == gse::Value::T_UNDEFINED ) {
+			if ( !v ) {
 				object->UnsetPropertyFromClass( GSE_CALL, p.first );
 			}
 			else {
@@ -219,7 +217,12 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	}
 	if ( m_is_master ) {
 		for ( const auto& c : m_subclasses ) {
-			properties.insert({ s_modifier_to_name.at( c.first ), c.second->Wrap( GSE_CALL, dynamic ) });
+			properties.insert(
+				{
+					s_modifier_to_name.at( c.first ),
+					c.second->Wrap( GSE_CALL, dynamic )
+				}
+			);
 		}
 	}
 	return new gse::value::Object(
@@ -236,6 +239,43 @@ void Class::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLAB
 void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
 	( (Class*)wrapobj )->WrapSet( key, value, GSE_CALL );
+}
+
+void Class::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Class" );
+
+	{
+		// gc mutex is not used everywhere here, for now we rely on locking Accumulate() to prevent races
+		// TODO: maybe reentrant mutex?
+		std::lock_guard guard( m_gc_mutex );
+
+		GC_DEBUG_BEGIN( "local_properties" );
+		for ( const auto& it : m_local_properties ) {
+			GC_REACHABLE( it.second );
+		}
+		GC_DEBUG_END();
+		GC_DEBUG_BEGIN( "properties" );
+		for ( const auto& it : m_properties ) {
+			GC_REACHABLE( it.second );
+		}
+		GC_DEBUG_END();
+
+		GC_DEBUG_BEGIN( "subclasses" );
+		for ( const auto& it : m_subclasses ) {
+			GC_REACHABLE( it.second );
+		}
+		GC_DEBUG_END();
+
+		GC_DEBUG_BEGIN( "child_classes" );
+		for ( const auto& cls : m_child_classes ) {
+			GC_REACHABLE( cls );
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
 }
 
 void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* value ) {

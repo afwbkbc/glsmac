@@ -1139,13 +1139,11 @@ Interpreter::Function::~Function() {
 }
 
 void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	value::Callable::GetReachableObjects( reachable_objects );
+
+	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "Function" );
-
-	// function is reachable
-	GC_DEBUG( "this", this );
-	reachable_objects.insert( this );
 
 	ASSERT_NOLOG( context, "function ctx not set" );
 	GC_DEBUG_BEGIN( "owner_context" );

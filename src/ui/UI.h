@@ -4,7 +4,7 @@
 #include <functional>
 
 #include "common/Common.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gc/Object.h"
 
 #include "Types.h"
@@ -32,7 +32,7 @@ class Object;
 
 class Class;
 
-CLASS3( UI, common::Class, gse::Wrappable, gc::Object )
+CLASS2( UI, common::Class, gse::GCWrappable )
 
 	UI( GSE_CALLABLE );
 	~UI();

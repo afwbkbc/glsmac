@@ -115,7 +115,7 @@ void UI::Iterate() {
 	}
 
 	if ( m_history ) {
-		std::lock_guard< std::mutex > guard( m_history_mutex );
+		std::lock_guard guard( m_history_mutex );
 		for ( const auto& text : m_history_buffer ) {
 			m_history->AddLine( text );
 		}
@@ -136,7 +136,7 @@ void UI::Destroy() {
 }
 
 void UI::Log( const std::string& text ) {
-	std::lock_guard< std::mutex > guard( m_history_mutex );
+	std::lock_guard guard( m_history_mutex );
 	m_history_buffer.push_back( text );
 }
 

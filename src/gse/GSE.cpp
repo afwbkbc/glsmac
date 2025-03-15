@@ -28,19 +28,21 @@ GSE::GSE()
 }
 
 GSE::~GSE() {
-	Finish();
-	for ( auto& it : m_include_cache ) {
-		it.second.Cleanup( this );
+	{
+		std::lock_guard guard( m_gc_mutex );
+		Finish();
+		for ( auto& it : m_include_cache ) {
+			it.second.Cleanup( this );
+		}
+
+		// make everything unreachable so that gc could clean it
+		m_global_contexts.clear();
+		m_parsers.clear();
+		m_runner = nullptr;
+		m_async = nullptr;
+		m_modules.clear();
+		m_root_objects.clear();
 	}
-
-	// make everything unreachable so that gc could clean it
-	m_global_contexts.clear();
-	m_parsers.clear();
-	m_runner = nullptr;
-	m_async = nullptr;
-	m_modules.clear();
-	m_root_objects.clear();
-
 	delete m_gc_space;
 }
 
@@ -75,7 +77,7 @@ parser::Parser* GSE::CreateParser( const std::string& filename, const std::strin
 	if ( ext == ".js" ) {
 		NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
 	}
-	
+
 	ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
 	return parser;
 }
@@ -83,7 +85,7 @@ parser::Parser* GSE::CreateParser( const std::string& filename, const std::strin
 parser::Parser* GSE::GetParser( const std::string& filename, const std::string& source, const size_t initial_line_num ) {
 	parser::Parser* parser = nullptr;
 	{
-		std::lock_guard< std::mutex > guard( m_gc_mutex );
+		std::lock_guard guard( m_gc_mutex );
 		auto it = m_parsers.find( filename );
 		if ( it == m_parsers.end() ) {
 			m_gc_space->Accumulate(
@@ -103,7 +105,7 @@ parser::Parser* GSE::GetParser( const std::string& filename, const std::string& 
 }
 
 runner::Runner* GSE::GetRunner() {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	if ( !m_runner ) {
 		m_gc_space->Accumulate(
 			[ this ]() {
@@ -124,13 +126,13 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 		[ this, &context, &source_path ]() {
 			NEW( context, context::GlobalContext, this, source_path );
 			{
-				std::lock_guard< std::mutex > guard( m_gc_mutex );
+				std::lock_guard guard( m_gc_mutex );
 				m_global_contexts.insert( context );
-				{
-					gse::ExecutionPointer ep;
-					for ( const auto& it : m_bindings ) {
-						it->AddToContext( m_gc_space, context, ep );
-					}
+			}
+			{
+				gse::ExecutionPointer ep;
+				for ( const auto& it : m_bindings ) {
+					it->AddToContext( m_gc_space, context, ep );
 				}
 			}
 		}
@@ -139,7 +141,7 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 }
 
 void GSE::AddModule( const std::string& path, value::Callable* module ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	if ( m_modules.find( path ) != m_modules.end() ) {
 		ExecutionPointer ep;
 		throw Exception( "GSE_InternalError", "module path '" + path + "' already taken", nullptr, {}, ep ); // ?
@@ -156,7 +158,7 @@ void GSE::Run() {
 	std::unordered_map< std::string, value::Callable* >::const_iterator it;
 	for ( auto& i : m_modules_order ) {
 		{
-			std::lock_guard< std::mutex > guard( m_gc_mutex );
+			std::lock_guard guard( m_gc_mutex );
 			it = m_modules.find( i );
 			ASSERT( it != m_modules.end(), "required module missing: " + i );
 		}
@@ -258,13 +260,13 @@ Value* const GSE::GetGlobal( const std::string& identifier ) {
 }
 
 void GSE::AddRootObject( gc::Root* const object ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( m_root_objects.find( object ) == m_root_objects.end(), "root object already exists" );
 	m_root_objects.insert( object );
 }
 
 void GSE::RemoveRootObject( gc::Root* const object ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( m_root_objects.find( object ) != m_root_objects.end(), "root object not found" );
 	m_root_objects.erase( object );
 }
@@ -287,7 +289,7 @@ gc::Space* const GSE::GetGCSpace() const {
 }
 
 void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
-	std::lock_guard< std::mutex > guard( m_gc_mutex );
+	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "runner" );
 	if ( m_runner ) {

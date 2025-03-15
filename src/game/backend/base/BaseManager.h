@@ -2,7 +2,7 @@
 
 #include "common/Common.h"
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -28,7 +28,7 @@ namespace base {
 class Base;
 class PopDef;
 
-CLASS2( BaseManager, common::Class, gse::Wrappable )
+CLASS2( BaseManager, common::Class, gse::GCWrappable )
 public:
 	BaseManager( Game* game );
 	~BaseManager();

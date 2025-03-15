@@ -13,7 +13,8 @@ namespace game {
 namespace backend {
 
 State::State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac )
-	: m_gc_space( gc_space )
+	: gse::GCWrappable( gc_space )
+	, m_gc_space( gc_space )
 	, m_ctx( ctx )
 	, m_glsmac( glsmac )
 	, m_slots( new slot::Slots( this ) ) {
@@ -35,16 +36,18 @@ void State::SetGame( Game* game ) {
 	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
-	WithGSE( [ this ]( GSE_CALLABLE ){
-		TriggerObject(
-			this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
-				{
-					"game",
-					m_game->Wrap( GSE_CALL )
-				}
-			}; }
-		);
-	});
+	WithGSE(
+		[ this ]( GSE_CALLABLE ) {
+			TriggerObject(
+				this, "initialize", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+					{
+						"game",
+						m_game->Wrap( GSE_CALL )
+					}
+				}; }
+			);
+		}
+	);
 }
 
 void State::UnsetGame() {
@@ -57,10 +60,12 @@ Game* State::GetGame() const {
 }
 
 void State::WithGSE( const gse_func_t& f ) {
-	m_gc_space->Accumulate( [ this, &f ]() {
-		gse::ExecutionPointer ep;
-		f( m_gc_space, m_ctx, {}, ep );
-	});
+	m_gc_space->Accumulate(
+		[ this, &f ]() {
+			gse::ExecutionPointer ep;
+			f( m_gc_space, m_ctx, {}, ep );
+		}
+	);
 }
 
 void State::Iterate() {
@@ -192,7 +197,7 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-gse::Value* const State::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
+gse::Value* const State::TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
 	if ( m_glsmac ) {
 		// new ui
 		return m_glsmac->TriggerObject( object, event, f_args );
@@ -205,6 +210,7 @@ gse::Value* const State::TriggerObject( gse::Wrappable* object, const std::strin
 
 WRAPIMPL_BEGIN( State )
 	WRAPIMPL_PROPS
+		WRAPIMPL_TRIGGERS
 		{
 			"fm",
 			m_fm->Wrap( GSE_CALL, true )
