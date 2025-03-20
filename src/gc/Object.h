@@ -4,14 +4,13 @@
 #include <mutex>
 #include <string>
 
-#define REACHABLE_EXT( _var, _method ) \
+#define GC_REACHABLE( _var ) \
     if ( reachable_objects.find( _var ) == reachable_objects.end() ) { \
-        (_var)->_method( reachable_objects ); \
+        (_var)->GetReachableObjects( reachable_objects ); \
     } \
     else { \
         GC_DEBUG( "ref", _var ); \
 }
-#define GC_REACHABLE( _var ) REACHABLE_EXT( _var, GetReachableObjects )
 
 #if ( defined( DEBUG ) || defined( FASTDEBUG ) )
 #include "GC.h"
@@ -44,8 +43,18 @@ public:
 
 	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects );
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	virtual const std::string ToString() = 0;
+#endif
+
 protected:
-	std::recursive_mutex m_gc_mutex; // always use this when changing or collecting reachables
+	std::mutex m_gc_mutex; // always use this when changing or collecting reachables
+
+	void Persist( Object* const obj );
+	void Unpersist( Object* const obj );
+
+private:
+	std::unordered_set< Object* > m_persisted_objects = {};
 
 };
 

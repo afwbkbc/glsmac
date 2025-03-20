@@ -19,7 +19,7 @@ class Object;
 
 class Class : public gse::GCWrappable {
 public:
-	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master );
+	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master = true );
 	~Class();
 
 	const std::string& GetName() const;
@@ -38,6 +38,10 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 private:
 	const UI* const m_ui;
 	const std::string m_name;
@@ -46,7 +50,6 @@ private:
 	properties_t m_local_properties = {};
 	properties_t m_properties = {};
 
-	void SetPropertyNoLock( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetPropertyFromParent( GSE_CALLABLE, const std::string& name, gse::Value* const value );
 	void SetPropertiesFromParent( GSE_CALLABLE );

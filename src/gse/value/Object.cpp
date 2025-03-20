@@ -60,9 +60,7 @@ void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE 
 			if ( !wrapsetter ) {
 				GSE_ERROR( EC.INVALID_ASSIGNMENT, "Property is read-only" );
 			}
-			m_gc_mutex.unlock();
 			wrapsetter( wrapobj, key, new_value, GSE_CALL );
-			m_gc_mutex.lock();
 		}
 		if ( has_value ) {
 			value.insert_or_assign( key, new_value );
@@ -90,7 +88,7 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 
 	ASSERT_NOLOG( m_ctx, "object ctx not set" );
 	GC_DEBUG_BEGIN( "internal_context" );
-	REACHABLE_EXT( m_ctx, CollectWithDependencies );
+	GC_REACHABLE( m_ctx );
 	GC_DEBUG_END();
 
 	{
@@ -111,6 +109,18 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 context::ChildContext* const Object::GetContext() const {
 	return m_ctx;
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Object::ToString() {
+	std::lock_guard guard( m_gc_mutex );
+	std::string result = "gse::value::Object( ";
+	for ( const auto& it : value ) {
+		result += it.first + ":" + it.second->ToString() + ", ";
+	}
+	result += ")";
+	return result;
+}
+#endif
 
 }
 }

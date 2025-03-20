@@ -11,6 +11,10 @@ Native::Native( gc::Space* const gc_space, context::Context* const ctx, const ex
 	//
 }
 
+Native::~Native() {
+	
+}
+
 Value* Native::Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) {
 	return m_executor( GSE_CALL, arguments );
 }

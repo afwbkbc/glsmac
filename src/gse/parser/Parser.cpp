@@ -40,32 +40,6 @@ const program::Program* Parser::Parse() {
 	return program;
 }
 
-Parser::StaticVars::StaticVars( const Parser* parser, gc::Space* const gc_space )
-	: gc::Object( gc_space ) {
-	parser->collect_static_vars( m_static_vars );
-}
-
-void Parser::StaticVars::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	gc::Object::GetReachableObjects( reachable_objects );
-
-	std::lock_guard guard( m_gc_mutex );
-
-	GC_DEBUG_BEGIN( "StaticVars" );
-
-	// static variables are reachable
-	GC_DEBUG_BEGIN( "static_vars" );
-	for ( const auto& object : m_static_vars ) {
-		GC_REACHABLE( object );
-	}
-	GC_DEBUG_END();
-
-	GC_DEBUG_END();
-}
-
-Parser::StaticVars* const Parser::GetStaticVars( gc::Space* const gc_space ) const {
-	return new StaticVars( this, gc_space );
-}
-
 void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
 

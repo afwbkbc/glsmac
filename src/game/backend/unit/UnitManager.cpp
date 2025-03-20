@@ -257,6 +257,7 @@ void UnitManager::PushUpdates() {
 
 WRAPIMPL_BEGIN( UnitManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"define_morales",
 			NATIVE_CALL( this ) {
@@ -446,6 +447,12 @@ void UnitManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	Unit::SetNextId( buf.ReadInt() );
 	Log( "Restored next unit id: " + std::to_string( Unit::GetNextId() ) );
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string UnitManager::ToString() {
+	return "game::UnitManager()";
+}
+#endif
 
 void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op ) {
 	auto it = m_unit_updates.find( unit->m_id );

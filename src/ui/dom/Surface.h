@@ -24,7 +24,7 @@ namespace dom {
 class Surface : public Area {
 public:
 	Surface( DOM_ARGS );
-
+	
 protected:
 	virtual ~Surface();
 

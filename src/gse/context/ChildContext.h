@@ -26,7 +26,7 @@ public:
 
 	void JoinContext() const;
 
-	void CollectWithDependencies( std::unordered_set< Object* >& reachable_objects ) override;
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
 	Context* m_parent_context = nullptr; // scope parent

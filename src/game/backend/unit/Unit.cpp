@@ -142,12 +142,15 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_GET_CALLABLE( on_complete, 1 );
-			const auto* errmsg = m_um->MoveUnitToTile( GSE_CALL, this, tile, [ on_complete, gc_space, ctx, si, ep ]() {
+			m_um->Persist( on_complete );
+			const auto* errmsg = m_um->MoveUnitToTile( GSE_CALL, this, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
 				auto ep2 = ep;
 				on_complete->Run( gc_space, ctx, si, ep2, {} );
+				m_um->Unpersist( on_complete );
 			});
 			if ( errmsg ) {
 				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
+				m_um->Unpersist( on_complete );
 				delete errmsg;
 			}
 			return VALUE( gse::value::Undefined );

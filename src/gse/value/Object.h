@@ -49,11 +49,15 @@ public:
 
 	context::ChildContext* const GetContext() const;
 
-private:
 	friend class gse::Value; // to be able to copy objects
 	context::ChildContext* m_ctx = nullptr;
 	const si_t m_si = {};
 	const gse::ExecutionPointer m_ep = {};
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 };
 
 }

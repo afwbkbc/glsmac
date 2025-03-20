@@ -6,15 +6,10 @@ return (glsmac) => {
 	const bases = #include('../bases');
 
 	glsmac.on('configure_state', (e) => {
-
-		#print('CONFIGURE STATE');
-
 		factions.configure(e.fm);
 	});
 
 	glsmac.on('configure_game', (e) => {
-
-		#print('CONFIGURE GAME');
 
 		let players = [];
 		let players_sz = 0;
@@ -50,9 +45,21 @@ return (glsmac) => {
 		let all_bases = [];
 
 		e.game.on('configure', (e) => {
+
+			e.game.um.on('unit_spawn', (e) => {
+				//
+			});
+
+			e.game.um.on('unit_despawn', (e) => {
+				//
+			});
+
+			e.game.bm.on('base_spawn', (e) => {
+				//
+			});
+
 			units.configure(e.game);
 			resources.configure(e.game.rm);
-
 		});
 
 		e.game.on('start', (e) => {
@@ -145,18 +152,6 @@ return (glsmac) => {
 			for (base of all_bases) {
 				add_pops(base, 1);
 			}
-			//
-		});
-
-		e.game.um.on('unit_spawn', (e) => {
-			//
-		});
-
-		e.game.um.on('unit_despawn', (e) => {
-			//
-		});
-
-		e.game.bm.on('base_spawn', (e) => {
 			//
 		});
 

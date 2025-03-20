@@ -22,11 +22,10 @@ Async::Async( gc::Space* const gc_space )
 
 void Async::Iterate( ExecutionPointer& ep ) {
 	if ( !m_is_stopping ) {
-		m_gc_mutex.lock();
+		std::lock_guard guard( m_gc_mutex );
 		while ( !m_timers.empty() && util::Time::Now() >= m_timers.begin()->first ) {
 			ProcessTimers( m_timers.begin(), ep );
 		}
-		m_gc_mutex.unlock();
 	}
 }
 
@@ -91,23 +90,24 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	m_is_stopping = true;
 	m_process_timers_mutex.lock(); // wait for anything processing timers to finish
 	m_process_timers_mutex.unlock();
-	m_gc_mutex.lock();
-	while ( !m_timers.empty() ) {
-		const auto& it = m_timers.begin();
-		const auto now = util::Time::Now();
-		const auto sleep_for = it->first > now
-			? it->first - now
-			: 0;
+	{
+		std::lock_guard guard( m_gc_mutex );
+		while ( !m_timers.empty() ) {
+			const auto& it = m_timers.begin();
+			const auto now = util::Time::Now();
+			const auto sleep_for = it->first > now
+				? it->first - now
+				: 0;
 
-		//Log( "Waiting for " + std::to_string( sleep_for ) + "ms" );
-		if ( sleep_for > 0 ) {
-			m_gc_mutex.unlock();
-			std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
-			m_gc_mutex.lock();
+			//Log( "Waiting for " + std::to_string( sleep_for ) + "ms" );
+			if ( sleep_for > 0 ) {
+				m_gc_mutex.unlock();
+				std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
+				m_gc_mutex.lock();
+			}
+			ProcessTimers( it, ep );
 		}
-		ProcessTimers( it, ep );
 	}
-	m_gc_mutex.unlock();
 }
 
 void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -131,6 +131,12 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 
 	GC_DEBUG_END();
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Async::ToString() {
+	return "gse::Async()";
+}
+#endif
 
 void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 	if ( ms < 0 ) {

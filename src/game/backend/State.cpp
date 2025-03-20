@@ -31,23 +31,14 @@ State::~State() {
 }
 
 void State::SetGame( Game* game ) {
-	ASSERT( !m_game, "game already set" );
-	m_game = game;
+	{
+		std::lock_guard guard( m_gc_mutex );
+		ASSERT( !m_game, "game already set" );
+		m_game = game;
+	}
 	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
-	WithGSE(
-		[ this ]( GSE_CALLABLE ) {
-			TriggerObject(
-				this, "initialize", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
-					{
-						"game",
-						m_game->Wrap( GSE_CALL )
-					}
-				}; }
-			);
-		}
-	);
 }
 
 void State::UnsetGame() {
@@ -233,6 +224,31 @@ void State::Unserialize( types::Buffer buf ) {
 	m_settings.global.Unserialize( buf.ReadString() );
 	m_fm->Unserialize( buf.ReadString() );
 }
+
+void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "State" );
+
+	{
+		std::lock_guard guard( m_gc_mutex );
+		if ( m_game ) {
+			GC_DEBUG_BEGIN( "game" );
+			GC_REACHABLE( m_game );
+			GC_DEBUG_END();
+		}
+	}
+
+	GC_DEBUG_END();
+}
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string State::ToString() {
+	return "game::State()";
+}
+#endif
+
+
 
 }
 }

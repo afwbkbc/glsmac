@@ -168,23 +168,9 @@ void Context::Clear() {
 }
 
 void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
-	std::lock_guard guard( m_gc_mutex );
-
-	if ( true || m_is_executing ) {
-		CollectWithDependencies( reachable_objects );
-
-/*		GC_DEBUG_BEGIN( "child_contexts" );
-		for ( const auto& child : m_child_contexts ) {
-			//ASSERT_NOLOG( child->m_is_executing, "context is executing but child isn't" );
-			GC_REACHABLE( child );
-		}
-		GC_DEBUG_END();*/
-	}
-
-}
-
-void Context::CollectWithDependencies( std::unordered_set< Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
+	
+	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "Context" );
 
@@ -202,8 +188,23 @@ void Context::CollectWithDependencies( std::unordered_set< Object* >& reachable_
 	}
 	GC_DEBUG_END();
 
+/*	GC_DEBUG_BEGIN( "child_contexts" );
+	for ( const auto& child : m_child_contexts ) {
+		//ASSERT_NOLOG( child->m_is_executing, "context is executing but child isn't" );
+		GC_REACHABLE( child );
+	}
+	GC_DEBUG_END();*/
+
 	GC_DEBUG_END();
+
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Context::ToString() {
+	const auto& si = GetSI();
+	return "gse::Context( " + si.file + ":" + std::to_string( si.from.line ) + " )";
+}
+#endif
 
 void Context::AddChildContext( ChildContext* const child ) {
 	std::lock_guard guard( m_gc_mutex );

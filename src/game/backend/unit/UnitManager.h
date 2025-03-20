@@ -54,6 +54,10 @@ public:
 	void Serialize( types::Buffer& buf ) const;
 	void Unserialize( GSE_CALLABLE, types::Buffer& buf );
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 public:
 	// TODO: limit access
 	typedef std::function< void() > cb_oncomplete;

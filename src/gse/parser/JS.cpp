@@ -42,6 +42,12 @@ JS::JS( gc::Space* gc_space, const std::string& filename, const std::string& sou
 	: Parser( gc_space, filename, source, initial_line_num )
 	, m_gc_space( gc_space ) {}
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string JS::ToString() {
+	return "gse::parser::JS()";
+}
+#endif
+
 void JS::GetElements( source_elements_t& elements ) {
 	char c;
 	si_t::pos_t begin;

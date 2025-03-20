@@ -21,6 +21,12 @@ public:
 	Int( gc::Space* const gc_space, const Int& other )
 		: Int( gc_space, other.value ) {}
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override {
+		return "gse::value::Int( " + std::to_string( value ) + " )";
+	}
+#endif
+
 };
 
 }

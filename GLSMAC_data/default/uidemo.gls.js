@@ -485,7 +485,6 @@
 	});
 
 	input.on('select', (e) => {
-		#print('SELECT', e);
 		return true;
 	});
 

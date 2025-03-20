@@ -29,7 +29,8 @@ namespace task {
 namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
-	: m_syntax( syntax )
+	: gc::Object( nullptr )
+	, m_syntax( syntax )
 	, m_is_tty( isatty( fileno( stdin ) ) ) {}
 
 GSEPrompt::~GSEPrompt() {}
@@ -125,6 +126,12 @@ void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 
 	GC_DEBUG_END();
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string GSEPrompt::ToString() {
+	return "gse::GSEPrompt()";
+}
+#endif
 
 void GSEPrompt::PrintPrompt() {
 	if ( m_is_tty ) {

@@ -18,7 +18,8 @@ namespace backend {
 namespace animation {
 
 AnimationManager::AnimationManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 
@@ -83,6 +84,7 @@ void AnimationManager::FinishAnimation( const size_t animation_id ) {
 
 WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"define_animation",
 			NATIVE_CALL( this ) {
@@ -140,12 +142,15 @@ WRAPIMPL_BEGIN( AnimationManager )
 			N_GETVALUE( id, 0, String );
 			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 			N_GET_CALLABLE( on_complete, 2 );
-			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, gc_space, ctx, si, ep ]() {
+			Persist( on_complete );
+			const auto* errmsg = ShowAnimation( id, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
 				auto ep2 = ep;
 				on_complete->Run( gc_space, ctx, si, ep2, {} );
+				Unpersist( on_complete );
 			});
 			if ( errmsg ) {
 				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
+				Unpersist( on_complete );
 				delete errmsg;
 			}
 			return VALUE( gse::value::Undefined );
@@ -180,6 +185,12 @@ void AnimationManager::Unserialize( types::Buffer& buf ) {
 	m_next_running_animation_id = buf.ReadInt();
 	Log( "Restored next animation id: " + std::to_string( m_next_running_animation_id ) );
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string AnimationManager::ToString() {
+	return "game::AnimationManager()";
+}
+#endif
 
 const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_complete ) {
 	const auto running_animation_id = ++m_next_running_animation_id;

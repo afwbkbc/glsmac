@@ -68,6 +68,9 @@ InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event
 		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
 ) {}
 
+Game::Game()
+	: gse::GCWrappable( nullptr ) {}
+
 common::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
 	request.op = OP_PING;
@@ -183,7 +186,6 @@ void Game::Stop() {
 	Log( "Stopping thread" );
 
 	if ( m_state ) {
-	   DELETE( m_state );
 	   m_state = nullptr;
 	   m_connection = nullptr;
 	}
@@ -193,19 +195,10 @@ void Game::Stop() {
 	DELETE( m_map_editor );
 	m_map_editor = nullptr;
 
-	DELETE( m_tm );
 	m_tm = nullptr;
-
-	DELETE( m_rm );
 	m_rm = nullptr;
-
-	DELETE( m_um );
 	m_um = nullptr;
-
-	DELETE( m_bm );
 	m_bm = nullptr;
-
-	DELETE( m_am );
 	m_am = nullptr;
 
 	DELETE( m_pending_frontend_requests );
@@ -420,7 +413,7 @@ void Game::Iterate() {
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
-										m_state, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+										this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 											{
 												"game",
 												Wrap( GSE_CALL )
@@ -431,6 +424,7 @@ void Game::Iterate() {
 								catch ( const gse::Exception& e ) {
 									Log( (std::string)"Initialization failed: " + e.ToString() );
 									f_init_failed( e.what() );
+									return;
 								}
 								GlobalAdvanceTurn( GSE_CALL );
 							}
@@ -508,33 +502,14 @@ void Game::HideLoader() {
 
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"year",
 			VALUE( gse::value::Int,, 2100/*tmp*/ + m_current_turn.GetId() )
 		},
 		{
 			"random",
-			m_random->Wrap( GSE_CALL, gc_space )
-		},
-		{
-			"tm",
-			m_tm->Wrap( GSE_CALL, gc_space )
-		},
-		{
-			"rm",
-			m_rm->Wrap( GSE_CALL, gc_space )
-		},
-		{
-			"um",
-			m_um->Wrap( GSE_CALL, gc_space )
-		},
-		{
-			"bm",
-			m_bm->Wrap( GSE_CALL, gc_space ),
-		},
-		{
-			"am",
-			m_am->Wrap( GSE_CALL, gc_space )
+			m_random->Wrap( GSE_CALL, true )
 		},
 		{
 		"message",
@@ -562,9 +537,80 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 	};
+	if ( m_tm ) {
+		properties.insert(
+			{
+				"tm",
+				m_tm->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_rm ) {
+		properties.insert(
+			{
+				"rm",
+				m_rm->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_um ) {
+		properties.insert(
+			{
+				"um",
+				m_um->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_bm ) {
+		properties.insert(
+
+			{
+				"bm",
+				m_bm->Wrap( GSE_CALL, true ),
+			}
+		);
+	}
+	if ( m_am ) {
+		properties.insert(
+			{
+				"am",
+				m_am->Wrap( GSE_CALL, true )
+			}
+		);
+	}
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Game )
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Game::ToString() {
+	return "game::Game()";
+}
+#endif
+
+void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Game" );
+
+	if ( m_tm ) {
+		GC_REACHABLE( m_tm );
+	}
+	if ( m_rm ) {
+		GC_REACHABLE( m_rm );
+	}
+	if ( m_um ) {
+		GC_REACHABLE( m_um );
+	}
+	if ( m_bm ) {
+		GC_REACHABLE( m_bm );
+	}
+	if ( m_am ) {
+		GC_REACHABLE( m_am );
+	}
+
+	GC_DEBUG_END();
+}
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
@@ -573,9 +619,24 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 	switch ( request.op ) {
 		case OP_INIT: {
 			//Log( "Got init request" );
-			ASSERT( request.data.init.state, "state not set" );
+			ASSERT( request.data.init.state, "state not received" );
+			ASSERT( !m_state, "state already set" );
 			m_state = request.data.init.state;
-			m_state->SetGame( this );
+
+			m_state->WithGSE(
+				[ this ]( GSE_CALLABLE ) {
+					m_state->TriggerObject(
+						this, "initialize", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+							{
+								"game",
+								Wrap( GSE_CALL )
+							}
+						}; }
+					);
+				}
+			);
+			//m_state->SetGame( this );
+
 			InitGame( response, MT_C );
 			response.data.init.slot_index = m_slot_num;
 			break;
@@ -983,7 +1044,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( m_state, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		m_state->TriggerObject( this, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1151,19 +1212,18 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
-	ASSERT_NOLOG( !m_tm, "tm not null" );
-	NEW( m_tm, map::tile::TileManager, this );
-	ASSERT_NOLOG( !m_rm, "rm not null" );
-	NEW( m_rm, resource::ResourceManager, this );
-	ASSERT_NOLOG( !m_um, "um not null" );
-	NEW( m_um, unit::UnitManager, this );
-	ASSERT_NOLOG( !m_bm, "bm not null" );
-	NEW( m_bm, base::BaseManager, this );
-	ASSERT_NOLOG( !m_am, "am not null" );
-	NEW( m_am, animation::AnimationManager, this );
-
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-		m_state->TriggerObject( m_state, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		ASSERT_NOLOG( !m_tm, "tm not null" );
+		m_tm = new map::tile::TileManager( this );
+		ASSERT_NOLOG( !m_rm, "rm not null" );
+		m_rm = new resource::ResourceManager( this );
+		ASSERT_NOLOG( !m_um, "um not null" );
+		m_um = new unit::UnitManager( this );
+		ASSERT_NOLOG( !m_bm, "bm not null" );
+		m_bm = new base::BaseManager( this );
+		ASSERT_NOLOG( !m_am, "am not null" );
+		m_am = new animation::AnimationManager( this );
+		m_state->TriggerObject( this, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1530,26 +1590,11 @@ void Game::ResetGame() {
 	}
 	m_unprocessed_events.clear();
 
-	if ( m_tm ) {
-		DELETE( m_tm );
-		m_tm = nullptr;
-	}
-	if ( m_rm ) {
-		DELETE( m_rm );
-		m_rm = nullptr;
-	}
-	if ( m_um ) {
-		DELETE( m_um );
-		m_um = nullptr;
-	}
-	if ( m_bm ) {
-		DELETE( m_bm );
-		m_bm = nullptr;
-	}
-	if ( m_am ) {
-		DELETE( m_am );
-		m_am = nullptr;
-	}
+	m_tm = nullptr;
+	m_rm = nullptr;
+	m_um = nullptr;
+	m_bm = nullptr;
+	m_am = nullptr;
 
 	if ( m_map ) {
 		Log( "Resetting map" );
@@ -1571,7 +1616,6 @@ void Game::ResetGame() {
 			m_connection->ResetHandlers();
 			m_connection = nullptr;
 		}
-		delete m_state;
 		m_state = nullptr;
 	}
 }

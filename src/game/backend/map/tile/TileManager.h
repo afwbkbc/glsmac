@@ -2,7 +2,7 @@
 
 #include "common/Common.h"
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -16,7 +16,7 @@ class Game;
 namespace map {
 namespace tile {
 
-CLASS2( TileManager, common::Class, gse::Wrappable )
+CLASS2( TileManager, common::Class, gse::GCWrappable )
 public:
 	TileManager( Game* game );
 	~TileManager();
@@ -37,6 +37,10 @@ public:
 	void ReleaseTileLocks( const size_t initiator_slot );
 
 	WRAPDEFS_PTR( TileManager )
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
 
 private:
 	Game* m_game = nullptr;

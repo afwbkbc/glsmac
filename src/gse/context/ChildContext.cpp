@@ -68,13 +68,14 @@ void ChildContext::JoinContext() const {
 	}
 }
 
-void ChildContext::CollectWithDependencies( std::unordered_set< Object* >& reachable_objects ) {
+void ChildContext::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	Context::GetReachableObjects( reachable_objects );
+
 	GC_DEBUG_BEGIN( "ChildContext" );
-	Context::CollectWithDependencies( reachable_objects );
 
 	if ( m_parent_context ) { // could have been detached
 		GC_DEBUG_BEGIN( "parent_context" );
-		REACHABLE_EXT( m_parent_context, CollectWithDependencies );
+		GC_REACHABLE( m_parent_context );
 		GC_DEBUG_END();
 	}
 

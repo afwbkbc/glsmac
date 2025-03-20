@@ -41,6 +41,10 @@ CLASS2( ResourceManager, common::Class, gse::GCWrappable )
 	void Serialize( types::Buffer& buf ) const;
 	void Unserialize( types::Buffer& buf );
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 private:
 	Game* m_game;
 

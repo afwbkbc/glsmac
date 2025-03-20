@@ -11,26 +11,27 @@ GCWrappable::GCWrappable( gc::Space* const gc_space )
 GCWrappable::~GCWrappable() {}
 
 const GCWrappable::callback_id_t GCWrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
-	std::lock_guard guard( m_gc_mutex );
-
-	return Wrappable::On( GSE_CALL, event, callback );
+	Persist( callback );
+	{
+		std::lock_guard guard( m_gc_mutex );
+		return Wrappable::On( GSE_CALL, event, callback );
+	}
 }
 
 void GCWrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id ) {
-	std::lock_guard guard( m_gc_mutex );
-
-	Wrappable::Off( GSE_CALL, event, callback_id );
+	Unpersist( m_callbacks.at( event ).at( callback_id ).callable );
+	{
+		std::lock_guard guard( m_gc_mutex );
+		Wrappable::Off( GSE_CALL, event, callback_id );
+	}
 }
 
 const bool GCWrappable::HasHandlers( const std::string& event ) {
 	std::lock_guard guard( m_gc_mutex );
-
 	return Wrappable::HasHandlers( event );
 }
 
-Value* const GCWrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional <Value::type_t> expected_return_type ) {
-	std::lock_guard guard( m_gc_mutex );
-
+Value* const GCWrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< Value::type_t > expected_return_type ) {
 	return Wrappable::Trigger( GSE_CALL, event, f_args, expected_return_type );
 }
 

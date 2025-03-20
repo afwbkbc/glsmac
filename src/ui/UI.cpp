@@ -97,7 +97,7 @@ WRAPIMPL_BEGIN( UI )
 					auto it = m_classes.find( name );
 					if ( it == m_classes.end() ) {
 						Log( "Creating UI class: " + name );
-						it = m_classes.insert({ name, new ui::Class( gc_space, this, name, true ) }).first;
+						it = m_classes.insert({ name, new ui::Class( gc_space, this, name ) }).first;
 						if ( arguments.size() >= 2 ) {
 							const gse::value::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;
@@ -209,6 +209,12 @@ void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objec
 
 	GC_DEBUG_END();
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string UI::ToString() {
+	return "ui::UI()";
+}
+#endif
 
 void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
 	ASSERT( m_iterables.find( obj ) == m_iterables.end(), "iterable already exists" );

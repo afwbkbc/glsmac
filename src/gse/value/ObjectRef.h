@@ -21,6 +21,11 @@ public:
 	const std::string key;
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 };
 
 }

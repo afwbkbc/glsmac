@@ -67,14 +67,17 @@ public:
 
 	void Clear();
 
-	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
-	virtual void CollectWithDependencies( std::unordered_set< Object* >& reachable_objects );
+	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 	virtual Context* GetParentContext() const = 0;
 	virtual const bool IsTraceable() const = 0;
 	virtual const std::string& GetSourceLine( const size_t line_num ) const = 0;
 	virtual const si_t& GetSI() const = 0;
 	virtual const script_info_t& GetScriptInfo() const = 0;
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
 
 protected:
 

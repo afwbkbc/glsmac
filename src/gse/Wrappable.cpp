@@ -20,7 +20,6 @@ void Wrappable::Unlink( value::Object* wrapobj ) {
 
 const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
 	ASSERT_NOLOG( callback->type == Value::T_CALLABLE, "callback not callable" );
-
 	auto it = m_callbacks.find( event );
 	if ( it == m_callbacks.end() ) {
 		it = m_callbacks.insert(
@@ -78,14 +77,16 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
 		for ( const auto& it2 : callbacks ) {
 			const auto& cb = it2.second.callable;
-			ASSERT_NOLOG( cb->type == Value::T_CALLABLE, "callback not callable" );
+			if ( cb->type != Value::T_CALLABLE ) {
+				ASSERT_NOLOG( cb->type == Value::T_CALLABLE, "callback not callable" );
+			}
 			result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { e } );
 			if ( expected_return_type.has_value() ) {
-				if ( result->type != expected_return_type.value() ) {
+				if ( !result || result->type != expected_return_type.value() ) {
 					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + result->GetTypeString() + ": " + result->ToString(), it2.second.ctx, it2.second.si, ep );
 				}
 			}
-			if ( result->type != Value::T_UNDEFINED ) {
+			if ( result && result->type != Value::T_UNDEFINED ) {
 				// TODO: resolve result conflicts somehow
 			}
 		}

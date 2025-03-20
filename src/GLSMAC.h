@@ -9,7 +9,7 @@
 
 #include "common/Common.h"
 #include "gse/Bindings.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 
 #include "gse/GSE.h"
 #include "gse/value/Object.h"
@@ -39,7 +39,7 @@ class Faction;
 class State;
 }
 
-CLASS4( GLSMAC, common::Class, gse::Bindings, gse::Wrappable, gc::Root )
+CLASS3( GLSMAC, common::Class, gse::Bindings, gse::GCWrappable )
 	GLSMAC();
 	~GLSMAC();
 
@@ -58,10 +58,16 @@ CLASS4( GLSMAC, common::Class, gse::Bindings, gse::Wrappable, gc::Root )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;
 	gc::Space* m_gc_space = nullptr;
+
+	gse::Value* m_wrapobj = nullptr;
 
 	std::vector< gse::Value* > m_main_callables = {};
 
@@ -89,7 +95,7 @@ private:
 	bool m_is_game_running = false;
 
 	void DeinitGameState( GSE_CALLABLE );
-	void InitGameState( GSE_CALLABLE, const f_t& on_complete );
+	void InitGameState( GSE_CALLABLE, const f_t on_complete );
 	void RandomizeSettings( GSE_CALLABLE );
 
 	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );

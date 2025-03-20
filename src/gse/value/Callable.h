@@ -28,8 +28,11 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-private:
 	context::Context* const m_ctx = nullptr;
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
 
 };
 

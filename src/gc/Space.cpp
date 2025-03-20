@@ -5,12 +5,14 @@
 
 #include "engine/Engine.h"
 #include "GC.h"
-#include "Root.h"
 #include "util/Time.h"
+#include "util/String.h"
+#include "util/LogHelper.h"
+#include "graphics/Graphics.h"
 
 namespace gc {
 
-Space::Space( Root* const root_object )
+Space::Space( Object* const root_object )
 	: m_root_object( root_object ) {
 	ASSERT_NOLOG( root_object, "root object is null" );
 	g_engine->GetGC()->AddSpace( this );
@@ -80,7 +82,7 @@ void Space::Accumulate( const std::function< void() >& f ) {
 				m_accumulations.erase( tid );
 			}
 			if ( !m_accumulated_objects.empty() ) {
-				std::lock_guard guard2( m_objects_mutex );
+				std::lock_guard guard( m_objects_mutex );
 				GC_LOG( "Accumulated " + std::to_string( m_accumulated_objects.size() ) + " objects" );
 				m_objects.insert( m_accumulated_objects.begin(), m_accumulated_objects.end() );
 				m_accumulated_objects.clear();
@@ -94,6 +96,13 @@ void Space::Accumulate( const std::function< void() >& f ) {
 		}
 		try {
 			f();
+		}
+		catch ( const gse::Exception& e ) {
+			for ( const auto& line : e.GetStackTrace() ) {
+				util::LogHelper::Println( line );
+			}
+			commit();
+			throw;
 		}
 		catch ( const std::exception& e ) {
 			commit();
@@ -113,35 +122,35 @@ const bool Space::Collect() {
 	GC_DEBUG_END();
 	GC_DEBUG_UNLOCK();
 
-	bool anything_removed = false;
 	std::unordered_set< Object* > removed_objects = {};
 	{
-		std::lock_guard guard2( m_objects_mutex );
-		for ( const auto& object : m_objects ) {
-			const auto& it = m_reachable_objects_tmp.find( object );
-			if ( it == m_reachable_objects_tmp.end() ) {
-				ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " was already removed" );
+		g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
+			[ this, &removed_objects ]() {
+				std::lock_guard guard2( m_objects_mutex );
+				for ( const auto& object : m_objects ) {
+					const auto& it = m_reachable_objects_tmp.find( object );
+					if ( it == m_reachable_objects_tmp.end() ) {
+						ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " was already removed" );
 #if defined( DEBUG ) || defined( FASTDEBUG )
-				GC_LOG( "Destroying unreachable object: " + std::to_string( (unsigned long long)object ) );
+						GC_LOG( "Destroying unreachable object: " + util::String::ToHexString( (unsigned long long)object ) /* TODO + "[ " + object->ToString() + " ]"*/ );
 #endif
-				delete object;
-				anything_removed = true;
-				removed_objects.insert( object );
+						delete object;
+						removed_objects.insert( object );
+					}
+				}
+				GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
 			}
-		}
-		GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
+		);
 
 		m_reachable_objects_tmp.clear();
 
-		if ( anything_removed ) {
-			for ( const auto& object : removed_objects ) {
-				ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
-				m_objects.erase( object );
-			}
+		for ( const auto& object : removed_objects ) {
+			ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
+			m_objects.erase( object );
 		}
 	}
 
-	return anything_removed;
+	return !removed_objects.empty();
 }
 
 }

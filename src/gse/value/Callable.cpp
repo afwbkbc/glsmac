@@ -17,11 +17,17 @@ void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable
 	GC_DEBUG_BEGIN( "Callable" );
 
 	GC_DEBUG_BEGIN( "owner_context" );
-	REACHABLE_EXT( m_ctx, CollectWithDependencies );
+	GC_REACHABLE( m_ctx );
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Callable::ToString() {
+	return "gse::value::Callable()";
+}
+#endif
 
 }
 }

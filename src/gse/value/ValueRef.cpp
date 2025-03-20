@@ -15,5 +15,12 @@ void ValueRef::GetReachableObjects( std::unordered_set< gc::Object* >& reachable
 	GC_DEBUG_END();
 }
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string ValueRef::ToString() {
+	std::lock_guard guard( m_gc_mutex );
+	return "gse::value::ValueRef( " + target->ToString() + ")";
+}
+#endif
+
 }
 }

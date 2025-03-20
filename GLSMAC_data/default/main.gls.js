@@ -1,14 +1,14 @@
 #main((glsmac) => {
 
-    // backwards compatibility
-    if (#classof(glsmac) != 'GLSMAC') {
-        (#include('main_legacy'))(glsmac);
-        return;
-    }
+	// backwards compatibility
+	if (#classof(glsmac) != 'GLSMAC') {
+		(#include('main_legacy'))(glsmac);
+		return;
+	}
 
-    #include('game/game')(glsmac);
-    #include('ui/ui')(glsmac);
+	#include('game/game')(glsmac);
+	#include('ui/ui')(glsmac);
 
-    glsmac.run();
+	glsmac.run();
 
 });

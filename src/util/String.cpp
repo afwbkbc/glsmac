@@ -93,6 +93,23 @@ const std::string String::Join( const std::vector< std::string >& input, const c
 	return result;
 }
 
+const std::string String::ToHexString( const uint64_t num ) {
+	const size_t hex_len = sizeof( uint64_t ) << 1;
+	static const char* digits = "0123456789abcdef";
+	std::string rc( hex_len, '0' );
+	for ( size_t i = 0, j = ( hex_len - 1 ) * 4 ; i < hex_len ; ++i, j -= 4 ) {
+		rc[ i ] = digits[ ( num >> j ) & 0x0f ];
+	}
+	size_t cutpos = 0;
+	for ( size_t i = 0 ; i < rc.length() ; i++ ) {
+		if ( rc.at( i ) != '0' ) {
+			break;
+		}
+		cutpos++;
+	}
+	return "0x" + rc.substr( cutpos );
+}
+
 void String::Trim( std::string& s ) {
 	trim( s );
 }

@@ -275,7 +275,9 @@ public:
 	InvalidEvent( const std::string& reason, const event::Event* event );
 };
 
-CLASS2( Game, MTModule, gse::Wrappable )
+CLASS2( Game, MTModule, gse::GCWrappable )
+
+	Game();
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
 	common::mt_id_t MT_Ping();
@@ -329,6 +331,12 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	void HideLoader();
 
 	WRAPDEFS_PTR( Game )
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 protected:
 

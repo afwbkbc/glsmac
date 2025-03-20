@@ -70,6 +70,7 @@ const std::vector< Faction* > FactionManager::GetAll() const {
 
 WRAPIMPL_BEGIN( FactionManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"import_base_names",
 			NATIVE_CALL() {

@@ -158,7 +158,6 @@ void MainMenu::Stop() {
 	}
 
 	if ( m_state ) {
-		DELETE( m_state );
 		m_state = nullptr;
 	}
 

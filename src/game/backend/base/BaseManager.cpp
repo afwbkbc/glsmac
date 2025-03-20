@@ -200,6 +200,7 @@ void BaseManager::PushUpdates() {
 
 WRAPIMPL_BEGIN( BaseManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"define_pop",
 			NATIVE_CALL( this ) {
@@ -269,7 +270,7 @@ WRAPIMPL_BEGIN( BaseManager )
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
 
 				if ( arguments.size() > 3 ) {
-					N_GET_CALLABLE( on_spawn, 3 );
+					// N_GET_CALLABLE( on_spawn, 3 ); not used???
 				}
 
 				return m_game->AddEvent( GSE_CALL, new event::SpawnBase(
@@ -336,6 +337,12 @@ void BaseManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 void BaseManager::RefreshBase( const base::Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string BaseManager::ToString() {
+	return "game::BaseManager()";
+}
+#endif
 
 void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op ) {
 	auto it = m_base_updates.find( base->m_id );

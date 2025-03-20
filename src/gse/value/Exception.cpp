@@ -28,5 +28,11 @@ Exception::Exception( GSE_CALLABLE, const gse::Exception& exception, const std::
 	value.insert_or_assign( "stacktrace", VALUE( value::Array, , bt ) );
 }
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Exception::ToString() {
+	return "gse::value::Exception()";
+}
+#endif
+
 }
 }

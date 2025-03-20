@@ -62,6 +62,12 @@ gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer&
 	return EvaluateScope( ctx, ep, program->body );
 }
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Interpreter::ToString() {
+	return "gse::runner::Interpreter()";
+}
+#endif
+
 gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope, bool* returnflag ) const {
 	gse::Value* result = nullptr;
 
@@ -1147,7 +1153,7 @@ void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object*
 
 	ASSERT_NOLOG( context, "function ctx not set" );
 	GC_DEBUG_BEGIN( "owner_context" );
-	REACHABLE_EXT( context, CollectWithDependencies );
+	GC_REACHABLE( context );
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();

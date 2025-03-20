@@ -329,6 +329,11 @@ Config::Config( const std::string& path )
 			m_gse_tests_script = value;
 		}
 	);
+	m_manager->AddRule(
+		"single-thread", "Run everything in same thread", AH( this ) {
+			m_debug_flags |= DF_SINGLE_THREAD;
+		}
+	);
 
 #ifdef DEBUG
 	m_manager->AddRule(

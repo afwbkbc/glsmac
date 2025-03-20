@@ -19,7 +19,8 @@ namespace map {
 namespace tile {
 
 TileManager::TileManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 
@@ -222,6 +223,7 @@ WRAPIMPL_BEGIN( TileManager )
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( tiles, 0, Array );
 				N_GET_CALLABLE( on_complete, 1 );
+				Persist( on_complete );
 				map::tile::positions_t tile_positions = {};
 				tile_positions.reserve( tiles.size() );
 				for ( const auto& tileobj : tiles ) {
@@ -239,6 +241,7 @@ WRAPIMPL_BEGIN( TileManager )
 							return VALUE( gse::value::Undefined );
 						} )
 					});
+					Unpersist( on_complete );
 				});
 				return VALUE( gse::value::Undefined );
 			})
@@ -247,6 +250,12 @@ WRAPIMPL_BEGIN( TileManager )
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( TileManager )
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string TileManager::ToString() {
+	return "game::TileManager()";
+}
+#endif
 
 void TileManager::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
 	ASSERT_NOLOG( m_game->GetState() && m_game->GetState()->IsMaster(), "only master can manage tile locks" );

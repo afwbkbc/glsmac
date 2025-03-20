@@ -20,6 +20,18 @@ public:
 	const std::optional< size_t > from;
 	const std::optional< size_t > to;
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override {
+		return "gse::value::Range( " + ( from.has_value()
+			? std::to_string( from.value() )
+			: ""
+		) + ":" + ( to.has_value()
+			? std::to_string( to.value() )
+			: ""
+		) + " )";
+	}
+#endif
+
 };
 
 }

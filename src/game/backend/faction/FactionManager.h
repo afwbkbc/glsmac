@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 namespace game {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/Task.h"
-#include "gc/Root.h"
+#include "gc/Object.h"
 
 namespace gc {
 class Space;
@@ -29,7 +29,7 @@ class Program;
 namespace task {
 namespace gseprompt {
 
-CLASS2( GSEPrompt, common::Task, gc::Root )
+CLASS2( GSEPrompt, common::Task, gc::Object )
 
 	GSEPrompt( const std::string& syntax );
 	~GSEPrompt();
@@ -39,6 +39,9 @@ CLASS2( GSEPrompt, common::Task, gc::Root )
 	void Iterate() override;
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString();
+#endif
 
 private:
 	bool m_is_running = false;

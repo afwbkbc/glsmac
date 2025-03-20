@@ -102,6 +102,18 @@ void Array::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 	GC_DEBUG_END();
 }
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Array::ToString() {
+	std::lock_guard guard( m_gc_mutex );
+	std::string result = "gse::value::Array( ";
+	for ( const auto& v : value ) {
+		result += v->ToString() + ", ";
+	}
+	result += ")";
+	return result;
+}
+#endif
+
 void Array::ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const {
 	if ( from.has_value() ) {
 		ASSERT_NOLOG( from.value() < value.size(), "range beginning overflow ( " + std::to_string( from.value() ) + " >= " + std::to_string( value.size() ) + " )" );

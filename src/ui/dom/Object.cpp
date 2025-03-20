@@ -14,6 +14,7 @@
 #include "util/LogHelper.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
+#include "gse/callable/Native.h"
 
 #include "Object.colormap.cpp"
 
@@ -88,11 +89,9 @@ Object::~Object() {
 		util::LogHelper::Println( "WARNING: object was not destroyed properly!" );
 	}
 	if ( !m_actors.empty() ) {
-		g_engine->GetGraphics()->NoRender( [ this ]() {
-			for ( const auto& actor : m_actors ) {
-				delete actor;
-			}
-		});
+		for ( const auto& actor : m_actors ) {
+			delete actor;
+		}
 	}
 };
 
@@ -127,7 +126,7 @@ void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLA
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	if ( value->type != gse::Value::T_UNDEFINED ) {
+	if ( value ) {
 		SetProperty( GSE_CALL, &m_manual_properties, key, value );
 		SetProperty( GSE_CALL, &m_properties, key, value );
 	}
@@ -205,15 +204,44 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 
 	GC_DEBUG_BEGIN( "Object" );
 
-	if ( m_wrapobj ) {
-		GC_DEBUG_BEGIN( "wrapobj" );
-		GC_REACHABLE( m_wrapobj );
+	{
+		std::lock_guard guard( m_gc_mutex );
+
+		if ( m_wrapobj ) {
+			GC_DEBUG_BEGIN( "wrapobj" );
+			GC_REACHABLE( m_wrapobj );
+			GC_DEBUG_END();
+		}
+
+		GC_DEBUG_BEGIN( "properties");
+		for ( const auto& p : m_properties ) {
+			GC_REACHABLE( p.second );
+		}
+		GC_DEBUG_END();
+
+		GC_DEBUG_BEGIN( "default_properties");
+		for ( const auto& p : m_default_properties ) {
+			GC_REACHABLE( p.second );
+		}
+		GC_DEBUG_END();
+
+		GC_DEBUG_BEGIN( "manual_properties");
+		for ( const auto& p : m_manual_properties ) {
+			GC_REACHABLE( p.second );
+		}
 		GC_DEBUG_END();
 	}
 
 	GC_DEBUG_END();
-
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string Object::ToString() {
+	return "ui::dom::Object( " + m_tag + " )";
+}
+#endif
+
+
 
 const bool Object::IsEventRelevant( const input::Event& event ) const {
 	ASSERT_NOLOG( !m_is_destroyed, "object is destroyed" );

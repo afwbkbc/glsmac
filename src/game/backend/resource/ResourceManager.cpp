@@ -64,7 +64,7 @@ const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::T
 		},
 	}; } );
 	if ( result->type != gse::Value::T_OBJECT ) {
-		THROW( "unexpected return type: expected Object, got " + result->GetTypeString() );
+		GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
 	}
 	const auto& values = ( (gse::value::Object*)result )->value;
 	for ( const auto& v : values ) {
@@ -94,6 +94,7 @@ const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::T
 
 WRAPIMPL_BEGIN( ResourceManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"define",
 			NATIVE_CALL( this ) {
@@ -183,6 +184,11 @@ void ResourceManager::Unserialize( types::Buffer& buf ) {
 	}
 }
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string ResourceManager::ToString() {
+	return "game::ResourceManager()";
+}
+#endif
 
 }
 }

@@ -133,6 +133,7 @@ public:
 	typedef std::function< Value*( GSE_CALLABLE, const value::function_arguments_t& arguments ) > executor_t;
 	Native() = delete;
 	Native( gc::Space* const gc_space, context::Context* const ctx, const executor_t& executor );
+	~Native();
 	virtual Value* Run( GSE_CALLABLE, const value::function_arguments_t& arguments ) override;
 
 private:

@@ -100,22 +100,49 @@ Engine::Engine(
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
 
-	NEWV( t_network, common::Thread, "NETWORK" );
+	common::Thread* t_network;
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+	if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+		t_network = t_main;
+	}
+	else
+#endif
+	{
+		NEW( t_network, common::Thread, "NETWORK" );
+		m_threads.push_back( t_network );
+	}
 	t_network->SetIPS( 100 );
 	t_network->AddModule( m_network );
-	m_threads.push_back( t_network );
 
-	NEWV( t_gc, common::Thread, "GC" );
+	common::Thread* t_gc;
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+	if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+		t_gc = t_main;
+	}
+	else
+#endif
+	{
+		NEW( t_gc, common::Thread, "GC" );
+		m_threads.push_back( t_gc );
+	}
 	t_gc->SetIPS( gc::GC::COLLECTS_PER_SECOND );
 	NEW( m_gc, gc::GC );
 	t_gc->AddModule( m_gc );
-	m_threads.push_back( t_gc );
 
+	common::Thread* t_game;
 	if ( m_game ) {
-		NEWV( t_game, common::Thread, "GAME" );
+#if defined( DEBUG ) || defined ( FASTDEBUG )
+		if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+			t_game = t_main;
+		}
+		else
+#endif
+		{
+			NEW( t_game, common::Thread, "GAME" );
+			m_threads.push_back( t_game );
+		}
 		t_game->SetIPS( g_max_fps );
 		t_game->AddModule( m_game );
-		m_threads.push_back( t_game );
 	}
 };
 

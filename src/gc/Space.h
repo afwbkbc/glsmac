@@ -20,11 +20,10 @@ namespace gc {
 
 class GC;
 class Object;
-class Root;
 
 CLASS( Space, common::Class )
 
-	Space( Root* const root );
+	Space( Object* const root );
 	~Space();
 
 	void Accumulate( const std::function< void() >& f );
@@ -34,7 +33,7 @@ private:
 	std::atomic< bool > m_is_destroying = false;
 
 	// object that is queried for reachability (recursive), not collectable and must be deleted manually after space
-	Root* const m_root_object = {};
+	Object* const m_root_object = {};
 
 	// to track accumulating threads
 	std::mutex m_accumulations_mutex;

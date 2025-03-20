@@ -13,8 +13,6 @@ return {
 
 		logo.height = 500;
 
-		#print('LOGO', logo);
-
 	},
 
 };

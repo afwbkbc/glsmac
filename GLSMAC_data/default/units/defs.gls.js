@@ -40,7 +40,7 @@ const units = [
 
 const result = {
 	define: (um) => {
-
+		
 		for (morale of morales) {
 			um.define_morales(morale[0], morale[1]);
 		}

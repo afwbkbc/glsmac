@@ -17,7 +17,7 @@ namespace gse {
 const char GSE::PATH_SEPARATOR = '/';
 
 GSE::GSE()
-	: gc::Root() {
+	: gc::Object( nullptr ) {
 	NEW( m_gc_space, gc::Space, this );
 	m_bindings.push_back( &m_builtins );
 	m_gc_space->Accumulate(
@@ -126,7 +126,7 @@ context::GlobalContext* GSE::CreateGlobalContext( const std::string& source_path
 		[ this, &context, &source_path ]() {
 			NEW( context, context::GlobalContext, this, source_path );
 			{
-				std::lock_guard guard( m_gc_mutex );
+				//std::lock_guard guard( m_gc_mutex );
 				m_global_contexts.insert( context );
 			}
 			{
@@ -259,13 +259,13 @@ Value* const GSE::GetGlobal( const std::string& identifier ) {
 	}
 }
 
-void GSE::AddRootObject( gc::Root* const object ) {
+void GSE::AddRootObject( gc::Object* const object ) {
 	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( m_root_objects.find( object ) == m_root_objects.end(), "root object already exists" );
 	m_root_objects.insert( object );
 }
 
-void GSE::RemoveRootObject( gc::Root* const object ) {
+void GSE::RemoveRootObject( gc::Object* const object ) {
 	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( m_root_objects.find( object ) != m_root_objects.end(), "root object not found" );
 	m_root_objects.erase( object );
@@ -331,6 +331,10 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	}
 	GC_DEBUG_END();
 
+}
+
+const std::string GSE::ToString() {
+	return "gse::GSE()";
 }
 
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {

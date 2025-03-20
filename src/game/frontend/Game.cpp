@@ -166,7 +166,6 @@ void Game::Stop() {
 		ASSERT_NOLOG( !m_state || game->GetState() == m_state, "backend has different state" );
 	}
 	else if ( m_state ) {
-		DELETE( m_state );
 		m_state = nullptr;
 	}
 
@@ -1321,15 +1320,6 @@ void Game::Initialize(
 
 	Log( "Initializing game" );
 
-/*
- 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
-	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
-	NEW( m_itm, text::InstancedTextManager, m_ism );
-	NEW( m_fm, faction::FactionManager, this );
-	NEW( m_tm, tile::TileManager, this );
-	NEW( m_um, unit::UnitManager, this );
-	NEW( m_bm, base::BaseManager, this );
-*/
 	NEW( m_camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	m_camera_angle = INITIAL_CAMERA_ANGLE;
 	UpdateCameraAngle();

@@ -7,7 +7,6 @@
 #include <functional>
 
 #include "common/Common.h"
-#include "gc/Root.h"
 
 #include "Types.h"
 
@@ -44,7 +43,7 @@ class Callable;
 
 class Async;
 
-CLASS2( GSE, common::Class, gc::Root )
+CLASS2( GSE, common::Class, gc::Object )
 	GSE();
 	virtual ~GSE();
 
@@ -69,8 +68,8 @@ CLASS2( GSE, common::Class, gc::Root )
 	void SetGlobal( const std::string& identifier, Value* variable );
 	Value* const GetGlobal( const std::string& identifier );
 
-	void AddRootObject( gc::Root* const object );
-	void RemoveRootObject( gc::Root* const object );
+	void AddRootObject( gc::Object* const object );
+	void RemoveRootObject( gc::Object* const object );
 
 	context::Context* GetContextByPath( const std::string& path ) const;
 	Async* GetAsync();
@@ -82,6 +81,8 @@ CLASS2( GSE, common::Class, gc::Root )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
 	const std::string& LogCaptureStopGet() const { return m_builtins.LogCaptureStopGet(); }
+
+	const std::string ToString() override;
 
 #endif
 
@@ -100,7 +101,7 @@ private:
 	std::vector< std::string > m_modules_order = {};
 	std::map< std::string, Value* > m_globals = {};
 
-	std::unordered_set< gc::Root* > m_root_objects = {};
+	std::unordered_set< gc::Object* > m_root_objects = {};
 
 	std::vector< Bindings* > m_bindings = {};
 	builtins::Builtins m_builtins = {};

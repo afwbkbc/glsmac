@@ -31,9 +31,7 @@
 static GLSMAC* s_glsmac = nullptr;
 
 GLSMAC::GLSMAC()
-	: gc::Root() {
-
-	std::lock_guard guard( m_gc_mutex );
+	: gse::GCWrappable( nullptr ) {
 
 	// there can only be one GLSMAC
 	ASSERT( !s_glsmac, "GLSMAC already defined" );
@@ -102,10 +100,6 @@ GLSMAC::~GLSMAC() {
 		delete m_game;
 	}
 
-	if ( m_state ) {
-		delete m_state;
-	}
-
 	m_gse->GetAsync()->StopTimers();
 
 	m_gc_space->Accumulate( [ this ](){
@@ -138,7 +132,6 @@ void GLSMAC::Iterate() {
 			m_load_thread.load()->join();
 			delete m_load_thread;
 			m_load_thread = nullptr;
-			ASSERT_NOLOG( m_f_after_load, "m_f_after_load not set" );
 			m_gc_space->Accumulate( [ this ](){
 				HideLoader();
 				m_f_after_load();
@@ -154,6 +147,7 @@ void GLSMAC::Iterate() {
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
+
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
@@ -189,14 +183,16 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GET_CALLABLE( on_complete, 0 );
+				Persist( on_complete );
 				InitGameState( GSE_CALL, [ this, on_complete, gc_space, ctx, si, ep ] () {
 					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
 					m_state->m_settings.global.Initialize();
 					auto ep2 = ep;
 					on_complete->Run( gc_space, ctx, si, ep2, {} );
+					Unpersist( on_complete );
 				} );
 				return VALUE( gse::value::Undefined );
-			} )
+			} ),
 		},
 		{
 			"randomize_settings",
@@ -233,7 +229,9 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		TriggerObject( m_ui, "loader_show" );
+		m_gc_space->Accumulate( [ this ] () {
+			TriggerObject( m_ui, "loader_show" );
+		});
 	}
 	UpdateLoaderText();
 }
@@ -252,7 +250,9 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		TriggerObject( m_ui, "loader_hide" );
+		m_gc_space->Accumulate( [ this ](){
+			TriggerObject( m_ui, "loader_hide" );
+		});
 	}
 }
 
@@ -267,12 +267,32 @@ gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::stri
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
 	std::lock_guard guard( m_gc_mutex );
+
+	if ( m_state ) {
+		GC_DEBUG_BEGIN( "state" );
+		GC_REACHABLE( m_state );
+		GC_DEBUG_END();
+	}
+
+	if ( m_wrapobj ) {
+		GC_DEBUG_BEGIN( "wrapobj" );
+		GC_REACHABLE( m_wrapobj );
+		GC_DEBUG_END();
+	}
 
 	GC_DEBUG_BEGIN("ui");
 	GC_REACHABLE( m_ui );
 	GC_DEBUG_END();
 }
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+const std::string GLSMAC::ToString() {
+	return "GLSMAC()";
+}
+#endif
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
 	ASSERT_NOLOG( !m_load_thread, "load thread already set" );
@@ -375,24 +395,27 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
-		{
-			"text", VALUEEXT( gse::value::String, m_gc_space, text )
-		}
-	}; } );
+	m_gc_space->Accumulate( [ this, &text ]() {
+		TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
+			{
+				"text", VALUEEXT( gse::value::String, m_gc_space, text )
+			}
+		}; } );
+	});
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
+	std::lock_guard guard( m_gc_mutex );
 	if ( m_state ) {
 		if ( m_is_game_running ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
 		}
-		delete m_state;
 		m_state = nullptr;
 	}
 }
 
-void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
+void GLSMAC::InitGameState( GSE_CALLABLE, const f_t on_complete  ) {
+	std::lock_guard guard( m_gc_mutex );
 	if ( m_state ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
 	}
@@ -402,6 +425,7 @@ void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
 	AsyncLoad( "Initializing game state", [ this ] {
 		m_gc_space->Accumulate( [ this ]() {
 			m_state = new game::backend::State( m_gc_space, m_ctx, this );
+			m_state->SetGame( g_engine->GetGame() );
 			m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
 				TriggerObject( this, "configure_state", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
 					{
@@ -447,27 +471,32 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu
 	auto* real_state = m_state;
-	m_state = nullptr;
+
+	//m_state = nullptr; // TODO: why?
+
 	m_is_game_running = true;
 
 	auto* game = g_engine->GetGame();
 	ASSERT_NOLOG( game, "game not set" );
-	TriggerObject( this, "configure_game", ARGS_F( &ctx, gc_space, &si, &ep, &game ) {
-		{
-			"game",
-			game->Wrap( GSE_CALL, true ),
-		}
-	}; } );
 
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		TriggerObject( this, "start_game" );
+		m_gc_space->Accumulate( [ this ](){
+			TriggerObject( this, "start_game" );
+		});
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
 		THROW( "TODO: cancel" );
 	} );
 
 	S_Game( GSE_CALL );
+
+	TriggerObject( this, "configure_game", ARGS_F( &ctx, gc_space, &si, &ep, &game ) {
+		{
+			"game",
+			game->Wrap( GSE_CALL, true ),
+		}
+	}; } );
 }
 
 void GLSMAC::RunMain() {
@@ -476,9 +505,14 @@ void GLSMAC::RunMain() {
 		for ( const auto& main : m_main_callables ) {
 			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
 			m_gc_space->Accumulate( [ this, &main ] (){
+				ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
 				gse::ExecutionPointer ep;
+				{
+					std::lock_guard guard( m_gc_mutex );
+					m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
+				}
 				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
-					Wrap( m_gc_space, m_ctx, {}, ep )
+					m_wrapobj
 				} );
 			});
 		}

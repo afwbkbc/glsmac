@@ -89,6 +89,12 @@ CLASS2( State, common::Class, gse::GCWrappable )
 	gc::Space* m_gc_space = nullptr;
 	gse::context::Context* m_ctx = nullptr;
 
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 private:
 
 	GLSMAC* m_glsmac = nullptr;

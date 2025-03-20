@@ -2,7 +2,7 @@
 
 #include "common/Common.h"
 
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 #include "gse/value/Object.h"
 
 namespace game {
@@ -18,13 +18,13 @@ namespace animation {
 
 class Def;
 
-CLASS2( AnimationManager, common::Class, gse::Wrappable )
+CLASS2( AnimationManager, common::Class, gse::GCWrappable )
 public:
 	AnimationManager( Game* game );
 	~AnimationManager();
 
 	typedef std::function< void() > cb_oncomplete;
-	
+
 	void Clear();
 	void DefineAnimation( Def* def );
 	const std::string* ShowAnimation( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
@@ -35,6 +35,10 @@ public:
 
 	void Serialize( types::Buffer& buf ) const;
 	void Unserialize( types::Buffer& buf );
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
 
 private:
 	Game* m_game = nullptr;

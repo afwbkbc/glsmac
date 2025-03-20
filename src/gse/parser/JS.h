@@ -33,6 +33,10 @@ CLASS( JS, Parser )
 
 	JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	const std::string ToString() override;
+#endif
+
 protected:
 	void GetElements( source_elements_t& elements ) override;
 	const program::Program* GetProgram( const source_elements_t& elements ) override;
