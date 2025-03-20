@@ -40,26 +40,14 @@ CLASS( GC, common::Module )
 	static void DebugUnlock();
 #endif
 
-	enum delete_after_t {
-		DA_RENDER,
-	};
-	void DeleteAfter( void* const what, const delete_after_t after );
-
 private:
 	std::mutex m_spaces_mutex;
 	std::unordered_set< Space* > m_spaces = {};
-
-	std::mutex m_delete_after_mutex;
-	std::unordered_map< delete_after_t, std::vector< void* > > m_delete_after = {};
 
 private:
 	friend class Space;
 	void AddSpace( Space* const space );
 	void RemoveSpace( Space* const space );
-
-private:
-	friend class graphics::opengl::OpenGL;
-	void TriggerDeleteAfter( const delete_after_t after );
 
 };
 

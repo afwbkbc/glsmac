@@ -243,8 +243,6 @@ void OpenGL::Iterate() {
 	Unlock();
 
 	DEBUG_STAT_INC( frames_rendered );
-
-	g_engine->GetGC()->TriggerDeleteAfter( gc::GC::DA_RENDER );
 }
 
 void OpenGL::AddScene( scene::Scene* scene ) {
@@ -746,7 +744,7 @@ void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
 
 void OpenGL::ProcessPendingUnloads() {
 	std::lock_guard guard( m_texture_objs_to_unload_mutex );
-	for ( const auto& obj : m_texture_objs_to_unload ) {
+	for ( auto& obj : m_texture_objs_to_unload ) {
 		glActiveTexture( GL_TEXTURE0 );
 		glDeleteTextures( 1, &obj );
 	}

@@ -16,7 +16,7 @@ namespace builtins {
 
 void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
-#define CONVERSION_ERROR( _type ) GSE_ERROR( EC.CONVERSION_ERROR, "Could not convert " + ( v ? v->GetTypeString() : "Undefined" ) + " to " + _type + ": " + v->ToString() );
+#define CONVERSION_ERROR( _type ) GSE_ERROR( EC.CONVERSION_ERROR, "Could not convert " + ( v ? v->GetTypeString() : "Undefined" ) + " to " + _type + ": " + ( v ? v->ToString() : "Undefined" ) )
 
 #define CONVERT_COLOR( _type, _constructor, _min, _max ) { \
 	N_GETVALUE( r, 0, _type ); \

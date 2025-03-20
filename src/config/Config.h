@@ -57,9 +57,9 @@ CLASS( Config, common::Module )
 		DF_NO_GC = 1 << 8,
 		DF_SINGLE_THREAD = 1 << 9,
 #ifdef DEBUG
-		DF_MAPDUMP = 1 << 7,
-		DF_MEMORYDEBUG = 1 << 8,
-		DF_QUICKSTART_MAP_DUMP = 1 << 9,
+		DF_MAPDUMP = 1 << 10,
+		DF_MEMORYDEBUG = 1 << 11,
+		DF_QUICKSTART_MAP_DUMP = 1 << 12,
 #endif
 	};
 #endif
