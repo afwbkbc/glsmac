@@ -76,7 +76,7 @@ CLASS2( GSE, common::Class, gc::Object )
 	gc::Space* const GetGCSpace() const;
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
-
+	
 #if defined ( DEBUG ) || defined( FASTDEBUG )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
