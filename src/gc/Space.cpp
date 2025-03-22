@@ -144,9 +144,12 @@ const bool Space::Collect() {
 
 		m_reachable_objects_tmp.clear();
 
-		for ( const auto& object : removed_objects ) {
-			ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
-			m_objects.erase( object );
+		{
+			std::lock_guard guard2( m_objects_mutex );
+			for ( const auto& object : removed_objects ) {
+				ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
+				m_objects.erase( object );
+			}
 		}
 	}
 

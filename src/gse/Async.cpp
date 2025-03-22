@@ -159,8 +159,6 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 		const auto f = timer.callable;
 		const auto si = timer.si;
 
-		m_gc_mutex.unlock();
-
 		size_t ms = 0;
 		bool repeat = false;
 		m_gc_space->Accumulate(
@@ -193,8 +191,6 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 				}
 			}
 		);
-
-		m_gc_mutex.lock();
 
 		if ( repeat ) {
 			timers_new[ util::Time::Now() + ms ].insert(
