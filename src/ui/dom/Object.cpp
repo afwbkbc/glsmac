@@ -126,7 +126,7 @@ void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLA
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	if ( value ) {
+	if ( value && value->type != gse::Value::T_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_manual_properties, key, value );
 		SetProperty( GSE_CALL, &m_properties, key, value );
 	}
