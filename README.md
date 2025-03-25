@@ -152,6 +152,8 @@ For debug build: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
 
 For 'fast debug' build (gdb and most asserts work, removed expensive checks and sanitation): `cmake -S . -B build -DCMAKE_BUILD_TYPE=FastDebug && make -C build`
 
+*( for debug or 'fast debug' build you can also add `-DSANITIZER=YES` to use asan, it does not work reliably on all OSes so is disabled by default. an alternative is to use valgrind tool )*
+
 For portable build (binary that can be executed on different machines): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Portable64 && make -C build` ( or `Portable32` for 32-bit )
 
 For same build as before (or Release if it's first build): `cmake -S . -B build && make -C build`
