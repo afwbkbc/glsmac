@@ -55,7 +55,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				auto* gc_space = gse->GetGCSpace();
 
 				parser::Parser* parser = nullptr;
-				const runner::Runner* runner = nullptr;
+				runner::Runner* runner = nullptr;
 				const program::Program* program = nullptr;
 				context::GlobalContext* context = nullptr;
 

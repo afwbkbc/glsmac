@@ -8,6 +8,7 @@
 #include "gse/context/Context.h"
 #include "ValueRef.h"
 #include "gse/context/ChildContext.h"
+#include "gc/Space.h"
 
 namespace gse {
 namespace value {
@@ -39,6 +40,7 @@ Object::~Object() {
 }
 
 Value* const Object::Get( const object_key_t& key ) {
+	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
 	const auto& it = value.find( key );
@@ -48,6 +50,7 @@ Value* const Object::Get( const object_key_t& key ) {
 }
 
 void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
+	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
 	const bool has_value = new_value && new_value->type != T_UNDEFINED;
@@ -72,6 +75,7 @@ void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE 
 }
 
 Value* const Object::GetRef( const object_key_t& key ) {
+	CHECKACCUM( m_gc_space );
 	return VALUEEXT( ObjectRef, m_gc_space, this, key );
 }
 

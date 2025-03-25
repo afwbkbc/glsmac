@@ -76,7 +76,7 @@ CLASS2( GSE, common::Class, gc::Object )
 	gc::Space* const GetGCSpace() const;
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
-	
+
 #if defined ( DEBUG ) || defined( FASTDEBUG )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
@@ -111,7 +111,7 @@ private:
 		context::GlobalContext* context;
 		// TODO: why can't we delete these two upon getting result?
 		const program::Program* program;
-		const runner::Runner* runner;
+		runner::Runner* runner;
 		void Cleanup( GSE* const gse );
 	};
 	std::unordered_map< std::string, std::string > m_include_paths = {};

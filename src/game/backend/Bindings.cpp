@@ -89,6 +89,7 @@ gse::context::Context* const Bindings::GetContext() const {
 }
 
 gse::Value* const Bindings::Trigger( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
+	CHECKACCUM( m_gse->GetGCSpace() );
 	auto* gc_space = m_gse->GetGCSpace();
 	gse::Value* result = nullptr;
 	try {

@@ -26,7 +26,7 @@ CLASS2( Runner, common::Class, gc::Object )
 
 	Runner( gc::Space* const gc_space );
 
-	virtual Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) const = 0;
+	virtual Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) = 0;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 

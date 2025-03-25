@@ -58,7 +58,9 @@ namespace runner {
 Interpreter::Interpreter( gc::Space* const gc_space )
 	: Runner( gc_space ) {}
 
-gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer& ep, const Program* program ) const {
+gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer& ep, const Program* program ) {
+	CHECKACCUM( m_gc_space );
+	std::lock_guard guard( m_execute_mutex );
 	return EvaluateScope( ctx, ep, program->body );
 }
 
@@ -68,7 +70,8 @@ const std::string Interpreter::ToString() {
 }
 #endif
 
-gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope, bool* returnflag ) const {
+gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope, bool* returnflag ) {
+	CHECKACCUM( m_gc_space );
 	gse::Value* result = nullptr;
 
 	ctx->ForkAndExecute(
@@ -109,7 +112,8 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 	return result;
 }
 
-gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement, bool* returnflag ) const {
+gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement, bool* returnflag ) {
+	CHECKACCUM( m_gc_space );
 	ASSERT_NOLOG( returnflag, "statement returnflag ptr not set" );
 	ASSERT_NOLOG( !*returnflag, "statement but returnflag is already true" );
 	const auto result = EvaluateExpression( ctx, ep, statement->body, returnflag );
@@ -120,7 +124,8 @@ gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, Executi
 	return nullptr;
 }
 
-gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested, bool* returnflag ) const {
+gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const Conditional* conditional, bool is_nested, bool* returnflag ) {
+	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
@@ -322,7 +327,8 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 	}
 }
 
-gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const Expression* expression, bool* returnflag ) const {
+gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const Expression* expression, bool* returnflag ) {
+	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	if ( !expression->op ) {
 		ASSERT( !expression->b, "expression has second operand but no operator" );
@@ -881,7 +887,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 	}
 }
 
-gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
+	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	ASSERT( operand, "operand is null" );
 	switch ( operand->type ) {
@@ -954,7 +961,7 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 	}
 }
 
-const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
 	if ( result->type != gse::Value::T_STRING ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si, ep );
@@ -962,7 +969,8 @@ const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionP
 	return ( (String*)result )->value;
 }
 
-gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const Operand* operand, const bool only_index ) const {
+gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const Operand* operand, const bool only_index ) {
+	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	ASSERT( operand, "index operand missing" );
 	const auto& get_index = [ &ctx, &ep, &operand ]( gse::Value* const value ) -> size_t {
@@ -1003,7 +1011,7 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 	}
 }
 
-const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
 	if ( result->type != gse::Value::T_BOOL ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si, ep );
@@ -1011,20 +1019,21 @@ const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& e
 	return ( (Bool*)result )->value;
 }
 
-const Variable* Interpreter::EvaluateVariable( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+const Variable* Interpreter::EvaluateVariable( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	if ( operand->type != Operand::OT_VARIABLE ) {
 		throw gse::Exception( EC.REFERENCE_ERROR, "Expected variable, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return (Variable*)operand;
 }
 
-const std::string Interpreter::EvaluateVarName( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) const {
+const std::string Interpreter::EvaluateVarName( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	const auto* var = EvaluateVariable( ctx, ep, operand );
 	ASSERT( var->hints == VH_NONE, "unexpected variable hints" );
 	return var->name;
 }
 
-gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const value ) const {
+gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const value ) {
+	CHECKACCUM( m_gc_space );
 	if ( value ) {
 		switch ( value->type ) {
 			case gse::Value::T_ARRAYREF: {
@@ -1050,7 +1059,7 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 	return value;
 }
 
-void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const ref, gse::Value* const value ) const {
+void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const ref, gse::Value* const value ) {
 	auto* gc_space = m_gc_space;
 	switch ( ref->type ) {
 		case gse::Value::T_OBJECTREF: {
@@ -1077,7 +1086,7 @@ void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPo
 	}
 }
 
-void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const value::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) const {
+void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const value::Array* array, const std::optional< size_t > from, const std::optional< size_t > to ) {
 	const auto& max = array->value.size() - 1;
 	if ( from.has_value() ) {
 		if ( from.value() > max ) {
@@ -1096,7 +1105,7 @@ void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, Executio
 	}
 }
 
-void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear ) const {
+void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear ) {
 	if ( !result ) {
 		*need_break = false;
 		*need_clear = false;
@@ -1128,7 +1137,7 @@ void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_brea
 
 Interpreter::Function::Function(
 	gc::Space* const gc_space,
-	const Interpreter* runner,
+	Interpreter* runner,
 	context::Context* context,
 	const std::vector< std::string >& parameters,
 	const Program* const program

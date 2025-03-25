@@ -273,6 +273,7 @@ const std::string Value::Dump() const {
 }
 
 Value* const Value::Deref() {
+	CHECKACCUM( m_gc_space );
 	switch ( type ) {
 		case T_ARRAYREF: {
 			const auto* that = (value::ArrayRef*)this;
@@ -295,6 +296,7 @@ Value* const Value::Deref() {
 }
 
 Value* const Value::Clone() {
+	CHECKACCUM( m_gc_space );
 	return New( this );
 }
 
@@ -405,6 +407,7 @@ const bool Value::operator>=( const Value& other ) const {
 Value* const Value::New( const Value* value ) {
 	auto* gc_space = value->m_gc_space;
 	ASSERT_NOLOG( gc_space, "value gc space is null" );
+	CHECKACCUM( gc_space );
 	switch ( type ) {
 		case T_UNDEFINED:
 			return VALUE( value::Undefined );

@@ -99,11 +99,6 @@ private:
 	void AddChildContext( ChildContext* const child );
 	void RemoveChildContext( ChildContext* const child );
 
-private:
-	friend class value::Object;
-	void AddChildObject( Value* const child );
-	void RemoveChildObject( Value* const child );
-
 };
 
 }

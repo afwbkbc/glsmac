@@ -50,14 +50,7 @@ Space::~Space() {
 
 void Space::Add( Object* object ) {
 	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	{
-		std::lock_guard guard( m_accumulations_mutex );
-		if ( m_accumulations.find( std::this_thread::get_id() ) == m_accumulations.end() ) {
-			ASSERT_NOLOG( m_accumulations.find( std::this_thread::get_id() ) != m_accumulations.end(), "GC not in accumulation mode" );
-		}
-	}
-#endif
+	ASSERT_NOLOG( IsAccumulating(), "GC not in accumulation mode" );
 	//GC_LOG( "Adding object: " + std::to_string( (unsigned long long)object ) );
 	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " already exists" );
 	m_accumulated_objects.insert( object );
@@ -110,6 +103,11 @@ void Space::Accumulate( const std::function< void() >& f ) {
 		}
 		commit();
 	}
+}
+
+const bool Space::IsAccumulating() {
+	std::lock_guard guard( m_accumulations_mutex );
+	return m_accumulations.find( std::this_thread::get_id() ) != m_accumulations.end();
 }
 
 const bool Space::Collect() {

@@ -4,6 +4,7 @@
 #include "ArrayRef.h"
 #include "ArrayRangeRef.h"
 #include "gse/Wrappable.h"
+#include "gc/Space.h"
 
 namespace gse {
 namespace value {
@@ -13,6 +14,7 @@ Array::Array( gc::Space* const gc_space, array_elements_t initial_value )
 	, value( initial_value ) {}
 
 Value* const Array::Get( const size_t index ) {
+	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
 	return ( index < value.size() )
@@ -21,6 +23,7 @@ Value* const Array::Get( const size_t index ) {
 }
 
 Value* const Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) {
+	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
 	ValidateFromTo( from, to );

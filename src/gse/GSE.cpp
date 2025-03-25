@@ -176,6 +176,7 @@ void GSE::Run() {
 }
 
 Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
+	CHECKACCUM( m_gc_space );
 	std::string full_path = "";
 	{
 		const auto& it = m_include_paths.find( path );
@@ -250,6 +251,7 @@ void GSE::SetGlobal( const std::string& identifier, Value* variable ) {
 
 Value* const GSE::GetGlobal( const std::string& identifier ) {
 	Log( "Get global: " + identifier );
+	CHECKACCUM( m_gc_space );
 	const auto& it = m_globals.find( identifier );
 	if ( it != m_globals.end() ) {
 		return it->second;

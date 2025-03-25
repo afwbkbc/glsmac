@@ -307,6 +307,7 @@ const std::string Parser::unpack_backslashes( const std::string& source ) const 
 
 #define X( _n, _t, _tt, _m ) \
 gse::Value* const _n( const _t& v, gc::Space* const gc_space ) { \
+    CHECKACCUM( gc_space ); \
     std::lock_guard guard( m_gc_mutex ); \
     const auto& it = _m.find( v ); \
     return it != _m.end() \

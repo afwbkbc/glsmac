@@ -923,6 +923,7 @@ void Game::OnGSEError( const gse::Exception& err ) {
 }
 
 gse::Value* const Game::AddEvent( GSE_CALLABLE, event::Event* event ) {
+	CHECKACCUM( m_state->m_gc_space );
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
 		m_connection->SendGameEvent( event );

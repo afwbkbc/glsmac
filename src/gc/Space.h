@@ -14,6 +14,9 @@
 namespace gse::runner {
 class Interpreter;
 }
+#define CHECKACCUM( _gcspace ) ASSERT_NOLOG( _gcspace->IsAccumulating(), "GC not in accumulation mode" )
+#else
+#define CHECKACCUM( _gcspace )
 #endif
 
 namespace gc {
@@ -27,6 +30,7 @@ CLASS( Space, common::Class )
 	~Space();
 
 	void Accumulate( const std::function< void() >& f );
+	const bool IsAccumulating();
 
 private:
 	// if true - it means space is about to be destroyed and doing final cleanups/collects
