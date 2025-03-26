@@ -283,9 +283,11 @@ void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 		GC_DEBUG_END();
 	}
 
-	GC_DEBUG_BEGIN("ui");
-	GC_REACHABLE( m_ui );
-	GC_DEBUG_END();
+	if ( m_ui ) {
+		GC_DEBUG_BEGIN( "ui" );
+		GC_REACHABLE( m_ui );
+		GC_DEBUG_END();
+	}
 }
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

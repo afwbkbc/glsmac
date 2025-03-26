@@ -118,7 +118,6 @@ gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, Executi
 	ASSERT_NOLOG( !*returnflag, "statement but returnflag is already true" );
 	const auto result = EvaluateExpression( ctx, ep, statement->body, returnflag );
 	if ( *returnflag ) {
-		auto* gc_space = m_gc_space;
 		return result;
 	}
 	return nullptr;
@@ -1169,6 +1168,7 @@ void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object*
 }
 
 gse::Value* Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t& arguments ) {
+	CHECKACCUM( gc_space );
 	if ( parameters.size() != arguments.size() ) {
 		GSE_ERROR( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
 	}

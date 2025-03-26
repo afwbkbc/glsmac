@@ -312,49 +312,53 @@ void AddGSETests( task::gsetests::GSETests* task ) {
 					return VALUE( value::Null );
 				}
 			};
-			gc_space->Accumulate(
-				[ &gc_space, &ctx, &gse ]() {
-					NEWV( set_variables, SetVariables, gc_space, gse, ctx );
-					gse->AddModule( "set_variables", set_variables );
-				}
-			);
-
-			gse->Run();
-
-			GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_first" ) ) == 10 );
-			GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_second" ) ) == 2 );
-			GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_third" ) ) == 30 );
-
-			const auto obj1 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj1" ) );
-			GT_ASSERT( obj1.empty() );
-
-			const auto obj2 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj2" ) );
-			GT_ASSERT( obj2.size() == 2 );
-			GT_ASSERT( VALUE_GET( value::Int, obj2.at( "property_int" ) ) == 555 );
-			GT_ASSERT( VALUE_GET( value::Bool, obj2.at( "property_bool" ) ) == true );
-
-			const auto obj3 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj3" ) );
-			GT_ASSERT( obj3.size() == 3 );
-			GT_ASSERT( VALUE_GET( value::Int, obj3.at( "property_int" ) ) == 30 );
-			GT_ASSERT( VALUE_GET( value::String, obj3.at( "property_string" ) ) == "STRING" );
-			const auto sum = VALUE_DATA( value::Callable, obj3.at( "property_sum" ) );
-
-			const auto run_tests = [ &gse, &gc_space, &sum ]() -> const std::string {
-				std::vector< Value* > args = {
-					VALUE( value::Int, , 2 ),
-					VALUE( value::Int, , 5 ),
-				};
-				{
-					ExecutionPointer ep;
-					GT_ASSERT( VALUE_GET( value::Int, sum->Run( gc_space, nullptr, {}, ep, args ) ) == 7 );
-				}
-				GT_OK();
-			};
 
 			std::string result = "";
+
 			gc_space->Accumulate(
-				[ &run_tests, &result ]() {
-					result = run_tests();
+				[ &gc_space, &ctx, &gse, &result ]() {
+					NEWV( set_variables, SetVariables, gc_space, gse, ctx );
+					gse->AddModule( "set_variables", set_variables );
+
+					gse->Run();
+
+					const auto f_asserts = [ &gse, &gc_space ]() {
+
+						GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_first" ) ) == 10 );
+						GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_second" ) ) == 2 );
+						GT_ASSERT( VALUE_GET( value::Int, gse->GetGlobal( "testvar_third" ) ) == 30 );
+
+						const auto obj1 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj1" ) );
+						GT_ASSERT( obj1.empty() );
+
+						const auto obj2 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj2" ) );
+						GT_ASSERT( obj2.size() == 2 );
+						GT_ASSERT( VALUE_GET( value::Int, obj2.at( "property_int" ) ) == 555 );
+						GT_ASSERT( VALUE_GET( value::Bool, obj2.at( "property_bool" ) ) == true );
+
+						const auto obj3 = VALUE_GET( value::Object, gse->GetGlobal( "testvar_obj3" ) );
+						GT_ASSERT( obj3.size() == 3 );
+						GT_ASSERT( VALUE_GET( value::Int, obj3.at( "property_int" ) ) == 30 );
+						GT_ASSERT( VALUE_GET( value::String, obj3.at( "property_string" ) ) == "STRING" );
+						const auto sum = VALUE_DATA( value::Callable, obj3.at( "property_sum" ) );
+
+						const auto run_tests = [ &gse, &gc_space, &sum ]() -> const std::string {
+							std::vector< Value* > args = {
+								VALUE( value::Int, , 2 ),
+								VALUE( value::Int, , 5 ),
+							};
+							{
+								ExecutionPointer ep;
+								GT_ASSERT( VALUE_GET( value::Int, sum->Run( gc_space, nullptr, {}, ep, args ) ) == 7 );
+							}
+							GT_OK();
+						};
+
+						return run_tests();
+					};
+
+					result = f_asserts();
+
 				}
 			);
 			return result;

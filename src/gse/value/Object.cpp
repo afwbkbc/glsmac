@@ -25,7 +25,8 @@ Object::Object( GSE_CALLABLE, object_properties_t initial_value, const object_cl
 	ctx->ForkAndExecute(
 		GSE_CALL, false, [ this, &gc_space, &si, &ep, &wrapobj ]( context::ChildContext* const subctx ) {
 			m_ctx = subctx;
-			m_ctx->CreateConst( "this", VALUE( value::ValueRef, , this ), si, ep );
+			m_this = VALUE( value::ValueRef, , this );
+			m_ctx->CreateConst( "this", m_this, si, ep );
 			if ( wrapobj ) {
 				wrapobj->Link( this );
 			}
@@ -94,6 +95,9 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	GC_DEBUG_BEGIN( "internal_context" );
 	GC_REACHABLE( m_ctx );
 	GC_DEBUG_END();
+
+	ASSERT_NOLOG( m_this, "this not set" );
+	GC_REACHABLE( m_this );
 
 	{
 		std::lock_guard guard( m_gc_mutex );

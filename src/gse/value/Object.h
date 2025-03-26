@@ -58,6 +58,9 @@ public:
 	const std::string ToString() override;
 #endif
 
+private:
+	Value* m_this = nullptr;
+
 };
 
 }
