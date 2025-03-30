@@ -55,10 +55,6 @@ void GSE::Iterate() {
 		Log( e.ToString() );
 		throw;
 	}
-	catch ( const std::exception& e ) {
-		Log( e.what() );
-		throw;
-	}
 }
 
 void GSE::Finish() {

@@ -268,7 +268,7 @@ void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 	ASSERT_NOLOG( !m_is_destroyed, "object is destroyed" );
 	m_properties.insert_or_assign( k, v );
 	if ( m_wrapobj ) {
-		m_wrapobj->value.insert_or_assign( k, v );
+		m_wrapobj->Assign( k, v );
 	}
 }
 
@@ -394,10 +394,8 @@ void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value*
 	if ( t1 != t2 ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
 	}
-	{
-		for ( const auto& obj : m_wrapobjs ) {
-			obj->value.insert_or_assign( key, value );
-		}
+	for ( const auto& obj : m_wrapobjs ) {
+		obj->Assign( key, value );
 	}
 	if ( def->second.f_on_set ) {
 		def->second.f_on_set( GSE_CALL, value );
@@ -410,7 +408,7 @@ void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
 	{
 		for ( const auto& obj : m_wrapobjs ) {
-			obj->value.erase( key );
+			obj->Assign( key, nullptr );
 		}
 	}
 	if ( def->second.f_on_unset ) {
@@ -531,7 +529,7 @@ void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const 
 		properties->erase( it );
 		if ( properties == &m_properties ) {
 			if ( m_wrapobj ) {
-				m_wrapobj->value.erase( key );
+				m_wrapobj->Assign( key, nullptr );
 			}
 		}
 		if ( m_is_initialized && properties == &m_properties ) {

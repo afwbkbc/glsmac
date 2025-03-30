@@ -826,7 +826,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						value = a.back();
 						a.pop_back();
 					}
-					return value;
+					return value
+						? value
+						: VALUE( value::Undefined );
 				}
 				default:
 					throw operation_not_supported_not_array( expression->a->ToString() );
@@ -854,7 +856,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						value = a.at( idx );
 						a.erase( a.begin() + idx );
 					}
-					return value;
+					return value
+						? value
+						: VALUE( value::Undefined );
 				}
 				default:
 					throw operation_not_supported_not_array( expression->a->ToString() );
@@ -906,17 +910,17 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 			return VALUE( value::Array, , elements );
 		}
 		case Operand::OT_OBJECT: {
-			gse::Value* result = nullptr;
 			const auto* obj = (program::Object*)operand;
 			for ( const auto& it : obj->ordered_properties ) {
 				if ( it.first == "this" ) {
 					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
 				}
 			}
-			result = VALUE( value::Object, , ctx, obj->m_si, ep, object_properties_t{} );
-			auto& properties = ( (value::Object*)result )->value;
+			auto* result = VALUE( value::Object, , ctx, obj->m_si, ep, object_properties_t{} );
+			auto* o = ( (value::Object*)result );
+			auto& properties = o->value;
 			for ( const auto& it : obj->ordered_properties ) {
-				properties.insert_or_assign( it.first, EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second )->Clone() );
+				o->Assign( it.first, EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second )->Clone() );
 			}
 			return result;
 		}

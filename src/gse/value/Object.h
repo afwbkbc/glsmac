@@ -34,7 +34,10 @@ public:
 	~Object();
 
 	Value* const Get( const object_key_t& key );
-	void Set( const object_key_t& key, Value* const value, GSE_CALLABLE );
+	void Assign( const object_key_t& key, Value* const new_value, const std::function< void() >& f_on_set = nullptr );
+	void Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE );
+
+	const object_properties_t& value = m_value;
 
 	Value* const GetRef( const object_key_t& key );
 
@@ -42,7 +45,6 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-	object_properties_t value;
 	const object_class_t object_class;
 	Wrappable* wrapobj;
 	wrapsetter_t* wrapsetter;
@@ -60,6 +62,8 @@ public:
 
 private:
 	Value* m_this = nullptr;
+
+	object_properties_t m_value = {};
 
 };
 

@@ -180,7 +180,7 @@ _type _type::Unwrap( gse::Value* const value ) { \
 class Value : public gc::Object {
 public:
 
-	virtual ~Value() = default;
+	virtual ~Value();
 
 	enum type_t : uint8_t {
 		T_NULLPTR, // special type only for serialization/deserialization
@@ -229,6 +229,7 @@ protected:
 	Value( gc::Space* const gc_space, const type_t type );
 
 	gc::Space* const m_gc_space = nullptr;
+
 };
 
 }

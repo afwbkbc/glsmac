@@ -40,7 +40,7 @@ private:
 	Object* const m_root_object = {};
 
 	// to track accumulating threads
-	std::mutex m_accumulations_mutex;
+	std::recursive_mutex m_accumulations_mutex; // TODO: make non-recursive
 	std::unordered_set< std::thread::id > m_accumulations = {};
 
 	// objects that have been accumulated but won't be collected until accumulator function finishes (that allows for temp values to move and assign where needed)

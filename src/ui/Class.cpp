@@ -303,7 +303,7 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* valu
 		m_properties.insert_or_assign( name, value );
 		{
 			for ( const auto& obj : m_wrapobjs ) {
-				obj->value.insert_or_assign( name, value );
+				obj->Assign( name, value );
 			}
 		}
 		for ( const auto& cls : m_child_classes ) {
@@ -335,7 +335,7 @@ void Class::UnsetProperty( GSE_CALLABLE, const std::string& name ) {
 		m_properties.erase( it );
 		{
 			for ( const auto& obj : m_wrapobjs ) {
-				obj->value.erase( name );
+				obj->Assign( name, nullptr );
 			}
 		}
 		for ( const auto& cls : m_child_classes ) {

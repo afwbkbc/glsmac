@@ -15,7 +15,7 @@ namespace value {
 
 Object::Object( GSE_CALLABLE, object_properties_t initial_value, const object_class_t object_class, Wrappable* wrapobj, wrapsetter_t* wrapsetter )
 	: Value( gc_space, GetType() )
-	, value( initial_value )
+	, m_value( initial_value )
 	, object_class( object_class )
 	, wrapobj( wrapobj )
 	, wrapsetter( wrapsetter )
@@ -44,35 +44,45 @@ Value* const Object::Get( const object_key_t& key ) {
 	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
-	const auto& it = value.find( key );
-	return it != value.end()
+	const auto& it = m_value.find( key );
+	return it != m_value.end()
 		? it->second
 		: VALUEEXT( value::Undefined, m_gc_space );
 }
 
-void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
+void Object::Assign( const object_key_t& key, Value* const new_value, const std::function< void() >& f_on_set ) {
 	CHECKACCUM( m_gc_space );
 	std::lock_guard guard( m_gc_mutex );
 
 	const bool has_value = new_value && new_value->type != T_UNDEFINED;
-	const auto it = value.find( key );
+	const auto it = m_value.find( key );
 	if (
-		( has_value && ( it == value.end() || new_value != it->second ) ) ||
-			( !has_value && it != value.end() )
+		( has_value && ( it == m_value.end() || new_value != it->second ) ) ||
+			( !has_value && it != m_value.end() )
 		) {
-		if ( wrapobj ) {
-			if ( !wrapsetter ) {
-				GSE_ERROR( EC.INVALID_ASSIGNMENT, "Property is read-only" );
-			}
-			wrapsetter( wrapobj, key, new_value, GSE_CALL );
+		if ( f_on_set ) {
+			f_on_set();
 		}
 		if ( has_value ) {
-			value.insert_or_assign( key, new_value );
+			m_value.insert_or_assign( key, new_value );
 		}
 		else {
-			value.erase( key );
+			m_value.erase( key );
 		}
 	}
+}
+
+void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE ) {
+	Assign(
+		key, new_value, [ this, &key, &new_value, &ctx, &si, &ep, &gc_space ]() {
+			if ( wrapobj ) {
+				if ( !wrapsetter ) {
+					GSE_ERROR( EC.INVALID_ASSIGNMENT, "Property is read-only" );
+				}
+				wrapsetter( wrapobj, key, new_value, GSE_CALL );
+			}
+		}
+	);
 }
 
 Value* const Object::GetRef( const object_key_t& key ) {
@@ -103,7 +113,7 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 		std::lock_guard guard( m_gc_mutex );
 
 		GC_DEBUG_BEGIN( "properties" );
-		for ( const auto& v : value ) {
+		for ( const auto& v : m_value ) {
 			GC_DEBUG_BEGIN( v.first );
 			GC_REACHABLE( v.second );
 			GC_DEBUG_END();
@@ -122,7 +132,7 @@ context::ChildContext* const Object::GetContext() const {
 const std::string Object::ToString() {
 	std::lock_guard guard( m_gc_mutex );
 	std::string result = "gse::value::Object( ";
-	for ( const auto& it : value ) {
+	for ( const auto& it : m_value ) {
 		result += it.first + ":" + it.second->ToString() + ", ";
 	}
 	result += ")";

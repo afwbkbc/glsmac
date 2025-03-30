@@ -25,7 +25,7 @@ Exception::Exception( GSE_CALLABLE, const gse::Exception& exception, const std::
 	for ( const auto& it : stacktrace ) {
 		bt.push_back( VALUEEXT( value::String, m_gc_space, it ) );
 	}
-	value.insert_or_assign( "stacktrace", VALUE( value::Array, , bt ) );
+	Assign( "stacktrace", VALUE( value::Array, , bt ) );
 }
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

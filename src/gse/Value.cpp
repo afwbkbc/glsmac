@@ -41,6 +41,8 @@ static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
 
+Value::~Value() {}
+
 const std::string& Value::GetTypeStringStatic( const type_t type ) {
 	switch ( type ) {
 		case T_UNDEFINED:

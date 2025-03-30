@@ -62,10 +62,12 @@ void ChildContext::Detach() {
 	m_parent_context = nullptr;
 }
 
-void ChildContext::JoinContext() const {
+void ChildContext::JoinContext() {
+	// what is this?
+	/*std::lock_guard guard( m_gc_mutex );
 	for ( const auto& it : m_variables ) {
 		m_parent_context->SetVariable( it.first, it.second );
-	}
+	}*/
 }
 
 void ChildContext::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

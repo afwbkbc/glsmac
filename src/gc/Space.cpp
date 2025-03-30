@@ -97,10 +97,6 @@ void Space::Accumulate( const std::function< void() >& f ) {
 			commit();
 			throw;
 		}
-		catch ( const std::exception& e ) {
-			commit();
-			throw;
-		}
 		commit();
 	}
 }
@@ -122,6 +118,8 @@ const bool Space::Collect() {
 
 	std::unordered_set< Object* > removed_objects = {};
 	{
+		std::lock_guard guard3( m_accumulations_mutex ); // prevent collection during accumulation // TODO: improve
+
 		g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
 			[ this, &removed_objects ]() {
 				std::lock_guard guard2( m_objects_mutex );

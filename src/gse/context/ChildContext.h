@@ -24,7 +24,7 @@ public:
 
 	void Detach();
 
-	void JoinContext() const;
+	void JoinContext();
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 

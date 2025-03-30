@@ -1124,6 +1124,7 @@ void JS::LogElements( const std::string& label, const source_elements_t::const_i
 
 gse::Value* const JS::static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f ) {
 	std::lock_guard guard( m_gc_mutex );
+	CHECKACCUM( gc_space );
 	const auto& it = m_static_vars_p.find( key );
 	return it != m_static_vars_p.end() ? it->second : m_static_vars_p.insert({ key, f( gc_space ) }).first->second;
 }
