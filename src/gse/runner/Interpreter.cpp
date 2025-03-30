@@ -41,11 +41,11 @@
 #include "gse/value/LoopControl.h"
 #include "gse/value/Exception.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 #include "engine/Engine.h"
 #include "config/Config.h"
-#include "gc/Space.h"
 #endif
 
 namespace gse {
