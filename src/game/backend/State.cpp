@@ -31,11 +31,8 @@ State::~State() {
 }
 
 void State::SetGame( Game* game ) {
-	{
-		std::lock_guard guard( m_gc_mutex );
-		ASSERT( !m_game, "game already set" );
-		m_game = game;
-	}
+	ASSERT( !m_game, "game already set" );
+	m_game = game;
 	m_on_gse_error = [ this ]( const gse::Exception& e ) -> void {
 		m_game->OnGSEError( e );
 	};
@@ -231,13 +228,10 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 
 	GC_DEBUG_BEGIN( "State" );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-		if ( m_game ) {
-			GC_DEBUG_BEGIN( "game" );
-			GC_REACHABLE( m_game );
-			GC_DEBUG_END();
-		}
+	if ( m_game ) {
+		GC_DEBUG_BEGIN( "game" );
+		GC_REACHABLE( m_game );
+		GC_DEBUG_END();
 	}
 
 	GC_DEBUG_END();

@@ -42,10 +42,10 @@
 #include "gse/value/Exception.h"
 #include "gse/ExecutionPointer.h"
 
+#include "gc/Space.h"
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 #include "engine/Engine.h"
 #include "config/Config.h"
-#include "gc/Space.h"
 #endif
 
 namespace gse {
@@ -534,7 +534,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
             ASSERT( !expression->b, "only one operand required, found two" ); \
             const auto varname = EvaluateVarName( ctx, ep, expression->a ); \
             gse::Value* value = ctx->GetVariable( varname, expression->a->m_si, ep ); \
-            if ( value->type != gse::Value::T_INT ) { \
+            if ( value->type != gse::Value::T_INT ) {                         \
                 throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->a->ToString(), ctx, expression->a->m_si, ep ); \
             } \
             ctx->UpdateVariable( varname, VALUE( Int,, ( (Int*)value )->value _op 1 ), expression->a->m_si, ep ); \
@@ -1158,8 +1158,6 @@ Interpreter::Function::~Function() {
 
 void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	value::Callable::GetReachableObjects( reachable_objects );
-
-	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "Function" );
 

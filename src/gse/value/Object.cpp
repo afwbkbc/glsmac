@@ -42,7 +42,6 @@ Object::~Object() {
 
 Value* const Object::Get( const object_key_t& key ) {
 	CHECKACCUM( m_gc_space );
-	std::lock_guard guard( m_gc_mutex );
 
 	const auto& it = m_value.find( key );
 	return it != m_value.end()
@@ -52,7 +51,6 @@ Value* const Object::Get( const object_key_t& key ) {
 
 void Object::Assign( const object_key_t& key, Value* const new_value, const std::function< void() >& f_on_set ) {
 	CHECKACCUM( m_gc_space );
-	std::lock_guard guard( m_gc_mutex );
 
 	const bool has_value = new_value && new_value->type != T_UNDEFINED;
 	const auto it = m_value.find( key );
@@ -109,17 +107,13 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	ASSERT_NOLOG( m_this, "this not set" );
 	GC_REACHABLE( m_this );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-
-		GC_DEBUG_BEGIN( "properties" );
-		for ( const auto& v : m_value ) {
-			GC_DEBUG_BEGIN( v.first );
-			GC_REACHABLE( v.second );
-			GC_DEBUG_END();
-		}
+	GC_DEBUG_BEGIN( "properties" );
+	for ( const auto& v : m_value ) {
+		GC_DEBUG_BEGIN( v.first );
+		GC_REACHABLE( v.second );
 		GC_DEBUG_END();
 	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
@@ -130,7 +124,6 @@ context::ChildContext* const Object::GetContext() const {
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 const std::string Object::ToString() {
-	std::lock_guard guard( m_gc_mutex );
 	std::string result = "gse::value::Object( ";
 	for ( const auto& it : m_value ) {
 		result += it.first + ":" + it.second->ToString() + ", ";

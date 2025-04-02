@@ -15,7 +15,6 @@ Array::Array( gc::Space* const gc_space, array_elements_t initial_value )
 
 Value* const Array::Get( const size_t index ) {
 	CHECKACCUM( m_gc_space );
-	std::lock_guard guard( m_gc_mutex );
 
 	return ( index < value.size() )
 		? value[ index ]
@@ -24,7 +23,6 @@ Value* const Array::Get( const size_t index ) {
 
 Value* const Array::GetSubArray( const std::optional< size_t > from, const std::optional< size_t > to ) {
 	CHECKACCUM( m_gc_space );
-	std::lock_guard guard( m_gc_mutex );
 
 	ValidateFromTo( from, to );
 	return VALUEEXT( value::Array, m_gc_space, std::vector(
@@ -40,15 +38,11 @@ Value* const Array::GetSubArray( const std::optional< size_t > from, const std::
 }
 
 void Array::Set( const size_t index, Value* const new_value ) {
-	std::lock_guard guard( m_gc_mutex );
-
 	ASSERT_NOLOG( index < value.size(), "index out of bounds" );
 	value[ index ] = new_value;
 }
 
 const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, Value* const new_subarray ) {
-	std::lock_guard guard( m_gc_mutex );
-
 	ValidateFromTo( from, to );
 	ASSERT_NOLOG( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
 	auto* v = (value::Array*)new_subarray;
@@ -65,8 +59,6 @@ const void Array::SetSubArray( const std::optional< size_t > from, const std::op
 }
 
 void Array::Append( Value* const new_value ) {
-	std::lock_guard guard( m_gc_mutex );
-
 	value.push_back( new_value );
 }
 
@@ -92,22 +84,17 @@ void Array::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 
 	GC_DEBUG_BEGIN( "Array" );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-		// elements are reachable
-		GC_DEBUG_BEGIN( "elements" );
-		for ( const auto& v : value ) {
-			GC_REACHABLE( v );
-		}
-		GC_DEBUG_END();
+	GC_DEBUG_BEGIN( "elements" );
+	for ( const auto& v : value ) {
+		GC_REACHABLE( v );
 	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 const std::string Array::ToString() {
-	std::lock_guard guard( m_gc_mutex );
 	std::string result = "gse::value::Array( ";
 	for ( const auto& v : value ) {
 		result += v->ToString() + ", ";

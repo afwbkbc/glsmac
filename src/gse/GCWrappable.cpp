@@ -12,22 +12,15 @@ GCWrappable::~GCWrappable() {}
 
 const GCWrappable::callback_id_t GCWrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
 	Persist( callback );
-	{
-		std::lock_guard guard( m_gc_mutex );
-		return Wrappable::On( GSE_CALL, event, callback );
-	}
+	return Wrappable::On( GSE_CALL, event, callback );
 }
 
 void GCWrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id ) {
 	Unpersist( m_callbacks.at( event ).at( callback_id ).callable );
-	{
-		std::lock_guard guard( m_gc_mutex );
-		Wrappable::Off( GSE_CALL, event, callback_id );
-	}
+	Wrappable::Off( GSE_CALL, event, callback_id );
 }
 
 const bool GCWrappable::HasHandlers( const std::string& event ) {
-	std::lock_guard guard( m_gc_mutex );
 	return Wrappable::HasHandlers( event );
 }
 
@@ -37,8 +30,6 @@ Value* const GCWrappable::Trigger( GSE_CALLABLE, const std::string& event, const
 
 void GCWrappable::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
-
-	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "GCWrappable" );
 

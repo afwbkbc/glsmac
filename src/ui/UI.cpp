@@ -197,15 +197,11 @@ void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objec
 
 	GC_REACHABLE( m_root );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-
-		GC_DEBUG_BEGIN( "classes" );
-		for ( const auto& it : m_classes ) {
-			GC_REACHABLE( it.second );
-		}
-		GC_DEBUG_END();
+	GC_DEBUG_BEGIN( "classes" );
+	for ( const auto& it : m_classes ) {
+		GC_REACHABLE( it.second );
 	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }

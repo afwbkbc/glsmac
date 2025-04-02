@@ -48,8 +48,6 @@ public:
 #endif
 
 protected:
-	std::recursive_mutex m_gc_mutex; // always use this when changing or collecting reachables
-
 	void Persist( Object* const obj );
 	void Unpersist( Object* const obj );
 

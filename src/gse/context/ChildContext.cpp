@@ -64,7 +64,7 @@ void ChildContext::Detach() {
 
 void ChildContext::JoinContext() {
 	// what is this?
-	/*std::lock_guard guard( m_gc_mutex );
+	/*
 	for ( const auto& it : m_variables ) {
 		m_parent_context->SetVariable( it.first, it.second );
 	}*/

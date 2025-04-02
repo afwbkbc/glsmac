@@ -269,8 +269,6 @@ gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::stri
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
-	std::lock_guard guard( m_gc_mutex );
-
 	if ( m_state ) {
 		GC_DEBUG_BEGIN( "state" );
 		GC_REACHABLE( m_state );
@@ -407,7 +405,6 @@ void GLSMAC::UpdateLoaderText() {
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	if ( m_state ) {
 		if ( m_is_game_running ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
@@ -417,7 +414,6 @@ void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 }
 
 void GLSMAC::InitGameState( GSE_CALLABLE, const f_t on_complete  ) {
-	std::lock_guard guard( m_gc_mutex );
 	if ( m_state ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
 	}
@@ -509,10 +505,7 @@ void GLSMAC::RunMain() {
 			m_gc_space->Accumulate( [ this, &main ] (){
 				ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
 				gse::ExecutionPointer ep;
-				{
-					std::lock_guard guard( m_gc_mutex );
-					m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
-				}
+				m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
 				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
 					m_wrapobj
 				} );

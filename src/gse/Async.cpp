@@ -22,7 +22,6 @@ Async::Async( gc::Space* const gc_space )
 
 void Async::Iterate( ExecutionPointer& ep ) {
 	if ( !m_is_stopping ) {
-		std::lock_guard guard( m_gc_mutex );
 		while ( !m_timers.empty() && util::Time::Now() >= m_timers.begin()->first ) {
 			ProcessTimers( m_timers.begin(), ep );
 		}
@@ -38,7 +37,6 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 	}
 	s_next_id++;
 	{
-		std::lock_guard guard( m_gc_mutex ); // TODO: optimize?
 		ValidateMs( ms, m_gc_space, ctx, si, ep );
 		const auto time = util::Time::Now() + ms;
 		m_timers[ time ].insert(
@@ -63,7 +61,6 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 }
 
 const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
-	std::lock_guard guard( m_gc_mutex ); // TODO: optimize?
 	const auto& it = m_timers_ms.find( id );
 	if ( it == m_timers_ms.end() ) {
 		return false;
@@ -81,7 +78,6 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 }
 
 void Async::StopTimers() {
-	std::lock_guard guard( m_gc_mutex );
 	m_timers.clear();
 	m_timers_ms.clear();
 }
@@ -91,7 +87,6 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 	m_process_timers_mutex.lock(); // wait for anything processing timers to finish
 	m_process_timers_mutex.unlock();
 	{
-		std::lock_guard guard( m_gc_mutex );
 		while ( !m_timers.empty() ) {
 			const auto& it = m_timers.begin();
 			const auto now = util::Time::Now();
@@ -101,9 +96,7 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 
 			//Log( "Waiting for " + std::to_string( sleep_for ) + "ms" );
 			if ( sleep_for > 0 ) {
-				m_gc_mutex.unlock();
 				std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
-				m_gc_mutex.lock();
 			}
 			ProcessTimers( it, ep );
 		}
@@ -115,19 +108,15 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 
 	GC_DEBUG_BEGIN( "Async" );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-
-		// timer callables are reachable
-		GC_DEBUG_BEGIN( "timer_callables" );
-		for ( const auto& timers : m_timers ) {
-			for ( const auto& timer : timers.second ) {
-				GC_REACHABLE( timer.second.callable );
-				ASSERT( reachable_objects.find( timer.second.ctx ) != reachable_objects.end(), "callable context not reachable" );
-			}
+	// timer callables are reachable
+	GC_DEBUG_BEGIN( "timer_callables" );
+	for ( const auto& timers : m_timers ) {
+		for ( const auto& timer : timers.second ) {
+			GC_REACHABLE( timer.second.callable );
+			ASSERT( reachable_objects.find( timer.second.ctx ) != reachable_objects.end(), "callable context not reachable" );
 		}
-		GC_DEBUG_END();
 	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
