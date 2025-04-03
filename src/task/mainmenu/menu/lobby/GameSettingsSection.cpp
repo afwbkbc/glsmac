@@ -164,21 +164,22 @@ void GameSettingsSection::UpdateRows() {
 		}, game_type
 	);
 
+	/* deprecated
 	UpdateRow(
 		RI_PLANET_SIZE, {
-			{ game::backend::settings::MapSettings::MAP_CONFIG_TINY,     "Tiny Planet" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_SMALL,    "Small Planet" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_STANDARD, "Standard Planet" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_LARGE,    "Large Planet" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_HUGE,     "Huge Planet" },
+			{ 0, "Tiny Planet" },
+			{ 1, "Small Planet" },
+			{ 2, "Standard Planet" },
+			{ 3, "Large Planet" },
+			{ 4, "Huge Planet" },
 		}, m_game_settings->map.size
 	);
 
 	UpdateRow(
 		RI_PLANET_OCEAN, {
-			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_LOW,    "30-50% of Surface" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_MEDIUM, "50-70% of Surface" },
-			{ game::backend::settings::MapSettings::MAP_CONFIG_OCEAN_HIGH,   "70-90% of Surface" },
+			{ 0, "30-50% of Surface" },
+			{ 1, "50-70% of Surface" },
+			{ 2, "70-90% of Surface" },
 		}, m_game_settings->map.ocean
 	);
 
@@ -205,7 +206,7 @@ void GameSettingsSection::UpdateRows() {
 			{ 3, "Dense" },
 		}, m_game_settings->map.clouds
 	);
-
+*/
 	UpdateRow(
 		RI_MAP_FILE, {
 			{
@@ -255,19 +256,97 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 					}
 					break;
 				case RI_PLANET_SIZE:
-					m_game_settings->map.size = data->value.change.id_num;
+					switch ( data->value.change.id_num ) {
+						case 0: {
+							m_game_settings->map.size_x = 68;
+							m_game_settings->map.size_y = 34;
+							break;
+						}
+						case 1: {
+							m_game_settings->map.size_x = 88;
+							m_game_settings->map.size_y = 44;
+							break;
+						}
+						case 2: {
+							m_game_settings->map.size_x = 112;
+							m_game_settings->map.size_y = 56;
+							break;
+						}
+						case 3: {
+							m_game_settings->map.size_x = 140;
+							m_game_settings->map.size_y = 70;
+							break;
+						}
+						case 4: {
+							m_game_settings->map.size_x = 180;
+							m_game_settings->map.size_y = 90;
+							break;
+						}
+					}
 					break;
 				case RI_PLANET_OCEAN:
-					m_game_settings->map.ocean = data->value.change.id_num;
+					switch ( data->value.change.id_num ) {
+						case 0: {
+							m_game_settings->map.ocean_coverage = 0.4f;
+							break;
+						}
+						case 1: {
+							m_game_settings->map.ocean_coverage = 0.6f;
+							break;
+						}
+						case 2: {
+							m_game_settings->map.ocean_coverage = 0.8f;
+							break;
+						}
+					}
 					break;
 				case RI_PLANET_EROSIVE:
-					m_game_settings->map.erosive = data->value.change.id_num;
+					switch ( data->value.change.id_num ) {
+						case 0: {
+							m_game_settings->map.erosive_forces = 0.5f;
+							break;
+						}
+						case 1: {
+							m_game_settings->map.erosive_forces = 0.75f;
+							break;
+						}
+						case 2: {
+							m_game_settings->map.erosive_forces = 1.0f;
+							break;
+						}
+					}
 					break;
 				case RI_PLANET_LIFEFORMS:
-					m_game_settings->map.lifeforms = data->value.change.id_num;
+					switch ( data->value.change.id_num ) {
+						case 0: {
+							m_game_settings->map.native_lifeforms = 0.25f;
+							break;
+						}
+						case 1: {
+							m_game_settings->map.native_lifeforms = 0.5f;
+							break;
+						}
+						case 2: {
+							m_game_settings->map.native_lifeforms = 0.75f;
+							break;
+						}
+					}
 					break;
 				case RI_PLANET_CLOUDS:
-					m_game_settings->map.clouds = data->value.change.id_num;
+					switch ( data->value.change.id_num ) {
+						case 0: {
+							m_game_settings->map.cloud_cover = 0.25f;
+							break;
+						}
+						case 1: {
+							m_game_settings->map.cloud_cover = 0.5f;
+							break;
+						}
+						case 2: {
+							m_game_settings->map.cloud_cover = 0.75f;
+							break;
+						}
+					}
 					break;
 				case RI_MAP_FILE:
 					// nothing to do yet because it will just open file browser

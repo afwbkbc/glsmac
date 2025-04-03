@@ -21,8 +21,7 @@ MapGenerator::MapGenerator( Game* game, util::random::Random* random )
 }
 
 void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) {
-	ASSERT( TARGET_LAND_AMOUNTS.find( map_settings->ocean ) != TARGET_LAND_AMOUNTS.end(), "unknown map ocean setting " + std::to_string( map_settings->ocean ) );
-	float desired_land_amount = TARGET_LAND_AMOUNTS.at( map_settings->ocean );
+	float desired_land_amount = map_settings->ocean_coverage;
 
 	bool need_generation = true;
 	size_t regenerations_asked = 0;
@@ -78,7 +77,6 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 
 	m_game->SetLoaderText( "Normalizing erosive forces" );
 	// normalize erosive forces
-	ASSERT( TARGET_EVELATION_MULTIPLIERS.find( map_settings->erosive ) != TARGET_EVELATION_MULTIPLIERS.end(), "unknown map erosive setting " + std::to_string( map_settings->erosive ) );
 	const auto range = GetElevationsRange( tiles, MT_C );
 	MT_RETIF();
 	float target_elevation_multiplier = std::min< float >(
@@ -89,7 +87,7 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 					(float)tile::ELEVATION_MAX / range.second
 				)
 			) *
-				TARGET_EVELATION_MULTIPLIERS.at( map_settings->erosive )
+				map_settings->erosive_forces
 		)
 	);
 	ScaleAllTilesBy( tiles, target_elevation_multiplier, MT_C );
@@ -100,15 +98,13 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 
 	m_game->SetLoaderText( "Normalizing fungus amount" );
 	// normalize fungus amount
-	ASSERT( TARGET_FUNGUS_AMOUNTS.find( map_settings->lifeforms ) != TARGET_FUNGUS_AMOUNTS.end(), "unknown map lifeforms setting " + std::to_string( map_settings->lifeforms ) );
-	const auto desired_fungus_amount = TARGET_FUNGUS_AMOUNTS.at( map_settings->lifeforms );
+	const auto desired_fungus_amount = map_settings->native_lifeforms;
 	SetFungusAmount( tiles, desired_fungus_amount, MT_C );
 	MT_RETIF();
 
 	m_game->SetLoaderText( "Normalizing moisture amount" );
 	// normalize moisture amount
-	ASSERT( TARGET_MOISTURE_AMOUNTS.find( map_settings->clouds ) != TARGET_MOISTURE_AMOUNTS.end(), "unknown map clouds setting " + std::to_string( map_settings->clouds ) );
-	const auto desired_moisture_amount = TARGET_MOISTURE_AMOUNTS.at( map_settings->clouds );
+	const auto desired_moisture_amount = map_settings->cloud_cover;
 	SetMoistureAmount( tiles, desired_moisture_amount, MT_C );
 	MT_RETIF();
 

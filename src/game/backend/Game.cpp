@@ -413,7 +413,7 @@ void Game::Iterate() {
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
-										this, "start", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+										this, "start", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 											{
 												"game",
 												Wrap( GSE_CALL )
@@ -626,7 +626,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			m_state->WithGSE(
 				[ this ]( GSE_CALLABLE ) {
 					m_state->TriggerObject(
-						this, "initialize", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+						this, "initialize", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 							{
 								"game",
 								Wrap( GSE_CALL )
@@ -1021,7 +1021,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			m_state->TriggerObject(
-				m_um, "unit_turn", ARGS_F( &ctx, gc_space, &si, &ep, &unit ) {
+				m_um, "unit_turn", ARGS_F( ARGS_GSE_CALLABLE, &unit ) {
 					{
 						"unit",
 						unit->Wrap( GSE_CALL, true )
@@ -1035,7 +1035,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_bm->GetBases() ) {
 			auto* base = it.second;
 			m_state->TriggerObject(
-				m_bm, "base_turn", ARGS_F( &ctx, gc_space, &si, &ep, &base ) {
+				m_bm, "base_turn", ARGS_F( ARGS_GSE_CALLABLE, &base ) {
 					{
 						"base",
 						base->Wrap( GSE_CALL, true )
@@ -1045,7 +1045,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( this, "turn", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		m_state->TriggerObject( this, "turn", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1224,7 +1224,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_bm = new base::BaseManager( this );
 		ASSERT_NOLOG( !m_am, "am not null" );
 		m_am = new animation::AnimationManager( this );
-		m_state->TriggerObject( this, "configure", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+		m_state->TriggerObject( this, "configure", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )

@@ -8,6 +8,8 @@
 #include "game/backend/rules/default/Default.h" // only default rules for now
 #include "game/backend/Account.h"
 
+#include "gse/Wrappable.h"
+
 #include "Types.h"
 
 namespace game {
@@ -16,7 +18,7 @@ namespace settings {
 
 // includes
 
-CLASS( MapSettings, types::Serializable )
+CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 
 	enum type_t {
 		MT_RANDOM,
@@ -27,45 +29,52 @@ CLASS( MapSettings, types::Serializable )
 
 	std::string filename = "";
 
-	static constexpr map_config_value_t MAP_CONFIG_CUSTOM = 0;
-	static constexpr map_config_value_t MAP_CONFIG_TINY = 1;
-	static constexpr map_config_value_t MAP_CONFIG_SMALL = 2;
-	static constexpr map_config_value_t MAP_CONFIG_STANDARD = 3;
-	static constexpr map_config_value_t MAP_CONFIG_LARGE = 4;
-	static constexpr map_config_value_t MAP_CONFIG_HUGE = 5;
+	/*
+	 	{ settings::MAP_CONFIG_TINY,     { 68,  34 } },
+		{ settings::MAP_CONFIG_SMALL,    { 88,  44 } },
+		{ settings::MAP_CONFIG_STANDARD, { 112, 56 } },
+		{ settings::MAP_CONFIG_LARGE,    { 140, 70 } },
+		{ settings::MAP_CONFIG_HUGE,     { 180, 90 } }
+	 */
+	size_t size_x = 112;
+	size_t size_y = 56;
 
-	map_config_value_t size = MAP_CONFIG_STANDARD;
-	types::Vec2< size_t > custom_size = {
-		80,
-		40
-	};
+	/*
+	 	{ settings::MAP_CONFIG_OCEAN_LOW,    0.4f }, // '30-50% of surface'
+		{ settings::MAP_CONFIG_OCEAN_MEDIUM, 0.6f }, // '50-70% of surface'
+		{ settings::MAP_CONFIG_OCEAN_HIGH,   0.8f }  // '70-90% of surface'
+	 */
+	float ocean_coverage = 0.4f;
 
-	static constexpr map_config_value_t MAP_CONFIG_OCEAN_LOW = 1;
-	static constexpr map_config_value_t MAP_CONFIG_OCEAN_MEDIUM = 2;
-	static constexpr map_config_value_t MAP_CONFIG_OCEAN_HIGH = 3;
-	map_config_value_t ocean = MAP_CONFIG_OCEAN_MEDIUM;
+	/*
+	 	{ settings::MAP_CONFIG_EROSIVE_STRONG,  0.5f }, // 'strong'
+		{ settings::MAP_CONFIG_EROSIVE_AVERAGE, 0.75f }, // 'average'
+		{ settings::MAP_CONFIG_EROSIVE_WEAK,    1.0f }, // 'weak'
+	 */
+	float erosive_forces = 0.75f;
 
-	static constexpr map_config_value_t MAP_CONFIG_EROSIVE_STRONG = 1;
-	static constexpr map_config_value_t MAP_CONFIG_EROSIVE_AVERAGE = 2;
-	static constexpr map_config_value_t MAP_CONFIG_EROSIVE_WEAK = 3;
-	map_config_value_t erosive = MAP_CONFIG_EROSIVE_AVERAGE;
+	/*
+ 		{ settings::MAP_CONFIG_LIFEFORMS_RARE,     0.25f }, // 'rare'
+		{ settings::MAP_CONFIG_LIFEFORMS_AVERAGE,  0.5f }, // 'average'
+		{ settings::MAP_CONFIG_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
+	 */
+	float native_lifeforms = 0.5f;
 
-	static constexpr map_config_value_t MAP_CONFIG_LIFEFORMS_RARE = 1;
-	static constexpr map_config_value_t MAP_CONFIG_LIFEFORMS_AVERAGE = 2;
-	static constexpr map_config_value_t MAP_CONFIG_LIFEFORMS_ABUNDANT = 3;
-	map_config_value_t lifeforms = MAP_CONFIG_LIFEFORMS_AVERAGE;
+	/*
+	 	{ settings::MAP_CONFIG_CLOUDS_SPARSE,  0.25f }, // 'sparse'
+		{ settings::MAP_CONFIG_CLOUDS_AVERAGE, 0.5f }, // 'average'
+		{ settings::MAP_CONFIG_CLOUDS_DENSE,   0.75f }, // 'dense'
+	 */
+	float cloud_cover = 0.5f;
 
-	static constexpr map_config_value_t MAP_CONFIG_CLOUDS_SPARSE = 1;
-	static constexpr map_config_value_t MAP_CONFIG_CLOUDS_AVERAGE = 2;
-	static constexpr map_config_value_t MAP_CONFIG_CLOUDS_DENSE = 3;
-	map_config_value_t clouds = MAP_CONFIG_CLOUDS_AVERAGE;
+	WRAPDEFS_DYNAMIC( MapSettings );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 };
 
 // settings that are synced between players (host has authority)
-CLASS( GlobalSettings, types::Serializable )
+CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 
 	void Initialize();
 
@@ -78,12 +87,14 @@ CLASS( GlobalSettings, types::Serializable )
 
 	// TODO: custom rules struct
 
+	WRAPDEFS_DYNAMIC( GlobalSettings );
+
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 };
 
 // settings that aren't synced between players
-CLASS( LocalSettings, types::Serializable )
+CLASS2( LocalSettings, types::Serializable, gse::Wrappable )
 public:
 
 	Account account;
@@ -94,6 +105,7 @@ public:
 		GM_SCENARIO,
 	};
 	game_mode_t game_mode = GM_SINGLEPLAYER;
+
 	enum network_type_t {
 		NT_NONE,
 		NT_SIMPLETCP,
@@ -112,14 +124,18 @@ public:
 
 	std::set< std::string > banned_addresses = {};
 
+	WRAPDEFS_DYNAMIC( LocalSettings );
+
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
 };
 
-CLASS( Settings, types::Serializable )
+CLASS2( Settings, types::Serializable, gse::Wrappable )
 
 	GlobalSettings global;
 	LocalSettings local;
+
+	WRAPDEFS_PTR( Settings );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

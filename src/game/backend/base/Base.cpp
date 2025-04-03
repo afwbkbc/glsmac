@@ -93,7 +93,7 @@ Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Base )
-	WRAPIMPL_GET( "id", Int, m_id )
+	WRAPIMPL_GET_CUSTOM( "id", Int, m_id )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	{

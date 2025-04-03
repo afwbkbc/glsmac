@@ -83,10 +83,10 @@ CLASS( Config, common::Module )
 	const util::random::state_t& GetQuickstartSeed() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapOcean() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapErosive() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapLifeforms() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const float GetQuickstartMapOceanCoverage() const;
+	const float GetQuickstartMapErosiveForces() const;
+	const float GetQuickstartMapNativeLifeforms() const;
+	const float GetQuickstartMapCloudCover() const;
 	const std::string& GetQuickstartFaction() const;
 
 	const std::vector< std::string >& GetModPaths() const;
@@ -127,10 +127,10 @@ private:
 	util::random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::backend::settings::map_config_value_t m_quickstart_map_ocean = game::backend::settings::MAP_CONFIG_OCEAN_MEDIUM;
-	game::backend::settings::map_config_value_t m_quickstart_map_erosive = game::backend::settings::MAP_CONFIG_EROSIVE_AVERAGE;
-	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
-	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	float m_quickstart_map_ocean_coverage = 0.4f;
+	float m_quickstart_map_erosive_forces = 0.75f;
+	float m_quickstart_map_native_lifeforms = 0.5f;
+	float m_quickstart_map_cloud_cover = 0.5f;
 	std::string m_quickstart_faction = "";
 
 	std::vector< std::string > m_mod_paths = {};

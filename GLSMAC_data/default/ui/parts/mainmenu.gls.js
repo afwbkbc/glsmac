@@ -6,6 +6,16 @@ return (m) => {
 
 	m.glsmac.on('mainmenu_show', (e) => {
 
+		#print('SETTINGS', e);
+		const randomize_map = () => {
+			e.settings.global.map.ocean_coverage = #random_float(0.4, 0.8);
+			e.settings.global.map.erosive_forces = #random_float(0.5, 1.0);
+			e.settings.global.map.native_lifeforms = #random_float(0.25, 0.75);
+			e.settings.global.map.cloud_cover = #random_float(0.25, 0.75);
+		};
+
+		randomize_map();
+
 		background = m.root.surface({
 			id: 'mainmenu-background',
 			top: 0,
@@ -31,12 +41,14 @@ return (m) => {
 				menublock.show([
 					['Start Game', () => {
 						m.glsmac.init_single_player(() => {
+							e.settings.local.game_mode = 'single';
 							steps.start_game();
 						});
 					}],
 					['Quick Start', () => {
 						m.glsmac.init_single_player(() => {
-							m.glsmac.randomize_settings();
+							e.settings.local.game_mode = 'single';
+							randomize_map();
 							m.glsmac.start_game();
 						});
 					}],
@@ -63,7 +75,8 @@ return (m) => {
 			start_game: () => {
 				menublock.show([
 					['Make Random Map', () => {
-
+						randomize_map();
+						steps.select_mapsize();
 					}],
 					['Customize Random Map', () => {
 
@@ -79,6 +92,12 @@ return (m) => {
 					}],
 				], () => {
 					return steps.main();
+				});
+			},
+
+			select_mapsize: () => {
+				menublock.show([], () => {
+					
 				});
 			},
 

@@ -7,6 +7,7 @@
 
 #include "util/ConfigManager.h"
 #include "util/FS.h"
+#include "util/String.h"
 #include "util/random/Random.h"
 #include "util/LogHelper.h"
 
@@ -178,62 +179,38 @@ Config::Config( const std::string& path )
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, launch_flag_t flag, game::backend::settings::map_config_value_t* out_param )
+		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::string& desc, launch_flag_t flag, float* out_param )
 			-> void {
-			ASSERT( values.size() == 3, "values size mismatch" );
 			m_manager->AddRule(
-				name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
-				AH( this, name, values, s_quickstart_argument_missing, out_param, &desc, flag ) {
+				name, "PERCENTAGE", "Generate map with specific " + desc,
+				AH( this, name, s_quickstart_argument_missing, out_param, &desc, flag ) {
 					if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 						Error( s_quickstart_argument_missing );
 					}
-					if ( value == values[ 0 ] ) {
-						*out_param = 1;
+					long int i = 0;
+					if ( !util::String::ParseInt( value, i ) || i < 0 || i > 100 ) {
+						Error( "Invalid --" + name + " value specified! Expected number ( 0 to 100 ), got: " + value );
 					}
-					else if ( value == values[ 1 ] ) {
-						*out_param = 2;
-					}
-					else if ( value == values[ 2 ] ) {
-						*out_param = 3;
-					}
-					else {
-						Error( "Invalid --" + name + " value specified! Possible choices: " + values[ 0 ] + " " + values[ 1 ] + " " + values[ 2 ] );
-					}
+					*out_param = (float)i / 100;
 					m_launch_flags |= flag;
 				}
 			);
 		};
 	f_add_map_parameter_option(
-		"quickstart-map-ocean", {
-			"low",
-			"medium",
-			"high"
-		}, "ocean coverage",
-		LF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean
+		"quickstart-map-ocean", "ocean coverage",
+		LF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean_coverage
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-erosive", {
-			"strong",
-			"average",
-			"weak"
-		}, "erosive forces",
-		LF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive
+		"quickstart-map-erosive", "erosive forces",
+		LF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive_forces
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-lifeforms", {
-			"rare",
-			"average",
-			"abundant"
-		}, "native lifeforms",
-		LF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_lifeforms
+		"quickstart-map-lifeforms", "native lifeforms",
+		LF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_native_lifeforms
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-clouds", {
-			"sparse",
-			"average",
-			"dense"
-		}, "cloud cover",
-		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+		"quickstart-map-clouds", "cloud cover",
+		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_cloud_cover
 	);
 	m_manager->AddRule(
 		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
@@ -444,20 +421,20 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
-	return m_quickstart_map_ocean;
+const float Config::GetQuickstartMapOceanCoverage() const {
+	return m_quickstart_map_ocean_coverage;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
-	return m_quickstart_map_erosive;
+const float Config::GetQuickstartMapErosiveForces() const {
+	return m_quickstart_map_erosive_forces;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
-	return m_quickstart_map_lifeforms;
+const float Config::GetQuickstartMapNativeLifeforms() const {
+	return m_quickstart_map_native_lifeforms;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
-	return m_quickstart_map_clouds;
+const float Config::GetQuickstartMapCloudCover() const {
+	return m_quickstart_map_cloud_cover;
 }
 
 const std::string& Config::GetQuickstartFaction() const {

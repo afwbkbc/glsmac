@@ -40,11 +40,12 @@ Main::Main( MainMenu* mainmenu )
 									// randomize settings
 									m_mainmenu->m_state->m_settings.global.Initialize();
 									m_mainmenu->m_state->m_settings.global.map.type = game::backend::settings::MapSettings::MT_RANDOM;
-									m_mainmenu->m_state->m_settings.global.map.size = game::backend::settings::MapSettings::MAP_CONFIG_STANDARD;
-									m_mainmenu->m_state->m_settings.global.map.ocean = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_state->m_settings.global.map.erosive = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_state->m_settings.global.map.lifeforms = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
-									m_mainmenu->m_state->m_settings.global.map.clouds = m_mainmenu->GetRandom()->GetUInt( 1, 3 );
+									m_mainmenu->m_state->m_settings.global.map.size_x = 112;
+									m_mainmenu->m_state->m_settings.global.map.size_y = 56;
+									m_mainmenu->m_state->m_settings.global.map.ocean_coverage = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
+									m_mainmenu->m_state->m_settings.global.map.erosive_forces = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
+									m_mainmenu->m_state->m_settings.global.map.native_lifeforms = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
+									m_mainmenu->m_state->m_settings.global.map.cloud_cover = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
 									// TODO: previous rules and difficulty
 									m_mainmenu->m_state->m_settings.global.global_difficulty = m_mainmenu->m_state->m_settings.global.game_rules.GetDefaultDifficultyLevel();
 

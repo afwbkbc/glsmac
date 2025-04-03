@@ -90,14 +90,14 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 
 WRAPIMPL_BEGIN( StaticDef )
 	WRAPIMPL_PROPS
-		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
-		WRAPIMPL_GET( "is_land", Bool, m_movement_type == MT_LAND )
-		WRAPIMPL_GET( "is_water", Bool, m_movement_type == MT_WATER )
-		WRAPIMPL_GET( "is_air", Bool, m_movement_type == MT_AIR )
-		WRAPIMPL_GET( "movement_per_turn", Float, m_movement_per_turn )
-		WRAPIMPL_GET( "health_per_turn", Float, HEALTH_PER_TURN )
-		WRAPIMPL_GET( "health_max", Float, HEALTH_MAX )
-	};
+			WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
+			WRAPIMPL_GET_CUSTOM( "is_land", Bool, m_movement_type == MT_LAND )
+			WRAPIMPL_GET_CUSTOM( "is_water", Bool, m_movement_type == MT_WATER )
+			WRAPIMPL_GET_CUSTOM( "is_air", Bool, m_movement_type == MT_AIR )
+			WRAPIMPL_GET_CUSTOM( "movement_per_turn", Float, m_movement_per_turn )
+			WRAPIMPL_GET_CUSTOM( "health_per_turn", Float, HEALTH_PER_TURN )
+			WRAPIMPL_GET_CUSTOM( "health_max", Float, HEALTH_MAX )
+		};
 	WRAPIMPL_PROPS_EXTEND( Def )
 WRAPIMPL_END_PTR()
 

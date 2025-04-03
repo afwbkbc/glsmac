@@ -107,7 +107,7 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_spawn", ARGS_F( &ctx, gc_space, &si, &ep, &unit, this ) {
+		state->TriggerObject( this, "unit_spawn", ARGS_F( ARGS_GSE_CALLABLE, &unit, this ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL, m_game->GetGCSpace() )
@@ -136,7 +136,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_despawn", ARGS_F( &ctx, gc_space, &si, &ep, &unit ) {
+		state->TriggerObject( this, "unit_despawn", ARGS_F( ARGS_GSE_CALLABLE, &unit ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL )
@@ -498,7 +498,7 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 }
 
 const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &dst_tile ) {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", ARGS_F( ARGS_GSE_CALLABLE, &unit, &dst_tile ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL )
@@ -524,7 +524,7 @@ const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map:
 }
 
 gse::Value* const UnitManager::MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &dst_tile ) {
+	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", ARGS_F( ARGS_GSE_CALLABLE, &unit, &dst_tile ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL )
@@ -554,7 +554,7 @@ void UnitManager::MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_
 	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
 	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
 
-	m_game->GetState()->TriggerObject( this, "unit_move_apply", ARGS_F( &ctx, gc_space, &si, &ep, &unit, &src_tile, &dst_tile, &resolutions ) {
+	m_game->GetState()->TriggerObject( this, "unit_move_apply", ARGS_F( ARGS_GSE_CALLABLE, &unit, &src_tile, &dst_tile, &resolutions ) {
 		{
 			"unit",
 			unit->Wrap( GSE_CALL, true )
@@ -603,7 +603,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 }
 
 const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender ) {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -625,7 +625,7 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 }
 
 gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender ) {
+	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -639,7 +639,7 @@ gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, 
 
 void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
-	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &ctx, gc_space, &si, &ep, &attacker, &defender, &resolutions ) {
+	state->TriggerObject( this, "unit_attack_apply", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender, &resolutions ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL, true )

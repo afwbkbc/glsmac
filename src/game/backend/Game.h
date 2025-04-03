@@ -415,7 +415,7 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
-	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
+	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
 	State* m_state = nullptr;
 	connection::Connection* m_connection = nullptr;
