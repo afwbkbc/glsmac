@@ -204,33 +204,29 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 
 	GC_DEBUG_BEGIN( "Object" );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-
-		if ( m_wrapobj ) {
-			GC_DEBUG_BEGIN( "wrapobj" );
-			GC_REACHABLE( m_wrapobj );
-			GC_DEBUG_END();
-		}
-
-		GC_DEBUG_BEGIN( "properties");
-		for ( const auto& p : m_properties ) {
-			GC_REACHABLE( p.second );
-		}
-		GC_DEBUG_END();
-
-		GC_DEBUG_BEGIN( "default_properties");
-		for ( const auto& p : m_default_properties ) {
-			GC_REACHABLE( p.second );
-		}
-		GC_DEBUG_END();
-
-		GC_DEBUG_BEGIN( "manual_properties");
-		for ( const auto& p : m_manual_properties ) {
-			GC_REACHABLE( p.second );
-		}
+	if ( m_wrapobj ) {
+		GC_DEBUG_BEGIN( "wrapobj" );
+		GC_REACHABLE( m_wrapobj );
 		GC_DEBUG_END();
 	}
+
+	GC_DEBUG_BEGIN( "properties");
+	for ( const auto& p : m_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_BEGIN( "default_properties");
+	for ( const auto& p : m_default_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_BEGIN( "manual_properties");
+	for ( const auto& p : m_manual_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }

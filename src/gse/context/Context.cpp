@@ -27,7 +27,6 @@ GSE* Context::GetGSE() const {
 }
 
 const bool Context::HasVariable( const std::string& name ) {
-	std::lock_guard guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		return true;
@@ -41,7 +40,6 @@ const bool Context::HasVariable( const std::string& name ) {
 
 Value* const Context::GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
 	CHECKACCUM( m_gse->GetGCSpace() );
-	std::lock_guard guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		return it->second.value;
@@ -57,12 +55,10 @@ Value* const Context::GetVariable( const std::string& name, const si_t& si, gse:
 
 void Context::SetVariable( const std::string& name, const var_info_t& var_info ) {
 	THROW( "TODO: SetVariable" );
-	std::lock_guard guard( m_gc_mutex );
 	m_variables.insert_or_assign( name, var_info );
 }
 
 void Context::CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( value, "value is null" );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
@@ -76,7 +72,6 @@ void Context::CreateVariable( const std::string& name, Value* const value, CONTE
 }
 
 void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( value, "value is null" );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
@@ -90,7 +85,6 @@ void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_
 }
 
 void Context::UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( value, "value is null" );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
@@ -109,7 +103,6 @@ void Context::UpdateVariable( const std::string& name, Value* const value, CONTE
 }
 
 void Context::DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		m_variables.erase( it );
@@ -133,32 +126,25 @@ ChildContext* const Context::ForkAndExecute(
 ) {
 	CHECKACCUM( gc_space );
 	NEWV( result, ChildContext, m_gse, this, si, is_traceable );
-	{
-		std::lock_guard guard( m_gc_mutex );
-		// functions have access to parent variables
-		for ( auto& it : m_ref_contexts ) {
-			result->m_ref_contexts.insert_or_assign( it.first, it.second );
-		}
-		for ( auto& it : m_variables ) {
-			result->m_ref_contexts.insert_or_assign( it.first, this );
-		}
+	// functions have access to parent variables
+	for ( auto& it : m_ref_contexts ) {
+		result->m_ref_contexts.insert_or_assign( it.first, it.second );
+	}
+	for ( auto& it : m_variables ) {
+		result->m_ref_contexts.insert_or_assign( it.first, this );
 	}
 	f( result );
 	return result;
 }
 
 void Context::Clear() {
-	{
-		std::lock_guard guard( m_gc_mutex );
-		m_variables.clear();
-	}
+	m_variables.clear();
 	for ( const auto& c : m_child_contexts ) {
 		c->Clear();
 	}
 }
 
 void Context::UnrefVariable( const std::string& name ) {
-	std::lock_guard guard( m_gc_mutex );
 	const auto& it = m_ref_contexts.find( name );
 	if ( it != m_ref_contexts.end() ) {
 		m_ref_contexts.erase( it );
@@ -170,8 +156,6 @@ void Context::UnrefVariable( const std::string& name ) {
 
 void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
-
-	std::lock_guard guard( m_gc_mutex );
 
 	GC_DEBUG_BEGIN( "Context" );
 
@@ -207,13 +191,11 @@ const std::string Context::ToString() {
 #endif
 
 void Context::AddChildContext( ChildContext* const child ) {
-	std::lock_guard guard( m_gc_mutex );
 	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
 	m_child_contexts.insert( child );
 }
 
 void Context::RemoveChildContext( ChildContext* const child ) {
-	std::lock_guard guard( m_gc_mutex );
 	if ( !m_child_contexts.empty() ) { // ?
 		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );

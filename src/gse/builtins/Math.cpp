@@ -9,9 +9,17 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/Undefined.h"
+#include "util/random/Random.h"
 
 namespace gse {
 namespace builtins {
+
+Math::Math() {
+	m_random = new util::random::Random();
+}
+Math::~Math() {
+	delete m_random;
+}
 
 void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
@@ -53,6 +61,26 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 	F( ceil, Float, Int )
 	F( sqrt, Float, Float )
 #undef F
+
+	ctx->CreateBuiltin( "random_int", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( min, 0, Int );
+		N_GETVALUE( max, 1, Int );
+		if ( min > max ) {
+			GSE_ERROR( EC.INVALID_CALL, "Min is larger than max ( " + std::to_string( min ) + " > " + std::to_string( max ) + " )" );
+		}
+		return VALUE( value::Int,, m_random->GetInt64( min, max ) );
+	} ), ep );
+
+	ctx->CreateBuiltin( "random_float", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( min, 0, Float );
+		N_GETVALUE( max, 1, Float );
+		if ( min > max ) {
+			GSE_ERROR( EC.INVALID_CALL, "Min is larger than max ( " + std::to_string( min ) + " > " + std::to_string( max ) + " )" );
+		}
+		return VALUE( value::Float,, m_random->GetFloat( min, max ) );
+	} ), ep );
 
 }
 

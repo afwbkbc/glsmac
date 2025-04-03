@@ -251,7 +251,6 @@ void Class::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 	{
 		// gc mutex is not used everywhere here, for now we rely on locking Accumulate() to prevent races
 		// TODO: maybe reentrant mutex?
-		std::lock_guard guard( m_gc_mutex );
 
 		GC_DEBUG_BEGIN( "local_properties" );
 		for ( const auto& it : m_local_properties ) {

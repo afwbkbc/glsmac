@@ -36,7 +36,6 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 GSEPrompt::~GSEPrompt() {}
 
 void GSEPrompt::Start() {
-	std::lock_guard guard( m_gc_mutex );
 	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 	m_gse = new gse::GSE();
 	m_gse->AddRootObject( this );
@@ -54,7 +53,6 @@ void GSEPrompt::Start() {
 }
 
 void GSEPrompt::Stop() {
-	std::lock_guard guard( m_gc_mutex );
 	Log( "Exiting GSE prompt" );
 	for ( const auto& it : m_programs ) {
 		delete ( it );
@@ -112,8 +110,6 @@ void GSEPrompt::Iterate() {
 }
 
 void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
-	std::lock_guard guard( m_gc_mutex );
-
 	GC_DEBUG_BEGIN( "GSEPrompt" );
 
 	if ( m_parser ) {

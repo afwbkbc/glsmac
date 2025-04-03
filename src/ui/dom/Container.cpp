@@ -188,23 +188,19 @@ void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 
 	GC_DEBUG_BEGIN( "Container" );
 
-	{
-		std::lock_guard guard( m_gc_mutex );
-
-		// children are reachable
-		GC_DEBUG_BEGIN( "children" );
-		for ( const auto& it : m_children ) {
-			GC_REACHABLE( it.second );
-		}
-		GC_DEBUG_END();
-
-		// embedded objects are reachable
-		GC_DEBUG_BEGIN( "embedded_objects" );
-		for ( const auto& it : m_embedded_objects ) {
-			GC_REACHABLE( it.first );
-		}
-		GC_DEBUG_END();
+	// children are reachable
+	GC_DEBUG_BEGIN( "children" );
+	for ( const auto& it : m_children ) {
+		GC_REACHABLE( it.second );
 	}
+	GC_DEBUG_END();
+
+	// embedded objects are reachable
+	GC_DEBUG_BEGIN( "embedded_objects" );
+	for ( const auto& it : m_embedded_objects ) {
+		GC_REACHABLE( it.first );
+	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }

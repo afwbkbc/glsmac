@@ -15,7 +15,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"SPARSE",  {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_SPARSE;
+							   m_mainmenu->m_state->m_settings.global.map.cloud_cover = 0.25f;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -27,7 +27,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"AVERAGE", {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_AVERAGE;
+							   m_mainmenu->m_state->m_settings.global.map.cloud_cover = 0.5f;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -39,7 +39,7 @@ Clouds::Clouds( MainMenu* mainmenu )
 		{
 			"DENSE",   {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.clouds = game::backend::settings::MapSettings::MAP_CONFIG_CLOUDS_DENSE;
+							   m_mainmenu->m_state->m_settings.global.map.cloud_cover = 0.75f;
 							   NEWV( menu, Difficulty, m_mainmenu );
 							   NextMenu( menu );
 						   },

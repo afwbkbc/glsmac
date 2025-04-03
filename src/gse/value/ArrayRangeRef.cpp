@@ -19,7 +19,6 @@ void ArrayRangeRef::GetReachableObjects( std::unordered_set< gc::Object* >& reac
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 const std::string ArrayRangeRef::ToString() {
-	std::lock_guard guard( m_gc_mutex );
 	return "gse::value::ArrayRangeRef( " + array->ToString() + ":" + ( from.has_value()
 		? std::to_string( from.value() )
 		: ""

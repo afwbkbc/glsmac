@@ -122,23 +122,34 @@ class Context;
 } \
 void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) { \
     auto* obj = (_type*)wrapobj; \
-    if ( !obj ) {}
+    if ( !obj ) { return; }
+
 #define WRAPIMPL_END_NOPTR( _type ) \
     return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS ); \
 }
 #define WRAPIMPL_DYNAMIC_ON_SET( _type ) \
-    else { \
-        GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property does not exist" ); \
-    } \
+    GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property does not exist" ); \
 } \
 void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
 #define WRAPIMPL_DYNAMIC_END() \
 }
-#define WRAPIMPL_GET( _key, _type, _property ) \
+#define WRAPIMPL_GET_CUSTOM( _key, _type, _value ) \
     { \
         _key, \
-        VALUE( gse::value::_type,, _property ) \
+        VALUE( gse::value::_type,, _value ) \
     },
+#define WRAPIMPL_GET( _property, _type ) WRAPIMPL_GET_CUSTOM( #_property, _type, _property )
+#define WRAPIMPL_GET_MAPPED( _property ) \
+    { \
+        #_property, \
+        __wrap_##_property.Get( GSE_CALL, _property ) \
+    },
+#define WRAPIMPL_GET_WRAPPED( _property ) \
+    { \
+        #_property, \
+        _property.Wrap( GSE_CALL, dynamic ) \
+    },
+
 #define WRAPIMPL_LINK( _key, _property ) \
     { \
         _key, \
@@ -147,14 +158,33 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         }) \
     },
 
-#define WRAPIMPL_SET( _key, _type, _property ) \
-    else if ( key == _key ) { \
+#define WRAPIMPL_SET_CUSTOM( _key, _type, _property ) \
+    if ( key == _key ) { \
         if ( value->type != gse::value::_type::GetType() ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString() ); \
         } \
         obj->_property = ((gse::value::_type*)value)->value; \
         obj->OnWrapSet( GSE_CALL, _key ); \
+        return; \
     }
+#define WRAPIMPL_SET( _property, _type ) WRAPIMPL_SET_CUSTOM( #_property, _type, _property )
+
+#define WRAPIMPL_SET_MAPPED( _property ) \
+    if ( key == #_property ) { \
+        if ( value->type != gse::Value::type_t::T_STRING ) { \
+            GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: String, got: " + value->GetTypeString() ); \
+        } \
+        obj->_property = __wrap_##_property.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
+        obj->OnWrapSet( GSE_CALL, #_property ); \
+        return; \
+    }
+
+#define WRAPMAP( _name, _type, ... ) \
+static const gse::Wrappable::wrapmap_t< _type > __wrap_##_name = { \
+    { \
+        __VA_ARGS__ \
+    } \
+};
 
 #define UNWRAPIMPL_PTR( _type ) \
 _type* _type::Unwrap( gse::Value* const value ) { \

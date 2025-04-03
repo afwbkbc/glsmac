@@ -611,9 +611,6 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
 	generator::SimplePerlin generator( m_game, random );
-	types::Vec2< size_t > size = map_settings->size == settings::MAP_CONFIG_CUSTOM
-		? map_settings->custom_size
-		: map::s_consts.map_sizes.at( map_settings->size );
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
@@ -621,24 +618,26 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 	const auto* c = g_engine->GetConfig();
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) ) {
-			size = c->GetQuickstartMapSize();
+			const auto size = c->GetQuickstartMapSize();
+			map_settings->size_x = size.x;
+			map_settings->size_y = size.y;
 		}
-		map_settings->ocean = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
-			? map_settings->ocean = c->GetQuickstartMapOcean()
-			: map_settings->ocean = random->GetUInt( 1, 3 );
-		map_settings->erosive = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
-			? map_settings->erosive = c->GetQuickstartMapErosive()
-			: map_settings->erosive = random->GetUInt( 1, 3 );
-		map_settings->lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
-			? map_settings->lifeforms = c->GetQuickstartMapLifeforms()
-			: map_settings->lifeforms = random->GetUInt( 1, 3 );
-		map_settings->clouds = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
-			? map_settings->clouds = c->GetQuickstartMapClouds()
-			: map_settings->clouds = random->GetUInt( 1, 3 );
+		map_settings->ocean_coverage = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
+			? c->GetQuickstartMapOceanCoverage()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->erosive_forces = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
+			? c->GetQuickstartMapErosiveForces()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->native_lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
+			? c->GetQuickstartMapNativeLifeforms()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->cloud_cover = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
+			? c->GetQuickstartMapCloudCover()
+			: random->GetFloat( 0.2, 0.8f );
 	}
-	Log( "Generating map of size " + size.ToString() );
+	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, tile::Tiles, size.x, size.y );
+	NEW( m_tiles, tile::Tiles, map_settings->size_x, map_settings->size_y );
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {
 		Log( "Map generation canceled" );

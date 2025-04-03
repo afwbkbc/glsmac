@@ -67,7 +67,8 @@ void Space::Accumulate( const std::function< void() >& f ) {
 		f();
 	}
 	else { // top accumulate, need to do full logic
-		std::lock_guard guard( m_accumulation_mutex );
+		std::lock_guard guard2( m_accumulation_mutex );
+		std::lock_guard guard( m_collect_mutex ); // do not accumulate during collect or vice versa // TODO: optimize to reduce lock times
 		const auto& commit = [ this, &tid ]() {
 			{
 				std::lock_guard guard( m_accumulations_mutex );
@@ -83,7 +84,7 @@ void Space::Accumulate( const std::function< void() >& f ) {
 		};
 		ASSERT_NOLOG( m_accumulated_objects.empty(), "accumulated objects not empty" );
 		{
-			std::lock_guard guard2( m_accumulations_mutex );
+			std::lock_guard guard3( m_accumulations_mutex );
 			ASSERT_NOLOG( m_accumulations.find( tid ) == m_accumulations.end(), "accumulations thread already exists" );
 			m_accumulations.insert( tid );
 		}

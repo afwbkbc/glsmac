@@ -195,13 +195,6 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} ),
 		},
 		{
-			"randomize_settings",
-			NATIVE_CALL( this ) {
-				RandomizeSettings( GSE_CALL );
-				return VALUE( gse::value::Undefined );
-			} )
-		},
-		{
 			"start_game",
 			NATIVE_CALL( this ) {
 				if ( !m_state ) {
@@ -269,8 +262,6 @@ gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::stri
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
-	std::lock_guard guard( m_gc_mutex );
-
 	if ( m_state ) {
 		GC_DEBUG_BEGIN( "state" );
 		GC_REACHABLE( m_state );
@@ -311,6 +302,9 @@ void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	const auto& c = g_engine->GetConfig();
 	auto* r = g_engine->GetResourceManager();
+	if ( !m_state ) {
+		m_state = new game::backend::State( m_gc_space, m_ctx, this );
+	}
 	try {
 		if ( path.has_value() ) {
 			r->Init( { path.value() }, config::ST_AUTO );
@@ -386,7 +380,12 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
-	TriggerObject( this, "mainmenu_show", {} );
+	TriggerObject( this, "mainmenu_show", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+		{
+			"settings",
+			m_state->m_settings.Wrap( GSE_CALL, true ),
+		}
+	}; } );
 }
 
 void GLSMAC::S_Game( GSE_CALLABLE ) {
@@ -407,29 +406,24 @@ void GLSMAC::UpdateLoaderText() {
 }
 
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
-	std::lock_guard guard( m_gc_mutex );
 	if ( m_state ) {
 		if ( m_is_game_running ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
 		}
-		m_state = nullptr;
+		m_state->Reset();
 	}
 }
 
 void GLSMAC::InitGameState( GSE_CALLABLE, const f_t on_complete  ) {
-	std::lock_guard guard( m_gc_mutex );
-	if ( m_state ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
-	}
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
 	AsyncLoad( "Initializing game state", [ this ] {
 		m_gc_space->Accumulate( [ this ]() {
-			m_state = new game::backend::State( m_gc_space, m_ctx, this );
+			m_state->Reset();
 			m_state->SetGame( g_engine->GetGame() );
 			m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-				TriggerObject( this, "configure_state", ARGS_F( &ctx, gc_space, &si, &ep, this ) {
+				TriggerObject( this, "configure_state", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 					{
 						"fm",
 						m_state->GetFM()->Wrap( GSE_CALL, true ),
@@ -493,7 +487,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 	S_Game( GSE_CALL );
 
-	TriggerObject( this, "configure_game", ARGS_F( &ctx, gc_space, &si, &ep, &game ) {
+	TriggerObject( this, "configure_game", ARGS_F( ARGS_GSE_CALLABLE, &game ) {
 		{
 			"game",
 			game->Wrap( GSE_CALL, true ),
@@ -509,10 +503,7 @@ void GLSMAC::RunMain() {
 			m_gc_space->Accumulate( [ this, &main ] (){
 				ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
 				gse::ExecutionPointer ep;
-				{
-					std::lock_guard guard( m_gc_mutex );
-					m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
-				}
+				m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
 				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
 					m_wrapobj
 				} );

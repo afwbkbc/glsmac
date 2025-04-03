@@ -15,6 +15,8 @@
 #include "Exception.h"
 #include "Value.h"
 
+#include "util/Struct.h"
+
 namespace gse {
 
 namespace value {
@@ -23,6 +25,38 @@ class Object;
 
 class Wrappable {
 public:
+
+	template< typename T >
+	class wrapmap_t {
+	public:
+		typedef const std::unordered_map< T, std::string > t_type_to_string;
+		typedef const std::unordered_map< std::string, T > t_string_to_type;
+		wrapmap_t( const t_type_to_string& type_to_string )
+			: m_type_to_string( type_to_string )
+			, m_string_to_type( util::Struct::FlipMap( type_to_string ) ) {}
+		const T& GetValue( GSE_CALLABLE, const std::string& str ) const {
+			const auto& it = m_string_to_type.find( str );
+			if ( it == m_string_to_type.end() ) {
+				std::string supported_values = "";
+				for ( const auto& v : m_string_to_type ) {
+					supported_values += " " + v.first;
+				}
+				GSE_ERROR( EC.INVALID_DEFINITION, "Unknown value '" + str + "', supported values:" + supported_values );
+			}
+			return it->second;
+		}
+		const std::string& GetString( const T& value ) const {
+			ASSERT_NOLOG( m_type_to_string.find( value ) != m_type_to_string.end(), "value not in wrapmap" );
+			return m_type_to_string.at( value );
+		}
+		Value* const Get( GSE_CALLABLE, const T& value ) const {
+			return VALUE( value::String, , GetString( value ) );
+		}
+	private:
+		t_type_to_string m_type_to_string;
+		t_string_to_type m_string_to_type;
+	};
+
 	virtual ~Wrappable();
 
 	virtual Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) = 0;

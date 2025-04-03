@@ -15,7 +15,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"STRONG",  {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_STRONG;
+							   m_mainmenu->m_state->m_settings.global.map.erosive_forces = 0.5f;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -27,7 +27,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"AVERAGE", {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_AVERAGE;
+							   m_mainmenu->m_state->m_settings.global.map.erosive_forces = 0.75f;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },
@@ -39,7 +39,7 @@ Erosive::Erosive( MainMenu* mainmenu )
 		{
 			"WEAK",    {
 						   CH( this ) {
-							   m_mainmenu->m_state->m_settings.global.map.erosive = game::backend::settings::MapSettings::MAP_CONFIG_EROSIVE_WEAK;
+							   m_mainmenu->m_state->m_settings.global.map.erosive_forces = 1.0f;
 							   NEWV( menu, Lifeforms, m_mainmenu );
 							   NextMenu( menu );
 						   },

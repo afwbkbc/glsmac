@@ -55,33 +55,6 @@ CLASS( MapGenerator, common::Class )
 	static constexpr size_t MAXIMUM_REGENERATION_ATTEMPTS = 50;
 
 	typedef std::unordered_map< settings::map_config_value_t, float > map_config_mappings_t;
-	// 'select ocean coverage'
-	const map_config_mappings_t TARGET_LAND_AMOUNTS = {
-		{ settings::MAP_CONFIG_OCEAN_LOW,    0.6f }, // '30-50% of surface'
-		{ settings::MAP_CONFIG_OCEAN_MEDIUM, 0.4f }, // '50-70% of surface'
-		{ settings::MAP_CONFIG_OCEAN_HIGH,   0.2f }  // '70-90% of surface'
-	};
-
-	// 'adjust erosive forces'
-	const map_config_mappings_t TARGET_EVELATION_MULTIPLIERS = {
-		{ settings::MAP_CONFIG_EROSIVE_STRONG,  0.5f }, // 'strong'
-		{ settings::MAP_CONFIG_EROSIVE_AVERAGE, 0.75f }, // 'average'
-		{ settings::MAP_CONFIG_EROSIVE_WEAK,    1.0f }, // 'weak'
-	};
-
-	// 'native life forms'
-	const map_config_mappings_t TARGET_FUNGUS_AMOUNTS = {
-		{ settings::MAP_CONFIG_LIFEFORMS_RARE,     0.25f }, // 'rare'
-		{ settings::MAP_CONFIG_LIFEFORMS_AVERAGE,  0.5f }, // 'average'
-		{ settings::MAP_CONFIG_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
-	};
-
-	// 'select cloud cover'
-	const map_config_mappings_t TARGET_MOISTURE_AMOUNTS = {
-		{ settings::MAP_CONFIG_CLOUDS_SPARSE,  0.25f }, // 'sparse'
-		{ settings::MAP_CONFIG_CLOUDS_AVERAGE, 0.5f }, // 'average'
-		{ settings::MAP_CONFIG_CLOUDS_DENSE,   0.75f }, // 'dense'
-	};
 
 	MapGenerator( Game* game, util::random::Random* random );
 
