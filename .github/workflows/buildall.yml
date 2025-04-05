@@ -138,6 +138,7 @@ jobs:
       - name: install_dependencies
         run: |
           choco install ninja
+          choco install cmake
       - name: prepare
         run: |
           mkdir build
