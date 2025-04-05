@@ -138,7 +138,7 @@ jobs:
       - name: install_dependencies
         run: |
           choco install ninja
-          choco install cmake
+          choco install cmake --installargs '"ADD_CMAKE_TO_PATH=System"'
       - name: prepare
         run: |
           mkdir build
