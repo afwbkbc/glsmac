@@ -62,17 +62,18 @@ void MapSettings::Unserialize( types::Buffer buf ) {
 }
 
 void GlobalSettings::Initialize() {
-	game_rules.Initialize();
-	global_difficulty = game_rules.GetDefaultDifficultyLevel();
+	rules.Initialize();
+	difficulty_level = rules.GetDefaultDifficultyLevelV();
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
 			WRAPIMPL_GET_WRAPPED( map )
-			// TODO: game_rules
-			// TODO: global_difficulty
+			WRAPIMPL_GET_WRAPPED( rules )
+			WRAPIMPL_GET_MAPPED_CUSTOM( difficulty_level, rules.m_difficulty_levels )
 			WRAPIMPL_GET( game_name, String )
 WRAPIMPL_DYNAMIC_SETTERS( GlobalSettings )
 	WRAPIMPL_SET( game_name, String )
+	WRAPIMPL_SET_MAPPED_CUSTOM( difficulty_level, obj->rules.m_difficulty_levels )
 WRAPIMPL_DYNAMIC_ON_SET( GlobalSettings )
 WRAPIMPL_DYNAMIC_END()
 
@@ -80,8 +81,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 	types::Buffer buf;
 
 	buf.WriteString( map.Serialize().ToString() );
-	buf.WriteString( game_rules.Serialize().ToString() );
-	buf.WriteString( global_difficulty.Serialize().ToString() );
+	buf.WriteString( rules.Serialize().ToString() );
+	buf.WriteInt( difficulty_level );
 	buf.WriteString( game_name );
 
 	return buf;
@@ -89,8 +90,8 @@ const types::Buffer GlobalSettings::Serialize() const {
 
 void GlobalSettings::Unserialize( types::Buffer buf ) {
 	map.Unserialize( buf.ReadString() );
-	game_rules.Unserialize( buf.ReadString() );
-	global_difficulty.Unserialize( buf.ReadString() );
+	rules.Unserialize( buf.ReadString() );
+	difficulty_level = buf.ReadInt();
 	game_name = buf.ReadString();
 }
 

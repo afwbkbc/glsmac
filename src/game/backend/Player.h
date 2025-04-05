@@ -4,8 +4,6 @@
 
 #include "types/Serializable.h"
 
-#include "game/backend/rules/DifficultyLevel.h"
-
 namespace game {
 namespace backend {
 
@@ -31,7 +29,7 @@ CLASS( Player, types::Serializable )
 		const std::string& name,
 		const role_t role,
 		faction::Faction* faction,
-		const rules::DifficultyLevel& difficulty_level
+		const std::string& difficulty_level
 	);
 
 	const std::string& GetPlayerName() const;
@@ -45,8 +43,8 @@ CLASS( Player, types::Serializable )
 	void ClearFaction();
 	faction::Faction* GetFaction();
 
-	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
-	const rules::DifficultyLevel& GetDifficultyLevel() const;
+	void SetDifficultyLevel( const std::string& difficulty_level );
+	const std::string& GetDifficultyLevel() const;
 
 	void SetSlot( slot::Slot* slot );
 	slot::Slot* GetSlot() const;
@@ -70,7 +68,7 @@ private:
 	slot::Slot* m_slot = nullptr;
 
 	faction::Faction* m_faction = {};
-	rules::DifficultyLevel m_difficulty_level = {};
+	std::string m_difficulty_level = "";
 
 	bool m_is_turn_completed = false;
 };

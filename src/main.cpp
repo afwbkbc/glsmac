@@ -296,10 +296,10 @@ int main( const int argc, const char* argv[] ) {
 		}
 		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 			NEWV( state, game::backend::State, nullptr, nullptr, nullptr ); // TODO: initialize settings randomly
-			state->m_settings.global.game_rules.Initialize();
+			state->m_settings.global.rules.Initialize();
 			state->InitBindings();
 			state->Configure();
-			const auto& rules = state->m_settings.global.game_rules;
+			const auto& rules = state->m_settings.global.rules;
 			game::backend::faction::Faction* faction = nullptr;
 			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 				faction = state->GetFM()->Get( config.GetQuickstartFaction() );

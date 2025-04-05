@@ -80,8 +80,8 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 
 	MapSettings map = {};
 
-	rules::Default game_rules = {}; // TODO: custom rules
-	rules::DifficultyLevel global_difficulty = {};
+	rules::Default rules = {}; // TODO: custom rules
+	int difficulty_level = rules.GetDefaultDifficultyLevelV();
 
 	std::string game_name = "";
 

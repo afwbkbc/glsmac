@@ -13,7 +13,7 @@ Player::Player(
 	const std::string& name,
 	const role_t role,
 	faction::Faction* faction,
-	const rules::DifficultyLevel& difficulty_level
+	const std::string& difficulty_level
 )
 	: m_name( name )
 	, m_role( role )
@@ -57,12 +57,12 @@ faction::Faction* Player::GetFaction() {
 	return m_faction;
 }
 
-void Player::SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level ) {
+void Player::SetDifficultyLevel( const std::string& difficulty_level ) {
 	// TODO: validate?
 	m_difficulty_level = difficulty_level;
 }
 
-const rules::DifficultyLevel& Player::GetDifficultyLevel() const {
+const std::string& Player::GetDifficultyLevel() const {
 	return m_difficulty_level;
 }
 
@@ -99,7 +99,7 @@ const types::Buffer Player::Serialize() const {
 	if ( m_faction ) {
 		buf.WriteString( m_faction->Serialize().ToString() );
 	}
-	buf.WriteString( m_difficulty_level.Serialize().ToString() );
+	buf.WriteString( m_difficulty_level );
 
 	return buf;
 }
@@ -113,7 +113,7 @@ void Player::Unserialize( types::Buffer buf ) {
 		m_faction = new faction::Faction();
 		m_faction->Unserialize( buf.ReadString() );
 	}
-	m_difficulty_level.Unserialize( buf.ReadString() );
+	m_difficulty_level = buf.ReadString();
 
 }
 

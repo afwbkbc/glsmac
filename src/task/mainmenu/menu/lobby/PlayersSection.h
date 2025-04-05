@@ -30,7 +30,7 @@ CLASS( PlayersSection, LobbySection )
 	void UpdateSlots( std::vector< game::backend::slot::Slot >& slots );
 
 	const ui_legacy::object::assoc_choices_t& GetFactionChoices();
-	const ui_legacy::object::num_choices_t& GetDifficultyLevelChoices();
+	const ui_legacy::object::assoc_choices_t& GetDifficultyLevelChoices();
 
 private:
 	std::vector< PlayersSectionRow* > m_slots = {};
@@ -38,7 +38,7 @@ private:
 	// some caches for player rows
 	struct {
 		ui_legacy::object::assoc_choices_t factions = {};
-		ui_legacy::object::num_choices_t difficulty_levels = {};
+		ui_legacy::object::assoc_choices_t difficulty_levels = {};
 	} m_choices;
 
 };

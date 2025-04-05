@@ -197,7 +197,7 @@ void MainMenu::MenuError( const std::string& error_text ) {
 
 void MainMenu::InitSinglePlayer() {
 	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-	const auto& rules = m_state->m_settings.global.game_rules;
+	const auto& rules = m_state->m_settings.global.rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,
@@ -217,7 +217,8 @@ void MainMenu::StartGame() {
 	// real state belongs to game task now
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu
-	auto* real_state = m_state;
+	THROW( "DEPRECATED" );
+	/*auto* real_state = m_state;
 	NEW( m_state, ::game::backend::State, nullptr, nullptr, nullptr );
 	m_state->m_settings = real_state->m_settings;
 	NEWV( task, task::game::Game, real_state, UH( this ) {
@@ -226,7 +227,7 @@ void MainMenu::StartGame() {
 		m_menu_object->MaybeClose();
 		//m_state->Reset();
 	} );
-	g_engine->GetScheduler()->AddTask( task );
+	g_engine->GetScheduler()->AddTask( task );*/
 }
 
 void MainMenu::ShowErrorOnStart( const std::string& error ) {

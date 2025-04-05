@@ -103,11 +103,40 @@ return (m) => {
 		}
 	};
 
+	const create_item = (text, bottom) => {
+		const itemobj = current_menublock.panel({
+			class: 'menublock-item',
+			bottom: bottom,
+		});
+		itemobj.surface({class: 'menublock-item-top'});
+		itemobj.surface({class: 'menublock-item-top2'});
+		itemobj.surface({class: 'menublock-item-bottom'});
+		itemobj.surface({class: 'menublock-item-right'});
+		return itemobj.button({
+			class: 'menublock-item-body',
+			text: text,
+		});
+	};
+
+	let menu_stack = [];
+
 	return {
 
-		show: (entries, on_exit) => {
+		back: () => {
+			menu_stack :~;
+			if ( !#is_empty(menu_stack)) {
+				this.show(menu_stack:~);
+			}
+			else {
+				m.glsmac.exit();
+			}
+		},
+
+		show: (data) => {
 
 			remove_active_menublock();
+
+			menu_stack :+data;
 
 			current_menublock = m.root.group({
 				class: 'menublock-items',
@@ -122,7 +151,7 @@ return (m) => {
 			current_menublock.on('keydown', (e) => {
 				// TODO: switch
 				if (e.code == 'ESCAPE') {
-					slideout_and_cb(on_exit);
+					slideout_and_cb(this.back);
 					return true;
 				}
 				// TODO: else if
@@ -144,22 +173,14 @@ return (m) => {
 				}
 				return false;
 			});
-			let bottom = (#sizeof(entries) - 1) * 70;
+			let bottom = (#sizeof(data.entries) - 1) * 70;
+			if (#is_defined(data.title)) {
+				create_item(data.title, bottom + 140).addclass('menublock-item-active');
+			}
 			current_entries = [];
 			let index = 0;
-			for (entry of entries) {
-				const itemobj = current_menublock.panel({
-					class: 'menublock-item',
-					bottom: bottom,
-				});
-				itemobj.surface({class: 'menublock-item-top'});
-				itemobj.surface({class: 'menublock-item-top2'});
-				itemobj.surface({class: 'menublock-item-bottom'});
-				itemobj.surface({class: 'menublock-item-right'});
-				const itembody = itemobj.button({
-					class: 'menublock-item-body',
-					text: entry[0],
-				});
+			for (entry of data.entries) {
+				const itembody = create_item(entry[0], bottom);
 				const cb = entry[1];
 				const current_entry = {
 					obj: itembody,
@@ -186,7 +207,7 @@ return (m) => {
 				current_entries:+current_entry;
 				index++;
 			}
-			if (#sizeof(entries) > 0) {
+			if (#sizeof(data.entries) > 0) {
 				set_active_entry(0);
 			}
 

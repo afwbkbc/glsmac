@@ -139,11 +139,12 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         VALUE( gse::value::_type,, _value ) \
     },
 #define WRAPIMPL_GET( _property, _type ) WRAPIMPL_GET_CUSTOM( #_property, _type, _property )
-#define WRAPIMPL_GET_MAPPED( _property ) \
+#define WRAPIMPL_GET_MAPPED_CUSTOM( _property, _map ) \
     { \
         #_property, \
-        __wrap_##_property.Get( GSE_CALL, _property ) \
+        _map.Get( GSE_CALL, _property ) \
     },
+#define WRAPIMPL_GET_MAPPED( _property ) WRAPIMPL_GET_MAPPED_CUSTOM( _property, __wrap_##_property )
 #define WRAPIMPL_GET_WRAPPED( _property ) \
     { \
         #_property, \
@@ -169,15 +170,16 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
     }
 #define WRAPIMPL_SET( _property, _type ) WRAPIMPL_SET_CUSTOM( #_property, _type, _property )
 
-#define WRAPIMPL_SET_MAPPED( _property ) \
+#define WRAPIMPL_SET_MAPPED_CUSTOM( _property, _map ) \
     if ( key == #_property ) { \
         if ( value->type != gse::Value::type_t::T_STRING ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: String, got: " + value->GetTypeString() ); \
         } \
-        obj->_property = __wrap_##_property.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
+        obj->_property = _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
         obj->OnWrapSet( GSE_CALL, #_property ); \
         return; \
     }
+#define WRAPIMPL_SET_MAPPED( _property ) WRAPIMPL_SET_MAPPED_CUSTOM( _property, __wrap_##_property )
 
 #define WRAPMAP( _name, _type, ... ) \
 static const gse::Wrappable::wrapmap_t< _type > __wrap_##_name = { \

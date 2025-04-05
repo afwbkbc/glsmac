@@ -109,12 +109,14 @@ void GameSettingsSection::UpdateRows() {
 	std::transform( title.begin(), title.end(), title.begin(), ::toupper );
 	SetTitleText( title );
 
-	const auto& game_rules = m_game_settings->game_rules;
+	const auto& rules = m_game_settings->rules;
 
 	::ui_legacy::object::NumChoiceList::choices_t difficulty_levels = {};
 	ui_legacy::object::NumChoiceList::value_t current_difficulty_level = 0;
-	for ( auto& it : game_rules.m_difficulty_levels ) {
-		if ( m_game_settings->global_difficulty.m_name == it.second.m_name ) {
+	THROW( "deprecated" );
+	/*
+	for ( auto& it : rules.m_difficulty_levels ) {
+		if ( m_game_settings->difficulty_level.m_name == it.second.m_name ) {
 			current_difficulty_level = it.first;
 		}
 		difficulty_levels.push_back(
@@ -123,7 +125,7 @@ void GameSettingsSection::UpdateRows() {
 				it.second.m_name
 			}
 		);
-	}
+	}*/
 	UpdateRow(
 		RI_DIFFICULTY_LEVEL,
 		difficulty_levels,
@@ -232,12 +234,13 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 	choices_el->SetAlign( ui_legacy::ALIGN_LEFT );
 	choices_el->SetLeft( label_width );
 	choices_el->SetWidth( choices_width );
-	choices_el->On(
+	THROW( "DEPRECATED" );
+	/*choices_el->On(
 		ui_legacy::event::EV_CHANGE, EH( this, choices_el, row_id ) {
-			const auto& game_rules = m_game_settings->game_rules;
+			const auto& rules = m_game_settings->rules;
 			switch ( row_id ) {
 				case RI_DIFFICULTY_LEVEL:
-					m_game_settings->global_difficulty = game_rules.m_difficulty_levels.at( data->value.change.id_num );
+					m_game_settings->difficulty_level = *data->value.change.id_str;
 					break;
 				case RI_TIME_CONTROLS:
 					break;
@@ -357,7 +360,7 @@ void GameSettingsSection::CreateRow( const row_id_t row_id, const std::string& l
 			GetLobby()->UpdateGameSettings();
 			return true;
 		}
-	);
+	);*/
 	m_body->AddChild( choices_el );
 	m_element_rows[ row_id ] = {
 		label_el,

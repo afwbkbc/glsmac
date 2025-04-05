@@ -92,9 +92,6 @@ void Space::Accumulate( const std::function< void() >& f ) {
 			f();
 		}
 		catch ( const gse::Exception& e ) {
-			for ( const auto& line : e.GetStackTrace() ) {
-				util::LogHelper::Println( line );
-			}
 			commit();
 			throw;
 		}

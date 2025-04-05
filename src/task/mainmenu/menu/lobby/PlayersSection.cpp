@@ -59,7 +59,7 @@ void PlayersSection::UpdateSlot( const size_t slot_num, game::backend::slot::Slo
 }
 
 void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slots ) {
-	const auto& game_rules = GetLobby()->GetSettings()->global.game_rules;
+	const auto& game_rules = GetLobby()->GetSettings()->global.rules;
 
 	m_choices.factions.clear();
 	m_choices.factions.push_back(
@@ -78,11 +78,11 @@ void PlayersSection::UpdateSlots( std::vector< game::backend::slot::Slot >& slot
 	}
 
 	m_choices.difficulty_levels.clear();
-	for ( auto& difficulty : game_rules.m_difficulty_levels ) {
+	for ( auto& it : game_rules.m_difficulty_levels.GetKV() ) {
 		m_choices.difficulty_levels.push_back(
 			{
-				difficulty.first,
-				difficulty.second.m_name
+				it.first,
+				it.first
 			}
 		);
 	}
@@ -97,7 +97,7 @@ const ui_legacy::object::assoc_choices_t& PlayersSection::GetFactionChoices() {
 	return m_choices.factions;
 }
 
-const ui_legacy::object::num_choices_t& PlayersSection::GetDifficultyLevelChoices() {
+const ui_legacy::object::assoc_choices_t& PlayersSection::GetDifficultyLevelChoices() {
 	return m_choices.difficulty_levels;
 }
 

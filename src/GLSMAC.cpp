@@ -186,7 +186,6 @@ WRAPIMPL_BEGIN( GLSMAC )
 				Persist( on_complete );
 				InitGameState( GSE_CALL, [ this, on_complete, gc_space, ctx, si, ep ] () {
 					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
-					m_state->m_settings.global.Initialize();
 					auto ep2 = ep;
 					on_complete->Run( gc_space, ctx, si, ep2, {} );
 					Unpersist( on_complete );
@@ -304,6 +303,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	auto* r = g_engine->GetResourceManager();
 	if ( !m_state ) {
 		m_state = new game::backend::State( m_gc_space, m_ctx, this );
+		m_state->m_settings.global.Initialize();
 	}
 	try {
 		if ( path.has_value() ) {
@@ -337,7 +337,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		InitGameState( GSE_CALL, [ this, c, ctx, si, ep ] () {
 			m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
 			m_state->m_settings.global.Initialize();
-			const auto& rules = m_state->m_settings.global.game_rules;
+			const auto& rules = m_state->m_settings.global.rules;
 			game::backend::faction::Faction* faction = nullptr;
 			if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 				const auto* fm = m_state->GetFM();
@@ -445,7 +445,7 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 
 void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
 	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-	const auto& rules = m_state->m_settings.global.game_rules;
+	const auto& rules = m_state->m_settings.global.rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,

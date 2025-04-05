@@ -4,20 +4,29 @@
 #include <vector>
 
 #include "types/Serializable.h"
-
-#include "DifficultyLevel.h"
+#include "gse/Wrappable.h"
 
 namespace game {
 namespace backend {
 namespace rules {
 
-CLASS( Rules, types::Serializable )
+CLASS2( Rules, types::Serializable, gse::Wrappable )
 
-	std::map< size_t, DifficultyLevel > m_difficulty_levels;
+	wrapmap_t< int > m_difficulty_levels{ {
+		{ -3, "Citizen", },
+		{ -2, "Specialist", },
+		{ -1, "Talent", },
+		{ 0, "Librarian", },
+		{ 1, "Thinker", },
+		{ 2, "Transcend", },
+	} }; // TODO: fix and wrap DifficultyLevel class, for now just hardcode and map name to difficulty
 
-	virtual const DifficultyLevel& GetDefaultDifficultyLevel() const = 0;
+	virtual const std::string& GetDefaultDifficultyLevel() const = 0;
+	const int GetDefaultDifficultyLevelV() const;
 
 	void Initialize();
+
+	WRAPDEFS_DYNAMIC( Rules );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;
@@ -27,6 +36,8 @@ protected:
 
 private:
 	bool m_is_initialized = false;
+
+	const gse::value::array_elements_t WrapDifficultyLevels( gc::Space* const gc_space );
 
 };
 

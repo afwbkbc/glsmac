@@ -49,7 +49,7 @@ void PlayersSectionRow::Create() {
 			ui_legacy::object::UIContainer::AddStyleModifier( ui_legacy::M_HIGHLIGHT );
 		}
 
-		const auto& rules = m_parent->GetLobby()->GetSettings()->global.game_rules;
+		const auto& rules = m_parent->GetLobby()->GetSettings()->global.rules;
 
 		const auto& faction = player->GetFaction();
 
@@ -105,7 +105,8 @@ void PlayersSectionRow::Create() {
 		AddChild( m_elements.faction );
 
 		NEW( m_elements.difficulty_level, ui_legacy::object::NumDropdown, "PopupDropdown" );
-		if ( allowed_to_change ) {
+		THROW( "deprecated" );
+		/*if ( allowed_to_change ) {
 			m_elements.difficulty_level->SetChoices( m_parent->GetDifficultyLevelChoices() );
 		}
 		m_elements.difficulty_level->SetValue( player->GetDifficultyLevel().m_name );
@@ -118,7 +119,7 @@ void PlayersSectionRow::Create() {
 				m_parent->GetLobby()->UpdateSlot( m_slot_num, m_slot );
 				return true;
 			}
-		);
+		);*/
 		AddChild( m_elements.difficulty_level );
 
 		std::vector< std::string > actions = {};

@@ -29,7 +29,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
 			m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-			const auto& rules = m_state->m_settings.global.game_rules;
+			const auto& rules = m_state->m_settings.global.rules;
 			NEW(
 				m_player, Player,
 				m_state->m_settings.local.player_name,
@@ -189,7 +189,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 						}
 
-						const auto& rules = m_state->m_settings.global.game_rules;
+						const auto& rules = m_state->m_settings.global.rules;
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots->GetSlot( slot_num );
 

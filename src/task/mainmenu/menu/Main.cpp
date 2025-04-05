@@ -47,7 +47,7 @@ Main::Main( MainMenu* mainmenu )
 									m_mainmenu->m_state->m_settings.global.map.native_lifeforms = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
 									m_mainmenu->m_state->m_settings.global.map.cloud_cover = m_mainmenu->GetRandom()->GetFloat( 0.2f, 0.8f );
 									// TODO: previous rules and difficulty
-									m_mainmenu->m_state->m_settings.global.global_difficulty = m_mainmenu->m_state->m_settings.global.game_rules.GetDefaultDifficultyLevel();
+									m_mainmenu->m_state->m_settings.global.difficulty_level = m_mainmenu->m_state->m_settings.global.rules.GetDefaultDifficultyLevelV();
 
 									// start game
 									m_mainmenu->InitSinglePlayer();
