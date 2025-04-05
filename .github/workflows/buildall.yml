@@ -139,6 +139,7 @@ jobs:
         run: |
           choco install ninja
           choco install cmake --installargs '"ADD_CMAKE_TO_PATH=System"'
+          refreshenv
       - name: prepare
         run: |
           mkdir build
