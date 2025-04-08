@@ -1,6 +1,6 @@
 return (m) => {
 
-	const menublock = #include('mainmenu/menublock')(m);
+	const sliding = #include('sliding')(m);
 	let background = null;
 	let music = null;
 
@@ -35,7 +35,7 @@ return (m) => {
 
 			main: () => {
 				m.glsmac.deinit();
-				menublock.show({
+				sliding.show({
 					entries: [
 						['Start Game', () => {
 							m.glsmac.init_single_player(() => {
@@ -70,7 +70,7 @@ return (m) => {
 			},
 
 			start_game: () => {
-				menublock.show({
+				sliding.show({
 					entries: [
 						['Make Random Map', () => {
 							e.settings.global.map.type = 'random';
@@ -102,7 +102,7 @@ return (m) => {
 						steps.customize_ocean_coverage();
 					}
 				};
-				menublock.show({
+				sliding.show({
 					title: 'Select size of planet',
 					entries: [
 						['Tiny Planet', () => {
@@ -135,7 +135,7 @@ return (m) => {
 			},
 
 			customize_ocean_coverage: () => {
-				menublock.show({
+				sliding.show({
 					title: 'Select ocean coverage',
 					entries: [
 						['30-50% of surface', () => {
@@ -154,7 +154,7 @@ return (m) => {
 				});
 			},
 			customize_erosive_forces: () => {
-				menublock.show({
+				sliding.show({
 					title: 'Adjust erosive forces',
 					entries: [
 						['Strong', () => {
@@ -173,7 +173,7 @@ return (m) => {
 				});
 			},
 			customize_native_lifeforms: () => {
-				menublock.show({
+				sliding.show({
 					title: 'Native life forms',
 					entries: [
 						['Rare', () => {
@@ -192,7 +192,7 @@ return (m) => {
 				});
 			},
 			customize_cloud_cover: () => {
-				menublock.show({
+				sliding.show({
 					title: 'Select cloud cover',
 					entries: [
 						['Sparse', () => {
@@ -219,14 +219,14 @@ return (m) => {
 						steps.select_rules();
 					}];
 				}
-				menublock.show({
+				sliding.show({
 					title: 'Pick a difficulty level',
 					entries: entries
 				});
 			},
 
 			select_rules: () => {
-				menublock.show({
+				sliding.show({
 					title: 'Game rules',
 					entries: [
 						['Play with Standard Rules', () => {
@@ -242,7 +242,7 @@ return (m) => {
 						['Customize Rules', () => {
 							// TODO: 'not supported'
 							// TODO: custom rules
-							menublock.back();
+							sliding.back();
 						}],
 					]
 				});
@@ -264,7 +264,7 @@ return (m) => {
 			music.remove();
 			music = null;
 		}
-		menublock.hide();
+		sliding.hide();
 	});
 
 };

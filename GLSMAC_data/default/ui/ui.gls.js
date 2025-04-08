@@ -10,7 +10,7 @@ return (glsmac) => {
 	for (step of [
 		'smacpath_prompt',
 		'intro',
-		'mainmenu',
+		'mainmenu/mainmenu',
 		'loader',
 		'game',
 	]) {

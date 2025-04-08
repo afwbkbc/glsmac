@@ -673,13 +673,14 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		case OT_AT: {
 			ASSERT( expression->a, "parent array expected" );
 			std::optional< size_t > index, from, to;
-			const auto valv = EvaluateRange( ctx, ep, expression->b );
-			const auto* val = valv;
+			std::optional< std::string > key;
+			const auto val = EvaluateRange( ctx, ep, expression->b );
 			switch ( val->type ) {
 				case gse::Value::T_INT: {
 					index = ( (Int*)val )->value;
 					from = std::nullopt;
 					to = std::nullopt;
+					key = std::nullopt;
 					break;
 				}
 				case gse::Value::T_RANGE: {
@@ -687,46 +688,74 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					index = std::nullopt;
 					from = range->from;
 					to = range->to;
+					key = std::nullopt;
+					break;
+				}
+				case gse::Value::T_STRING: {
+					index = std::nullopt;
+					from = std::nullopt;
+					to = std::nullopt;
+					key = ( (String*)val )->value;
 					break;
 				}
 				default:
 					THROW( "unexpected index type: " + val->ToString() );
 			}
-			const auto& not_an_array = [ &ctx, &ep, &index, &from, &to ]( const std::string& what, const si_t& si ) -> gse::Exception {
-				return gse::Exception(
-					EC.INVALID_DEREFERENCE, "Could not get " +
-						( index.has_value()
-							? "index " + std::to_string( index.value() )
-							: "range [ " + std::to_string( from.value() ) + " : " + std::to_string( to.value() )
-						) +
-						" of non-array: " + what, ctx, si, ep
-				);
+			const auto& check_indexable = [ &ctx, &ep, &index, &key, &from, &to ]( const gse::Value* const value, const si_t& si, const gse::Value::type_t expected_type ) {
+				if ( value->type != expected_type ) {
+					throw gse::Exception(
+						EC.INVALID_DEREFERENCE, "Could not get " +
+							( index.has_value()
+								? "index " + std::to_string( index.value() )
+								: key.has_value()
+									? "index " + key.value()
+									: "range [ " + std::to_string( from.value() ) + " : " + std::to_string( to.value() )
+							) +
+							" of non-indexable: " + value->ToString(), ctx, si, ep
+					);
+				}
+			};
+			const auto& process_indexable = [ this, &ctx, &ep, &index, &key, &from, &to, &check_indexable, &expression ]( const gse::Value* value ) {
+				if ( index.has_value() ) {
+					check_indexable( value, expression->a->m_si, gse::Value::T_ARRAY );
+					return ( (value::Array*)value )->GetRef( index.value() );
+				}
+				if ( key.has_value() ) {
+					check_indexable( value, expression->a->m_si, gse::Value::T_OBJECT );
+					return ( (value::Object*)value )->GetRef( key.value() );
+				}
+				else {
+					check_indexable( value, expression->a->m_si, gse::Value::T_ARRAY );
+					ValidateRange( ctx, expression->b->m_si, ep, (value::Array*)value, from, to );
+					return ( (value::Array*)value )->GetRangeRef( from, to );
+				}
 			};
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
-					const auto* arr = arrv;
-					if ( arr->type != gse::Value::T_ARRAY ) {
-						throw not_an_array( arr->ToString(), expression->a->m_si );
-					}
-					if ( index.has_value() ) {
-						return ( (value::Array*)arr )->GetRef( index.value() );
-					}
-					else {
-						return ( (value::Array*)arr )->GetRangeRef( from, to );
-					}
+					return process_indexable( ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep ) );
 				}
 				case Operand::OT_ARRAY: {
-					const auto arrv = EvaluateOperand( ctx, ep, expression->a );
-					const auto* arr = arrv;
-					ASSERT( arr->type == gse::Value::T_ARRAY, "parent is not array: " + arr->Dump() );
+					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
+					/*const auto arr = EvaluateOperand( ctx, ep, expression->a );
+					check_indexable( arr, expression->a->m_si, gse::Value::T_ARRAY );
 					if ( index.has_value() ) {
 						return ( (value::Array*)arr )->Get( index.value() );
 					}
 					else {
 						ValidateRange( ctx, expression->b->m_si, ep, (value::Array*)arr, from, to );
 						return ( (value::Array*)arr )->GetSubArray( from, to );
+					}*/
+				}
+				case Operand::OT_OBJECT: {
+					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
+					/*const auto obj = EvaluateOperand( ctx, ep, expression->a );
+					check_indexable( obj, expression->a->m_si, gse::Value::T_OBJECT );
+					if ( key.has_value() ) {
+						return ( (value::Object*)obj )->Get( key.value() );
 					}
+					else {
+						throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected object key", ctx, expression->a->m_si, ep );
+					}*/
 				}
 				case Operand::OT_EXPRESSION: {
 					const auto refv = EvaluateExpression( ctx, ep, (Expression*)expression->a );
@@ -745,26 +774,26 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 							}
 						}
 						case gse::Value::T_ARRAY: {
-							if ( index.has_value() ) {
+							return process_indexable( ref );
+							/*if ( index.has_value() ) {
 								return ( (value::Array*)ref )->Get( index.value() );
 							}
 							else {
 								return ( (value::Array*)ref )->GetRangeRef( from, to );
+							}*/
+						}
+						case gse::Value::T_OBJECT: {
+							return process_indexable( ref );
+							/*if ( key.has_value() ) {
+								return ( (value::Object*)ref )->Get( key.value() );
 							}
+							else {
+								throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected object key", ctx, expression->a->m_si, ep );
+							}*/
 						}
 						case gse::Value::T_ARRAYREF: {
 							const auto* r = (ArrayRef*)ref;
-							const auto arrv = r->array->Get( r->index );
-							const auto* arr = arrv;
-							if ( arr->type != gse::Value::T_ARRAY ) {
-								throw not_an_array( arr->ToString(), expression->a->m_si );
-							}
-							if ( index.has_value() ) {
-								return ( (value::Array*)arr )->GetRef( index.value() );
-							}
-							else {
-								return ( (value::Array*)arr )->GetRangeRef( from, to );
-							}
+							return process_indexable( r->array->Get( r->index ) );
 						}
 						case gse::Value::T_ARRAYRANGEREF: {
 							THROW( "TODO: T_ARRAYRANGEREF" );
@@ -773,72 +802,76 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 							THROW( "TODO: T_LOOPCONTROL" );
 						}
 						case gse::Value::T_OBJECTREF: {
-							const auto arrv = Deref( ctx, expression->a->m_si, ep, refv );
-							const auto* arr = arrv;
-							if ( arr->type != gse::Value::T_ARRAY ) {
-								throw not_an_array( arr->ToString(), expression->a->m_si );
-							}
-							if ( index.has_value() ) {
-								return ( (value::Array*)arr )->GetRef( index.value() );
-							}
-							else {
-								return ( (value::Array*)arr )->GetRangeRef( from, to );
-							}
+							return process_indexable( Deref( ctx, expression->a->m_si, ep, refv ) );
 						}
 						case gse::Value::T_VALUEREF: {
 							THROW( "TODO: T_VALUEREF" );
 						}
 						default:
-							throw not_an_array( ref->ToString(), expression->a->m_si );
+							check_indexable( ref, expression->a->m_si, gse::Value::T_ARRAY );
 					}
 				}
+				case Operand::OT_VALUE: {
+					return process_indexable( ( (program::Value*)expression->a )->value );
+				}
 				default:
-					throw not_an_array( expression->a->ToString(), expression->a->m_si );
+					THROW( "unsupported indexable type" );
 			}
 		}
 		case OT_PUSH: {
+			const gse::Value* arr = nullptr;
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
-					const auto* arr = arrv;
-					if ( arr->type != gse::Value::T_ARRAY ) {
-						throw operation_not_supported_not_array( expression->a->ToString() );
-					}
-					gse::Value* value = EvaluateOperand( ctx, ep, expression->b );
-					( (value::Array*)arr )->Append( value );
-					return value;
+					arr = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
+					break;
 				}
-				default:
+				case Operand::OT_EXPRESSION: {
+					arr = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
+					break;
+				}
+				default: {
 					throw operation_not_supported_not_array( expression->a->ToString() );
+				}
 			}
+			if ( arr->type != gse::Value::T_ARRAY ) {
+				throw operation_not_supported_not_array( expression->a->ToString() );
+			}
+			gse::Value* value = EvaluateOperand( ctx, ep, expression->b );
+			( (value::Array*)arr )->Append( value );
+			return value;
 		}
 		case OT_POP: {
+			const gse::Value* arr = nullptr;
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
-					const auto* arr = arrv;
-					if ( arr->type != gse::Value::T_ARRAY ) {
-						throw operation_not_supported_not_array( expression->a->ToString() );
-					}
-					auto& a = ( (value::Array*)arr )->value;
-					gse::Value* value = nullptr;
-					if ( !a.empty() ) {
-						value = a.back();
-						a.pop_back();
-					}
-					return value
-						? value
-						: VALUE( value::Undefined );
+					arr = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
+					break;
 				}
-				default:
+				case Operand::OT_EXPRESSION: {
+					arr = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
+					break;
+				}
+				default: {
 					throw operation_not_supported_not_array( expression->a->ToString() );
+				}
 			}
+			if ( arr->type != gse::Value::T_ARRAY ) {
+				throw operation_not_supported_not_array( expression->a->ToString() );
+			}
+			auto& a = ( (value::Array*)arr )->value;
+			gse::Value* value = nullptr;
+			if ( !a.empty() ) {
+				value = a.back();
+				a.pop_back();
+			}
+			return value
+				? value
+				: VALUE( value::Undefined );
 		}
 		case OT_ERASE: {
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
-					const auto arrv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
-					const auto* arr = arrv;
+					const auto arr = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					if ( arr->type != gse::Value::T_ARRAY ) {
 						throw operation_not_supported_not_array( expression->a->ToString() );
 					}
@@ -870,15 +903,17 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			std::optional< size_t > to = std::nullopt;
 
 			if ( expression->a ) {
-				const auto fromv = EvaluateRange( ctx, ep, expression->a, true );
-				const auto* fromr = fromv;
-				ASSERT( fromr->type == gse::Value::T_INT, "int expected here" );
+				const auto fromr = EvaluateRange( ctx, ep, expression->a, true );
+				if ( fromr->type != gse::Value::T_INT ) {
+					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + fromr->ToString(), ctx, expression->a->m_si, ep );
+				}
 				from = ( (Int*)fromr )->value;
 			}
 			if ( expression->b ) {
-				const auto tov = EvaluateRange( ctx, ep, expression->b, true );
-				const auto* tor = tov;
-				ASSERT( tor->type == gse::Value::T_INT, "int expected here" );
+				const auto tor = EvaluateRange( ctx, ep, expression->b, true );
+				if ( tor->type != gse::Value::T_INT ) {
+					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + tor->ToString(), ctx, expression->a->m_si, ep );
+				}
 				to = ( (Int*)tor )->value;
 			}
 
@@ -976,37 +1011,29 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	ASSERT( operand, "index operand missing" );
-	const auto& get_index = [ &ctx, &ep, &operand ]( gse::Value* const value ) -> size_t {
-		const auto* val = value;
-		if ( val->type != gse::Value::T_INT ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be int: " + val->ToString(), ctx, operand->m_si, ep );
+	const auto& get_index = [ &ctx, &ep, &operand, this, &only_index, &gc_space ]( gse::Value* const value ) -> gse::Value* {
+		switch ( value->type ) {
+			case gse::Value::T_INT:
+			case gse::Value::T_STRING:
+				return value;
+			case gse::Value::T_RANGE: {
+				ASSERT( !only_index, "range not allowed here" );
+				const auto* range = (Range*)value;
+				return VALUE( Range, , range->from, range->to );
+			}
+			default:
+				throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid index - expected int or string, got: " + value->ToString(), ctx, operand->m_si, ep );
 		}
-		if ( ( (Int*)val )->value < 0 ) {
-			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid range - index must be positive: " + val->ToString(), ctx, operand->m_si, ep );
-		}
-		return ( (Int*)val )->value;
 	};
 	switch ( operand->type ) {
 		case Operand::OT_VALUE: {
-			return VALUE( Int, , get_index( ( (program::Value*)operand )->value ) );
+			return get_index( ( (program::Value*)operand )->value );
 		}
 		case Operand::OT_VARIABLE: {
-			return VALUE( Int, , get_index( ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep ) ) );
+			return get_index( ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep ) );
 		}
 		case Operand::OT_EXPRESSION: {
-			const auto result = Deref( ctx, operand->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)operand ) );
-			switch ( result->type ) {
-				case gse::Value::T_INT: {
-					return VALUE( Int, , get_index( result ) );
-				}
-				case gse::Value::T_RANGE: {
-					ASSERT( !only_index, "range not allowed here" );
-					const auto* range = (Range*)result;
-					return VALUE( Range, , range->from, range->to );
-				}
-				default:
-					THROW( "unexpected index expression result type: " + result->ToString() );
-			}
+			return get_index( Deref( ctx, operand->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)operand ) ) );
 		}
 		default: {
 			THROW( "unexpected index type: " + operand->ToString() );
@@ -1053,7 +1080,7 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 				return ref->object->Get( ref->key );
 			}
 			case gse::Value::T_VALUEREF: {
-				THROW( "TODO: T_VALUEREF" );
+				return ( (ValueRef*)value )->target;
 			}
 			default: {
 			}

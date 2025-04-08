@@ -118,25 +118,19 @@ return (m) => {
 		});
 	};
 
-	let menu_stack = [];
-
 	return {
 
+		manager: #include('manager')('sliding', this),
+
 		back: () => {
-			menu_stack :~;
-			if ( !#is_empty(menu_stack)) {
-				this.show(menu_stack:~);
-			}
-			else {
-				m.glsmac.exit();
-			}
+			this.manager.pop(m);
 		},
 
 		show: (data) => {
 
-			remove_active_menublock();
+			this.manager.push('sliding', data);
 
-			menu_stack :+data;
+			remove_active_menublock();
 
 			current_menublock = m.root.group({
 				class: 'menublock-items',
