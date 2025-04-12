@@ -368,7 +368,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	TriggerObject( m_ui, "intro", ARGS_F( &ctx, gc_space, this ) {
+	TriggerObject( this, "intro", ARGS_F( &ctx, gc_space, this ) {
 		{
 			"mainmenu", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
