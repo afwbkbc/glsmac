@@ -25,7 +25,7 @@ InstancedSpriteManager::~InstancedSpriteManager() {
 	m_instanced_sprites.clear();
 
 	for ( const auto& it : m_repainted_textures ) {
-		delete it.second;
+		DELETE( it.second );
 	}
 }
 

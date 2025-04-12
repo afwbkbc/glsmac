@@ -351,7 +351,7 @@ void Game::Iterate() {
 
 					{
 						const auto factions = m_state->GetFM()->GetAll();
-						auto* faction_defines = new FrontendRequest::faction_defines_t();
+						NEWV( faction_defines, FrontendRequest::faction_defines_t );
 						for ( const auto& faction : factions ) {
 							faction_defines->push_back( faction );
 						}
@@ -362,7 +362,7 @@ void Game::Iterate() {
 
 					{
 						const auto& slots = m_state->m_slots->GetSlots();
-						auto* slot_defines = new FrontendRequest::slot_defines_t();
+						NEWV( slot_defines, FrontendRequest::slot_defines_t );
 						for ( const auto& slot : slots ) {
 							if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
 								continue;

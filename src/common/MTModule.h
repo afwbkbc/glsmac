@@ -58,7 +58,9 @@ public:
 		RESPONSE_TYPE response = {};
 		m_mt_states_mutex.lock();
 		auto it = m_mt_states.find( mt_id );
-		ASSERT( it != m_mt_states.end(), "GetResponse() mt_id not found" );
+		if ( it == m_mt_states.end() ) {
+			return response;
+		}
 		if ( it->second.is_executed ) {
 			response = it->second.response;
 			DestroyRequest( it->second.request );
