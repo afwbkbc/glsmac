@@ -6,6 +6,7 @@
 #include <mutex>
 
 #define SDL_MAIN_HANDLED 1
+
 #include <SDL.h>
 
 #include <GL/glew.h>
@@ -18,10 +19,8 @@
 
 namespace graphics {
 namespace opengl {
-
 class Scene;
 class FBO;
-
 namespace shader_program {
 class ShaderProgram;
 }
@@ -85,7 +84,7 @@ CLASS( OpenGL, Graphics )
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
 	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
-	void NoRender( const std::function< void() >& f );
+	void NoRender( const std::function< void() >& f ) override;
 
 protected:
 	struct {

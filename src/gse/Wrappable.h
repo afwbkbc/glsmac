@@ -31,18 +31,23 @@ public:
 	public:
 		typedef const std::unordered_map< T, std::string > t_type_to_string;
 		typedef const std::unordered_map< std::string, T > t_string_to_type;
+
 		wrapmap_t()
 			: m_type_to_string( {} )
 			, m_string_to_type( {} ) {}
+
 		wrapmap_t( const t_type_to_string& type_to_string )
 			: m_type_to_string( type_to_string )
 			, m_string_to_type( util::Struct::FlipMap( type_to_string ) ) {}
+
 		const t_type_to_string& GetVK() const {
 			return m_type_to_string;
 		}
+
 		const t_string_to_type& GetKV() const {
 			return m_string_to_type;
 		}
+
 		const T& GetValue( GSE_CALLABLE, const std::string& str ) const {
 			const auto& it = m_string_to_type.find( str );
 			if ( it == m_string_to_type.end() ) {
@@ -54,17 +59,21 @@ public:
 			}
 			return it->second;
 		}
+
 		const std::string& GetString( const T& value ) const {
 			ASSERT_NOLOG( m_type_to_string.find( value ) != m_type_to_string.end(), "value not in wrapmap" );
 			return m_type_to_string.at( value );
 		}
+
 		const T& GetValueUnsafe( const std::string& value ) const {
 			ASSERT_NOLOG( m_string_to_type.find( value ) != m_string_to_type.end(), "string not in wrapmap" );
 			return m_string_to_type.at( value );
 		}
+
 		Value* const Get( GSE_CALLABLE, const T& value ) const {
 			return VALUE( value::String, , GetString( value ) );
 		}
+
 	private:
 		const t_type_to_string m_type_to_string;
 		const t_string_to_type m_string_to_type;
@@ -90,7 +99,7 @@ protected:
 
 protected:
 	struct callback_t {
-		Value* const callable;
+		Value* callable;
 		context::Context* ctx;
 		si_t si;
 	};

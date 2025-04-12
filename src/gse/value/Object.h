@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <unordered_set>
 
 #include "gse/Value.h"
 
@@ -16,6 +17,7 @@ class Wrappable;
 
 namespace context {
 class Context;
+
 class ChildContext;
 }
 
