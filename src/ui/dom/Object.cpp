@@ -15,6 +15,7 @@
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
 #include "gse/callable/Native.h"
+#include "gse/value/Object.h"
 
 #include "Object.colormap.cpp"
 
@@ -252,7 +253,7 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		const auto& event_type = event.GetTypeStr();
 		if ( HasHandlers( event_type ) ) {
 			gse::value::object_properties_t event_data = {};
-			WrapEvent( gc_space, event, event_data );
+			WrapEvent( GSE_CALL, event, event_data );
 			const auto result = Trigger( GSE_CALL, event_type, ARGS( event_data ), gse::Value::T_BOOL );
 			return ( (gse::value::Bool*)result )->value;
 		}
@@ -412,7 +413,7 @@ void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 	}
 }
 
-void Object::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Object::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_KEY_DOWN: {
 			if ( e.data.key.is_printable ) {
@@ -429,6 +430,17 @@ void Object::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::v
 					VALUE( gse::value::String,, e.GetKeyCodeStr() )
 				}
 			);
+			gse::value::object_properties_t modifier_props = {};
+			if ( e.data.key.modifiers & input::KM_SHIFT ) {
+				modifier_props.insert({"shift", VALUE( gse::value::Bool,, true )});
+			}
+			if ( e.data.key.modifiers & input::KM_CTRL ) {
+				modifier_props.insert({"ctrl", VALUE( gse::value::Bool,, true )});
+			}
+			if ( e.data.key.modifiers & input::KM_ALT ) {
+				modifier_props.insert({"alt", VALUE( gse::value::Bool,, true )});
+			}
+			obj.insert({"modifiers", VALUE( gse::value::Object,, ctx, {}, ep, modifier_props ) } );
 			break;
 		}
 		default: {

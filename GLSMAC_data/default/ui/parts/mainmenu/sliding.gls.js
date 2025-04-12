@@ -58,15 +58,7 @@ return (m) => {
 	let menublock_animation = null;
 
 	let active_entry_index = null;
-	const set_active_entry = (index) => {
-		if (index != active_entry_index) {
-			if (active_entry_index != null) {
-				((current_entries[active_entry_index]).obj).removeclass('menublock-item-active');
-			}
-			active_entry_index = index;
-			((current_entries[active_entry_index]).obj).addclass('menublock-item-active');
-		}
-	};
+
 	const get_active_cb = () => {
 		if (active_entry_index != null) {
 			return (current_entries[active_entry_index]).cb;
@@ -123,7 +115,18 @@ return (m) => {
 		manager: #include('manager')('sliding', this),
 
 		back: () => {
+			remove_active_menublock();
 			this.manager.pop(m);
+		},
+
+		select: (index) => {
+			if (index != active_entry_index) {
+				if (active_entry_index != null) {
+					((current_entries[active_entry_index]).obj).removeclass('menublock-item-active');
+				}
+				active_entry_index = index;
+				((current_entries[active_entry_index]).obj).addclass('menublock-item-active');
+			}
 		},
 
 		show: (data) => {
@@ -143,6 +146,9 @@ return (m) => {
 			});
 
 			current_menublock.on('keydown', (e) => {
+				if (!#is_empty(e.modifiers)) {
+					return false;
+				}
 				// TODO: switch
 				if (e.code == 'ESCAPE') {
 					slideout_and_cb(this.back);
@@ -151,17 +157,18 @@ return (m) => {
 				// TODO: else if
 				if (e.code == 'DOWN') {
 					if (active_entry_index < #sizeof(current_entries) - 1) {
-						set_active_entry(active_entry_index + 1);
+						this.select(active_entry_index + 1);
 					}
 					return true;
 				}
 				if (e.code == 'UP') {
 					if (active_entry_index > 0) {
-						set_active_entry(active_entry_index - 1);
+						this.select(active_entry_index - 1);
 					}
 					return true;
 				}
 				if (e.code == 'ENTER') {
+					this.manager.select(active_entry_index);
 					slideout_and_cb(get_active_cb());
 					return true;
 				}
@@ -183,16 +190,16 @@ return (m) => {
 				};
 				itembody.on('mousedown', (e) => {
 					if (menublock_animation == null) {
-						set_active_entry(current_entry.index);
-						const cb = get_active_cb();
-						slideout_and_cb(cb);
+						this.select(current_entry.index);
+						this.manager.select(active_entry_index);
+						slideout_and_cb(get_active_cb());
 						return true;
 					}
 					return false;
 				});
 				itembody.on('mousemove', (e) => {
 					if (menublock_animation == null) {
-						set_active_entry(current_entry.index);
+						this.select(current_entry.index);
 						return true;
 					}
 					return false;
@@ -202,7 +209,7 @@ return (m) => {
 				index++;
 			}
 			if (#sizeof(data.entries) > 0) {
-				set_active_entry(0);
+				this.select(0);
 			}
 
 			current_menublock.right = -354;

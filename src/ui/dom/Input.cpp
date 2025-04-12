@@ -37,7 +37,6 @@ Input::Input( DOM_ARGS )
 
 	Events(
 		{
-			input::EV_KEY_DOWN,
 			input::EV_CHANGE,
 			input::EV_SELECT,
 		}
@@ -104,7 +103,7 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return Panel::ProcessEventImpl( GSE_CALL, event );
 }
 
-void Input::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Input::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CHANGE:
 		case input::EV_SELECT: {
@@ -118,7 +117,7 @@ void Input::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::va
 			break;
 		}
 		default: {
-			Panel::WrapEvent( gc_space, e, obj );
+			Panel::WrapEvent( GSE_CALL, e, obj );
 		}
 	}
 }

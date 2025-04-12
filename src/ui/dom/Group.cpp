@@ -6,12 +6,6 @@ namespace dom {
 Group::Group( DOM_ARGS_T )
 	: Container( DOM_ARGS_PASS_T, true ) {
 
-	Events(
-		{
-			input::EV_KEY_DOWN,
-		}
-	);
-
 }
 
 }

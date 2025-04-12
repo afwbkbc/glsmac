@@ -23,7 +23,6 @@ Button::Button( DOM_ARGS )
 	Events(
 		{
 			input::EV_CLICK,
-			input::EV_KEY_DOWN,
 		}
 	);
 
@@ -90,7 +89,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	return result;
 }
 
-void Button::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CLICK: {
 			std::string buttonstr = "";
@@ -120,7 +119,7 @@ void Button::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::v
 			break;
 		}
 		default: {
-			Panel::WrapEvent( gc_space, e, obj );
+			Panel::WrapEvent( GSE_CALL, e, obj );
 		}
 	}
 }

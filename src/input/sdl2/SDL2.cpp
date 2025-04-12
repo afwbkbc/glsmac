@@ -130,9 +130,10 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
+					ui_legacy::event::key_modifier_t key_modifiers = GetModifiers( modifiers );
+
 					// legacy ui
-					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
+					NEWV( ui_event, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
 
@@ -141,7 +142,7 @@ void SDL2::Iterate() {
 					e.data.key.key = keycode;
 					e.data.key.code = scancode;
 					e.data.key.is_printable = keycode > 0;
-					e.data.key.modifiers = modifiers;
+					e.data.key.modifiers = key_modifiers;
 				}
 				break;
 			}
@@ -150,10 +151,19 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
-					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
+					ui_legacy::event::key_modifier_t key_modifiers = GetModifiers( modifiers );
+
+					// legacy ui
+					NEWV( ui_event, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
 					g_engine->GetUI()->ProcessEvent( ui_event );
 					DELETE( ui_event );
+
+					// new ui
+					e.SetType( EV_KEY_UP );
+					e.data.key.key = keycode;
+					e.data.key.code = scancode;
+					e.data.key.is_printable = keycode > 0;
+					e.data.key.modifiers = key_modifiers;
 				}
 				break;
 			}

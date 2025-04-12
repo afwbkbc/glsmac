@@ -8,14 +8,24 @@ const manager = {
 	},
 
 	push: (type, data) => {
-		this.data_stack :+ [type, data];
+		this.data_stack :+ {
+			type: type,
+			data: data
+		};
+	},
+
+	select: (index) => {
+		this.data_stack[#sizeof(this.data_stack) - 1].index = index;
 	},
 
 	pop: (m) => {
 		this.data_stack :~;
 		if ( !#is_empty(this.data_stack)) {
-			const type_and_data = this.data_stack:~;
-			this.modules[type_and_data[0]].show(type_and_data[1]);
+			const entry = this.data_stack :~;
+			this.modules[entry.type].show(entry.data);
+			if ( #is_defined( entry.index ) ) {
+				this.modules[entry.type].select(entry.index);
+			}
 		}
 		else {
 			m.glsmac.exit();

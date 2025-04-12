@@ -63,7 +63,7 @@ const bool Area::IsEventRelevant( const input::Event& event ) const {
 	return Drawable::IsEventRelevant( event );
 }
 
-void Area::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& obj ) const {
+void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_MOUSE_MOVE:
 		case input::EV_MOUSE_OVER:
@@ -124,7 +124,7 @@ void Area::WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::val
 			break;
 		}
 		default: {
-			Drawable::WrapEvent( gc_space, e, obj );
+			Drawable::WrapEvent( GSE_CALL, e, obj );
 		}
 	}
 }

@@ -22,6 +22,12 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	: Area( DOM_ARGS_PASS_T )
 	, m_cache( new scene::actor::Cache( "UI::Cache" ) ) {
 
+	Events(
+		{
+			input::EV_KEY_DOWN,
+		}
+	);
+
 	Actor( m_cache );
 
 	GeometryHandler( GH_ON_EFFECTIVE_AREA_UPDATE, [ this ]() {

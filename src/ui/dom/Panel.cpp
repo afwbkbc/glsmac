@@ -66,7 +66,7 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 }
 
 void Panel::UpdateBorderTexture() {
-	m_surface->GetGeometry()->SetPadding( m_border_corners / 2 );
+	m_surface->GetGeometry()->SetPadding( std::ceil( m_border_corners / 2 ) );
 	auto* texture = m_border_surface->GetOwnedTexturePtr();
 	const auto& a = m_geometry->AsRectangle()->m_area;
 	texture->Resize( a.width, a.height );

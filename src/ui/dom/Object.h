@@ -106,7 +106,7 @@ protected:
 	virtual void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value );
 	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key );
 
-	virtual void WrapEvent( gc::Space* const gc_space, const input::Event& e, gse::value::object_properties_t& event_data ) const;
+	virtual void WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& event_data ) const;
 
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );

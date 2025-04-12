@@ -1,6 +1,8 @@
 return (m) => {
 
 	const sliding = #include('sliding')(m);
+	const popup = #include('popup')(m);
+
 	let background = null;
 	let music = null;
 
@@ -51,7 +53,7 @@ return (m) => {
 							});
 						}],
 						['Scenario', () => {
-
+							popup.show({});
 						}],
 						['Load Game', () => {
 

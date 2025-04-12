@@ -10,12 +10,6 @@ namespace dom {
 Root::Root( GSE_CALLABLE, UI* const ui )
 	: Container( GSE_CALL, ui, nullptr, {}, "root", true ) { // the only dom object without parent
 
-	Events(
-		{
-			input::EV_KEY_DOWN,
-		}
-	);
-
 	FACTORY( "window", Window );
 
 	InitAndValidate( GSE_CALL );

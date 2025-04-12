@@ -1,6 +1,8 @@
 return (glsmac) => {
 
-	#include('styles/system')(glsmac.ui);
+	for (style of ['system', 'popup']) {
+		#include('styles/' + style)(glsmac.ui);
+	}
 
 	const m = {
 		utils: #include('utils/utils'),
