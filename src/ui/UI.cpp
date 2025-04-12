@@ -70,7 +70,7 @@ UI::~UI() {
 	g_engine->GetInput()->RemoveHandler( this );
 
 	g_engine->GetGraphics()->RemoveScene( m_scene );
-	DELETE( m_scene );
+	delete m_scene;
 
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 

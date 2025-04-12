@@ -40,7 +40,7 @@ CLASS2( GSEPrompt, common::Task, gc::Object )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 #if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString();
+	const std::string ToString() override;
 #endif
 
 private:

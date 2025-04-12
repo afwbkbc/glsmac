@@ -10,6 +10,12 @@
 #include "util/LogHelper.h"
 #include "graphics/Graphics.h"
 
+#if defined( DEBUG ) || defined( FASTDEBUG )
+
+#include "debug/MemoryWatcher.h"
+
+#endif
+
 namespace gc {
 
 Space::Space( Object* const root_object )
@@ -129,6 +135,9 @@ const bool Space::Collect() {
 						GC_LOG( "Destroying unreachable object: " + util::String::ToHexString( (unsigned long long)object ) /* TODO + "[ " + object->ToString() + " ]"*/ );
 #endif
 						delete object;
+#if defined( DEBUG ) || defined( FASTDEBUG )
+						debug::g_memory_watcher->MaybeDelete( object );
+#endif
 						removed_objects.insert( object );
 					}
 				}

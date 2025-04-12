@@ -18,7 +18,7 @@ const char GSE::PATH_SEPARATOR = '/';
 
 GSE::GSE()
 	: gc::Object( nullptr ) {
-	NEW( m_gc_space, gc::Space, this );
+	m_gc_space = new gc::Space( this );
 	m_bindings.push_back( &m_builtins );
 	m_gc_space->Accumulate(
 		[ this ]() {
@@ -70,7 +70,7 @@ parser::Parser* GSE::CreateParser( const std::string& filename, const std::strin
 	const auto& ext = extensions.at( 1 );
 
 	if ( ext == ".js" ) {
-		NEW( parser, parser::JS, m_gc_space, filename, source, initial_line_num );
+		parser = new parser::JS( m_gc_space, filename, source, initial_line_num );
 	}
 
 	ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
@@ -102,7 +102,7 @@ runner::Runner* GSE::GetRunner() {
 	if ( !m_runner ) {
 		m_gc_space->Accumulate(
 			[ this ]() {
-				NEW( m_runner, runner::Interpreter, m_gc_space );
+				m_runner = new runner::Interpreter( m_gc_space );
 			}
 		);
 	}
@@ -319,9 +319,11 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 }
 
 #if defined ( DEBUG ) || defined( FASTDEBUG )
+
 const std::string GSE::ToString() {
 	return "gse::GSE()";
 }
+
 #endif
 
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {

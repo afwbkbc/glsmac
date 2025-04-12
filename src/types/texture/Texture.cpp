@@ -45,7 +45,7 @@ Texture::~Texture() {
 }
 
 const bool Texture::IsEmpty() const {
-	return m_width == 0 && m_height == 0;
+	return m_width == 0 || m_height == 0;
 }
 
 void Texture::Resize( const size_t width, const size_t height ) {

@@ -126,15 +126,15 @@ MemoryWatcher::~MemoryWatcher() {
 
 	bool any_leaks = false;
 #define CHECK_LEAKS( _where ) \
-	if ( !_where.empty() ) { \
-		Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):", true ); \
-		for (auto& o : _where) { \
-			std::stringstream ptrstr; \
-			ptrstr << o.first; \
-			Log( "    (" + ptrstr.str() + ") @" + o.second.source, true ); \
-		} \
-		any_leaks = true; \
-	}
+    if ( !_where.empty() ) { \
+        Log( "WARNING: " + std::to_string( _where.size() ) + " objects were never freed (possible memory leaks?):", true ); \
+        for (auto& o : _where) { \
+            std::stringstream ptrstr; \
+            ptrstr << o.first; \
+            Log( "    (" + ptrstr.str() + ") @" + o.second.source, true ); \
+        } \
+        any_leaks = true; \
+    }
 	if ( m_memory_debug ) {
 		CHECK_LEAKS( m_allocated_objects )
 		CHECK_LEAKS( m_allocated_memory )
@@ -176,6 +176,23 @@ void MemoryWatcher::New( const void* object, const size_t size, const std::strin
 
 	// VERY spammy
 	//Log( "Allocated " + std::to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
+}
+
+void MemoryWatcher::MaybeDelete( const void* object ) {
+	if ( !m_memory_debug ) {
+		return;
+	}
+
+	std::lock_guard guard( m_mutex );
+
+	auto it = m_allocated_objects.find( object );
+	if ( it != m_allocated_objects.end() ) {
+		auto& obj = it->second;
+		DEBUG_STAT_INC( objects_destroyed );
+		DEBUG_STAT_DEC( objects_active );
+		DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
+		m_allocated_objects.erase( it );
+	}
 }
 
 void MemoryWatcher::Delete( const void* object, const std::string& file, const size_t line ) {

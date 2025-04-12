@@ -63,7 +63,7 @@ GLSMAC::GLSMAC()
 			gse::ExecutionPointer ep;
 
 			// global objects
-			NEW( m_ui, ui::UI, m_gc_space, m_ctx, { "" }, ep );
+			m_ui = new ui::UI( m_gc_space, m_ctx, { "" }, ep );
 
 			// run main(s)
 			m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );

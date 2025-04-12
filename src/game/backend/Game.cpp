@@ -192,8 +192,10 @@ void Game::Stop() {
 
 	ResetGame();
 
-	DELETE( m_map_editor );
-	m_map_editor = nullptr;
+	if ( m_map_editor ) {
+		DELETE( m_map_editor );
+		m_map_editor = nullptr;
+	}
 
 	m_tm = nullptr;
 	m_rm = nullptr;
