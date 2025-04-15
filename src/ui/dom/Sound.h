@@ -19,6 +19,10 @@ class Sound : public Object {
 public:
 	Sound( DOM_ARGS );
 
+	void Play();
+	void Pause();
+	void Stop();
+
 protected:
 	virtual ~Sound();
 
@@ -40,9 +44,6 @@ private:
 	void SetRepeatable( const bool repeatable );
 	void SetStartDelay( const size_t start_delay );
 	void SetVolume( const float volume );
-	void Play();
-	void Pause();
-	void Stop();
 
 };
 

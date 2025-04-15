@@ -241,8 +241,8 @@ const std::string Object::ToString() {
 
 
 const bool Object::IsEventRelevant( const input::Event& event ) const {
-	ASSERT_NOLOG( !m_is_destroyed, "object is destroyed" );
 	return
+		!m_is_destroyed &&
 		m_is_visible &&
 		m_supported_events.find( event.type ) != m_supported_events.end()
 	;

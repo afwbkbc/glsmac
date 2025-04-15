@@ -6,6 +6,7 @@ namespace ui {
 namespace dom {
 
 class Text;
+class Sound;
 
 class Button : public Panel {
 public:
@@ -18,6 +19,8 @@ protected:
 
 private:
 	Text* m_label;
+	Sound* m_sound;
+	
 	input::mouse_button_t m_last_button = input::MB_NONE;
 
 	bool m_is_ok = false;

@@ -92,9 +92,11 @@ return (m) => {
 
 			current_menublock = m.root.panel({
 				class: 'popup',
-				width: 400,
-				height: 300,
+				width: data.width,
+				height: data.height,
 			});
+
+			let body_class = 'popup-body';
 
 			if (#is_defined(data.title)) {
 				const header = current_menublock.panel({
@@ -104,14 +106,33 @@ return (m) => {
 					class: 'popup-header-text',
 					text: data.title,
 				});
+			} else {
+				body_class += ' popup-body-noheader';
+			}
+
+			if (!#is_defined(data.buttons)) {
+				body_class += ' popup-body-nofooter';
 			}
 
 			const body = current_menublock.panel({
-				class: 'popup-body',
+				class: body_class,
 			});
 
+			if (#is_defined(data.generator)) {
+				data.generator(body);
+			}
+
+			if (#is_defined(data.buttons)) {
+				const footer = current_menublock.panel({
+					class: 'popup-footer',
+				});
+				for (button of data.buttons) {
+					const btn = footer.button(button.style + {class: 'popup-button'});
+					btn.on('click', button.onclick);
+				}
+			}
+
 			current_menublock.on('keydown', (e) => {
-				#print(e.modifiers);
 				if (!#is_empty(e.modifiers)) {
 					return false;
 				}
@@ -124,6 +145,36 @@ return (m) => {
 
 			return {};
 
+		},
+
+		error: (text) => {
+			const that = this;
+			this.show({
+				title: 'ERROR',
+				width: 400,
+				height: 120,
+				generator: (body) => {
+					body.text({
+						class: 'popup-text',
+						align: 'center',
+						text: text,
+					});
+				},
+				buttons: [
+					{
+						style: {
+							text: 'OK',
+							align: 'center',
+							is_ok: true,
+							is_cancel: true,
+						},
+						onclick: (e) => {
+							that.back();
+							return true;
+						},
+					},
+				],
+			})
 		},
 
 		hide: () => {

@@ -1,6 +1,7 @@
 #include "Button.h"
 
 #include "Text.h"
+#include "Sound.h"
 #include "ui/geometry/Geometry.h"
 #include "input/Event.h"
 #include "gse/value/Bool.h"
@@ -14,11 +15,15 @@ Button::Button( DOM_ARGS )
 	m_label = new Text( GSE_CALL, ui, this, {} );
 	m_label->GetGeometry()->SetAlign( geometry::Geometry::ALIGN_CENTER );
 	Embed( m_label );
-
 	ForwardProperty( GSE_CALL, "text", m_label );
 	ForwardProperty( GSE_CALL, "transform", m_label );
 	ForwardProperty( GSE_CALL, "color", m_label );
 	ForwardProperty( GSE_CALL, "font", m_label );
+
+	m_sound = new Sound( GSE_CALL, ui, this, {} );
+	Embed( m_sound );
+	ForwardProperty( GSE_CALL, "sound", m_sound );
+	ForwardProperty( GSE_CALL, "volume", m_sound );
 
 	Events(
 		{
@@ -60,6 +65,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 			RemoveModifier( GSE_CALL, CM_ACTIVE );
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
 				// actual click happened
+				m_sound->Play();
 				input::Event e;
 				e.SetType( input::EV_CLICK );
 				e.data.mouse = event.data.mouse;
@@ -71,8 +77,8 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		}
 		case input::EV_KEY_DOWN: {
 			if (
-				( m_is_ok && event.data.key.code == input::K_ENTER ) ||
-					( m_is_cancel && event.data.key.code == input::K_ESCAPE )
+				( m_is_ok && !event.data.key.modifiers && event.data.key.code == input::K_ENTER ) ||
+					( m_is_cancel && !event.data.key.modifiers && event.data.key.code == input::K_ESCAPE )
 				) {
 				input::Event e;
 				e.SetType( input::EV_CLICK );

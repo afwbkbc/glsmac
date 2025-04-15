@@ -35,6 +35,10 @@ return (m) => {
 		let steps = null;
 		steps = {
 
+			notimpl: () => {
+				popup.error('This feature is not implemented yet.');
+			},
+
 			main: () => {
 				m.glsmac.deinit();
 				sliding.show({
@@ -53,16 +57,16 @@ return (m) => {
 							});
 						}],
 						['Scenario', () => {
-							popup.show({});
+							steps.notimpl();
 						}],
 						['Load Game', () => {
-
+							steps.notimpl();
 						}],
 						['Multiplayer', () => {
-
+							steps.notimpl();
 						}],
 						['View Credits', () => {
-
+							steps.notimpl();
 						}],
 						['Exit Game', () => {
 							m.glsmac.exit();
@@ -84,13 +88,13 @@ return (m) => {
 							steps.select_mapsize();
 						}],
 						['The Map of Planet', () => {
-
+							steps.notimpl();
 						}],
 						['Huge Map of Planet', () => {
-
+							steps.notimpl();
 						}],
 						['Load Map File', () => {
-
+							steps.notimpl();
 						}],
 					]
 				});
@@ -242,9 +246,8 @@ return (m) => {
 							m.glsmac.start_game();
 						}],
 						['Customize Rules', () => {
-							// TODO: 'not supported'
 							// TODO: custom rules
-							sliding.back();
+							steps.notimpl();
 						}],
 					]
 				});
