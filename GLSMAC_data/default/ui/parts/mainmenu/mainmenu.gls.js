@@ -44,17 +44,15 @@ return (m) => {
 				sliding.show({
 					entries: [
 						['Start Game', () => {
-							m.glsmac.init_single_player(() => {
-								e.settings.local.game_mode = 'single';
-								steps.start_game();
-							});
+							m.glsmac.init();
+							e.settings.local.game_mode = 'single';
+							steps.start_game();
 						}],
 						['Quick Start', () => {
-							m.glsmac.init_single_player(() => {
-								e.settings.local.game_mode = 'single';
-								randomize_map();
-								m.glsmac.start_game();
-							});
+							m.glsmac.init();
+							e.settings.local.game_mode = 'single';
+							randomize_map();
+							m.glsmac.start_game();
 						}],
 						['Scenario', () => {
 							steps.notimpl();

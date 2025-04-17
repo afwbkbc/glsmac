@@ -95,7 +95,7 @@ private:
 	bool m_is_game_running = false;
 
 	void DeinitGameState( GSE_CALLABLE );
-	void InitGameState( GSE_CALLABLE, const f_t on_complete );
+	void InitGameState( GSE_CALLABLE );
 	void RandomizeSettings( GSE_CALLABLE );
 
 	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );

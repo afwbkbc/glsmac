@@ -179,23 +179,17 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} )
 		},
 		{
-			"init_single_player",
+			"init",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_GET_CALLABLE( on_complete, 0 );
-				Persist( on_complete );
-				InitGameState( GSE_CALL, [ this, on_complete, gc_space, ctx, si, ep ] () {
-					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
-					auto ep2 = ep;
-					on_complete->Run( gc_space, ctx, si, ep2, {} );
-					Unpersist( on_complete );
-				} );
+				N_EXPECT_ARGS( 0 );
+				InitGameState( GSE_CALL );
 				return VALUE( gse::value::Undefined );
 			} ),
 		},
 		{
 			"start_game",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -334,27 +328,26 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	}
 
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		InitGameState( GSE_CALL, [ this, c, ctx, si, ep ] () {
-			m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
-			m_state->m_settings.global.Initialize();
-			const auto& rules = m_state->m_settings.global.rules;
-			game::backend::faction::Faction* faction = nullptr;
-			if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-				const auto* fm = m_state->GetFM();
-				ASSERT_NOLOG( fm, "fm is null" );
-				faction = fm->Get( c->GetQuickstartFaction() );
-				if ( !faction ) {
-					std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
-					for ( const auto& f : fm->GetAll() ) {
-						errmsg += " " + f->m_id;
-					}
-					THROW( errmsg );
+		InitGameState( GSE_CALL );
+		m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+		m_state->m_settings.global.Initialize();
+		const auto& rules = m_state->m_settings.global.rules;
+		game::backend::faction::Faction* faction = nullptr;
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
+			const auto* fm = m_state->GetFM();
+			ASSERT_NOLOG( fm, "fm is null" );
+			faction = fm->Get( c->GetQuickstartFaction() );
+			if ( !faction ) {
+				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
+				for ( const auto& f : fm->GetAll() ) {
+					errmsg += " " + f->m_id;
 				}
+				THROW( errmsg );
 			}
-			AddSinglePlayerSlot( faction );
-			auto ep2 = ep;
-			StartGame( m_gc_space, ctx, si, ep2 );
-		} );
+		}
+		AddSinglePlayerSlot( faction );
+		auto ep2 = ep;
+		StartGame( m_gc_space, ctx, si, ep2 );
 	}
 	else if (
 		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
@@ -414,24 +407,20 @@ void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::InitGameState( GSE_CALLABLE, const f_t on_complete  ) {
+void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
-	AsyncLoad( "Initializing game state", [ this ] {
-		m_gc_space->Accumulate( [ this ]() {
-			m_state->Reset();
-			m_state->SetGame( g_engine->GetGame() );
-			m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-				TriggerObject( this, "configure_state", ARGS_F( ARGS_GSE_CALLABLE, this ) {
-					{
-						"fm",
-						m_state->GetFM()->Wrap( GSE_CALL, true ),
-					}
-				}; } );
-			});
-		});
-	}, on_complete );
+	m_state->Reset();
+	m_state->SetGame( g_engine->GetGame() );
+	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+		TriggerObject( this, "configure_state", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+			{
+				"fm",
+				m_state->GetFM()->Wrap( GSE_CALL, true ),
+			}
+		}; } );
+	});
 }
 
 void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
