@@ -248,16 +248,16 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"newui", "Use new (experimental/unfinished) UI, development purposes only", AH( this ) {
-			m_launch_flags |= LF_NEWUI;
+		"legacy-ui", "Use legacy UI, development purposes only (broken, will be removed soon)", AH( this ) {
+			m_launch_flags |= LF_LEGACY_UI;
 		}
 	);
 	m_manager->AddRule(
-		"newui-mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
-			if ( !HasLaunchFlag( LF_NEWUI ) ) {
-				Error( "--newui-mainscript requires --newui argument!" );
+		"mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
+			if ( HasLaunchFlag( LF_LEGACY_UI ) ) {
+				Error( "--mainscript is not supported for legacy UI!" );
 			}
-			m_newui_mainscript = value;
+			m_mainscript = value;
 		}
 	);
 
@@ -445,8 +445,8 @@ const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
 }
 
-const std::string& Config::GetNewUIMainScript() const {
-	return m_newui_mainscript;
+const std::string& Config::GetMainScript() const {
+	return m_mainscript;
 }
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

@@ -104,7 +104,7 @@ int main( const int argc, const char* argv[] ) {
 	config.Init( argc, argv );
 
 	// this changes the whole flow
-	const auto newui = config.HasLaunchFlag( config::Config::LF_NEWUI );
+	const auto legacy_ui = config.HasLaunchFlag( config::Config::LF_LEGACY_UI );
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
@@ -158,7 +158,7 @@ int main( const int argc, const char* argv[] ) {
 	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		loggers.push_back( new logger::Stdout() );
 	}
-	if ( !newui ) {
+	if ( legacy_ui ) {
 		loggers.push_back( new logger::Console() );
 	}
 #endif
@@ -254,7 +254,7 @@ int main( const int argc, const char* argv[] ) {
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
 
-		if ( !newui ) {
+		if ( legacy_ui ) {
 #ifdef DEBUG
 			NEWV( debug_overlay, debug::DebugOverlay );
 			scheduler.AddTask( debug_overlay );
@@ -286,12 +286,12 @@ int main( const int argc, const char* argv[] ) {
 			&game
 		);
 
-		if ( !newui ) {
+		if ( legacy_ui ) {
 			NEWV( console_task, task::console::Console );
 			scheduler.AddTask( console_task );
 		}
 
-		if ( newui ) {
+		if ( !legacy_ui ) {
 			NEW( task, task::main::Main );
 		}
 		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {

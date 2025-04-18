@@ -87,7 +87,7 @@ Engine::Engine(
 	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
 #endif
 	{
-		if ( !m_config->HasLaunchFlag( config::Config::LF_NEWUI ) ) {
+		if ( m_config->HasLaunchFlag( config::Config::LF_LEGACY_UI ) ) {
 			// with new ui this will happen in script
 			m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
 		}

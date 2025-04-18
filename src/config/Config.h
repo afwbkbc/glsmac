@@ -40,7 +40,7 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
-		LF_NEWUI = 1 << 16,
+		LF_LEGACY_UI = 1 << 16,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -91,7 +91,7 @@ CLASS( Config, common::Module )
 
 	const std::vector< std::string >& GetModPaths() const;
 
-	const std::string& GetNewUIMainScript() const;
+	const std::string& GetMainScript() const;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
@@ -135,7 +135,7 @@ private:
 
 	std::vector< std::string > m_mod_paths = {};
 
-	std::string m_newui_mainscript = "main";
+	std::string m_mainscript = "main";
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 

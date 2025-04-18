@@ -53,7 +53,7 @@ GLSMAC::GLSMAC()
 			{
 				c->GetDataPath(),
 				"default", // only 'default' mod for now
-				c->GetNewUIMainScript() // script name (extension is appended automatically)
+				c->GetMainScript() // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;
