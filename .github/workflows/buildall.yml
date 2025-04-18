@@ -138,10 +138,6 @@ jobs:
       - name: install_dependencies
         run: |
           choco install ninja
-          choco install cmake.portable
-          Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-          refreshenv
-          Copy-Item -Path "C:\ProgramData\Chocolatey\bin\cmake.exe" -Destination "C:\Program Files\CMake\bin\cmake.exe"
           cmake --version
           (Get-Command cmake).Path
           where.exe cmake
