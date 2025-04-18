@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-class AttackUnit : public Event {
+class AttackUnit : public LegacyEvent {
 public:
 	AttackUnit( const size_t initiator_slot, const size_t attacker_unit_id, const size_t defender_unit_id );
 
@@ -16,7 +16,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const AttackUnit* event );
 	static AttackUnit* Unserialize( GSE_CALLABLE, types::Buffer& buf, const size_t initiator_slot );

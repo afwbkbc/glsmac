@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
@@ -11,7 +11,7 @@ class MoraleSet;
 
 namespace event {
 
-class DefineMorales : public Event {
+class DefineMorales : public LegacyEvent {
 public:
 	DefineMorales( const size_t initiator_slot, unit::MoraleSet* moraleset );
 
@@ -20,7 +20,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const DefineMorales* event );
 	static DefineMorales* Unserialize( types::Buffer& buf, const size_t initiator_slot );

@@ -12,7 +12,7 @@ namespace backend {
 namespace event {
 
 MoveUnit::MoveUnit( const size_t initiator_slot, const size_t unit_id, const backend::map::tile::direction_t direction )
-	: Event( initiator_slot, ET_UNIT_MOVE )
+	: LegacyEvent( initiator_slot, ET_UNIT_MOVE )
 	, m_unit_id( unit_id )
 	, m_direction( direction ) {}
 

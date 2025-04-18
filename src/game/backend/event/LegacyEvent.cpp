@@ -1,4 +1,4 @@
-#include "Event.h"
+#include "LegacyEvent.h"
 
 #include "DefineResource.h"
 #include "DefineAnimation.h"
@@ -25,13 +25,13 @@ namespace game {
 namespace backend {
 namespace event {
 
-Event::Event( const size_t initiator_slot, const event_type_t type )
+LegacyEvent::LegacyEvent( const size_t initiator_slot, const event_type_t type )
 	: m_initiator_slot( initiator_slot )
 	, m_type( type ) {
 	//
 }
 
-const types::Buffer Event::Serialize( const Event* event ) {
+const types::Buffer LegacyEvent::Serialize( const LegacyEvent* event ) {
 	types::Buffer buf;
 	buf.WriteInt( event->m_initiator_slot );
 	buf.WriteInt( event->m_type );
@@ -68,10 +68,10 @@ const types::Buffer Event::Serialize( const Event* event ) {
 	return buf;
 }
 
-Event* Event::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
+LegacyEvent* LegacyEvent::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	const auto initiator_slot = buf.ReadInt();
 	const auto type = buf.ReadInt();
-	Event* result = nullptr;
+	LegacyEvent* result = nullptr;
 #define UNSERIALIZE( _type, _class, ... ) \
     case _type: { \
         result = _class::Unserialize( __VA_ARGS__ buf, initiator_slot ); \
@@ -105,25 +105,25 @@ Event* Event::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	return result;
 }
 
-const types::Buffer Event::SerializeMultiple( const std::vector< Event* >& events ) {
+const types::Buffer LegacyEvent::SerializeMultiple( const std::vector< LegacyEvent* >& events ) {
 	types::Buffer buf;
 	buf.WriteInt( events.size() );
 	for ( const auto& event : events ) {
-		buf.WriteString( backend::event::Event::Serialize( event ).ToString() );
+		buf.WriteString( backend::event::LegacyEvent::Serialize( event ).ToString() );
 	}
 	const auto serialized_events = buf.ToString();
 	return buf;
 }
 
-void Event::UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< Event* >& events_out ) {
+void LegacyEvent::UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< LegacyEvent* >& events_out ) {
 	const auto count = buf.ReadInt();
 	for ( auto i = 0 ; i < count ; i++ ) {
 		auto event_buf = types::Buffer( buf.ReadString() );
-		events_out.push_back( backend::event::Event::Unserialize( GSE_CALL, event_buf ) );
+		events_out.push_back( backend::event::LegacyEvent::Unserialize( GSE_CALL, event_buf ) );
 	}
 }
 
-const bool Event::IsBroadcastable( const event_type_t type ) {
+const bool LegacyEvent::IsBroadcastable( const event_type_t type ) {
 	switch ( type ) {
 		case ET_REQUEST_TILE_LOCKS:
 		case ET_REQUEST_TILE_UNLOCKS:
@@ -133,24 +133,24 @@ const bool Event::IsBroadcastable( const event_type_t type ) {
 	}
 }
 
-void Event::SetDestinationSlot( const uint8_t destination_slot ) {
+void LegacyEvent::SetDestinationSlot( const uint8_t destination_slot ) {
 	m_is_public = false;
 	m_destination_slot = destination_slot;
 }
 
-const bool Event::IsProcessableBy( const uint8_t destination_slot ) const {
+const bool LegacyEvent::IsProcessableBy( const uint8_t destination_slot ) const {
 	return m_is_public || m_destination_slot == destination_slot;
 };
 
-const bool Event::IsSendableTo( const uint8_t destination_slot ) const {
+const bool LegacyEvent::IsSendableTo( const uint8_t destination_slot ) const {
 	return IsBroadcastable( m_type ) && IsProcessableBy( destination_slot );
 }
 
-const std::string* Event::Ok() const {
+const std::string* LegacyEvent::Ok() const {
 	return nullptr;
 }
 
-const std::string* Event::Error( const std::string& text ) const {
+const std::string* LegacyEvent::Error( const std::string& text ) const {
 	return new std::string( text );
 }
 

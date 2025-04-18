@@ -70,7 +70,7 @@ class AnimationManager;
 }
 
 namespace event {
-class Event;
+class LegacyEvent;
 }
 
 class State;
@@ -96,6 +96,8 @@ class MapEditor;
 namespace slot {
 class Slot;
 }
+
+class Event;
 
 enum op_t {
 	OP_NONE,
@@ -272,7 +274,7 @@ typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
 class InvalidEvent : public types::Exception {
 public:
-	InvalidEvent( const std::string& reason, const event::Event* event );
+	InvalidEvent( const std::string& reason, const event::LegacyEvent* event );
 };
 
 CLASS2( Game, MTModule, gse::GCWrappable )
@@ -307,7 +309,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
 
 	// send event
-	common::mt_id_t MT_AddEvent( const event::Event* event );
+	common::mt_id_t MT_AddEvent( const event::LegacyEvent* event );
 
 #ifdef DEBUG
 
@@ -352,7 +354,7 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( const gse::Exception& e );
-	gse::Value* const AddEvent( GSE_CALLABLE, event::Event* event );
+	gse::Value* const AddEvent( GSE_CALLABLE, event::LegacyEvent* event );
 	const size_t GetTurnId() const;
 	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
@@ -378,8 +380,8 @@ public:
 
 private:
 
-	void ValidateEvent( GSE_CALLABLE, event::Event* event );
-	gse::Value* const ProcessEvent( GSE_CALLABLE, event::Event* event );
+	void ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event );
+	gse::Value* const ProcessEvent( GSE_CALLABLE, event::LegacyEvent* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
@@ -424,7 +426,7 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
 
-	std::vector< backend::event::Event* > m_unprocessed_events = {};
+	std::vector< backend::event::LegacyEvent* > m_unprocessed_events = {};
 
 	turn::Turn m_current_turn = {};
 
@@ -436,6 +438,8 @@ private:
 		Interface( gc::Space* const gc_space );
 	};
 	Interface* m_interface = nullptr;
+
+	std::unordered_map< std::string, Event* > m_event_handlers = {};
 
 private:
 	friend class map::tile::TileManager;

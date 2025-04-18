@@ -35,7 +35,7 @@ CLASS( Server, Connection )
 	void SendPlayersList();
 
 protected:
-	void ProcessEvent( const network::Event& event ) override;
+	void ProcessEvent( const network::LegacyEvent& event ) override;
 	void SendGameEvents( const game_events_t& game_events ) override;
 
 private:

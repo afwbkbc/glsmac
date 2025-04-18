@@ -39,7 +39,7 @@ enum result_t {
 	R_CANCELED,
 };
 
-typedef std::vector< Event > events_t;
+typedef std::vector< LegacyEvent > events_t;
 
 struct MT_Request {
 	op_t op;
@@ -48,7 +48,7 @@ struct MT_Request {
 		std::string remote_address;
 	} connect;
 	cid_t cid;
-	Event event;
+	LegacyEvent event;
 };
 
 struct MT_Response {

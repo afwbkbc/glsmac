@@ -11,7 +11,7 @@ namespace backend {
 namespace event {
 
 SkipUnitTurn::SkipUnitTurn( const size_t initiator_slot, const size_t unit_id )
-	: Event( initiator_slot, ET_UNIT_SKIP_TURN )
+	: LegacyEvent( initiator_slot, ET_UNIT_SKIP_TURN )
 	, m_unit_id( unit_id ) {
 	//
 }

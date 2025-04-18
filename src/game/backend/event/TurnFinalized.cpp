@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 TurnFinalized::TurnFinalized( const size_t initiator_slot, const util::crc32::crc_t checksum )
-	: Event( initiator_slot, ET_TURN_FINALIZED )
+	: LegacyEvent( initiator_slot, ET_TURN_FINALIZED )
 	, m_checksum( checksum ) {
 	//
 }

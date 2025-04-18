@@ -9,7 +9,7 @@ namespace backend {
 namespace event {
 
 UncompleteTurn::UncompleteTurn( const size_t initiator_slot, const size_t turn_id )
-	: Event( initiator_slot, ET_UNCOMPLETE_TURN )
+	: LegacyEvent( initiator_slot, ET_UNCOMPLETE_TURN )
 	, m_turn_id( turn_id ) {
 	//
 }

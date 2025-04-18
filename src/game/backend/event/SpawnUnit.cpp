@@ -21,7 +21,7 @@ SpawnUnit::SpawnUnit(
 	const unit::morale_t morale,
 	const unit::health_t health
 )
-	: Event( initiator_slot, ET_UNIT_SPAWN )
+	: LegacyEvent( initiator_slot, ET_UNIT_SPAWN )
 	, m_unit_def( unit_def )
 	, m_owner_slot( owner_slot )
 	, m_pos_x( pos_x )

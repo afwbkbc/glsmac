@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "game/backend/event/Event.h"
+#include "game/backend/event/LegacyEvent.h"
 #include "util/crc32/CRC32.h"
 
 namespace game {
@@ -11,7 +11,7 @@ namespace turn {
 
 class Turn {
 public:
-	typedef std::vector< event::Event* > events_t;
+	typedef std::vector< event::LegacyEvent* > events_t;
 
 	Turn();
 	~Turn();
@@ -22,7 +22,7 @@ public:
 	void AdvanceTurn( const size_t turn_id );
 	const util::crc32::crc_t FinalizeAndChecksum();
 
-	void AddEvent( event::Event* event );
+	void AddEvent( event::LegacyEvent* event );
 	const events_t* const GetEvents() const;
 
 	void Reset();

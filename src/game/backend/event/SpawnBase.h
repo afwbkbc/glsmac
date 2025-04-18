@@ -2,13 +2,13 @@
 
 #include <string>
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-class SpawnBase : public Event {
+class SpawnBase : public LegacyEvent {
 public:
 	SpawnBase(
 		const size_t initiator_slot,
@@ -23,7 +23,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const SpawnBase* event );
 	static SpawnBase* Unserialize( types::Buffer& buf, const size_t initiator_slot );

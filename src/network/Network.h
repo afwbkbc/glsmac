@@ -19,7 +19,7 @@ CLASS( Network, MTModule )
 	common::mt_id_t MT_DisconnectClient( const cid_t cid );
 
 	common::mt_id_t MT_GetEvents();
-	common::mt_id_t MT_SendEvent( const Event& event );
+	common::mt_id_t MT_SendEvent( const LegacyEvent& event );
 
 	common::mt_id_t MT_SendPacket( const types::Packet* packet, const cid_t cid = 0 );
 
@@ -40,7 +40,7 @@ protected:
 	struct {
 		int tmpint;
 		int tmpint2;
-		Event event;
+		LegacyEvent event;
 		char* ptr;
 		time_t now;
 		time_t time;
@@ -123,7 +123,7 @@ protected:
 
 	common::mt_id_t MT_Success();
 
-	void AddEvent( const Event& event );
+	void AddEvent( const LegacyEvent& event );
 	events_t GetEvents();
 	void InvalidateEventsForDisconnectedClient( const cid_t cid );
 

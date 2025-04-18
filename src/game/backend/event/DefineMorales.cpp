@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 DefineMorales::DefineMorales( const size_t initiator_slot, unit::MoraleSet* moraleset )
-	: Event( initiator_slot, ET_UNIT_DEFINE_MORALES )
+	: LegacyEvent( initiator_slot, ET_UNIT_DEFINE_MORALES )
 	, m_moraleset( moraleset ) {
 	//
 }

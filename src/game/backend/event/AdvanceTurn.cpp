@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 AdvanceTurn::AdvanceTurn( const size_t initiator_slot, const size_t turn_id )
-	: Event( initiator_slot, ET_ADVANCE_TURN )
+	: LegacyEvent( initiator_slot, ET_ADVANCE_TURN )
 	, m_turn_id( turn_id ) {
 	//
 }

@@ -133,7 +133,7 @@ MT_Response SimpleTCP::ListenStart() {
 	}
 
 	m_tmp.event.Clear();
-	m_tmp.event.type = Event::ET_LISTEN;
+	m_tmp.event.type = LegacyEvent::ET_LISTEN;
 	m_tmp.event.cid = 0; // server always has cid 0
 	AddEvent( m_tmp.event );
 
@@ -297,7 +297,7 @@ void SimpleTCP::ProcessEvents() {
 	auto events = GetEvents();
 	for ( auto& event : events ) {
 		switch ( event.type ) {
-			case Event::ET_PACKET: {
+			case LegacyEvent::ET_PACKET: {
 				Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
 				if ( event.cid ) { // presence of cid means we are server
 					if ( GetCurrentConnectionMode() != CM_SERVER ) {
@@ -328,7 +328,7 @@ void SimpleTCP::ProcessEvents() {
 				}
 				break;
 			}
-			case Event::ET_DISCONNECT: {
+			case LegacyEvent::ET_DISCONNECT: {
 				Log( "Disconnect event" );
 				switch ( GetCurrentConnectionMode() ) {
 					case CM_NONE: {
@@ -351,7 +351,7 @@ void SimpleTCP::ProcessEvents() {
 				}
 				break;
 			}
-			case Event::ET_CLIENT_DISCONNECT: {
+			case LegacyEvent::ET_CLIENT_DISCONNECT: {
 				Log( "Disconnect client event ( cid = " + std::to_string( event.cid ) + " )" );
 				auto response = DisconnectClient( event.cid );
 				ASSERT( response.result == R_SUCCESS, "failed to disconnect client" );
@@ -407,7 +407,7 @@ void SimpleTCP::Iterate() {
 				Log( "Accepted connection from " + data.remote_address + " (cid " + std::to_string( data.cid ) + ")" );
 
 				m_tmp.event.Clear();
-				m_tmp.event.type = Event::ET_CLIENT_CONNECT;
+				m_tmp.event.type = LegacyEvent::ET_CLIENT_CONNECT;
 				m_tmp.event.data.remote_address = data.remote_address;
 				m_tmp.event.cid = data.cid;
 
@@ -554,12 +554,12 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 				}
 				else {
 					//Log( "Sending event" );
-					m_tmp.event.type = Event::ET_PACKET;
+					m_tmp.event.type = LegacyEvent::ET_PACKET;
 					AddEvent( m_tmp.event );
 				}
 			}
 			catch ( std::runtime_error& err ) {
-				m_tmp.event.type = Event::ET_ERROR;
+				m_tmp.event.type = LegacyEvent::ET_ERROR;
 				m_tmp.event.data.packet_data = err.what();
 				AddEvent( m_tmp.event );
 			}
@@ -682,11 +682,11 @@ void SimpleTCP::CloseSocket( int fd, cid_t cid, bool skip_event ) {
 	if ( !skip_event ) {
 		m_tmp.event.Clear();
 		if ( cid ) {
-			m_tmp.event.type = Event::ET_CLIENT_DISCONNECT;
+			m_tmp.event.type = LegacyEvent::ET_CLIENT_DISCONNECT;
 			m_tmp.event.cid = cid;
 		}
 		else {
-			m_tmp.event.type = Event::ET_DISCONNECT;
+			m_tmp.event.type = LegacyEvent::ET_DISCONNECT;
 		}
 		AddEvent( m_tmp.event );
 	}

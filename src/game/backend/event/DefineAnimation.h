@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
@@ -11,7 +11,7 @@ class Def;
 
 namespace event {
 
-class DefineAnimation : public Event {
+class DefineAnimation : public LegacyEvent {
 public:
 	DefineAnimation( const size_t initiator_slot, animation::Def* def );
 
@@ -20,7 +20,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const DefineAnimation* event );
 	static DefineAnimation* Unserialize( types::Buffer& buf, const size_t initiator_slot );

@@ -6,7 +6,7 @@
 
 namespace network {
 
-CLASS( Event, common::Class )
+CLASS( LegacyEvent, common::Class )
 
 	enum event_type_t {
 		ET_NONE,
@@ -26,7 +26,7 @@ CLASS( Event, common::Class )
 		std::string packet_data;
 	} data;
 
-	void operator=( const Event& other ) {
+	void operator=( const LegacyEvent& other ) {
 		cid = other.cid;
 		type = other.type;
 		data.remote_address = other.data.remote_address;

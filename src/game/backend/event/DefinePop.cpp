@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 DefinePop::DefinePop( const size_t initiator_slot, base::PopDef* pop_def )
-	: Event( initiator_slot, ET_BASE_DEFINE_POP )
+	: LegacyEvent( initiator_slot, ET_BASE_DEFINE_POP )
 	, m_pop_def( pop_def ) {
 	//
 }

@@ -31,7 +31,7 @@ class Slot;
 class Player;
 
 namespace event {
-class Event;
+class LegacyEvent;
 }
 
 namespace connection {
@@ -65,8 +65,8 @@ CLASS( Connection, common::Module )
 	std::function< void( const size_t slot_num, slot::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
-	std::function< void( backend::event::Event* event ) > m_on_game_event_validate = nullptr;
-	std::function< void( backend::event::Event* event ) > m_on_game_event_apply = nullptr;
+	std::function< void( backend::event::LegacyEvent* event ) > m_on_game_event_validate = nullptr;
+	std::function< void( backend::event::LegacyEvent* event ) > m_on_game_event_apply = nullptr;
 
 	void SetState( State* state );
 
@@ -82,7 +82,7 @@ CLASS( Connection, common::Module )
 	Server* AsServer() const; // for server-specific calls
 	void IfServer( std::function< void( Server* server ) > cb ); // call cb if server
 
-	void SendGameEvent( backend::event::Event* event );
+	void SendGameEvent( backend::event::LegacyEvent* event );
 
 	const bool IsConnected() const;
 	const bool IsServer() const;
@@ -98,7 +98,7 @@ protected:
 
 	network::Network* const m_network;
 
-	virtual void ProcessEvent( const network::Event& event );
+	virtual void ProcessEvent( const network::LegacyEvent& event );
 
 	gc::Space* GetGCSpace() const;
 
@@ -110,7 +110,7 @@ protected:
 	State* m_state = nullptr;
 
 protected:
-	typedef std::vector< backend::event::Event* > game_events_t;
+	typedef std::vector< backend::event::LegacyEvent* > game_events_t;
 	game_state_t m_game_state = GS_NONE;
 
 	size_t m_slot = 0;

@@ -29,10 +29,10 @@ void Turn::AdvanceTurn( const size_t turn_id ) {
 const util::crc32::crc_t Turn::FinalizeAndChecksum() {
 	ASSERT_NOLOG( m_is_active, "turn not active" );
 	m_is_active = false;
-	return util::crc32::CRC32::CalculateFromBuffer( event::Event::SerializeMultiple( m_events ) );
+	return util::crc32::CRC32::CalculateFromBuffer( event::LegacyEvent::SerializeMultiple( m_events ) );
 }
 
-void Turn::AddEvent( event::Event* event ) {
+void Turn::AddEvent( event::LegacyEvent* event ) {
 	m_events.push_back( event );
 }
 

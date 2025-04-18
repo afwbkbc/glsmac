@@ -1,6 +1,6 @@
 SET( SRC ${SRC}
 
-	${PWD}/Event.cpp
+	${PWD}/LegacyEvent.cpp
 	${PWD}/DefineResource.cpp
 	${PWD}/DefineAnimation.cpp
 	${PWD}/DefineMorales.cpp

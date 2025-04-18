@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-class FinalizeTurn : public Event {
+class FinalizeTurn : public LegacyEvent {
 public:
 	FinalizeTurn( const size_t initiator_slot );
 
@@ -15,7 +15,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const FinalizeTurn* event );
 	static FinalizeTurn* Unserialize( types::Buffer& buf, const size_t initiator_slot );

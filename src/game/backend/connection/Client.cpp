@@ -4,7 +4,7 @@
 
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
-#include "game/backend/event/Event.h"
+#include "game/backend/event/LegacyEvent.h"
 #include "types/Packet.h"
 #include "network/Network.h"
 
@@ -17,13 +17,13 @@ Client::Client( settings::LocalSettings* const settings )
 	//
 }
 
-void Client::ProcessEvent( const network::Event& event ) {
+void Client::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
 
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
 
 	switch ( event.type ) {
-		case network::Event::ET_PACKET: {
+		case network::LegacyEvent::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					types::Packet packet( types::Packet::PT_NONE );
@@ -232,10 +232,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 							Log( "Got game events packet" );
 							if ( m_on_game_event_validate && m_on_game_event_apply ) {
 								auto buf = types::Buffer( packet.data.str );
-								std::vector< backend::event::Event* > game_events = {};
+								std::vector< backend::event::LegacyEvent* > game_events = {};
 								m_state->WithGSE(
 									[ &buf, &game_events ]( GSE_CALLABLE ) {
-										backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+										backend::event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
 									}
 								);
 								for ( const auto& game_event : game_events ) {
@@ -260,11 +260,11 @@ void Client::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_ERROR: {
+		case network::LegacyEvent::ET_ERROR: {
 			Error( event.data.packet_data );
 			break;
 		}
-		case network::Event::ET_DISCONNECT: {
+		case network::LegacyEvent::ET_DISCONNECT: {
 			Disconnect( "Connection to server lost." );
 			break;
 		}
@@ -277,7 +277,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	p.data.str = backend::event::Event::SerializeMultiple( game_events ).ToString();
+	p.data.str = backend::event::LegacyEvent::SerializeMultiple( game_events ).ToString();
 	m_network->MT_SendPacket( &p );
 }
 

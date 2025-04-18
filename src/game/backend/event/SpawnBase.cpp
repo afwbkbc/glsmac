@@ -23,7 +23,7 @@ SpawnBase::SpawnBase(
 	const size_t pos_y,
 	const std::string& name
 )
-	: Event( initiator_slot, ET_BASE_SPAWN )
+	: LegacyEvent( initiator_slot, ET_BASE_SPAWN )
 	, m_owner_slot( owner_slot )
 	, m_pos_x( pos_x )
 	, m_pos_y( pos_y )

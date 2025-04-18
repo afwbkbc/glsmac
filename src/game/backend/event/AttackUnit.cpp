@@ -12,7 +12,7 @@ namespace backend {
 namespace event {
 
 AttackUnit::AttackUnit( const size_t initiator_slot, const size_t attacker_unit_id, const size_t defender_unit_id )
-	: Event( initiator_slot, ET_UNIT_ATTACK )
+	: LegacyEvent( initiator_slot, ET_UNIT_ATTACK )
 	, m_attacker_unit_id( attacker_unit_id )
 	, m_defender_unit_id( defender_unit_id ) {}
 

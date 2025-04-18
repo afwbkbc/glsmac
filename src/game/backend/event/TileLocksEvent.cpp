@@ -19,7 +19,7 @@ TileLocksEvent::TileLocksEvent(
 	const std::string event_name,
 	const map::tile::positions_t& tile_positions
 )
-	: Event( initiator_slot, event_type )
+	: LegacyEvent( initiator_slot, event_type )
 	, m_event_name( event_name )
 	, m_tile_positions( tile_positions ) {
 	//

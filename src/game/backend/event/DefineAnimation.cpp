@@ -13,7 +13,7 @@ namespace backend {
 namespace event {
 
 DefineAnimation::DefineAnimation( const size_t initiator_slot, animation::Def* def )
-	: Event( initiator_slot, ET_ANIMATION_DEFINE )
+	: LegacyEvent( initiator_slot, ET_ANIMATION_DEFINE )
 	, m_def( def ) {
 	//
 }

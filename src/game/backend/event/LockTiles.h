@@ -18,7 +18,7 @@ public:
 	gse::Value* const Apply( GSE_CALLABLE, Game* game ) const override;
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	static void Serialize( types::Buffer& buf, const LockTiles* event );
 	static LockTiles* Unserialize( types::Buffer& buf, const size_t initiator_slot );

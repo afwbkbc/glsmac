@@ -44,6 +44,7 @@
 #include "base/Base.h"
 #include "animation/AnimationManager.h"
 #include "gc/Space.h"
+#include "Event.h"
 
 namespace game {
 namespace backend {
@@ -60,7 +61,7 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
-InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
+InvalidEvent::InvalidEvent( const std::string& reason, const event::LegacyEvent* event )
 	: Exception(
 	"InvalidEvent", (std::string)
 		"Event validation failed!\n" +
@@ -137,10 +138,10 @@ common::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest 
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
+common::mt_id_t Game::MT_AddEvent( const event::LegacyEvent* event ) {
 	MT_Request request = {};
 	request.op = OP_ADD_EVENT;
-	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
+	NEW( request.data.add_event.serialized_event, std::string, event::LegacyEvent::Serialize( event ).ToString() );
 	return MT_CreateRequest( request );
 }
 
@@ -538,6 +539,58 @@ WRAPIMPL_BEGIN( Game )
 				return VALUE( gse::value::Array,, elements );
 			} )
 		},
+		{
+			"register_event",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( name, 0, String );
+				if ( m_event_handlers.find( name ) != m_event_handlers.end() ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event already registered: " + name );
+				}
+				N_GETVALUE( def, 1, Object );
+				auto verify_it = def.find( "verify" );
+				if ( verify_it == def.end() || verify_it->second->type != gse::Value::T_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide verify method" );
+				}
+				auto apply_it = def.find( "apply" );
+				if ( apply_it == def.end() || apply_it->second->type != gse::Value::T_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide apply method" );
+				}
+				auto rollback_it = def.find( "rollback" );
+				if ( rollback_it == def.end() || rollback_it->second->type != gse::Value::T_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide rollback method" );
+				}
+				m_event_handlers.insert( { name, new Event( gc_space, name,
+					(gse::value::Callable*)verify_it->second,
+					(gse::value::Callable*)apply_it->second,
+					(gse::value::Callable*)rollback_it->second
+				) } );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"call_event",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( name, 0, String );
+				const auto& it = m_event_handlers.find( name );
+				if ( it == m_event_handlers.end() ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+				}
+				const auto& event = it->second;
+				N_GETVALUE( args, 1, Object );
+				const auto fargs = gse::value::function_arguments_t{ VALUE( gse::value::Object,, GSE_CALL_NOGC, args ) };
+				const auto* errptr = event->Verify( GSE_CALL, fargs );
+				if ( errptr ) {
+					const auto errmsg = "Event rejected: " + *errptr;
+					delete( errptr );
+					GSE_ERROR( gse::EC.INVALID_EVENT, errmsg );
+				}
+				event->Apply( GSE_CALL, fargs );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
 	};
 	if ( m_tm ) {
 		properties.insert(
@@ -610,6 +663,12 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	if ( m_am ) {
 		GC_REACHABLE( m_am );
 	}
+
+	GC_DEBUG_BEGIN( "event_handlers" );
+	for ( const auto& it : m_event_handlers ) {
+		GC_REACHABLE( it.second );
+	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
@@ -799,11 +858,11 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_ADD_EVENT: {
 			const std::string* errmsg = nullptr;
-			event::Event* event = nullptr;
+			event::LegacyEvent* event = nullptr;
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
-				event = event::Event::Unserialize( GSE_CALL, buf );
-				if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
+				event = event::LegacyEvent::Unserialize( GSE_CALL, buf );
+				if ( !m_current_turn.IsActive() && event->m_type != event::LegacyEvent::ET_UNCOMPLETE_TURN ) {
 					errmsg = new std::string( "Turn not active" );
 				}
 				else {
@@ -924,7 +983,7 @@ void Game::OnGSEError( const gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-gse::Value* const Game::AddEvent( GSE_CALLABLE, event::Event* event ) {
+gse::Value* const Game::AddEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
 	CHECKACCUM( m_state->m_gc_space );
 	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
 	if ( m_connection ) {
@@ -1146,7 +1205,7 @@ gc::Space* const Game::GetGCSpace() const {
 	return m_state->m_gc_space;
 }
 
-void Game::ValidateEvent( GSE_CALLABLE, event::Event* event ) {
+void Game::ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
 	if ( !event->m_is_validated ) {
 		const auto* errmsg = event->Validate( GSE_CALL, this );
 		if ( errmsg ) {
@@ -1159,7 +1218,7 @@ void Game::ValidateEvent( GSE_CALLABLE, event::Event* event ) {
 	}
 }
 
-gse::Value* const Game::ProcessEvent( GSE_CALLABLE, event::Event* event ) {
+gse::Value* const Game::ProcessEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
 	if ( m_state->IsMaster() ) { // TODO: validate in either case?
 		ValidateEvent( GSE_CALL, event );
 	}
@@ -1378,7 +1437,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			AddFrontendRequest( fr );
 		};
 
-		m_connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
+		m_connection->m_on_game_event_validate = [ this ]( event::LegacyEvent* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
@@ -1393,7 +1452,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		};
 
-		m_connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
+		m_connection->m_on_game_event_apply = [ this ]( event::LegacyEvent* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
@@ -1587,6 +1646,8 @@ void Game::ResetGame() {
 	m_player = nullptr;
 	m_slot_num = 0;
 	m_slot = nullptr;
+
+	m_event_handlers.clear();
 
 	for ( auto& it : m_unprocessed_events ) {
 		delete it;

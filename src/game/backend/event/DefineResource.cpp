@@ -11,7 +11,7 @@ namespace backend {
 namespace event {
 
 DefineResource::DefineResource( const size_t initiator_slot, resource::Resource* resource )
-	: Event( initiator_slot, ET_RESOURCE_DEFINE )
+	: LegacyEvent( initiator_slot, ET_RESOURCE_DEFINE )
 	, m_resource( resource ) {
 	//
 }

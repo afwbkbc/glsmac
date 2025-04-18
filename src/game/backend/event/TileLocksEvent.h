@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 #include "game/backend/map/tile/Types.h"
 
@@ -12,7 +12,7 @@ class RequestTileLocks;
 
 class LockTiles;
 
-class TileLocksEvent : public Event {
+class TileLocksEvent : public LegacyEvent {
 public:
 	TileLocksEvent(
 		const size_t initiator_slot,

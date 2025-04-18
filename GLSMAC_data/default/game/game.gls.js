@@ -11,6 +11,8 @@ return (glsmac) => {
 
 	glsmac.on('configure_game', (e) => {
 
+		#include('events')(e.game);
+
 		let players = [];
 		let players_sz = 0;
 		let random_player = () => {
@@ -90,7 +92,16 @@ return (glsmac) => {
 							for (let i = 0; i < units_count; i++) {
 								if (tile.is_land) {
 									if (e.game.random.get_int(0, 4) != 0) {
-										e.game.um.spawn_unit('MindWorms', owner, tile, random_morale(), random_health());
+
+										e.game.call_event('spawn_unit', {
+											id: 'MindWorms',
+											owner: owner,
+											tile: tile,
+											morale: random_morale(),
+											health: random_health(),
+										});
+										//e.game.um.spawn_unit('MindWorms', owner, tile, random_morale(), random_health());
+
 										units_spawned++;
 									} else {
 										if (tile.has_fungus && e.game.random.get_int(0, 3) == 0) {
@@ -104,16 +115,43 @@ return (glsmac) => {
 													morale++;
 												}
 											}
-											e.game.um.spawn_unit('FungalTower', owner, tile, morale, random_health());
+
+											e.game.call_event('spawn_unit', {
+												id: 'FungalTower',
+												owner: owner,
+												tile: tile,
+												morale: morale,
+												health: random_health(),
+											});
+											//e.game.um.spawn_unit('FungalTower', owner, tile, morale, random_health());
+
 											units_spawned++;
 										} else {
-											e.game.um.spawn_unit('SporeLauncher', owner, tile, random_morale(), random_health());
+
+											e.game.call_event('spawn_unit', {
+												id: 'SporeLauncher',
+												owner: owner,
+												tile: tile,
+												morale: random_morale(),
+												health: random_health(),
+											});
+											//e.game.um.spawn_unit('SporeLauncher', owner, tile, random_morale(), random_health());
+
 											units_spawned++;
 										}
 									}
 								} else {
 									if (e.game.random.get_int(0, 3) == 0) {
-										e.game.um.spawn_unit('SeaLurk', owner, tile, random_morale(), random_health());
+
+										e.game.call_event('spawn_unit', {
+											id: 'SeaLurk',
+											owner: owner,
+											tile: tile,
+											morale: random_morale(),
+											health: random_health(),
+										});
+										//e.game.um.spawn_unit('SeaLurk', owner, tile, random_morale(), random_health());
+
 										units_spawned++;
 									}
 								}

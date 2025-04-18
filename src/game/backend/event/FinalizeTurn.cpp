@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 FinalizeTurn::FinalizeTurn( const size_t initiator_slot )
-	: Event( initiator_slot, ET_FINALIZE_TURN ) {
+	: LegacyEvent( initiator_slot, ET_FINALIZE_TURN ) {
 	//
 }
 

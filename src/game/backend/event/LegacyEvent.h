@@ -11,7 +11,7 @@ class Game;
 
 namespace event {
 
-class Event {
+class LegacyEvent {
 public:
 	enum event_type_t {
 		ET_NONE,
@@ -37,14 +37,14 @@ public:
 		ET_UNLOCK_TILES,
 	};
 
-	Event( const size_t initiator_slot, const event_type_t type );
-	virtual ~Event() = default;
+	LegacyEvent( const size_t initiator_slot, const event_type_t type );
+	virtual ~LegacyEvent() = default;
 
-	static const types::Buffer Serialize( const Event* event );
-	static Event* Unserialize( GSE_CALLABLE, types::Buffer& buf );
+	static const types::Buffer Serialize( const LegacyEvent* event );
+	static LegacyEvent* Unserialize( GSE_CALLABLE, types::Buffer& buf );
 
-	static const types::Buffer SerializeMultiple( const std::vector< Event* >& events );
-	static void UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< Event* >& events_out );
+	static const types::Buffer SerializeMultiple( const std::vector< LegacyEvent* >& events );
+	static void UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< LegacyEvent* >& events_out );
 
 	static const bool IsBroadcastable( const event_type_t type );
 

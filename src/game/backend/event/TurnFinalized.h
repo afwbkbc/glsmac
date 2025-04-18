@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 #include "util/crc32/Types.h"
 
@@ -8,7 +8,7 @@ namespace game {
 namespace backend {
 namespace event {
 
-class TurnFinalized : public Event {
+class TurnFinalized : public LegacyEvent {
 public:
 	TurnFinalized( const size_t initiator_slot, const util::crc32::crc_t checksum );
 
@@ -17,7 +17,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	const util::crc32::crc_t m_checksum;
 

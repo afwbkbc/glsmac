@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Event.h"
+#include "LegacyEvent.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-class CompleteTurn : public Event {
+class CompleteTurn : public LegacyEvent {
 public:
 	CompleteTurn( const size_t initiator_slot, const size_t turn_id );
 
@@ -15,7 +15,7 @@ public:
 	TS_DEF()
 
 private:
-	friend class Event;
+	friend class LegacyEvent;
 
 	const size_t m_turn_id;
 

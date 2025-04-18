@@ -16,9 +16,9 @@ namespace callable {
 #define N_ARGS \
     const gse::Value* arg; \
     gse::value::object_properties_t::const_iterator obj_it; \
-    gse::Value* getprop_val = VALUE( gse::value::Undefined ); \
-    gse::Value* obj_val = VALUE( gse::value::Undefined ); \
-    gse::Value* callable_val = VALUE( gse::value::Undefined );
+    gse::Value* getprop_val = nullptr; \
+    gse::Value* obj_val = nullptr; \
+    gse::Value* callable_val = nullptr;
 #define N_EXPECT_ARGS( _count ) \
     if ( arguments.size() != _count ) { \
         GSE_ERROR( gse::EC.INVALID_CALL, "Expected " + std::to_string( _count ) + " arguments, found " + std::to_string( arguments.size() ) ); \

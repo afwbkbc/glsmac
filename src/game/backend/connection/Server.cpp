@@ -18,13 +18,13 @@ Server::Server( settings::LocalSettings* const settings )
 	//
 }
 
-void Server::ProcessEvent( const network::Event& event ) {
+void Server::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( event.cid || event.type == network::Event::ET_LISTEN, "server connection received event without cid" );
+	ASSERT( event.cid || event.type == network::LegacyEvent::ET_LISTEN, "server connection received event without cid" );
 
 	switch ( event.type ) {
-		case network::Event::ET_LISTEN: {
+		case network::LegacyEvent::ET_LISTEN: {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
@@ -54,7 +54,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_CLIENT_CONNECT: {
+		case network::LegacyEvent::ET_CLIENT_CONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
 
@@ -70,7 +70,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_CLIENT_DISCONNECT: {
+		case network::LegacyEvent::ET_CLIENT_DISCONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
@@ -116,7 +116,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_PACKET: {
+		case network::LegacyEvent::ET_PACKET: {
 			try {
 				types::Packet packet( types::Packet::PT_NONE );
 				packet.Unserialize( types::Buffer( event.data.packet_data ) );
@@ -336,15 +336,15 @@ void Server::ProcessEvent( const network::Event& event ) {
 						ASSERT( m_on_game_event_validate, "m_on_game_event_validate is not set" );
 						ASSERT( m_on_game_event_apply, "m_on_game_event_apply is not set" );
 						auto buf = types::Buffer( packet.data.str );
-						std::vector< event::Event* > game_events = {};
+						std::vector< event::LegacyEvent* > game_events = {};
 						m_state->WithGSE(
 							[ &buf, &game_events ]( GSE_CALLABLE ) {
-								event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+								event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
 							}
 						);
 						const size_t slot = m_state->GetCidSlots().at( event.cid );
-						std::vector< event::Event* > broadcastable_events = {};
-						std::vector< event::Event* > valid_events = {};
+						std::vector< event::LegacyEvent* > broadcastable_events = {};
+						std::vector< event::LegacyEvent* > valid_events = {};
 						for ( const auto& game_event : game_events ) {
 							bool ok = true;
 							if ( game_event->m_initiator_slot != slot ) {
@@ -363,7 +363,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 							}
 							if ( ok ) {
 								valid_events.push_back( game_event );
-								if ( event::Event::IsBroadcastable( game_event->m_type ) ) {
+								if ( event::LegacyEvent::IsBroadcastable( game_event->m_type ) ) {
 									broadcastable_events.push_back( game_event );
 								}
 							}
@@ -388,7 +388,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			}
 			break;
 		}
-		case network::Event::ET_ERROR: {
+		case network::LegacyEvent::ET_ERROR: {
 			Error( event.cid, event.data.packet_data );
 			break;
 		}
@@ -402,7 +402,7 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	Broadcast(
 		[ this, game_events ]( const network::cid_t cid ) -> void {
-			std::vector< event::Event* > events = {};
+			std::vector< event::LegacyEvent* > events = {};
 			for ( const auto& e : game_events ) {
 				const auto slot_num = m_state->GetCidSlots().at( cid );
 				if ( e->IsSendableTo( slot_num ) ) {
@@ -411,7 +411,7 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 				}
 			}
 			if ( !events.empty() ) {
-				const auto serialized_events = event::Event::SerializeMultiple( events ).ToString();
+				const auto serialized_events = event::LegacyEvent::SerializeMultiple( events ).ToString();
 				SendGameEventsTo( serialized_events, cid );
 			}
 		}

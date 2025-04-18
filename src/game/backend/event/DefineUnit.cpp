@@ -9,7 +9,7 @@ namespace backend {
 namespace event {
 
 DefineUnit::DefineUnit( const size_t initiator_slot, unit::Def* def )
-	: Event( initiator_slot, ET_UNIT_DEFINE )
+	: LegacyEvent( initiator_slot, ET_UNIT_DEFINE )
 	, m_def( def ) {
 	//
 }

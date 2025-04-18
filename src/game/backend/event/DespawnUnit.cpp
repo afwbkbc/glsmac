@@ -10,7 +10,7 @@ namespace backend {
 namespace event {
 
 DespawnUnit::DespawnUnit( const size_t initiator_slot, const size_t unit_id )
-	: Event( initiator_slot, ET_UNIT_DESPAWN )
+	: LegacyEvent( initiator_slot, ET_UNIT_DESPAWN )
 	, m_unit_id( unit_id ) {
 	//
 }
