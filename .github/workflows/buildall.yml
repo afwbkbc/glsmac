@@ -138,9 +138,10 @@ jobs:
       - name: install_dependencies
         run: |
           choco install ninja
-          choco install cmake --installargs '"ADD_CMAKE_TO_PATH=System"'
-          Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
-          refreshenv
+          choco install cmake.portable
+#          Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
+#          refreshenv
+          cmake --version
       - name: prepare
         run: |
           mkdir build
