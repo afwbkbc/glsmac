@@ -142,6 +142,8 @@ jobs:
           Import-Module $env:ChocolateyInstall\helpers\chocolateyProfile.psm1
           refreshenv
           cmake --version
+          (Get-Command cmake).Path
+          where.exe cmake
       - name: prepare
         run: |
           mkdir build
