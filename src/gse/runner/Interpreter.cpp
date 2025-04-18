@@ -912,7 +912,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			if ( expression->b ) {
 				const auto tor = EvaluateRange( ctx, ep, expression->b, true );
 				if ( tor->type != gse::Value::T_INT ) {
-					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + tor->ToString(), ctx, expression->a->m_si, ep );
+					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + tor->ToString(), ctx, expression->b->m_si, ep );
 				}
 				to = ( (Int*)tor )->value;
 			}
