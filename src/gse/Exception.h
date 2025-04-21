@@ -48,6 +48,8 @@ public:
 	const stacktrace_t& GetStackTrace() const;
 	const std::string ToString() const;
 
+	const char* what() const noexcept override;
+
 private:
 	stacktrace_t m_stacktrace = {};
 

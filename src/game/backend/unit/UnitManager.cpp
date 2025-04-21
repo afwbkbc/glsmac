@@ -12,7 +12,6 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/DefineMorales.h"
 #include "game/backend/event/DefineUnit.h"
-#include "game/backend/event/SpawnUnit.h"
 #include "game/backend/event/DespawnUnit.h"
 #include "game/backend/unit/SpriteRender.h"
 
@@ -119,7 +118,10 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
+	if ( it == m_units.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unit id " + std::to_string( unit_id ) + " not found" );
+	}
+
 	auto* unit = it->second;
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
@@ -354,29 +356,44 @@ WRAPIMPL_BEGIN( UnitManager )
 		{
 			"spawn_unit",
 			NATIVE_CALL( this ) {
+				m_game->CheckRW( GSE_CALL );
 				N_EXPECT_ARGS( 5 );
 				N_GETVALUE( def_name, 0, String );
 				N_GETVALUE_UNWRAP( owner, 1, slot::Slot );
 				N_GETVALUE_UNWRAP( tile, 2, map::tile::Tile );
 				N_GETVALUE( morale, 3, Int );
 				N_GETVALUE( health, 4, Float );
-				return m_game->AddEvent( GSE_CALL, new event::SpawnUnit(
-					m_game->GetSlotNum(),
-					def_name,
-					owner->GetIndex(),
-					tile->coord.x,
-					tile->coord.y,
-					GetMorale( GSE_CALL, morale ),
-					GetHealth( GSE_CALL, health )
-				) );
+
+				auto* def = GetUnitDef( def_name );
+				if ( !def ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit type '" + def_name + "' is not defined" );
+				}
+				ASSERT_NOLOG( def->m_type == unit::DT_STATIC, "only static defs are supported for now" );
+				const auto* staticdef = (unit::StaticDef*)def;
+				auto* unit = new unit::Unit(
+					GSE_CALL,
+					this,
+					unit::Unit::GetNextId(),
+					def,
+					owner,
+					tile,
+					staticdef->m_movement_per_turn,
+					morale,
+					health,
+					false
+				);
+				SpawnUnit( GSE_CALL, unit );
+				return unit->Wrap( GSE_CALL, true );
 			})
 		},
 		{
 			"despawn_unit",
 			NATIVE_CALL( this ) {
+			m_game->CheckRW( GSE_CALL );
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( unit, 0, Unit );
-				return m_game->AddEvent( GSE_CALL, new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );
+				DespawnUnit( GSE_CALL, unit->m_id );
+				return VALUE( gse::value::Undefined );
 			})
 		},
 	};
@@ -469,7 +486,7 @@ void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op )
 	}
 	auto& update = it->second;
 	if ( op == UUO_DESPAWN ) {
-		if ( op & UUO_SPAWN ) {
+		if ( update.ops & UUO_SPAWN ) {
 			// if unit is despawned immediately after spawning - frontend doesn't need to know
 			m_unit_updates.erase( it );
 			return;

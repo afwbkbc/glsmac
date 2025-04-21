@@ -5,7 +5,6 @@ SET( SRC ${SRC}
 	${PWD}/DefineAnimation.cpp
 	${PWD}/DefineMorales.cpp
 	${PWD}/DefineUnit.cpp
-	${PWD}/SpawnUnit.cpp
 	${PWD}/DespawnUnit.cpp
 	${PWD}/MoveUnit.cpp
 	${PWD}/AttackUnit.cpp
@@ -22,5 +21,7 @@ SET( SRC ${SRC}
 	${PWD}/LockTiles.cpp
 	${PWD}/RequestTileUnlocks.cpp
 	${PWD}/UnlockTiles.cpp
+	${PWD}/Event.cpp
+	${PWD}/EventHandler.cpp
 
 	PARENT_SCOPE )

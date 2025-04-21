@@ -486,21 +486,16 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 void GLSMAC::RunMain() {
 	ASSERT_NOLOG( m_gc_space, "gc space is null" );
-	try {
-		for ( const auto& main : m_main_callables ) {
-			ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
-			m_gc_space->Accumulate( [ this, &main ] (){
-				ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
-				gse::ExecutionPointer ep;
-				m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
-				( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
-					m_wrapobj
-				} );
-			});
-		}
-	} catch ( const gse::Exception& e ) {
-		util::LogHelper::Println( e.ToString() );
-		throw e;
+	for ( const auto& main : m_main_callables ) {
+		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
+		m_gc_space->Accumulate( [ this, &main ] (){
+			ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
+			gse::ExecutionPointer ep;
+			m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
+			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
+				m_wrapobj
+			} );
+		});
 	}
 }
 

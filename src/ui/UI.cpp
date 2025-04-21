@@ -51,17 +51,10 @@ UI::UI( GSE_CALLABLE )
 				event.data.mouse.y
 			};
 		}
-		try {
-			m_gc_space->Accumulate( [ this, &ctx, &gc_space, &si, &event ] () {
-				gse::ExecutionPointer ep;
-				m_root->ProcessEvent( GSE_CALL, event );
-			});
-		}
-		catch ( const gse::Exception& e ) {
-			const auto msg = e.ToString();
-			Log( msg );
-			throw std::runtime_error( msg );
-		}
+		m_gc_space->Accumulate( [ this, &ctx, &gc_space, &si, &event ] () {
+			gse::ExecutionPointer ep;
+			m_root->ProcessEvent( GSE_CALL, event );
+		});
 	});
 }
 

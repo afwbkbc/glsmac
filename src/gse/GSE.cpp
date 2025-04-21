@@ -47,13 +47,7 @@ GSE::~GSE() {
 
 void GSE::Iterate() {
 	ExecutionPointer ep;
-	try {
-		m_async->Iterate( ep );
-	}
-	catch ( const Exception& e ) {
-		Log( e.ToString() );
-		throw;
-	}
+	m_async->Iterate( ep );
 }
 
 void GSE::Finish() {
@@ -220,7 +214,6 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	}
 	catch ( const Exception& e ) {
 		cache.Cleanup( this );
-		Log( e.ToString() );
 		throw;
 	}
 	catch ( const std::runtime_error& e ) {

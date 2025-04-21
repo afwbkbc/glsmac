@@ -18,7 +18,6 @@ SET( SRC ${SRC}
 	${PWD}/Bindings.cpp
 	${PWD}/State.cpp
 	${PWD}/Game.cpp
-	${PWD}/Event.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp

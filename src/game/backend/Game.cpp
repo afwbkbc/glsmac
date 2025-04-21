@@ -44,7 +44,8 @@
 #include "base/Base.h"
 #include "animation/AnimationManager.h"
 #include "gc/Space.h"
-#include "Event.h"
+#include "game/backend/event/Event.h"
+#include "game/backend/event/EventHandler.h"
 
 namespace game {
 namespace backend {
@@ -442,6 +443,52 @@ void Game::Iterate() {
 				}
 			}
 		}
+		else if ( m_game_state == GS_RUNNING ) {
+			ASSERT_NOLOG( m_state, "state not set" );
+
+			m_state->m_gc_space->Accumulate([this]() {
+				std::vector< event::Event* > events;
+				{
+					std::lock_guard guard( m_pending_events_mutex );
+					events = m_pending_events;
+					m_pending_events.clear();
+				}
+				if ( !events.empty() ) {
+					m_state->WithGSE([ this, &events ]( GSE_CALLABLE ) {
+						const std::string* errptr = nullptr;
+						for ( const auto& event : events ) {
+							Log( "Processing event: " + event->ToString() );
+							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+							const auto fargs = gse::value::function_arguments_t{ obj };
+							const auto& it = m_event_handlers.find( event->GetName() );
+							const auto* handler = it != m_event_handlers.end() ? it->second : nullptr;
+							if ( handler ) {
+								errptr = handler->Validate( GSE_CALL, fargs );
+							}
+							else {
+								errptr = new std::string( "Unknown event: " + event->GetName() );
+							}
+							if ( !errptr ) {
+								auto* resolved = handler->Resolve( GSE_CALL, fargs );
+								if ( resolved ) {
+									obj->Set( "resolved", resolved, GSE_CALL );
+								}
+								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
+									auto* applied = handler->Apply( GSE_CALL, fargs );
+									if ( applied ) {
+										obj->Set( "applied", applied, GSE_CALL );
+									}
+								});
+							}
+							else {
+								Log( "Event rejected: " + *errptr );
+								delete ( errptr );
+							}
+						}
+					});
+				}
+			});
+		}
 	}
 	catch ( const InvalidEvent& e ) {
 		Log( (std::string)e.what() );
@@ -524,6 +571,19 @@ WRAPIMPL_BEGIN( Game )
 			})
 		},
 		{
+			"get_player_by_id",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, Int );
+				auto& slots = m_state->m_slots->GetSlots();
+				if ( id < slots.size() ) {
+					auto& slot = slots.at( id );
+					return slot.Wrap( GSE_CALL );
+				}
+				GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( id ) + " not found" );
+			}),
+		},
+		{
 			"get_players",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -548,9 +608,17 @@ WRAPIMPL_BEGIN( Game )
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event already registered: " + name );
 				}
 				N_GETVALUE( def, 1, Object );
-				auto verify_it = def.find( "verify" );
-				if ( verify_it == def.end() || verify_it->second->type != gse::Value::T_CALLABLE ) {
-					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide verify method" );
+				auto validate_it = def.find( "validate" );
+				if ( validate_it == def.end() || validate_it->second->type != gse::Value::T_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide validate method" );
+				}
+				gse::value::Callable* resolve = nullptr;
+				auto resolve_it = def.find( "resolve" );
+				if ( resolve_it != def.end() ) {
+					if ( resolve_it->second->type != gse::Value::T_CALLABLE ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide resolve method" );
+					}
+					resolve = (gse::value::Callable*)resolve_it->second;
 				}
 				auto apply_it = def.find( "apply" );
 				if ( apply_it == def.end() || apply_it->second->type != gse::Value::T_CALLABLE ) {
@@ -560,8 +628,9 @@ WRAPIMPL_BEGIN( Game )
 				if ( rollback_it == def.end() || rollback_it->second->type != gse::Value::T_CALLABLE ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide rollback method" );
 				}
-				m_event_handlers.insert( { name, new Event( gc_space, name,
-					(gse::value::Callable*)verify_it->second,
+				m_event_handlers.insert( { name, new event::EventHandler( gc_space, name,
+					(gse::value::Callable*)validate_it->second,
+					resolve,
 					(gse::value::Callable*)apply_it->second,
 					(gse::value::Callable*)rollback_it->second
 				) } );
@@ -570,7 +639,7 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
-			"call_event",
+			"event",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
@@ -578,16 +647,13 @@ WRAPIMPL_BEGIN( Game )
 				if ( it == m_event_handlers.end() ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
 				}
-				const auto& event = it->second;
+				const auto& handler = it->second;
 				N_GETVALUE( args, 1, Object );
-				const auto fargs = gse::value::function_arguments_t{ VALUE( gse::value::Object,, GSE_CALL_NOGC, args ) };
-				const auto* errptr = event->Verify( GSE_CALL, fargs );
-				if ( errptr ) {
-					const auto errmsg = "Event rejected: " + *errptr;
-					delete( errptr );
-					GSE_ERROR( gse::EC.INVALID_EVENT, errmsg );
+				auto* event = new event::Event( this, m_slot_num, GSE_CALL, name, args );
+				{
+					std::lock_guard guard( m_pending_events_mutex );
+					m_pending_events.push_back( event );
 				}
-				event->Apply( GSE_CALL, fargs );
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -663,6 +729,15 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	if ( m_am ) {
 		GC_REACHABLE( m_am );
 	}
+
+	GC_DEBUG_BEGIN( "events" );
+	{
+		std::lock_guard guard( m_pending_events_mutex );
+		for ( const auto& event : m_pending_events ) {
+			GC_REACHABLE( event );
+		}
+	}
+	GC_DEBUG_END();
 
 	GC_DEBUG_BEGIN( "event_handlers" );
 	for ( const auto& it : m_event_handlers ) {
@@ -1257,6 +1332,18 @@ void Game::UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const {
 	);
 }
 
+void Game::WithRW( const std::function< void() >& f ) {
+	m_rw_counter++;
+	f();
+	m_rw_counter--;
+}
+
+void Game::CheckRW( GSE_CALLABLE ) {
+	if ( !m_rw_counter ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read only. Try using events?");
+	}
+}
+
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
 	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
@@ -1647,7 +1734,12 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
+	{
+		std::lock_guard guard( m_pending_events_mutex );
+		m_pending_events.clear();
+	}
 	m_event_handlers.clear();
+	m_next_event_id = 0;
 
 	for ( auto& it : m_unprocessed_events ) {
 		delete it;
@@ -1715,6 +1807,10 @@ Game::Interface::Interface( gc::Space* const gc_space )
 
 const bool Game::IsRunning() const {
 	return m_game_state == GS_RUNNING;
+}
+
+const std::string Game::GenerateEventId() {
+	return std::to_string( m_slot_num ) + "_" + std::to_string( ++m_next_event_id );
 }
 
 }

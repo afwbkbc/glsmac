@@ -112,7 +112,7 @@ gse::Value* const Bindings::Trigger( gse::GCWrappable* object, const std::string
 			m_state->m_on_gse_error( e );
 		}
 		else {
-			throw std::runtime_error( e.ToString() );
+			throw;
 		}
 	}
 	return result;

@@ -77,4 +77,8 @@ const std::string Exception::ToString() const {
 	return result;
 }
 
+const char* Exception::what() const noexcept {
+	return strdup( ToString().c_str() );
+}
+
 }

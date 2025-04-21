@@ -97,7 +97,10 @@ namespace slot {
 class Slot;
 }
 
+namespace event {
 class Event;
+class EventHandler;
+}
 
 enum op_t {
 	OP_NONE,
@@ -439,7 +442,15 @@ private:
 	};
 	Interface* m_interface = nullptr;
 
-	std::unordered_map< std::string, Event* > m_event_handlers = {};
+	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
+
+	std::vector< event::Event* > m_pending_events = {};
+	std::mutex m_pending_events_mutex;
+
+	std::atomic< uint64_t > m_next_event_id = 0;
+
+	std::atomic< size_t > m_rw_counter = 0;
+	void WithRW( const std::function< void() >& f );
 
 private:
 	friend class map::tile::TileManager;
@@ -450,6 +461,11 @@ private:
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	const bool IsRunning() const;
+	void CheckRW( GSE_CALLABLE );
+
+private:
+	friend class event::Event;
+	const std::string GenerateEventId();
 
 };
 
