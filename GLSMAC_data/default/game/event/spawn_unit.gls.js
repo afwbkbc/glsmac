@@ -9,13 +9,14 @@ return {
 
 	apply: (e) => {
 		#print('SPAWN UNIT apply', e);
-		const unit = e.game.um.spawn_unit(
-			e.data.type,
-			e.game.get_player(e.data.owner),
-			e.game.tm.get_tile(e.data.tile.x, e.data.tile.y),
-			e.data.morale,
-			e.data.health
-		);
+		const unit = e.game.um.spawn_unit({
+			def: e.data.type,
+			owner: e.game.get_player(e.data.owner),
+			tile: e.game.tm.get_tile(e.data.tile.x, e.data.tile.y),
+			morale: e.data.morale,
+			health: e.data.health,
+		});
+
 		return {
 			unit: unit,
 		};

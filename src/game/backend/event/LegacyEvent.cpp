@@ -4,7 +4,6 @@
 #include "DefineAnimation.h"
 #include "DefineMorales.h"
 #include "DefineUnit.h"
-#include "DespawnUnit.h"
 #include "MoveUnit.h"
 #include "AttackUnit.h"
 #include "SkipUnitTurn.h"
@@ -44,7 +43,6 @@ const types::Buffer LegacyEvent::Serialize( const LegacyEvent* event ) {
 		SERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
 		SERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		SERIALIZE( ET_UNIT_DEFINE, DefineUnit )
-		SERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
 		SERIALIZE( ET_UNIT_MOVE, MoveUnit )
 		SERIALIZE( ET_UNIT_ATTACK, AttackUnit )
 		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
@@ -80,7 +78,6 @@ LegacyEvent* LegacyEvent::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 		UNSERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
 		UNSERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
 		UNSERIALIZE( ET_UNIT_DEFINE, DefineUnit )
-		UNSERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
 		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit, GSE_CALL, )
 		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit, GSE_CALL, )
 		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )

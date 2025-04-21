@@ -12,7 +12,6 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/DefineMorales.h"
 #include "game/backend/event/DefineUnit.h"
-#include "game/backend/event/DespawnUnit.h"
 #include "game/backend/unit/SpriteRender.h"
 
 #include "gse/context/Context.h"
@@ -354,15 +353,41 @@ WRAPIMPL_BEGIN( UnitManager )
 			})
 		},
 		{
+			"has_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( unit_id, 0, Int );
+				return VALUE( gse::value::Bool,, m_units.find( unit_id ) != m_units.end() );
+			} )
+		},
+		{
+			"get_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( unit_id, 0, Int );
+				const auto& it = m_units.find( unit_id );
+				if ( it != m_units.end() ) {
+					return it->second->Wrap( GSE_CALL, true );
+				}
+				else {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit id " + std::to_string( unit_id ) + " not found" );
+				}
+			} )
+		},
+		{
 			"spawn_unit",
 			NATIVE_CALL( this ) {
+
 				m_game->CheckRW( GSE_CALL );
-				N_EXPECT_ARGS( 5 );
-				N_GETVALUE( def_name, 0, String );
-				N_GETVALUE_UNWRAP( owner, 1, slot::Slot );
-				N_GETVALUE_UNWRAP( tile, 2, map::tile::Tile );
-				N_GETVALUE( morale, 3, Int );
-				N_GETVALUE( health, 4, Float );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( obj, 0, Object );
+				N_GETPROP_OPT( size_t, unit_id, obj, "id", Int, 0 );
+				N_GETPROP( def_name, obj, "def", String );
+				N_GETPROP_UNWRAP( owner, obj, "owner", slot::Slot );
+				N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
+				N_GETPROP( morale, obj, "morale", Int );
+				N_GETPROP( health, obj, "health", Float );
 
 				auto* def = GetUnitDef( def_name );
 				if ( !def ) {
@@ -373,7 +398,7 @@ WRAPIMPL_BEGIN( UnitManager )
 				auto* unit = new unit::Unit(
 					GSE_CALL,
 					this,
-					unit::Unit::GetNextId(),
+					unit_id ? unit_id : unit::Unit::GetNextId(),
 					def,
 					owner,
 					tile,
@@ -389,10 +414,18 @@ WRAPIMPL_BEGIN( UnitManager )
 		{
 			"despawn_unit",
 			NATIVE_CALL( this ) {
-			m_game->CheckRW( GSE_CALL );
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 1 );
-				N_GETVALUE_UNWRAP( unit, 0, Unit );
-				DespawnUnit( GSE_CALL, unit->m_id );
+				if ( arguments.at( 0 )->type == gse::Value::T_INT ) {
+					N_GETVALUE( unit_id, 0, Int );
+					DespawnUnit( GSE_CALL, unit_id );
+				}
+				else {
+					N_GETVALUE_UNWRAP( unit, 0, Unit );
+					DespawnUnit( GSE_CALL, unit->m_id );
+				}
 				return VALUE( gse::value::Undefined );
 			})
 		},
@@ -492,6 +525,17 @@ void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op )
 			return;
 		}
 		update.ops = UUO_NONE; // clear other actions if unit was despawned
+	}
+	if ( op == UUO_SPAWN || op == UUO_REFRESH ) {
+		if ( update.ops & UUO_DESPAWN ) {
+			// do not despawn if it needs to spawn or refresh, i.e. if event was rolled back
+			update.ops = (unit_update_op_t)( (uint8_t)update.ops & ~UUO_DESPAWN);
+			if ( op == UUO_SPAWN ) {
+				// if there's pending despawn event it means unit was already spawned, nothing to do
+				m_unit_updates.erase( it );
+				return;
+			}
+		}
 	}
 	// add to operations list
 	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
@@ -670,33 +714,12 @@ void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender,
 			resolutions
 		}
 	}; } );
-	if ( attacker->m_health <= 0.0f ) {
-		if ( state->IsMaster() ) {
-			m_game->AddEvent( GSE_CALL, new event::DespawnUnit( m_game->GetSlotNum(), attacker->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( GSE_CALL, attacker );
-	}
-	if ( defender->m_health <= 0.0f ) {
-		if ( state->IsMaster() ) {
-			m_game->AddEvent( GSE_CALL, new event::DespawnUnit( m_game->GetSlotNum(), defender->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( GSE_CALL, defender );
-	}
+	RefreshUnit( GSE_CALL, attacker );
+	RefreshUnit( GSE_CALL, defender );
 }
 
 void UnitManager::RefreshUnit( GSE_CALLABLE, const Unit* unit ) {
-	if ( unit->m_health <= 0.0f ) {
-		if ( m_game->GetState()->IsMaster() ) {
-			m_game->AddEvent( GSE_CALL, new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );
-		}
-	}
-	else {
-		QueueUnitUpdate( unit, UUO_REFRESH );
-	}
+	QueueUnitUpdate( unit, UUO_REFRESH );
 }
 
 map::Map* UnitManager::GetMap() const {

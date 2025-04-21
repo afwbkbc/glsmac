@@ -95,7 +95,11 @@ void UnitManager::SpawnUnit(
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
-	ASSERT( m_units.find( unit_id ) == m_units.end(), "unit id already exists" );
+
+	if ( m_units.find( unit_id ) != m_units.end() ) {
+		// maybe unit was spawned, then despawned and then despawn rolled back
+		return;
+	}
 
 	auto* unitdef = m_unitdefs.at( unitdef_id );
 	auto* slot = m_game->GetSlot( slot_index );

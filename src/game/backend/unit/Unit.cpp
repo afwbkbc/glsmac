@@ -114,6 +114,12 @@ Unit* Unit::Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	WRAPIMPL_GET_CUSTOM( "id", Int, m_id )
+	WRAPIMPL_GET_CUSTOM( "def", String, m_def->m_id )
+	WRAPIMPL_GET_CUSTOM( "owner", Int, m_owner->GetIndex() )
+	WRAPIMPL_GET_CUSTOM( "tile", Object, GSE_CALL_NOGC, {
+		{ "x", VALUE( gse::value::Int,, m_tile->coord.x ) },
+		{ "y", VALUE( gse::value::Int,, m_tile->coord.y ) },
+	} )
 	WRAPIMPL_GET_CUSTOM( "movement", Float, m_movement )
 	WRAPIMPL_GET_CUSTOM( "morale", Int, m_morale )
 	WRAPIMPL_GET_CUSTOM( "health", Float, m_health )

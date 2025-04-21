@@ -133,10 +133,10 @@ void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value
 void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
 #define WRAPIMPL_DYNAMIC_END() \
 }
-#define WRAPIMPL_GET_CUSTOM( _key, _type, _value ) \
+#define WRAPIMPL_GET_CUSTOM( _key, _type, ... ) \
     { \
         _key, \
-        VALUE( gse::value::_type,, _value ) \
+        VALUE( gse::value::_type,, __VA_ARGS__ ) \
     },
 #define WRAPIMPL_GET( _property, _type ) WRAPIMPL_GET_CUSTOM( #_property, _type, _property )
 #define WRAPIMPL_GET_MAPPED_CUSTOM( _property, _map ) \

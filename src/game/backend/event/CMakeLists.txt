@@ -5,7 +5,6 @@ SET( SRC ${SRC}
 	${PWD}/DefineAnimation.cpp
 	${PWD}/DefineMorales.cpp
 	${PWD}/DefineUnit.cpp
-	${PWD}/DespawnUnit.cpp
 	${PWD}/MoveUnit.cpp
 	${PWD}/AttackUnit.cpp
 	${PWD}/SkipUnitTurn.cpp
