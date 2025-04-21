@@ -34,9 +34,11 @@ void EventHandler::GetReachableObjects( std::unordered_set< gc::Object* >& reach
 	GC_REACHABLE( m_validate );
 	GC_DEBUG_END();
 
-	GC_DEBUG_BEGIN( "resolve" );
-	GC_REACHABLE( m_resolve );
-	GC_DEBUG_END();
+	if ( m_resolve ) {
+		GC_DEBUG_BEGIN( "resolve" );
+		GC_REACHABLE( m_resolve );
+		GC_DEBUG_END();
+	}
 
 	GC_DEBUG_BEGIN( "apply" );
 	GC_REACHABLE( m_apply );

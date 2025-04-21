@@ -571,7 +571,7 @@ WRAPIMPL_BEGIN( Game )
 			})
 		},
 		{
-			"get_player_by_id",
+			"get_player",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( id, 0, Int );

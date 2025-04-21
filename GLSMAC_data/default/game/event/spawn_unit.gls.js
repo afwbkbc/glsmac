@@ -7,20 +7,12 @@ return {
 		}
 	},
 
-	resolve: (e) => {
-		#print('SPAWN UNIT resolve', e);
-		return {
-			owner: e.game.get_player_by_id(e.data.owner),
-			tile: e.game.tm.get_tile(e.data.tile.x, e.data.tile.y),
-		};
-	},
-
 	apply: (e) => {
 		#print('SPAWN UNIT apply', e);
 		const unit = e.game.um.spawn_unit(
 			e.data.type,
-			e.resolved.owner,
-			e.resolved.tile,
+			e.game.get_player(e.data.owner),
+			e.game.tm.get_tile(e.data.tile.x, e.data.tile.y),
 			e.data.morale,
 			e.data.health
 		);
