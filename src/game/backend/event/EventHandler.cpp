@@ -51,9 +51,11 @@ void EventHandler::GetReachableObjects( std::unordered_set< gc::Object* >& reach
 	GC_DEBUG_END();
 }
 
+#if defined(DEBUG) || defined(FASTDEBUG)
 const std::string EventHandler::ToString() {
 	return "EventHandler( " + m_name + " )";
 }
+#endif
 
 const std::string* const EventHandler::Validate( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const {
 	const auto* result = m_validate->Run( GSE_CALL, args );

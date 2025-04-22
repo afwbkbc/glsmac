@@ -20,7 +20,9 @@ public:
 	const types::Buffer Serialize() const;
 	void Unserialize( GSE_CALLABLE, types::Buffer buffer );
 
+#if defined(DEBUG) || defined(FASTDEBUG)
 	const std::string ToString() override;
+#endif
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 

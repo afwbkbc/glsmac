@@ -457,7 +457,9 @@ void Game::Iterate() {
 					m_state->WithGSE([ this, &events ]( GSE_CALLABLE ) {
 						const std::string* errptr = nullptr;
 						for ( const auto& event : events ) {
+#if defined(DEBUG) || defined(FASTDEBUG)
 							Log( "Processing event: " + event->ToString() );
+#endif
 							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 							const auto fargs = gse::value::function_arguments_t{ obj };
 							const auto& it = m_event_handlers.find( event->GetName() );
