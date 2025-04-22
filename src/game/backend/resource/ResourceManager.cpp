@@ -7,7 +7,6 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/Bindings.h"
-#include "game/backend/event/DefineResource.h"
 
 namespace game {
 namespace backend {
@@ -28,14 +27,12 @@ void ResourceManager::Clear() {
 		delete it.second;
 	}
 	m_resources.clear();
-	m_resource_idx.clear();
-	m_resource_idx_map.clear();
 }
 
 void ResourceManager::DefineResource( resource::Resource* resource ) {
 	Log( "Defining resource ('" + resource->m_id + "')" );
 
-	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "Resource '" + resource->m_id + "' already exists" );
+	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "resource already exists" );
 
 	m_resources.insert(
 		{
@@ -43,49 +40,39 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 			resource
 		}
 	);
-	m_resource_idx_map.insert(
-		{
-			resource->m_id,
-			m_resource_idx.size()
-		}
-	);
-	m_resource_idx.push_back( resource->m_id );
+}
+
+void ResourceManager::UndefineResource( const std::string& id ) {
+	Log( "Undefining resource ('" + id + "')" );
+
+	ASSERT( m_resources.find( id ) != m_resources.end(), "resource does not exist" );
+	m_resources.erase( id );
 }
 
 const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "get_yields", ARGS_F( ARGS_GSE_CALLABLE, &tile, &slot ) {
-		{
-			"tile",
-			tile->Wrap( GSE_CALL, gc_space )
-		},
-		{
-			"player",
-			slot->Wrap( GSE_CALL, gc_space )
-		},
-	}; } );
-	if ( result->type != gse::Value::T_OBJECT ) {
-		GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
-	}
-	const auto& values = ( (gse::value::Object*)result )->value;
-	for ( const auto& v : values ) {
-		if ( m_resources.find( v.first ) == m_resources.end() ) {
-			THROW( "unknown resource type: " + v.first );
-		}
-	}
 	map::tile::yields_t yields = {};
-	yields.reserve( m_resource_idx.size() );
-	for ( const auto& idx : m_resource_idx ) {
-		const auto& v = values.find( idx );
-		if ( v == values.end() ) {
-			THROW( "missing yields for resource: " + idx );
-		}
-		if ( v->second->type != gse::Value::T_INT ) {
-			THROW( "invalid resource value, expected Int,, got " + v->second->GetTypeString() + ": " + v->second->ToString() );
-		}
-		yields.push_back(
+	for ( const auto& it : m_resources ) {
+		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( ARGS_GSE_CALLABLE, &tile, &slot, &it ) {
 			{
-				idx,
-				( (gse::value::Int*)v->second )->value
+				"tile",
+				tile->Wrap( GSE_CALL, gc_space )
+			},
+			{
+				"resource",
+				VALUE( gse::value::String,, it.first )
+			},
+			{
+				"player",
+				slot->Wrap( GSE_CALL, gc_space )
+			},
+		}; } );
+		if ( result->type != gse::Value::T_INT ) {
+			GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
+		}
+		yields.insert(
+			{
+				it.first,
+				( (gse::value::Int*)result )->value
 			}
 		);
 	}
@@ -98,12 +85,19 @@ WRAPIMPL_BEGIN( ResourceManager )
 		{
 			"define",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( def, 1, Object );
 				N_GETPROP( name, def, "name", String );
 				N_GETPROP( render, def, "render", Object );
 				N_GETPROP( type, render, "type", String );
+
+				if ( m_resources.find( id ) != m_resources.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Resource '" + id + "' already exists" );
+				}
 
 				if ( type == "sprite_map" ) {
 					N_GETPROP( file, render, "file", String );
@@ -144,7 +138,8 @@ WRAPIMPL_BEGIN( ResourceManager )
 							},
 						}
 					);
-					return m_game->AddEvent( GSE_CALL, new event::DefineResource( m_game->GetSlotNum(), resource ) );
+					DefineResource( resource );
+					return VALUE( gse::value::Undefined );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported resource type: " + type );
@@ -153,6 +148,24 @@ WRAPIMPL_BEGIN( ResourceManager )
 				return VALUE( gse::value::Undefined );
 			} )
 		},
+		{
+			"undefine",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_resources.find( id ) == m_resources.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Resource \"" + id + "\" does not exist" );
+				}
+
+				UndefineResource( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		}
 	};
 WRAPIMPL_END_PTR()
 
@@ -161,9 +174,8 @@ UNWRAPIMPL_PTR( ResourceManager )
 void ResourceManager::Serialize( types::Buffer& buf ) const {
 	Log( "Serializing " + std::to_string( m_resources.size() ) + " resources" );
 	buf.WriteInt( m_resources.size() );
-	for ( const auto& it : m_resource_idx ) {
-		ASSERT( m_resources.find( it ) != m_resources.end(), "invalid resource idx" );
-		const auto& res = m_resources.at( it );
+	for ( const auto& it : m_resources ) {
+		const auto& res = it.second;
 		buf.WriteString( res->m_id );
 		buf.WriteString( resource::Resource::Serialize( res ).ToString() );
 	}
@@ -175,8 +187,6 @@ void ResourceManager::Unserialize( types::Buffer& buf ) {
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " resources" );
 	m_resources.reserve( sz );
-	m_resource_idx.reserve( sz );
-	m_resource_idx_map.reserve( sz );
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );

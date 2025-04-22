@@ -151,7 +151,7 @@ void Tile::Unserialize( types::Buffer buf ) {
 	const auto yields_size = buf.ReadInt();
 	yields.reserve( yields_size );
 	for ( size_t i = 0 ; i < yields_size ; i++ ) {
-		yields.push_back({
+		yields.insert({
 			buf.ReadString(),
 			buf.ReadInt()
 		});

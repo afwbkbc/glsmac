@@ -33,8 +33,10 @@ public:
 		FR_FACTION_DEFINE,
 		FR_SLOT_DEFINE,
 		FR_ANIMATION_DEFINE,
+		FR_ANIMATION_UNDEFINE,
 		FR_ANIMATION_SHOW,
 		FR_UNIT_DEFINE,
+		FR_UNIT_UNDEFINE,
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
 		FR_UNIT_UPDATE,
@@ -106,6 +108,9 @@ public:
 		} animation_define;
 		struct {
 			const std::string* animation_id;
+		} animation_undefine;
+		struct {
+			const std::string* animation_id;
 			size_t running_animation_id;
 			struct {
 				float x;
@@ -116,6 +121,9 @@ public:
 		struct {
 			const std::string* serialized_unitdef; // can be optimized
 		} unit_define;
+		struct {
+			const std::string* id;
+		} unit_undefine;
 		struct {
 			size_t unit_id;
 			const std::string* unitdef_id;

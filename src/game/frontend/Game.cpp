@@ -950,7 +950,7 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const ty
 void Game::DefineAnimation( const backend::animation::Def* def ) {
 	ASSERT( m_animationdefs.find( def->m_id ) == m_animationdefs.end(), "animation def already exists" );
 
-	Log( "Initializing animation definition: " + def->m_id );
+	Log( "Defining animation definition: " + def->m_id );
 
 	m_animationdefs.insert(
 		{
@@ -961,6 +961,14 @@ void Game::DefineAnimation( const backend::animation::Def* def ) {
 			)
 		}
 	);
+}
+
+void Game::UndefineAnimation( const std::string& id ) {
+	ASSERT( m_animationdefs.find( id ) != m_animationdefs.end(), "animation def not found" );
+
+	Log( "Undefining animation definition: " + id );
+
+	m_animationdefs.erase( id );
 }
 
 void Game::ProcessRequest( const FrontendRequest* request ) {
@@ -1087,6 +1095,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			delete animationdef;
 			break;
 		}
+		case FrontendRequest::FR_ANIMATION_UNDEFINE: {
+			UndefineAnimation( *request->data.animation_undefine.animation_id );
+			break;
+		}
 		case FrontendRequest::FR_ANIMATION_SHOW: {
 			const auto& d = request->data.animation_show;
 
@@ -1110,6 +1122,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			const auto* unitdef = backend::unit::Def::Unserialize( buf );
 			m_um->DefineUnit( unitdef );
 			delete unitdef;
+			break;
+		}
+		case FrontendRequest::FR_UNIT_UNDEFINE: {
+			m_um->UndefineUnit( *request->data.unit_undefine.id );
 			break;
 		}
 		case FrontendRequest::FR_UNIT_SPAWN: {
@@ -2334,7 +2350,7 @@ void Game::ResetMapState() {
 	UpdateMinimap();
 
 	// select tile at center
-	types::Vec2< size_t > coords = {
+	types::Vec2 <size_t> coords = {
 		m_map_data.width / 2,
 		m_map_data.height / 2
 	};

@@ -36,7 +36,9 @@ public:
 
 	void Clear();
 	void DefineMoraleSet( MoraleSet* moraleset );
+	void UndefineMoraleSet( const std::string& id );
 	void DefineUnit( Def* def );
+	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
 	void SkipUnitTurn( GSE_CALLABLE, const size_t unit_id );

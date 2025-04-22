@@ -81,15 +81,15 @@ void TilePreview::PreviewTile( const tile::Tile* tile ) {
 	if ( !need_to_add ) {
 		ASSERT_NOLOG( m_texts.yields.size() == yields.size(), "yields lines count mismatch" );
 	}
-	for ( size_t i = 0 ; i < yields.size() ; i++ ) {
-		const auto& y = yields.at( i );
-		const auto text = y.first + ": " + std::to_string( y.second );
+	/* DEPRECATED
+	for ( const auto& it : yields ) {
+		const auto text = it.first + ": " + std::to_string( it.second );
 		::ui_legacy::object::Label* label;
 		if ( need_to_add ) {
 			NEW( label, ::ui_legacy::object::Label, "BBTilePreviewTextLine" );
 		}
 		else {
-			label = m_texts.yields.at( i );
+			label = m_texts.yields.at( it.first );
 		}
 		label->SetText( text );
 		if ( need_to_add ) {
@@ -98,7 +98,7 @@ void TilePreview::PreviewTile( const tile::Tile* tile ) {
 			m_pages.yields->AddChild( label );
 			label_top += label->GetHeight() * 2; // TODO: 'with farm:' etc
 		}
-	}
+	}*/
 
 	// print tile coordinates
 	NEWV( label, ::ui_legacy::object::Label, "BBTilePreviewTextFooter" );

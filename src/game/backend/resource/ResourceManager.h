@@ -33,6 +33,7 @@ CLASS2( ResourceManager, common::Class, gse::GCWrappable )
 
 	void Clear();
 	void DefineResource( resource::Resource* resource );
+	void UndefineResource( const std::string& id );
 
 	const map::tile::yields_t GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot );
 
@@ -49,8 +50,6 @@ private:
 	Game* m_game;
 
 	std::unordered_map< std::string, resource::Resource* > m_resources = {};
-	std::vector< std::string > m_resource_idx = {};
-	std::unordered_map< std::string, size_t > m_resource_idx_map = {};
 };
 
 }

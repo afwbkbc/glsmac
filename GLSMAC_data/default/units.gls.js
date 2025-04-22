@@ -13,8 +13,8 @@ const result = {
 	},
 
 	define: (game) => {
-		defs.define(game.um);
-		animations.define(game.am);
+		defs.define(game);
+		animations.define(game);
 	},
 
 };

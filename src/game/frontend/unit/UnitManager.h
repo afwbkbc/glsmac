@@ -52,6 +52,7 @@ CLASS( UnitManager, common::Class )
 	Unit* GetUnitById( const size_t id ) const;
 
 	void DefineUnit( const backend::unit::Def* def );
+	void UndefineUnit( const std::string& id );
 	void SpawnUnit(
 		const size_t unit_id,
 		const std::string& unitdef_name,

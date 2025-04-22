@@ -5,13 +5,11 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/value/Array.h"
 #include "gse/value/Float.h"
 #include "gse/ExecutionPointer.h"
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
 #include "game/backend/animation/FramesRow.h"
-#include "game/backend/event/DefineAnimation.h"
 
 namespace game {
 namespace backend {
@@ -39,7 +37,7 @@ void AnimationManager::Clear() {
 void AnimationManager::DefineAnimation( animation::Def* def ) {
 	Log( "Defining animation ('" + def->m_id + "')" );
 
-	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "Animation definition '" + def->m_id + "' already exists" );
+	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "animation definition already exists" );
 
 	// backend doesn't need any animation details, just keep track of it's existence for validations
 	m_animation_defs.insert(
@@ -51,6 +49,18 @@ void AnimationManager::DefineAnimation( animation::Def* def ) {
 
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_DEFINE );
 	NEW( fr.data.animation_define.serialized_animation, std::string, animation::Def::Serialize( def ).ToString() );
+	m_game->AddFrontendRequest( fr );
+}
+
+void AnimationManager::UndefineAnimation( const std::string& id ) {
+	Log( "Undefining animation ('" + id + "')" );
+
+	ASSERT( m_animation_defs.find( id ) != m_animation_defs.end(), "animation definition not found" );
+
+	m_animation_defs.erase( id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_UNDEFINE );
+	NEW( fr.data.animation_undefine.animation_id, std::string, id );
 	m_game->AddFrontendRequest( fr );
 }
 
@@ -86,12 +96,19 @@ WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
-			"define_animation",
+			"define",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( animation_def, 1, Object );
 				N_GETPROP( type, animation_def, "type", String );
+
+				if ( m_animation_defs.find( id ) != m_animation_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Animation \"" + id + "\" already exists" );
+				}
 
 				if ( type == "frames_row" ) {
 					N_GETPROP( file, animation_def, "file", String );
@@ -128,7 +145,8 @@ WRAPIMPL_BEGIN( AnimationManager )
 						duration_ms,
 						sound
 					);
-					return m_game->AddEvent( GSE_CALL, new event::DefineAnimation( m_game->GetSlotNum(), def ) );
+					DefineAnimation( def );
+					return VALUE( gse::value::Undefined );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );
@@ -138,23 +156,42 @@ WRAPIMPL_BEGIN( AnimationManager )
 		{
 			"show_animation",
 			NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 3 );
-			N_GETVALUE( id, 0, String );
-			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
-			N_GET_CALLABLE( on_complete, 2 );
-			Persist( on_complete );
-			const auto* errmsg = ShowAnimation( id, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
-				auto ep2 = ep;
-				on_complete->Run( gc_space, ctx, si, ep2, {} );
-				Unpersist( on_complete );
-			});
-			if ( errmsg ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
-				Unpersist( on_complete );
-				delete errmsg;
-			}
-			return VALUE( gse::value::Undefined );
-		} )
+				N_EXPECT_ARGS( 3 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
+				N_GET_CALLABLE( on_complete, 2 );
+				Persist( on_complete );
+				const auto* errmsg = ShowAnimation( id, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
+					auto ep2 = ep;
+					on_complete->Run( gc_space, ctx, si, ep2, {} );
+					Unpersist( on_complete );
+				});
+				if ( errmsg ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
+					Unpersist( on_complete );
+					delete errmsg;
+				}
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"undefine",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_animation_defs.find( id ) == m_animation_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Animation \"" + id + "\" does not exist" );
+				}
+
+				UndefineAnimation( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
 		}
 	};
 WRAPIMPL_END_PTR()

@@ -1,0 +1,20 @@
+return {
+
+	validate: (e) => {
+		if (e.caller != 0) {
+			return 'Only master is allowed to define moraleset';
+		}
+	},
+
+	apply: (e) => {
+		e.game.um.define_moraleset(e.data.id, e.data.data);
+		return {
+			id: e.data.id,
+		};
+	},
+
+	rollback: (e) => {
+		e.game.um.undefine_moraleset(e.applied.id);
+	},
+
+};

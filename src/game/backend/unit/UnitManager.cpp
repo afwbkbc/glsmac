@@ -10,8 +10,6 @@
 #include "game/backend/State.h"
 #include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
-#include "game/backend/event/DefineMorales.h"
-#include "game/backend/event/DefineUnit.h"
 #include "game/backend/unit/SpriteRender.h"
 
 #include "gse/context/Context.h"
@@ -71,6 +69,14 @@ void UnitManager::DefineMoraleSet( MoraleSet* moraleset ) {
 	);
 }
 
+void UnitManager::UndefineMoraleSet( const std::string& id ) {
+	Log( "Undefining unit moraleset ('" + id + "')" );
+
+	ASSERT( m_unit_moralesets.find( id ) != m_unit_moralesets.end(), "Unit moraleset '" + id + "' not found" );
+
+	m_unit_moralesets.erase( id );
+}
+
 void UnitManager::DefineUnit( Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
@@ -85,6 +91,18 @@ void UnitManager::DefineUnit( Def* def ) {
 
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_DEFINE );
 	NEW( fr.data.unit_define.serialized_unitdef, std::string, Def::Serialize( def ).ToString() );
+	m_game->AddFrontendRequest( fr );
+}
+
+void UnitManager::UndefineUnit( const std::string& id ) {
+	Log( "Defining unit ('" + id + "')" );
+
+	ASSERT( m_unit_defs.find( id ) != m_unit_defs.end(), "Unit definition '" + id + "' not found" );
+
+	m_unit_defs.erase( id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UNDEFINE );
+	NEW( fr.data.unit_undefine.id, std::string, id );
 	m_game->AddFrontendRequest( fr );
 }
 
@@ -260,36 +278,73 @@ WRAPIMPL_BEGIN( UnitManager )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
-			"define_morales",
+			"define_moraleset",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( arr, 1, Array );
+
+				if ( m_unit_moralesets.find( id ) != m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" already exists" );
+				}
+
 				const uint8_t expected_count = unit::MORALE_MAX - unit::MORALE_MIN + 1;
 				if ( arr.size() != expected_count ) {
-					GSE_ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
+					GSE_ERROR( gse::EC.INVALID_CALL, "Moraleset must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
 				}
 				unit::MoraleSet::morale_values_t values = {};
 				for ( const auto& v : arr ) {
 					if ( v->type != gse::Value::T_OBJECT ) {
-						GSE_ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
+						GSE_ERROR( gse::EC.INVALID_CALL, "Moraleset elements must be objects");
 					}
 					const auto* obj = (gse::value::Object*)v;
 					N_GETPROP( name, obj->value, "name", String );
 					values.push_back( unit::Morale{ name } );
 				}
-				return m_game->AddEvent( GSE_CALL, new event::DefineMorales( m_game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
+
+				DefineMoraleSet( new unit::MoraleSet( id, values ) );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"undefine_moraleset",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_unit_moralesets.find( id ) == m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" not found" );
+				}
+
+				UndefineMoraleSet( id );
+
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
 			"define_unit",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( unit_def, 1, Object );
 				N_GETPROP( name, unit_def, "name", String );
 				N_GETPROP( morale, unit_def, "morale", String );
 				N_GETPROP( unit_type, unit_def, "type", String );
+
+				if ( m_unit_defs.find( id ) != m_unit_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit def '" + id + "' already exists");
+				}
+
 				if ( unit_type == "static" ) {
 					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
 					unit::movement_type_t movement_type;
@@ -341,7 +396,10 @@ WRAPIMPL_BEGIN( UnitManager )
 								sprite_morale_based_xshift
 							)
 						);
-						return m_game->AddEvent( GSE_CALL, new event::DefineUnit( m_game->GetSlotNum(), def ) );
+
+						DefineUnit( def );
+
+						return VALUE( gse::value::Undefined );
 					}
 					else {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -351,6 +409,24 @@ WRAPIMPL_BEGIN( UnitManager )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported unit type: " + unit_type );
 				}
 			})
+		},
+		{
+			"undefine_unit",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_unit_defs.find( id ) == m_unit_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit def '" + id + "' not found" );
+				}
+
+				UndefineUnit( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
 		},
 		{
 			"has_unit",

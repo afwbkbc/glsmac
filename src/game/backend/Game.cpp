@@ -1340,7 +1340,7 @@ void Game::WithRW( const std::function< void() >& f ) {
 
 void Game::CheckRW( GSE_CALLABLE ) {
 	if ( !m_rw_counter ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read only. Try using events?");
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
 }
 

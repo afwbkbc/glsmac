@@ -69,7 +69,7 @@ Unit* UnitManager::GetUnitById( const size_t id ) const {
 void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 	ASSERT( m_unitdefs.find( def->m_id ) == m_unitdefs.end(), "unit def already exists" );
 
-	Log( "Initializing unit definition: " + def->m_id );
+	Log( "Defining unit: " + def->m_id );
 
 	m_unitdefs.insert(
 		{
@@ -80,6 +80,14 @@ void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 			)
 		}
 	);
+}
+
+void UnitManager::UndefineUnit( const std::string& id ) {
+	ASSERT( m_unitdefs.find( id ) != m_unitdefs.end(), "unit def not found" );
+
+	Log( "Undefining unit: " + id );
+
+	m_unitdefs.erase( id );
 }
 
 void UnitManager::SpawnUnit(

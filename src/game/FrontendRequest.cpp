@@ -48,12 +48,20 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.animation_define.serialized_animation, std::string, *other.data.animation_define.serialized_animation );
 			break;
 		}
+		case FR_ANIMATION_UNDEFINE: {
+			NEW( data.animation_undefine.animation_id, std::string, *other.data.animation_undefine.animation_id );
+			break;
+		}
 		case FR_ANIMATION_SHOW: {
 			NEW( data.animation_show.animation_id, std::string, *other.data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {
 			NEW( data.unit_define.serialized_unitdef, std::string, *other.data.unit_define.serialized_unitdef );
+			break;
+		}
+		case FR_UNIT_UNDEFINE: {
+			NEW( data.unit_undefine.id, std::string, *other.data.unit_undefine.id );
 			break;
 		}
 		case FR_UNIT_SPAWN: {
@@ -120,12 +128,20 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.animation_define.serialized_animation );
 			break;
 		}
+		case FR_ANIMATION_UNDEFINE: {
+			DELETE( data.animation_undefine.animation_id );
+			break;
+		}
 		case FR_ANIMATION_SHOW: {
 			DELETE( data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {
 			DELETE( data.unit_define.serialized_unitdef );
+			break;
+		}
+		case FR_UNIT_UNDEFINE: {
+			DELETE( data.unit_undefine.id );
 			break;
 		}
 		case FR_UNIT_SPAWN: {

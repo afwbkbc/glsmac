@@ -61,7 +61,7 @@ return (glsmac) => {
 			});
 
 			units.configure(e.game);
-			resources.configure(e.game.rm);
+			resources.configure(e.game);
 		});
 
 		e.game.on('start', (e) => {

@@ -1,10 +1,6 @@
 SET( SRC ${SRC}
 
 	${PWD}/LegacyEvent.cpp
-	${PWD}/DefineResource.cpp
-	${PWD}/DefineAnimation.cpp
-	${PWD}/DefineMorales.cpp
-	${PWD}/DefineUnit.cpp
 	${PWD}/MoveUnit.cpp
 	${PWD}/AttackUnit.cpp
 	${PWD}/SkipUnitTurn.cpp
