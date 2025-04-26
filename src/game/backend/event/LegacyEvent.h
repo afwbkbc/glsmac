@@ -15,7 +15,6 @@ class LegacyEvent {
 public:
 	enum event_type_t {
 		ET_NONE,
-		ET_UNIT_MOVE,
 		ET_UNIT_ATTACK,
 		ET_UNIT_SKIP_TURN,
 		ET_BASE_DEFINE_POP,

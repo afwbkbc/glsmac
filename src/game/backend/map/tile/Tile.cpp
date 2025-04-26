@@ -181,6 +181,13 @@ WRAPIMPL_BEGIN( Tile )
 			VALUE( gse::value::Int,, coord.y )
 		},
 		{
+			"is_locked",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS(0);
+				return VALUE( gse::value::Bool,, m_is_locked );
+			} )
+		},
+		{
 			"is_water",
 			VALUE( gse::value::Bool,, is_water_tile )
 		},

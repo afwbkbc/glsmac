@@ -85,12 +85,12 @@ const result = {
 			}
 			if (attacker_health <= 0.0) {
 				game.event('despawn_unit', {
-					unit_id: e.attacker.id,
+					unit: e.attacker,
 				});
 			}
 			if (defender_health <= 0.0) {
 				game.event('despawn_unit', {
-					unit_id: e.defender.id,
+					unit: e.defender,
 				});
 			}
 			return damage_sequence;

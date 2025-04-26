@@ -332,8 +332,8 @@ void Unit::SetTile( tile::Tile* dst_tile ) {
 }
 
 void Unit::MoveToTile( tile::Tile* dst_tile ) {
-	ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
-	ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
+	m_mover.Stop(); //ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
+	//ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
 	ASSERT_NOLOG( m_tile, "source tile not set" );
 	ASSERT_NOLOG( dst_tile, "destination tile not set" );
 

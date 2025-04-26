@@ -9,8 +9,8 @@ return {
 	apply: (e) => {
 		const unit = e.game.um.spawn_unit({
 			def: e.data.type,
-			owner: e.game.get_player(e.data.owner),
-			tile: e.game.tm.get_tile(e.data.tile.x, e.data.tile.y),
+			owner: e.data.owner,
+			tile: e.data.tile,
 			morale: e.data.morale,
 			health: e.data.health,
 		});

@@ -19,7 +19,6 @@
 #include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
-#include "game/backend/event/MoveUnit.h"
 #include "game/backend/event/AttackUnit.h"
 #include "game/backend/event/SkipUnitTurn.h"
 #include "game/backend/event/CompleteTurn.h"
@@ -57,6 +56,10 @@
 #include "game/frontend/ui_legacy/popup/base_popup/BasePopup.h"
 #include "input/Types.h"
 #include "GLSMAC.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/map/Map.h"
+#include "game/backend/map/tile/Tile.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -1556,8 +1559,23 @@ void Game::Initialize(
 							}
 							if ( foreign_units.empty() ) {
 								// move
-								const auto event = backend::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
-								game->MT_AddEvent( &event );
+
+								m_glsmac->WithGSE(
+									[ this, &game, &selected_unit, &tile ]( GSE_CALLABLE ) {
+										auto* unit = game->GetUM()->GetUnit( selected_unit->GetId() );
+										const auto& c = tile->GetCoords();
+										auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
+										ASSERT_NOLOG( unit, "unit not found" );
+										game->Event(
+											GSE_CALL, "move_unit", {
+												{ "unit", unit->Wrap( GSE_CALL, true ) },
+												{ "tile", dst_tile->Wrap( GSE_CALL, true ) },
+											}
+										);
+									}
+								);
+								//const auto event = backend::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
+								//game->MT_AddEvent( &event );
 							}
 							else {
 								// attack
@@ -2350,7 +2368,7 @@ void Game::ResetMapState() {
 	UpdateMinimap();
 
 	// select tile at center
-	types::Vec2 <size_t> coords = {
+	types::Vec2< size_t > coords = {
 		m_map_data.width / 2,
 		m_map_data.height / 2
 	};

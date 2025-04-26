@@ -335,6 +335,8 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
+	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
+
 	WRAPDEFS_PTR( Game )
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

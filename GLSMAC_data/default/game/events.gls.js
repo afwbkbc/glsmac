@@ -6,7 +6,8 @@ return (game) => {
 		'define_moraleset',
 		'define_unit',
 		'spawn_unit',
-		'despawn_unit'
+		'despawn_unit',
+		'move_unit',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

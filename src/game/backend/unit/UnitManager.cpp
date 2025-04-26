@@ -95,7 +95,7 @@ void UnitManager::DefineUnit( Def* def ) {
 }
 
 void UnitManager::UndefineUnit( const std::string& id ) {
-	Log( "Defining unit ('" + id + "')" );
+	Log( "Undefining unit ('" + id + "')" );
 
 	ASSERT( m_unit_defs.find( id ) != m_unit_defs.end(), "Unit definition '" + id + "' not found" );
 
@@ -458,6 +458,7 @@ WRAPIMPL_BEGIN( UnitManager )
 
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( obj, 0, Object );
+
 				N_GETPROP_OPT( size_t, unit_id, obj, "id", Int, 0 );
 				N_GETPROP( def_name, obj, "def", String );
 				N_GETPROP_UNWRAP( owner, obj, "owner", slot::Slot );
@@ -716,12 +717,13 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 	if ( src_tile == dst_tile ) {
 		return new std::string( "Unit can't move because it's already on target tile" );
 	}
-	if ( !src_tile->IsLocked() ) {
+	// TODO: fix tile locking
+	/*if ( !src_tile->IsLocked() ) {
 		return new std::string( "Source tile must be locked before moving unit" );
 	}
 	if ( !dst_tile->IsLocked() ) {
 		return new std::string( "Destination tile must be locked before moving unit" );
-	}
+	}*/
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
 	fr.data.unit_move.unit_id = unit->m_id;
 	fr.data.unit_move.dst_tile_coords = {

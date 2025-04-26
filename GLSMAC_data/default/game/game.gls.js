@@ -95,11 +95,8 @@ return (glsmac) => {
 
 										e.game.event('spawn_unit', {
 											type: 'MindWorms',
-											owner: owner.id,
-											tile: {
-												x: tile.x,
-												y: tile.y
-											},
+											owner: owner,
+											tile: tile,
 											morale: random_morale(),
 											health: random_health(),
 										});
@@ -120,11 +117,8 @@ return (glsmac) => {
 
 											e.game.event('spawn_unit', {
 												type: 'FungalTower',
-												owner: owner.id,
-												tile: {
-													x: tile.x,
-													y: tile.y
-												},
+												owner: owner,
+												tile: tile,
 												morale: morale,
 												health: random_health(),
 											});
@@ -134,11 +128,8 @@ return (glsmac) => {
 
 											e.game.event('spawn_unit', {
 												type: 'SporeLauncher',
-												owner: owner.id,
-												tile: {
-													x: tile.x,
-													y: tile.y
-												},
+												owner: owner,
+												tile: tile,
 												morale: random_morale(),
 												health: random_health(),
 											});
@@ -151,11 +142,8 @@ return (glsmac) => {
 
 										e.game.event('spawn_unit', {
 											type: 'SeaLurk',
-											owner: owner.id,
-											tile: {
-												x: tile.x,
-												y: tile.y
-											},
+											owner: owner,
+											tile: tile,
 											morale: random_morale(),
 											health: random_health(),
 										});

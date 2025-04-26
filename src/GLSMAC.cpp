@@ -247,9 +247,15 @@ void GLSMAC::ShowError( const std::string& text, const std::function< void() >& 
 	TriggerObject( m_ui, "error_popup" );
 }
 
+
+
 gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
 	gse::ExecutionPointer ep;
 	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, f_args );
+}
+
+void GLSMAC::WithGSE( const std::function<void( GSE_CALLABLE )>& f ) {
+	m_state->WithGSE( f );
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {

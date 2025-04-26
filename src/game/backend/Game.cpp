@@ -475,7 +475,7 @@ void Game::Iterate() {
 								if ( resolved ) {
 									obj->Set( "resolved", resolved, GSE_CALL );
 								}
-								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
+								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj, &event ] () {
 									auto* applied = handler->Apply( GSE_CALL, fargs );
 									if ( applied ) {
 										obj->Set( "applied", applied, GSE_CALL );
@@ -550,6 +550,19 @@ void Game::SetLoaderText( const std::string& text ) {
 void Game::HideLoader() {
 	auto fr = FrontendRequest( FrontendRequest::FR_LOADER_HIDE );
 	AddFrontendRequest( fr );
+}
+
+void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	const auto& it = m_event_handlers.find( name );
+	if ( it == m_event_handlers.end() ) {
+		GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+	}
+	const auto& handler = it->second;
+	auto* event = new event::Event( this, m_slot_num, GSE_CALL, name, args );
+	{
+		std::lock_guard guard( m_pending_events_mutex );
+		m_pending_events.push_back( event );
+	}
 }
 
 WRAPIMPL_BEGIN( Game )

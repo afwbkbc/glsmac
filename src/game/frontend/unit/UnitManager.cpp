@@ -188,7 +188,17 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 
 void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id ) {
 	auto* src_tile = unit->GetTile();
-	ASSERT( m_moving_units.find( unit ) == m_moving_units.end(), "unit already moving" );
+	const auto& it = m_moving_units.find( unit );
+	if ( it != m_moving_units.end() ) {
+		const auto& tile = it->second.tile;
+		if ( unit == m_selected_unit ) {
+			m_game->SetSelectedTile( tile );
+		}
+		unit->SetTile( tile );
+		m_game->RefreshSelectedTileIf( tile, m_selected_unit );
+		m_game->SendAnimationFinished( it->second.animation_id );
+		m_moving_units.erase( it );
+	}
 	m_moving_units.insert(
 		{
 			unit,
@@ -412,6 +422,7 @@ const bool UnitManager::SelectNextUnitMaybe() {
 void UnitManager::SelectNextUnitOrSwitchToTileSelection() {
 	if ( !SelectNextUnitMaybe() ) {
 		m_game->SelectUnitOrSelectedTile( m_selected_unit );
+		m_selected_unit = nullptr;
 	}
 }
 
