@@ -12,7 +12,7 @@ GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 ### Quickstart
 
-1) Download [latest stable release](https://github.com/afwbkbc/glsmac/releases/latest) or [latest development build](https://github.com/afwbkbc/glsmac/releases/tag/development) for your OS ( only 64-bit windows and ubuntu for now )
+1) Download [latest stable release](https://github.com/afwbkbc/glsmac/releases/latest) or [latest development build](https://github.com/afwbkbc/glsmac/releases/tag/development) for your OS (only 64-bit windows and ubuntu for now)
 
 2) Unpack all files into your SMAC directory (must have SMACX expansion too)
 
