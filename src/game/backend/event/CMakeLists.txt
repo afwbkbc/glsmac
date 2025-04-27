@@ -1,7 +1,6 @@
 SET( SRC ${SRC}
 
 	${PWD}/LegacyEvent.cpp
-	${PWD}/AttackUnit.cpp
 	${PWD}/SkipUnitTurn.cpp
 	${PWD}/DefinePop.cpp
 	${PWD}/SpawnBase.cpp

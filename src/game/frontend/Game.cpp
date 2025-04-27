@@ -19,7 +19,6 @@
 #include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
-#include "game/backend/event/AttackUnit.h"
 #include "game/backend/event/SkipUnitTurn.h"
 #include "game/backend/event/CompleteTurn.h"
 #include "game/backend/event/UncompleteTurn.h"
@@ -35,7 +34,6 @@
 #include "game/frontend/text/InstancedTextManager.h"
 #include "Animation.h"
 #include "AnimationDef.h"
-#include "game/frontend/unit/Unit.h"
 #include "game/frontend/unit/UnitDef.h"
 #include "Slot.h"
 #include "game/frontend/unit/BadgeDefs.h"
@@ -1552,17 +1550,17 @@ void Game::Initialize(
 							std::unordered_map< size_t, unit::Unit* > foreign_units = {};
 							for ( const auto& it : dst_tile->GetUnits() ) {
 								const auto& unit = it.second;
-								if ( !unit->IsOwned() ) { // TODO: pacts
-									// TODO: skip units of treaty/truce faction?
-									foreign_units.insert( it );
-								}
+								//if ( !unit->IsOwned() ) { // TODO: pacts
+								// TODO: skip units of treaty/truce faction?
+								foreign_units.insert( it );
+								//}
 							}
-							if ( foreign_units.empty() ) {
-								// move
-
-								m_glsmac->WithGSE(
-									[ this, &game, &selected_unit, &tile ]( GSE_CALLABLE ) {
-										auto* unit = game->GetUM()->GetUnit( selected_unit->GetId() );
+							m_glsmac->WithGSE(
+								[ &game, &selected_unit, &tile, &foreign_units ]( GSE_CALLABLE ) {
+									const auto* um = game->GetUM();
+									if ( foreign_units.empty() ) {
+										// move
+										auto* unit = um->GetUnit( selected_unit->GetId() );
 										const auto& c = tile->GetCoords();
 										auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
 										ASSERT_NOLOG( unit, "unit not found" );
@@ -1573,17 +1571,21 @@ void Game::Initialize(
 											}
 										);
 									}
-								);
-								//const auto event = backend::event::MoveUnit( m_slot_index, selected_unit->GetId(), td );
-								//game->MT_AddEvent( &event );
-							}
-							else {
-								// attack
-								// TODO: select the most powerful defender for attacker
-								const auto& target_unit = foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() );
-								const auto event = backend::event::AttackUnit( m_slot_index, selected_unit->GetId(), target_unit->GetId() );
-								game->MT_AddEvent( &event );
-							}
+									else {
+										// attack
+										auto* attacker = um->GetUnit( selected_unit->GetId() );
+										ASSERT_NOLOG( attacker, "attacker unit not found" );
+										auto* defender = um->GetUnit( foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() )->GetId() );
+										ASSERT_NOLOG( attacker, "defender unit not found" );
+										game->Event(
+											GSE_CALL, "attack_unit", {
+												{ "attacker", attacker->Wrap( GSE_CALL, true ) },
+												{ "defender", defender->Wrap( GSE_CALL, true ) },
+											}
+										);
+									}
+								}
+							);
 
 							return true;
 						}

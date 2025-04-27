@@ -54,7 +54,7 @@ return {
 			return 'Source tile is locked';
 		}
 		if (dst_tile.is_locked()) {
-			return 'Source tile is locked';
+			return 'Destination tile is locked';
 		}
 
 		if (e.data.unit.is_immovable) {

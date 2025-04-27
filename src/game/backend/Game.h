@@ -383,6 +383,8 @@ public:
 
 	gc::Space* const GetGCSpace() const;
 
+	void CheckRW( GSE_CALLABLE );
+	
 private:
 
 	void ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event );
@@ -463,7 +465,6 @@ private:
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	const bool IsRunning() const;
-	void CheckRW( GSE_CALLABLE );
 
 private:
 	friend class event::Event;

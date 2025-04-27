@@ -132,19 +132,11 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
 	{
-		"set_tile",
-		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 1 );
-			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
-			if ( tile != m_tile ) {
-				SetTile( GSE_CALL, tile );
-			}
-			return VALUE( gse::value::Undefined );
-		} )
-	},
-	{
 		"move_to_tile",
 		NATIVE_CALL( this ) {
+
+			m_um->m_game->CheckRW( GSE_CALL );
+
 			N_EXPECT_ARGS( 2 );
 			N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
 			N_GET_CALLABLE( on_complete, 1 );
