@@ -244,10 +244,10 @@ void GLSMAC::HideLoader() {
 
 void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
 	Log( text );
-	TriggerObject( m_ui, "error_popup" );
+	m_gc_space->Accumulate([ this ](){
+		TriggerObject( m_ui, "error_popup" );
+	});
 }
-
-
 
 gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
 	gse::ExecutionPointer ep;

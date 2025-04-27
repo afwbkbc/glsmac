@@ -24,10 +24,6 @@ public:
 		ET_FINALIZE_TURN,
 		ET_TURN_FINALIZED,
 		ET_ADVANCE_TURN,
-		ET_REQUEST_TILE_LOCKS,
-		ET_LOCK_TILES,
-		ET_REQUEST_TILE_UNLOCKS,
-		ET_UNLOCK_TILES,
 	};
 
 	LegacyEvent( const size_t initiator_slot, const event_type_t type );
@@ -38,8 +34,6 @@ public:
 
 	static const types::Buffer SerializeMultiple( const std::vector< LegacyEvent* >& events );
 	static void UnserializeMultiple( GSE_CALLABLE, types::Buffer& buf, std::vector< LegacyEvent* >& events_out );
-
-	static const bool IsBroadcastable( const event_type_t type );
 
 	const event_type_t m_type;
 	const size_t m_initiator_slot;

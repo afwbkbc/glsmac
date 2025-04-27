@@ -18,8 +18,6 @@ namespace tile {
 // using SMAC coordinate system (increments by 2 horizontally and vertically, by 1 diagonally)
 typedef types::Vec2< size_t > coords_t;
 
-typedef std::vector< coords_t > positions_t;
-
 enum direction_t {
 	D_NONE,
 	D_W,

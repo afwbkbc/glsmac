@@ -86,10 +86,11 @@ const std::string* AnimationManager::ShowAnimation( const std::string& animation
 
 void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	const auto& it = m_running_animations_callbacks.find( animation_id );
-	ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( animation_id ) + " is not running" );
-	const auto on_complete = it->second;
-	m_running_animations_callbacks.erase( it );
-	on_complete();
+	if ( it != m_running_animations_callbacks.end() ) {
+		const auto on_complete = it->second;
+		m_running_animations_callbacks.erase( it );
+		on_complete();
+	}
 }
 
 WRAPIMPL_BEGIN( AnimationManager )

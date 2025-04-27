@@ -46,10 +46,16 @@ return {
 		const src_tile = e.data.unit.get_tile();
 		const dst_tile = e.data.tile;
 
-		// TODO: fix tile locking
-		/*if (src_tile.is_locked()) {
+		if (src_tile == dst_tile) {
+			return 'Source tile is same as destination tile';
+		}
+
+		if (src_tile.is_locked()) {
 			return 'Source tile is locked';
-		}*/
+		}
+		if (dst_tile.is_locked()) {
+			return 'Source tile is locked';
+		}
 
 		if (e.data.unit.is_immovable) {
 			return 'Unit is immovable';
@@ -107,14 +113,13 @@ return {
 		const src_tile = unit.get_tile();
 		const dst_tile = e.data.tile;
 
-		const original_state = {
-			tile: src_tile,
-			movement: unit.movement,
-			moved_this_turn: unit.moved_this_turn,
+		const result = {
+			orig: {
+				tile: src_tile,
+				movement: unit.movement,
+				moved_this_turn: unit.moved_this_turn,
+			}
 		};
-
-		// TODO: fix tile locking
-		//e.game.tm.lock_tiles([src_tile, dst_tile], (unlock) => {
 
 		let movement_cost = get_movement_cost(unit, src_tile, dst_tile) + get_movement_aftercost(unit, src_tile, dst_tile);
 
@@ -126,8 +131,6 @@ return {
 				unit.movement = 0.0;
 			}
 			unit.moved_this_turn = true;
-
-			//unlock();
 		};
 
 		if (e.resolved.is_movement_successful) {
@@ -136,17 +139,15 @@ return {
 			next();
 		}
 
-		//});
-		return original_state;
+		return result;
 	},
 
 	rollback: (e) => {
 		const unit = e.data.unit;
-		const orig = e.applied;
-
-		unit.movement = orig.movement;
-		unit.moved_this_turn = orig.moved_this_turn;
+		const orig = e.applied.orig;
 		unit.move_to_tile(orig.tile, () => {
+			unit.movement = orig.movement;
+			unit.moved_this_turn = orig.moved_this_turn;
 		});
 	},
 

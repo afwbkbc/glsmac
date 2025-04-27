@@ -53,6 +53,8 @@ public:
 	health_t m_health;
 	bool m_moved_this_turn;
 
+	size_t m_animation_id = 0;
+
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;

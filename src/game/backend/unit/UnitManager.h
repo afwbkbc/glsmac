@@ -63,9 +63,6 @@ public:
 public:
 	// TODO: limit access
 	typedef std::function< void() > cb_oncomplete;
-	const std::string* MoveUnitValidate( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile );
-	gse::Value* const MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile );
-	void MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions );
 	const std::string* MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete );
 	const std::string* AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender );
 	gse::Value* const AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender );

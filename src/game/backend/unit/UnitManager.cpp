@@ -17,6 +17,7 @@
 #include "gse/value/Bool.h"
 #include "gse/value/Float.h"
 #include "gse/value/Array.h"
+#include "game/backend/map/tile/TileManager.h"
 
 namespace game {
 namespace backend {
@@ -635,109 +636,54 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 	return (health_t)health;
 }
 
-const std::string* UnitManager::MoveUnitValidate( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_move_validate", ARGS_F( ARGS_GSE_CALLABLE, &unit, &dst_tile ) {
-		{
-			"unit",
-			unit->Wrap( GSE_CALL )
-		},
-		{
-			"src_tile",
-			unit->GetTile()->Wrap( GSE_CALL )
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap( GSE_CALL )
-		},
-	}; } );
-	switch ( result->type ) {
-		case gse::Value::T_NULL:
-		case gse::Value::T_UNDEFINED:
-			return nullptr; // no errors
-		case gse::Value::T_STRING:
-			return new std::string( ( (gse::value::String*)result )->value ); // error
-		default:
-			THROW( "unexpected validation result type: " + result->GetTypeString() );
-	}
-}
-
-gse::Value* const UnitManager::MoveUnitResolve( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->TriggerObject(this, "unit_move_resolve", ARGS_F( ARGS_GSE_CALLABLE, &unit, &dst_tile ) {
-		{
-			"unit",
-			unit->Wrap( GSE_CALL )
-		},
-		{
-			"src_tile",
-			unit->GetTile()->Wrap( GSE_CALL )
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap( GSE_CALL )
-		},
-	}; } );
-}
-
-void UnitManager::MoveUnitApply( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, gse::Value* const resolutions ) {
-	auto* src_tile = unit->GetTile();
-	ASSERT( dst_tile, "dst tile not set" );
-
-	if ( src_tile == dst_tile ) {
-		return;
-	}
-
-	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
-
-	ASSERT( src_tile, "src tile not set" );
-	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
-	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
-
-	m_game->GetState()->TriggerObject( this, "unit_move_apply", ARGS_F( ARGS_GSE_CALLABLE, &unit, &src_tile, &dst_tile, &resolutions ) {
-		{
-			"unit",
-			unit->Wrap( GSE_CALL, true )
-		},
-		{
-			"src_tile",
-			src_tile->Wrap( GSE_CALL )
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap( GSE_CALL )
-		},
-		{
-			"resolutions",
-			resolutions
-		}
-	}; } );
-}
-
 const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
-	const auto* src_tile = unit->GetTile();
+
+	auto* tm = m_game->GetTM();
+	auto* am = m_game->GetAM();
+
+	if ( unit->m_animation_id ) {
+		// stop any previous animation
+		am->FinishAnimation( unit->m_animation_id );
+	}
+
+	auto* src_tile = unit->GetTile();
 	if ( src_tile == dst_tile ) {
 		return new std::string( "Unit can't move because it's already on target tile" );
 	}
-	// TODO: fix tile locking
-	/*if ( !src_tile->IsLocked() ) {
+
+	const std::vector< map::tile::Tile* > tiles_to_lock = { src_tile, dst_tile };
+
+	const auto* locked_tile = tm->FindLockedTile( tiles_to_lock );
+	if ( locked_tile ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile " + locked_tile->coord.ToString() + " is locked" );
+	}
+
+	m_game->GetTM()->LockTiles( m_game->GetSlotNum(), tiles_to_lock );
+
+	if ( !src_tile->IsLocked() ) {
 		return new std::string( "Source tile must be locked before moving unit" );
 	}
 	if ( !dst_tile->IsLocked() ) {
 		return new std::string( "Destination tile must be locked before moving unit" );
-	}*/
+	}
 	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_MOVE );
 	fr.data.unit_move.unit_id = unit->m_id;
 	fr.data.unit_move.dst_tile_coords = {
 		dst_tile->coord.x,
 		dst_tile->coord.y
 	};
-	fr.data.unit_move.running_animation_id = m_game->GetAM()->AddAnimationCallback(
-		[ on_complete, unit, dst_tile, ctx, gc_space, ep, si]() {
+	fr.data.unit_move.running_animation_id = unit->m_animation_id = am->AddAnimationCallback(
+		[ this, tm, tiles_to_lock, on_complete, unit, dst_tile, ctx, gc_space, ep, si ]() {
+			ASSERT_NOLOG( unit->m_animation_id, "animation id gone" );
+			unit->m_animation_id = 0;
+			tm->UnlockTiles( m_game->GetSlotNum(), tiles_to_lock );
 			gse::ExecutionPointer ep2 = ep;
 			unit->SetTile( gc_space, ctx, si, ep2 , dst_tile );
 			on_complete();
 		}
 	);
 	m_game->AddFrontendRequest( fr );
+
 	return nullptr; // no error
 }
 

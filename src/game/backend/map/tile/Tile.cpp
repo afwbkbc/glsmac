@@ -17,21 +17,6 @@ namespace backend {
 namespace map {
 namespace tile {
 
-const std::string Tile::TilePositionsToString( const positions_t& tile_positions, std::string prefx ) {
-	// TODO: refactor
-	std::string result = TS_ARR_BEGIN( "Tiles" );
-	for ( const auto& pos : tile_positions ) {
-		std::string prefix = prefx + TS_OFFSET;
-		result += TS_OFFSET + TS_OBJ_BEGIN( "Tile" ) +
-			TS_OBJ_PROP_NUM( "x", pos.x ) +
-			TS_OBJ_PROP_NUM( "y", pos.y ) +
-			TS_OBJ_END() + ",\n";
-	}
-	std::string prefix = prefx;
-	result += TS_ARR_END();
-	return result;
-}
-
 const std::unordered_map< direction_t, std::string > Tile::s_direction_str = {
 #define X( _x ) { D_##_x, #_x },
 	{

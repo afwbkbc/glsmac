@@ -5,8 +5,6 @@
 #include "game/backend/slot/Slot.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/map/Map.h"
-#include "game/backend/event/LockTiles.h"
-#include "game/backend/event/UnlockTiles.h"
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
@@ -34,39 +32,18 @@ void TileManager::Clear() {
 	m_tile_lock_callbacks.clear();
 }
 
-void TileManager::SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete ) {
-	// testing
-	/*m_tile_lock_callbacks.push_back(
-		{
-			tile_positions,
-			on_complete
-		}
-	);*/
-	LockTiles( m_game->GetSlotNum(), tile_positions );
-	on_complete();
-	//AddEvent( new event::RequestTileLocks( m_slot_num, tile_positions ) );
-}
-
-void TileManager::RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_game->GetState()->IsMaster() ) { // huh?
-		Log( "Tile locks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( true, initiator_slot, tile_positions );
-	}
-}
-
-void TileManager::LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_game->GetMap()->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( !tile->IsLocked(), "tile " + pos.ToString() + " is already locked" );
+void TileManager::LockTiles( const size_t initiator_slot, const std::vector< Tile* >& tiles ) {
+	for ( const auto& tile : tiles ) {
+		ASSERT_NOLOG( !tile->IsLocked(), "tile " + tile->coord.ToString() + " is already locked" );
 		tile->Lock( initiator_slot );
 	}
 	for ( auto it = m_tile_lock_callbacks.begin() ; it != m_tile_lock_callbacks.end() ; it++ ) {
 		const auto& it_positions = it->first;
 		const auto sz = it_positions.size();
-		if ( sz == tile_positions.size() ) {
+		if ( sz == tiles.size() ) {
 			bool match = true;
 			for ( size_t i = 0 ; i < sz ; i++ ) {
-				if ( tile_positions.at( i ) != it_positions.at( i ) ) {
+				if ( tiles.at( i ) != it_positions.at( i ) ) {
 					match = false;
 					break;
 				}
@@ -81,23 +58,18 @@ void TileManager::LockTiles( const size_t initiator_slot, const map::tile::posit
 	}
 }
 
-void TileManager::SendTileUnlockRequest( const map::tile::positions_t& tile_positions ) {
-	// testing
-	UnlockTiles( m_game->GetSlotNum(), tile_positions );
-	//AddEvent( new event::RequestTileUnlocks( m_slot_num, tile_positions ) );
-}
-
-void TileManager::RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	if ( m_game->GetState()->IsMaster() ) {
-		Log( "Tile unlocks request from " + std::to_string( initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( tile_positions, "" ) );
-		AddTileLockRequest( false, initiator_slot, tile_positions );
+const Tile* TileManager::FindLockedTile( const tiles_t& tiles ) {
+	for ( const auto& tile : tiles ) {
+		if ( tile->IsLocked() ) {
+			return tile;
+		}
 	}
+	return nullptr;
 }
 
-void TileManager::UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	for ( const auto& pos : tile_positions ) {
-		auto* tile = m_game->GetMap()->GetTile( pos.x, pos.y );
-		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + pos.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
+void TileManager::UnlockTiles( const size_t initiator_slot, const tiles_t& tiles ) {
+	for ( const auto& tile : tiles ) {
+		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + tile->coord.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
 		tile->Unlock();
 	}
 }
@@ -131,11 +103,8 @@ void TileManager::ProcessTileLockRequests() {
 							auto& locks = it->second;
 							if ( req.is_lock ) {
 								// lock
-								Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+								Log( "Locking tiles for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
 								locks.push_back( TileLock{ req.tile_positions } );
-								auto e = new event::LockTiles( slot_num, req.tile_positions, req.initiator_slot );
-								e->SetDestinationSlot( req.initiator_slot );
-								m_game->AddEvent( GSE_CALL, e );
 							}
 							else {
 								// unlock
@@ -143,19 +112,16 @@ void TileManager::ProcessTileLockRequests() {
 								for ( auto locks_it = locks.begin() ; locks_it != locks.end() ; locks_it++ ) {
 									if ( locks_it->Matches( req.tile_positions ) ) {
 										found = true;
-										Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+										Log( "Unlocking tiles for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
 										locks.erase( locks_it );
 										if ( locks.empty() ) {
 											m_tile_locks.erase( it );
 										}
-										auto e = new event::UnlockTiles( slot_num, req.tile_positions, req.initiator_slot );
-										e->SetDestinationSlot( req.initiator_slot );
-										m_game->AddEvent( GSE_CALL, e );
 										break;
 									}
 								}
 								if ( !found ) {
-									Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + map::tile::Tile::TilePositionsToString( req.tile_positions ) );
+									Log( "Could not find matching tile locks for " + std::to_string( req.initiator_slot ) + ": " + TilesToString( req.tile_positions ) );
 								}
 							}
 						}
@@ -217,35 +183,6 @@ WRAPIMPL_BEGIN( TileManager )
 				return m->GetTile( x, y )->Wrap( GSE_CALL, gc_space );
 			} )
 		},
-		{
-			"lock_tiles",
-				NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( tiles, 0, Array );
-				N_GET_CALLABLE( on_complete, 1 );
-				Persist( on_complete );
-				map::tile::positions_t tile_positions = {};
-				tile_positions.reserve( tiles.size() );
-				for ( const auto& tileobj : tiles ) {
-					N_UNWRAP( tile, tileobj, map::tile::Tile );
-					tile_positions.push_back( tile->coord );
-				}
-				SendTileLockRequest( tile_positions, [ this, gc_space, on_complete, tile_positions, ctx, si, ep ]() {
-					auto ep2 = ep;
-					on_complete->Run( gc_space, ctx, si, ep2, {
-						VALUE( gse::callable::Native,, ctx, [ this, tile_positions ](
-							GSE_CALLABLE,
-							const gse::value::function_arguments_t& arguments
-						)  {
-							SendTileUnlockRequest( tile_positions );
-							return VALUE( gse::value::Undefined );
-						} )
-					});
-					Unpersist( on_complete );
-				});
-				return VALUE( gse::value::Undefined );
-			})
-		},
 	};
 WRAPIMPL_END_PTR()
 
@@ -257,16 +194,22 @@ const std::string TileManager::ToString() {
 }
 #endif
 
-void TileManager::AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions ) {
-	ASSERT_NOLOG( m_game->GetState() && m_game->GetState()->IsMaster(), "only master can manage tile locks" );
-	m_tile_lock_requests.push_back(
-		{
-			is_lock,
-			initiator_slot,
-			tile_positions
-		}
-	);
+const std::string TileManager::TilesToString( const tiles_t& tiles, std::string prefx ) {
+	// TODO: refactor
+	std::string result = TS_ARR_BEGIN( "Tiles" );
+	for ( const auto& tile : tiles ) {
+		std::string prefix = prefx + TS_OFFSET;
+		result += TS_OFFSET + TS_OBJ_BEGIN( "Tile" ) +
+			TS_OBJ_PROP_NUM( "x", tile->coord.x ) +
+			TS_OBJ_PROP_NUM( "y", tile->coord.y ) +
+			TS_OBJ_END() + ",\n";
+	}
+	std::string prefix = prefx;
+	result += TS_ARR_END();
+	return result;
 }
+
+
 
 }
 }

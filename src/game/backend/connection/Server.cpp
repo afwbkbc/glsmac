@@ -343,7 +343,6 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 							}
 						);
 						const size_t slot = m_state->GetCidSlots().at( event.cid );
-						std::vector< event::LegacyEvent* > broadcastable_events = {};
 						std::vector< event::LegacyEvent* > valid_events = {};
 						for ( const auto& game_event : game_events ) {
 							bool ok = true;
@@ -363,9 +362,6 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 							}
 							if ( ok ) {
 								valid_events.push_back( game_event );
-								if ( event::LegacyEvent::IsBroadcastable( game_event->m_type ) ) {
-									broadcastable_events.push_back( game_event );
-								}
 							}
 						}
 						for ( const auto& game_event : valid_events ) {
@@ -373,8 +369,8 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 								m_on_game_event_apply( game_event );
 							}
 						}
-						if ( !broadcastable_events.empty() ) {
-							SendGameEvents( broadcastable_events );
+						if ( !valid_events.empty() ) {
+							SendGameEvents( valid_events );
 						}
 						break;
 					}

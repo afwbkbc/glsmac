@@ -34,8 +34,6 @@ public:
 
 	coords_t coord;
 
-	static const std::string TilePositionsToString( const positions_t& tile_positions, std::string prefx = "" );
-
 	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
 	// pointers are set only once by Tiles and are not to be changed after
 	struct {
