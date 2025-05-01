@@ -102,7 +102,11 @@ return {
 				attacker_health -= damage;
 			}
 		}
-		return damage_sequence;
+		return {
+			sequence: damage_sequence,
+			attacker_dead: attacker_health <= 0.0,
+			defender_dead: defender_health <= 0.0,
+		};
 	},
 
 	apply: (e) => {
@@ -111,43 +115,52 @@ return {
 		let attacker_tile = attacker.get_tile();
 		let defender_tile = defender.get_tile();
 
-		let damages_sz = #sizeof(e.resolved);
+		attacker.movement = 0.0; // TODO: rovers etc
 
-		#print('RESOLUTIONS', e.resolved);
-
-		const process_next_damage = (damage_index) => {
-			let next = () => {
-				process_next_damage(damage_index + 1);
-			};
-			if (damage_index < damages_sz) {
-				const damages = e.resolved[damage_index];
-				if (damages[0]) {
-					e.game.am.show_animation('ATTACK_PSI', defender_tile, () => {
-						defender.health = defender.health - damages[1];
-						if (defender.health <= 0.0) {
-							e.game.event('despawn_unit', { unit: defender });
-							e.game.am.show_animation('DEATH_PSI', defender_tile, next);
-						} else {
-							next();
-						}
-					});
-				} else {
-					e.game.am.show_animation('ATTACK_PSI', attacker_tile, () => {
-						attacker.health = attacker.health - damages[1];
-						if (attacker.health <= 0.0) {
-							e.game.event('despawn_unit', { unit: attacker });
-							e.game.am.show_animation('DEATH_PSI', attacker_tile, next);
-						} else {
-							next();
-						}
-					});
-				}
-			} else {
-				// TODO: multiattack i.e. rovers
-				attacker.movement = 0.0;
+		let animations = [];
+		for (step of e.resolved.sequence) {
+			const s = step;
+			if (step[0]) {
+				animations :+{
+					id: 'ATTACK_PSI',
+					tile: defender_tile,
+					oncomplete: () => {
+						defender.health = defender.health - s[1];
+					}
+				};
 			}
-		};
-		process_next_damage(0);
+			else {
+				const s = step;
+				animations :+{
+					id: 'ATTACK_PSI',
+					tile: attacker_tile,
+					oncomplete: () => {
+						attacker.health = attacker.health - s[1];
+					}
+				};
+			}
+		}
+		if (e.resolved.attacker_dead) {
+			animations :+{
+				id: 'DEATH_PSI',
+				tile: attacker_tile,
+				oncomplete: () => {
+					e.game.event('despawn_unit', {unit: attacker});
+				}
+			};
+		}
+		if (e.resolved.defender_dead) {
+			animations :+{
+				id: 'DEATH_PSI',
+				tile: defender_tile,
+				oncomplete: () => {
+					e.game.event('despawn_unit', {unit: defender});
+				}
+			};
+		}
+
+		e.game.am.show_animations(animations);
+
 	},
 
 	rollback: (e) => {

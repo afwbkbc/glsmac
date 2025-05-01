@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "common/Common.h"
 
 #include "gse/GCWrappable.h"
@@ -27,7 +29,7 @@ public:
 
 	void Clear();
 
-	typedef std::vector< map::tile::Tile* > tiles_t;
+	typedef std::unordered_set< map::tile::Tile* > tiles_t;
 
 	const Tile* FindLockedTile( const tiles_t& tiles );
 	void LockTiles( const size_t initiator_slot, const tiles_t& tiles );

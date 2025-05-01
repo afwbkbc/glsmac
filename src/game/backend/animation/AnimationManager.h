@@ -28,7 +28,7 @@ public:
 	void Clear();
 	void DefineAnimation( Def* def );
 	void UndefineAnimation( const std::string& id );
-	const std::string* ShowAnimation( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete );
+	const std::string* ShowAnimation( const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	const size_t AddAnimationCallback( const cb_oncomplete& on_complete );
 	void FinishAnimation( const size_t animation_id );
 

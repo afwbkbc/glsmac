@@ -651,7 +651,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 		return new std::string( "Unit can't move because it's already on target tile" );
 	}
 
-	const std::vector< map::tile::Tile* > tiles_to_lock = { src_tile, dst_tile };
+	const std::unordered_set< map::tile::Tile* > tiles_to_lock = { src_tile, dst_tile };
 
 	const auto* locked_tile = tm->FindLockedTile( tiles_to_lock );
 	if ( locked_tile ) {

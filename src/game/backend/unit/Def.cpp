@@ -51,15 +51,19 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 
 WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
-		{
-			"name",
-			VALUE( gse::value::String,, m_name )
-		},
-		{
-			"type",
-			VALUE( gse::value::String,, "static" ) // TODO
-		},
-	};
+			{
+				"id",
+				VALUE( gse::value::String, , m_id )
+			},
+			{
+				"name",
+				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"type",
+				VALUE( gse::value::String, , "static" ) // TODO
+			},
+		};
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Def )

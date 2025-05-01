@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unordered_set>
+
 #include "game/backend/map/tile/Types.h"
 #include "util/Timer.h"
 
@@ -17,7 +19,7 @@ class TileLock {
 public:
 	static const size_t MAX_WAIT_MS;
 
-	typedef std::vector< Tile* > tiles_t;
+	typedef std::unordered_set< Tile* > tiles_t;
 
 	TileLock( const tiles_t& tile_positions );
 	const bool Matches( const tiles_t& tile_positions ) const;

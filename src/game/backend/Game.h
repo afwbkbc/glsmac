@@ -384,7 +384,7 @@ public:
 	gc::Space* const GetGCSpace() const;
 
 	void CheckRW( GSE_CALLABLE );
-	
+
 private:
 
 	void ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event );

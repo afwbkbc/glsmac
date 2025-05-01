@@ -54,6 +54,14 @@ namespace callable {
     arg = callable_val; \
     N_CHECKARG( arg, _index, Callable ); \
     const auto& _var = (gse::value::Callable*)arg;
+#define N_GET_CALLABLE_OPT( _var, _index ) \
+    gse::value::Callable* _var = nullptr; \
+    if ( _index < arguments.size() ) { \
+        callable_val = arguments.at( _index ); \
+        arg = callable_val; \
+        N_CHECKARG( arg, _index, Callable ); \
+        _var = (gse::value::Callable*)arg; \
+    }
 #define N_GETVALUE_NONCONST( _var, _index, _type ) \
     ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index )->Deref(); \

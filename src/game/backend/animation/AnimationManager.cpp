@@ -6,14 +6,26 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/value/Float.h"
+#include "gse/value/Array.h"
 #include "gse/ExecutionPointer.h"
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
 #include "game/backend/animation/FramesRow.h"
+#include "game/backend/map/tile/TileManager.h"
 
 namespace game {
 namespace backend {
 namespace animation {
+
+#define PARSEANIMATION( _var, _type, ... ) \
+	const auto& it_##_var = props.find( #_var ); \
+	if ( it_##_var == props.end() ) { \
+		GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations() does not contain property: " #_var ); \
+	} \
+	if ( it_##_var->second->type != gse::value::_type::GetType() ) { \
+		GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property " #_var " is of wrong type. Expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got " + it_##_var->second->GetTypeString() + ": " + it_##_var->second->ToString() ); \
+	} \
+	const auto _var = ((gse::value::_type*)it_##_var->second) __VA_ARGS__;
 
 AnimationManager::AnimationManager( Game* game )
 	: gse::GCWrappable( game->GetGCSpace() )
@@ -64,7 +76,7 @@ void AnimationManager::UndefineAnimation( const std::string& id ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-const std::string* AnimationManager::ShowAnimation( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
+const std::string* AnimationManager::ShowAnimation( const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
 	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
 		return new std::string( "Animation '" + animation_id + "' is not defined" );
 	}
@@ -157,21 +169,135 @@ WRAPIMPL_BEGIN( AnimationManager )
 		{
 			"show_animation",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 3 );
+				N_EXPECT_ARGS_MIN_MAX( 2, 3 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
-				N_GET_CALLABLE( on_complete, 2 );
-				Persist( on_complete );
-				const auto* errmsg = ShowAnimation( id, tile, [ this, on_complete, gc_space, ctx, si, ep ]() {
-					auto ep2 = ep;
-					on_complete->Run( gc_space, ctx, si, ep2, {} );
-					Unpersist( on_complete );
+				N_GET_CALLABLE_OPT( on_complete, 2 );
+				if ( on_complete ) {
+					Persist( on_complete );
+				}
+
+				auto* tm = m_game->GetTM();
+				const auto slotnum = m_game->GetSlotNum();
+				tm->LockTiles( slotnum, { tile } );
+
+				const auto* errmsg = ShowAnimation( id, tile, [ this, tm, slotnum, tile, on_complete, gc_space, ctx, si, ep ]() {
+					if ( on_complete ) {
+						auto ep2 = ep;
+						on_complete->Run( gc_space, ctx, si, ep2, {} );
+						Unpersist( on_complete );
+					}
+					tm->UnlockTiles( slotnum, { tile } );
 				});
 				if ( errmsg ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
-					Unpersist( on_complete );
+					if ( on_complete ) {
+						Unpersist( on_complete );
+					}
+					tm->UnlockTiles( slotnum, { tile } );
 					delete errmsg;
 				}
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"show_animations",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( animations, 0, Array );
+
+				if ( animations.empty() ) {
+					// nothing to do
+					return VALUE( gse::value::Undefined );
+				}
+
+				std::unordered_set< map::tile::Tile* > unique_tiles = {};
+
+				struct animdef_t {
+					const map::tile::Tile* tile;
+					std::string animation_id;
+					gse::value::Callable* oncomplete;
+				};
+				auto* sequence = new std::vector< animdef_t >();
+				sequence->reserve( animations.size() );
+
+				for ( const auto& value : animations ) {
+					if ( value->type != gse::Value::T_OBJECT ) {
+						GSE_ERROR( gse::EC.GAME_ERROR, "Invalid array element in show_animations(): expected Object, got " + value->GetTypeString() + ": " + value->ToString() );
+					}
+
+					const auto& props = ((gse::value::Object*)value)->value;
+
+
+					PARSEANIMATION( id, String, ->value );
+
+					PARSEANIMATION( tile, Object );
+					if (tile->object_class != map::tile::Tile::WRAP_CLASS ) {
+						GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property tile is not of class Tile: " + tile->ToString() );
+					}
+
+					const auto& t = (map::tile::Tile*)tile->wrapobj;
+					unique_tiles.insert( t );
+
+					animdef_t animdef = {t, id};
+					if (props.find("oncomplete") != props.end()) {
+						PARSEANIMATION( oncomplete, Callable );
+						animdef.oncomplete = oncomplete;
+						Persist( oncomplete );
+					}
+
+					sequence->push_back( animdef );
+				}
+
+				const auto slotnum = m_game->GetSlotNum();
+
+				auto* tm = m_game->GetTM();
+
+				tm->LockTiles( slotnum, unique_tiles );
+
+				const auto cleanup = [ this, tm, slotnum, unique_tiles, sequence ](){
+					for ( const auto& s : *sequence ) {
+						if ( s.oncomplete ) {
+							Unpersist( s.oncomplete );
+						}
+					}
+					tm->UnlockTiles( slotnum, unique_tiles );
+					delete sequence;
+				};
+
+				// TODO: a way to make it non-static? should we?
+				static std::function< void( const size_t ) > next;
+
+				next = [ this, sequence, cleanup, gc_space, ctx, si, ep ]( const size_t idx ) {
+					ASSERT_NOLOG( sequence->size() > idx, "sequence overflow ( " + std::to_string( idx ) + " >= " + std::to_string( sequence->size() ) + " )" );
+					const auto& s = sequence->at( idx );
+					try {
+						ShowAnimation(
+							s.animation_id, s.tile, [ idx, sequence, cleanup, s, gc_space, ctx, si, ep ]() {
+								if ( s.oncomplete ) {
+									try {
+										auto ep2 = ep;
+										s.oncomplete->Run( gc_space, ctx, si, ep2, {} );
+									} catch ( const std::exception& e ) {
+										cleanup();
+										throw;
+									}
+								}
+								if ( idx < sequence->size() - 1 ) {
+									next( idx + 1 );
+								}
+								else {
+									cleanup();
+								}
+							}
+						);
+					} catch ( const std::exception& e ) {
+						cleanup();
+						throw;
+					}
+				};
+				next( 0 );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -244,3 +370,5 @@ const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_com
 }
 }
 }
+
+#undef PARSEANIMATION
