@@ -115,6 +115,14 @@ return {
 		let attacker_tile = attacker.get_tile();
 		let defender_tile = defender.get_tile();
 
+		let applied = {
+			backup: {
+				attacker_health: attacker.health,
+				defender_health: defender.health,
+				attacker_movement: attacker.movement,
+			},
+		};
+
 		attacker.movement = 0.0; // TODO: rovers etc
 
 		let animations = [];
@@ -145,6 +153,7 @@ return {
 				id: 'DEATH_PSI',
 				tile: attacker_tile,
 				oncomplete: () => {
+					applied.backup.attacker = attacker;
 					e.game.event('despawn_unit', {unit: attacker});
 				}
 			};
@@ -154,17 +163,34 @@ return {
 				id: 'DEATH_PSI',
 				tile: defender_tile,
 				oncomplete: () => {
+					applied.backup.defender = defender;
 					e.game.event('despawn_unit', {unit: defender});
 				}
 			};
 		}
 
-		e.game.am.show_animations(animations);
+		applied.animations_id = e.game.am.show_animations(animations);
 
+		return applied;
 	},
 
 	rollback: (e) => {
-		#print('ROLLBACK', e);
+		// TODO: test in multiplayer
+		const a = e.applied;
+		e.game.am.stop_animations(a.animations_id);
+		if (#is_defined(a.backup.attacker)) {
+			e.game.event('spawn_unit', {unit: a.backup.attacker});
+		}
+		else {
+			e.data.attacker.movement = a.backup.attacker_movement;
+			e.data.attacker.health = a.backup.attacker_health;
+		}
+		if (#is_defined(a.backup.defender)) {
+			e.game.event('spawn_unit', {unit: a.backup.defender});
+		}
+		else {
+			e.data.defender.health = a.backup.defender_health;
+		}
 	},
 
 };

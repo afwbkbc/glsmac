@@ -281,6 +281,7 @@ private:
 	void DefineAnimation( const backend::animation::Def* def );
 	void UndefineAnimation( const std::string& id );
 	void ShowAnimation( AnimationDef* def, const size_t animation_id, const ::types::Vec3& render_coords );
+	void AbortAnimation( const size_t animation_id );
 
 	void ProcessRequest( const FrontendRequest* request );
 	void SendBackendRequest( const BackendRequest* request );

@@ -26,8 +26,9 @@ Animation::~Animation() {
 	m_timer.Stop();
 	if ( m_instance_id ) {
 		// clear animation
-		m_frames.at( m_frame_index )->actor->RemoveInstance( m_instance_id );
+		m_frames.at( m_frame_index - 1 )->actor->RemoveInstance( m_instance_id );
 	}
+	m_sound->Stop();
 	g_engine->GetAudio()->RemoveAndDeleteActor( m_sound );
 }
 

@@ -35,6 +35,7 @@ public:
 		FR_ANIMATION_DEFINE,
 		FR_ANIMATION_UNDEFINE,
 		FR_ANIMATION_SHOW,
+		FR_ANIMATION_ABORT,
 		FR_UNIT_DEFINE,
 		FR_UNIT_UNDEFINE,
 		FR_UNIT_SPAWN,
@@ -118,6 +119,9 @@ public:
 				float z;
 			} render_coords;
 		} animation_show;
+		struct {
+			size_t running_animation_id;
+		} animation_abort;
 		struct {
 			const std::string* serialized_unitdef; // can be optimized
 		} unit_define;

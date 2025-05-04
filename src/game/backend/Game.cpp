@@ -475,7 +475,7 @@ void Game::Iterate() {
 								if ( resolved ) {
 									obj->Set( "resolved", resolved, GSE_CALL );
 								}
-								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj, &event ] () {
+								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
 									auto* applied = handler->Apply( GSE_CALL, fargs );
 									if ( applied ) {
 										obj->Set( "applied", applied, GSE_CALL );

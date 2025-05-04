@@ -32,6 +32,7 @@ public:
 	const size_t ShowAnimation( GSE_CALLABLE, const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	const size_t AddAnimationCallback( const cb_oncomplete& on_complete );
 	void FinishAnimation( const size_t animation_id );
+	void AbortAnimation( const size_t animation_id );
 
 	WRAPDEFS_PTR( AnimationManager )
 
@@ -47,14 +48,15 @@ public:
 private:
 	friend class AnimationSequence;
 	Game* m_game = nullptr;
-	void RemoveAnimationSequence( AnimationSequence* const animation_sequence );
+	void RemoveAnimationSequence( const size_t sequence_id );
 
 private:
 	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
 	size_t m_next_running_animation_id = 1;
 	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
 
-	std::unordered_set< AnimationSequence* > m_animation_sequences = {};
+	std::unordered_map< size_t, AnimationSequence* > m_animation_sequences = {};
+	size_t m_next_animation_sequence_id = 1;
 
 };
 

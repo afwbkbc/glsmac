@@ -23,7 +23,7 @@ Animation::Animation(
 
 void Animation::Run( GSE_CALLABLE ) {
 	try {
-		m_sequence->m_am->ShowAnimation(
+		m_animation_id = m_sequence->m_am->ShowAnimation(
 			GSE_CALL,
 			m_animdef_id, m_tile, [ this, gc_space, ctx, si, ep ]( const size_t animation_id ) {
 				auto ep2 = ep;
@@ -45,6 +45,12 @@ void Animation::Run( GSE_CALLABLE ) {
 		m_sequence->Finish();
 		throw;
 	}
+}
+
+void Animation::Abort() {
+	ASSERT_NOLOG( !m_is_finished, "animation already finished" );
+	ASSERT_NOLOG( m_animation_id, "animation id is zero" );
+	m_sequence->m_am->AbortAnimation( m_animation_id );
 }
 
 void Animation::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {

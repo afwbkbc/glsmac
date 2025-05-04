@@ -109,6 +109,16 @@ void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	}
 }
 
+void AnimationManager::AbortAnimation( const size_t animation_id ) {
+	const auto& it = m_running_animations_callbacks.find( animation_id );
+	if ( it != m_running_animations_callbacks.end() ) {
+		m_running_animations_callbacks.erase( it );
+		auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_ABORT );
+		fr.data.animation_abort.running_animation_id = animation_id;
+		m_game->AddFrontendRequest( fr );
+	}
+}
+
 WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
@@ -173,6 +183,9 @@ WRAPIMPL_BEGIN( AnimationManager )
 		{
 			"show_animation",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS_MIN_MAX( 2, 3 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
@@ -208,10 +221,26 @@ WRAPIMPL_BEGIN( AnimationManager )
 			} )
 		},
 		{
+			"stop_animations",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( animations_id, 0, Int );
+
+				const auto& it = m_animation_sequences.find( animations_id );
+				if ( it != m_animation_sequences.end() ) {
+					it->second->Abort();
+				}
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
 			"show_animations",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( animations, 0, Array );
+
+				m_game->CheckRW( GSE_CALL );
 
 				if ( animations.empty() ) {
 					// nothing to do
@@ -220,9 +249,12 @@ WRAPIMPL_BEGIN( AnimationManager )
 
 				std::unordered_set< map::tile::Tile* > unique_tiles = {};
 
-				auto* sequence = *m_animation_sequences.insert(
-					new AnimationSequence( gc_space, this, animations.size() )
-				).first;
+				if ( m_next_animation_sequence_id == SIZE_MAX ) {
+					m_next_animation_sequence_id = 1;
+				}
+
+				auto* sequence = new AnimationSequence( gc_space, this, m_next_animation_sequence_id, animations.size() );
+				m_animation_sequences.insert( { m_next_animation_sequence_id, sequence } );
 
 				for ( const auto& value : animations ) {
 					if ( value->type != gse::Value::T_OBJECT ) {
@@ -234,7 +266,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 					PARSEANIMATION( id, String, ->value );
 
 					PARSEANIMATION( tile, Object );
-					if (tile->object_class != map::tile::Tile::WRAP_CLASS ) {
+					if ( tile->object_class != map::tile::Tile::WRAP_CLASS ) {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property tile is not of class Tile: " + tile->ToString() );
 					}
 
@@ -251,7 +283,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 
 				sequence->Run( GSE_CALL );
 
-				return VALUE( gse::value::Undefined );
+				return VALUE( gse::value::Int,, m_next_animation_sequence_id++ );
 			} )
 		},
 		{
@@ -323,16 +355,16 @@ void AnimationManager::GetReachableObjects( std::unordered_set< gc::Object* >& r
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "animation_sequences" );
-	for ( const auto& animation_sequence : m_animation_sequences ) {
-		GC_REACHABLE( animation_sequence );
+	for ( const auto& it : m_animation_sequences ) {
+		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
 
 }
 
-void AnimationManager::RemoveAnimationSequence( AnimationSequence* const animation_sequence ) {
-	ASSERT_NOLOG( m_animation_sequences.find( animation_sequence ) != m_animation_sequences.end(), "animation sequence not found" );
-	m_animation_sequences.erase( animation_sequence );
+void AnimationManager::RemoveAnimationSequence( const size_t sequence_id ) {
+	ASSERT_NOLOG( m_animation_sequences.find( sequence_id ) != m_animation_sequences.end(), "animation sequence not found" );
+	m_animation_sequences.erase( sequence_id );
 }
 
 }

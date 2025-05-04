@@ -948,6 +948,13 @@ void Game::ShowAnimation( AnimationDef* def, const size_t animation_id, const ty
 	);
 }
 
+void Game::AbortAnimation( const size_t animation_id ) {
+	const auto& it = m_animations.find( animation_id );
+	ASSERT( it != m_animations.end(), "animation id not found" );
+	delete it->second;
+	m_animations.erase( it );
+}
+
 void Game::DefineAnimation( const backend::animation::Def* def ) {
 	ASSERT( m_animationdefs.find( def->m_id ) == m_animationdefs.end(), "animation def already exists" );
 
@@ -1116,6 +1123,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				}
 			);
 
+			break;
+		}
+		case FrontendRequest::FR_ANIMATION_ABORT: {
+			AbortAnimation( request->data.animation_abort.running_animation_id );
 			break;
 		}
 		case FrontendRequest::FR_UNIT_DEFINE: {
@@ -1550,10 +1561,10 @@ void Game::Initialize(
 							std::unordered_map< size_t, unit::Unit* > foreign_units = {};
 							for ( const auto& it : dst_tile->GetUnits() ) {
 								const auto& unit = it.second;
-								//if ( !unit->IsOwned() ) { // TODO: pacts
-								// TODO: skip units of treaty/truce faction?
-								foreign_units.insert( it );
-								//}
+								if ( !unit->IsOwned() ) { // TODO: pacts
+									// TODO: skip units of treaty/truce faction?
+									foreign_units.insert( it );
+								}
 							}
 							m_glsmac->WithGSE(
 								[ &game, &selected_unit, &tile, &foreign_units ]( GSE_CALLABLE ) {

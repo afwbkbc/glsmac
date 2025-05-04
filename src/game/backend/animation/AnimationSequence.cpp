@@ -9,8 +9,9 @@ namespace game {
 namespace backend {
 namespace animation {
 
-AnimationSequence::AnimationSequence( gc::Space* const gc_space, AnimationManager* const animation_manager, const size_t size )
+AnimationSequence::AnimationSequence( gc::Space* const gc_space, AnimationManager* const animation_manager, const size_t sequence_id, const size_t size )
 	: gc::Object( gc_space )
+	, m_sequence_id( sequence_id )
 	, m_expected_size( size )
 	, m_am( animation_manager ) {
 	m_animations.reserve( size );
@@ -33,6 +34,13 @@ void AnimationSequence::Run( GSE_CALLABLE ) {
 		const auto& first = m_animations.front();
 		first->Run( GSE_CALL );
 	}
+}
+
+void AnimationSequence::Abort() {
+	ASSERT_NOLOG( m_is_running, "animation sequence not running" );
+	ASSERT_NOLOG( m_current_animation_idx < m_animations.size(), "animation idx overflow" );
+	m_animations.at( m_current_animation_idx )->Abort();
+	Finish();
 }
 
 void AnimationSequence::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -63,9 +71,10 @@ const std::string AnimationSequence::ToString() {
 #endif
 
 void AnimationSequence::Finish() {
+	ASSERT_NOLOG( m_is_running, "animation sequence not running" );
 	ASSERT_NOLOG( !m_locked_tiles.empty(), "locked tiles empty" );
 	m_am->m_game->GetTM()->UnlockTiles( m_am->m_game->GetSlotNum(), m_locked_tiles );
-	m_am->RemoveAnimationSequence( this );
+	m_am->RemoveAnimationSequence( m_sequence_id );
 }
 
 void AnimationSequence::RunNextMaybe( GSE_CALLABLE ) {

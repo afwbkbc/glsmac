@@ -30,6 +30,7 @@ public:
 	);
 
 	void Run( GSE_CALLABLE );
+	void Abort();
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
@@ -46,6 +47,7 @@ private:
 	const std::string m_animdef_id;
 	gse::value::Callable* const m_oncomplete;
 
+	size_t m_animation_id = 0;
 	bool m_is_finished = false;
 };
 
