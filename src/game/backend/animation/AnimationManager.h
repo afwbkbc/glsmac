@@ -17,18 +17,19 @@ class Tile;
 namespace animation {
 
 class Def;
+class AnimationSequence;
 
 CLASS2( AnimationManager, common::Class, gse::GCWrappable )
 public:
 	AnimationManager( Game* game );
 	~AnimationManager();
 
-	typedef std::function< void() > cb_oncomplete;
+	typedef std::function< void( const size_t& animation_id ) > cb_oncomplete;
 
 	void Clear();
 	void DefineAnimation( Def* def );
 	void UndefineAnimation( const std::string& id );
-	const std::string* ShowAnimation( const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete );
+	const size_t ShowAnimation( GSE_CALLABLE, const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete );
 	const size_t AddAnimationCallback( const cb_oncomplete& on_complete );
 	void FinishAnimation( const size_t animation_id );
 
@@ -41,12 +42,19 @@ public:
 	const std::string ToString() override;
 #endif
 
-private:
-	Game* m_game = nullptr;
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+private:
+	friend class AnimationSequence;
+	Game* m_game = nullptr;
+	void RemoveAnimationSequence( AnimationSequence* const animation_sequence );
+
+private:
 	std::unordered_map< std::string, animation::Def* > m_animation_defs = {};
 	size_t m_next_running_animation_id = 1;
 	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
+
+	std::unordered_set< AnimationSequence* > m_animation_sequences = {};
 
 };
 

@@ -13,6 +13,9 @@
 #include "game/backend/animation/FramesRow.h"
 #include "game/backend/map/tile/TileManager.h"
 
+#include "AnimationSequence.h"
+#include "Animation.h"
+
 namespace game {
 namespace backend {
 namespace animation {
@@ -38,6 +41,7 @@ AnimationManager::~AnimationManager() {
 }
 
 void AnimationManager::Clear() {
+	ASSERT( m_animation_sequences.empty(), "some animations are still running" );
 	m_running_animations_callbacks.clear();
 	m_next_running_animation_id = 0;
 	for ( auto& it : m_animation_defs ) {
@@ -76,12 +80,12 @@ void AnimationManager::UndefineAnimation( const std::string& id ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-const std::string* AnimationManager::ShowAnimation( const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
+const size_t AnimationManager::ShowAnimation( GSE_CALLABLE, const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
 	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
-		return new std::string( "Animation '" + animation_id + "' is not defined" );
+		GSE_ERROR( gse::EC.GAME_ERROR, "Animation '" + animation_id + "' is not defined" );
 	}
 	if ( !tile->IsLocked() ) {
-		return new std::string( "Tile must be locked before showing animation" );
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile must be locked before showing animation" );
 	}
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
 	NEW( fr.data.animation_show.animation_id, std::string, animation_id );
@@ -93,7 +97,7 @@ const std::string* AnimationManager::ShowAnimation( const std::string& animation
 		c.z,
 	};
 	m_game->AddFrontendRequest( fr );
-	return nullptr; // no error
+	return fr.data.animation_show.running_animation_id;
 }
 
 void AnimationManager::FinishAnimation( const size_t animation_id ) {
@@ -101,7 +105,7 @@ void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	if ( it != m_running_animations_callbacks.end() ) {
 		const auto on_complete = it->second;
 		m_running_animations_callbacks.erase( it );
-		on_complete();
+		on_complete( animation_id );
 	}
 }
 
@@ -181,21 +185,23 @@ WRAPIMPL_BEGIN( AnimationManager )
 				const auto slotnum = m_game->GetSlotNum();
 				tm->LockTiles( slotnum, { tile } );
 
-				const auto* errmsg = ShowAnimation( id, tile, [ this, tm, slotnum, tile, on_complete, gc_space, ctx, si, ep ]() {
+				try {
+					ShowAnimation(
+						GSE_CALL, id, tile, [ this, tm, slotnum, tile, on_complete, gc_space, ctx, si, ep ]( const size_t animation_id ) {
+							if ( on_complete ) {
+								auto ep2 = ep;
+								on_complete->Run( gc_space, ctx, si, ep2, {} );
+								Unpersist( on_complete );
+							}
+							tm->UnlockTiles( slotnum, { tile } );
+						}
+					);
+				} catch ( gse::Exception& e ) {
 					if ( on_complete ) {
-						auto ep2 = ep;
-						on_complete->Run( gc_space, ctx, si, ep2, {} );
 						Unpersist( on_complete );
 					}
 					tm->UnlockTiles( slotnum, { tile } );
-				});
-				if ( errmsg ) {
-					GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
-					if ( on_complete ) {
-						Unpersist( on_complete );
-					}
-					tm->UnlockTiles( slotnum, { tile } );
-					delete errmsg;
+					throw;
 				}
 
 				return VALUE( gse::value::Undefined );
@@ -214,13 +220,9 @@ WRAPIMPL_BEGIN( AnimationManager )
 
 				std::unordered_set< map::tile::Tile* > unique_tiles = {};
 
-				struct animdef_t {
-					const map::tile::Tile* tile;
-					std::string animation_id;
-					gse::value::Callable* oncomplete;
-				};
-				auto* sequence = new std::vector< animdef_t >();
-				sequence->reserve( animations.size() );
+				auto* sequence = *m_animation_sequences.insert(
+					new AnimationSequence( gc_space, this, animations.size() )
+				).first;
 
 				for ( const auto& value : animations ) {
 					if ( value->type != gse::Value::T_OBJECT ) {
@@ -228,7 +230,6 @@ WRAPIMPL_BEGIN( AnimationManager )
 					}
 
 					const auto& props = ((gse::value::Object*)value)->value;
-
 
 					PARSEANIMATION( id, String, ->value );
 
@@ -240,64 +241,15 @@ WRAPIMPL_BEGIN( AnimationManager )
 					const auto& t = (map::tile::Tile*)tile->wrapobj;
 					unique_tiles.insert( t );
 
-					animdef_t animdef = {t, id};
+					gse::value::Callable* cb = nullptr;
 					if (props.find("oncomplete") != props.end()) {
 						PARSEANIMATION( oncomplete, Callable );
-						animdef.oncomplete = oncomplete;
-						Persist( oncomplete );
+						cb = oncomplete;
 					}
-
-					sequence->push_back( animdef );
+					sequence->AddAnimation( new Animation( gc_space, t, id, cb ) );
 				}
 
-				const auto slotnum = m_game->GetSlotNum();
-
-				auto* tm = m_game->GetTM();
-
-				tm->LockTiles( slotnum, unique_tiles );
-
-				const auto cleanup = [ this, tm, slotnum, unique_tiles, sequence ](){
-					for ( const auto& s : *sequence ) {
-						if ( s.oncomplete ) {
-							Unpersist( s.oncomplete );
-						}
-					}
-					tm->UnlockTiles( slotnum, unique_tiles );
-					delete sequence;
-				};
-
-				// TODO: a way to make it non-static? should we?
-				static std::function< void( const size_t ) > next;
-
-				next = [ this, sequence, cleanup, gc_space, ctx, si, ep ]( const size_t idx ) {
-					ASSERT_NOLOG( sequence->size() > idx, "sequence overflow ( " + std::to_string( idx ) + " >= " + std::to_string( sequence->size() ) + " )" );
-					const auto& s = sequence->at( idx );
-					try {
-						ShowAnimation(
-							s.animation_id, s.tile, [ idx, sequence, cleanup, s, gc_space, ctx, si, ep ]() {
-								if ( s.oncomplete ) {
-									try {
-										auto ep2 = ep;
-										s.oncomplete->Run( gc_space, ctx, si, ep2, {} );
-									} catch ( const std::exception& e ) {
-										cleanup();
-										throw;
-									}
-								}
-								if ( idx < sequence->size() - 1 ) {
-									next( idx + 1 );
-								}
-								else {
-									cleanup();
-								}
-							}
-						);
-					} catch ( const std::exception& e ) {
-						cleanup();
-						throw;
-					}
-				};
-				next( 0 );
+				sequence->Run( GSE_CALL );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -365,6 +317,22 @@ const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_com
 		}
 	);
 	return running_animation_id;
+}
+
+void AnimationManager::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "animation_sequences" );
+	for ( const auto& animation_sequence : m_animation_sequences ) {
+		GC_REACHABLE( animation_sequence );
+	}
+	GC_DEBUG_END();
+
+}
+
+void AnimationManager::RemoveAnimationSequence( AnimationSequence* const animation_sequence ) {
+	ASSERT_NOLOG( m_animation_sequences.find( animation_sequence ) != m_animation_sequences.end(), "animation sequence not found" );
+	m_animation_sequences.erase( animation_sequence );
 }
 
 }
