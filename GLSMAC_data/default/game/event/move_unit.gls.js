@@ -36,9 +36,6 @@ const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 return {
 
 	validate: (e) => {
-		if (!e.game.um.has_unit(e.data.unit.id)) {
-			return 'Unit id ' + #to_string(e.data.unit_id) + ' not found';
-		}
 		if (e.data.unit.owner != e.caller) {
 			return 'Unit can only be moved by it\'s owner';
 		}

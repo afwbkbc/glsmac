@@ -9,6 +9,7 @@ return (game) => {
 		'despawn_unit',
 		'move_unit',
 		'attack_unit',
+		'unit_skip_turn',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

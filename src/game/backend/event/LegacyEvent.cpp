@@ -1,6 +1,5 @@
 #include "LegacyEvent.h"
 
-#include "SkipUnitTurn.h"
 #include "DefinePop.h"
 #include "SpawnBase.h"
 #include "CompleteTurn.h"
@@ -29,7 +28,6 @@ const types::Buffer LegacyEvent::Serialize( const LegacyEvent* event ) {
         break; \
     }
 	switch ( event->m_type ) {
-		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
 		SERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
 		SERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
@@ -54,7 +52,6 @@ LegacyEvent* LegacyEvent::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
         break; \
     }
 	switch ( type ) {
-		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
 		UNSERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
 		UNSERIALIZE( ET_BASE_SPAWN, SpawnBase )
 		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )

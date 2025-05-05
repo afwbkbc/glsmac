@@ -4,9 +4,6 @@ return {
 		if (e.caller != 0) {
 			return 'Only master is allowed to despawn units';
 		}
-		if (!e.game.um.has_unit(e.data.unit.id)) {
-			return 'Unit id ' + #to_string(e.data.unit_id) + ' not found';
-		}
 	},
 
 	apply: (e) => {

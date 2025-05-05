@@ -56,8 +56,8 @@ Unit::Unit(
 	SetTile( GSE_CALL, tile );
 }
 
-const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.1f;
-const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.1f;
+const movement_t Unit::MINIMUM_MOVEMENT_TO_KEEP = 0.025f;
+const movement_t Unit::MINIMUM_HEALTH_TO_KEEP = 0.025f;
 
 const bool Unit::HasMovesLeft() const {
 	return m_movement >= unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;

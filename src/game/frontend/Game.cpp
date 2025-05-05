@@ -19,7 +19,6 @@
 #include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
-#include "game/backend/event/SkipUnitTurn.h"
 #include "game/backend/event/CompleteTurn.h"
 #include "game/backend/event/UncompleteTurn.h"
 #include "game/frontend/ui_legacy/bottom_bar/BottomBar.h"
@@ -1508,8 +1507,16 @@ void Game::Initialize(
 						case input::K_SPACE: {
 							auto* unit = m_um->GetSelectedUnit();
 							if ( unit ) {
-								const auto event = backend::event::SkipUnitTurn( m_slot_index, unit->GetId() );
-								game->MT_AddEvent( &event );
+								m_glsmac->WithGSE(
+									[ &game, &unit ]( GSE_CALLABLE ) {
+										auto* u = game->GetUM()->GetUnit( unit->GetId() );
+										game->Event(
+											GSE_CALL, "unit_skip_turn", {
+												{ "unit", u->Wrap( GSE_CALL, true ) },
+											}
+										);
+									}
+								);
 							}
 							break;
 						}
