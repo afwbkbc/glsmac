@@ -41,7 +41,6 @@ public:
 	void UndefineUnit( const std::string& id );
 	void SpawnUnit( GSE_CALLABLE, Unit* unit );
 	void DespawnUnit( GSE_CALLABLE, const size_t unit_id );
-	void SkipUnitTurn( GSE_CALLABLE, const size_t unit_id );
 
 	MoraleSet* GetMoraleSet( const std::string& name ) const;
 	Unit* GetUnit( const size_t id ) const;

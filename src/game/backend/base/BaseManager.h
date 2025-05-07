@@ -38,7 +38,9 @@ public:
 	PopDef* GetPopDef( const std::string& id ) const;
 	Base* GetBase( const size_t id ) const;
 	void DefinePop( base::PopDef* pop_def );
+	void UndefinePop( const std::string& id );
 	void SpawnBase( GSE_CALLABLE, base::Base* base );
+	void DespawnBase( GSE_CALLABLE, const size_t base_id );
 
 	const std::map< size_t, Base* >& GetBases() const;
 

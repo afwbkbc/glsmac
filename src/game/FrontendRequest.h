@@ -43,7 +43,9 @@ public:
 		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
 		FR_BASE_POP_DEFINE,
+		FR_BASE_POP_UNDEFINE,
 		FR_BASE_SPAWN,
+		FR_BASE_DESPAWN,
 		FR_BASE_UPDATE,
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
@@ -175,6 +177,9 @@ public:
 			const std::string* serialized_popdef;
 		} base_pop_define;
 		struct {
+			const std::string* id;
+		} base_pop_undefine;
+		struct {
 			size_t base_id;
 			size_t slot_index;
 			struct {
@@ -188,6 +193,9 @@ public:
 			} render_coords;
 			const std::string* name;
 		} base_spawn;
+		struct {
+			size_t base_id;
+		} base_despawn;
 		struct {
 			size_t base_id;
 			size_t slot_index;

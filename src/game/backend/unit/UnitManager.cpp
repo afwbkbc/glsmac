@@ -167,18 +167,6 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 	delete unit;
 }
 
-void UnitManager::SkipUnitTurn( GSE_CALLABLE, const size_t unit_id ) {
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-	auto* unit = it->second;
-
-	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
-
-	unit->m_movement = 0.0f;
-
-	RefreshUnit( GSE_CALL, unit );
-}
-
 MoraleSet* UnitManager::GetMoraleSet( const std::string& name ) const {
 	const auto& it = m_unit_moralesets.find( name );
 	if ( it != m_unit_moralesets.end() ) {

@@ -61,6 +61,19 @@ void BaseManager::DefinePop( const backend::base::PopDef* def ) {
 	);
 }
 
+void BaseManager::UndefinePop( const std::string& id ) {
+	const auto& it = m_popdefs.find( id );
+	ASSERT( it != m_popdefs.end(), "popdef does not exist: " + id );
+	delete it->second;
+	m_popdefs.erase( it );
+	for ( auto it = m_popdefs_order.begin() ; it != m_popdefs_order.end() ; it++ ) {
+		if ( ( *it ) == id ) {
+			m_popdefs_order.erase( it );
+			break;
+		}
+	}
+}
+
 const std::vector< std::string >& BaseManager::GetPopDefOrder() const {
 	return m_popdefs_order;
 }
@@ -119,6 +132,19 @@ void BaseManager::SpawnBase(
 	it->second.insert( base_id );
 
 	RefreshBase( base );
+}
+
+void BaseManager::DespawnBase( const size_t base_id ) {
+	const auto& it = m_bases.find( base_id );
+	ASSERT( it != m_bases.end(), "base id not found" );
+
+	auto* base = it->second;
+
+	m_bases.erase( it );
+
+	delete base;
+
+	m_game->RefreshSelectedTile();
 }
 
 void BaseManager::RefreshBase( Base* base ) {

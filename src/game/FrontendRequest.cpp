@@ -73,6 +73,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
 			break;
 		}
+		case FR_BASE_POP_UNDEFINE: {
+			NEW( data.base_pop_undefine.id, std::string, *other.data.base_pop_undefine.id );
+			break;
+		}
 		case FR_BASE_SPAWN: {
 			NEW( data.base_spawn.name, std::string, *other.data.base_spawn.name );
 			break;
@@ -151,6 +155,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_BASE_POP_DEFINE: {
 			DELETE( data.base_pop_define.serialized_popdef );
+			break;
+		}
+		case FR_BASE_POP_UNDEFINE: {
+			DELETE( data.base_pop_undefine.id );
 			break;
 		}
 		case FR_BASE_SPAWN: {

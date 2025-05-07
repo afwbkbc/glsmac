@@ -9,6 +9,8 @@ return (glsmac) => {
 		factions.configure(e.fm);
 	});
 
+	let tiles_with_bases = {};
+
 	glsmac.on('configure_game', (e) => {
 
 		#include('events')(e.game);
@@ -44,8 +46,6 @@ return (glsmac) => {
 			}
 		};
 
-		let all_bases = [];
-
 		e.game.on('configure', (e) => {
 
 			e.game.um.on('unit_spawn', (e) => {
@@ -56,8 +56,9 @@ return (glsmac) => {
 				//
 			});
 
+			const random = e.game.random; // TODO: rework
 			e.game.bm.on('base_spawn', (e) => {
-				//
+				add_pops(e.base, random.get_int(1, 7));
 			});
 
 			units.configure(e.game);
@@ -68,7 +69,7 @@ return (glsmac) => {
 
 			// init game data
 			units.define(e.game);
-			bases.define(e.game.bm);
+			bases.define(e.game);
 
 			// init players
 			players = e.game.get_players();
@@ -156,21 +157,19 @@ return (glsmac) => {
 						if (e.game.random.get_int(0, 5) == 0) {
 							let has_adjactent_bases = false;
 							for (neighbour of tile.get_surrounding_tiles()) {
-								if (neighbour.get_base() != null) {
+								const key = #to_string(neighbour.x) + 'x' + #to_string(neighbour.y); // TODO: sets
+								if (#is_defined(tiles_with_bases[key])) {
 									has_adjactent_bases = true;
 									break;
 								}
 							}
 							if (!has_adjactent_bases) {
-								let base = e.game.bm.spawn_base(
-									owner,
-									tile,
-									{
-										// name: 'base name',
-									}
-								);
-								add_pops(base, e.game.random.get_int(1, 7));
-								all_bases :+base;
+								e.game.event('spawn_base', {
+									owner: owner,
+									tile: tile,
+									// name: 'base name',
+								});
+								tiles_with_bases[#to_string(tile.x) + 'x' + #to_string(tile.y)] = true;
 								bases_spawned++;
 							}
 						}
@@ -183,10 +182,9 @@ return (glsmac) => {
 		});
 
 		e.game.on('turn', (e) => {
-			for (base of all_bases) {
+			for (base of e.game.bm.get_bases()) {
 				add_pops(base, 1);
 			}
-			//
 		});
 
 	});

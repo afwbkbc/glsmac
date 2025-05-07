@@ -40,7 +40,6 @@ return ((game) => {
 			}
 		};
 
-		let all_bases = [];
 	});
 
 	game.on('configure', (e) => {
@@ -128,15 +127,12 @@ return ((game) => {
 							}
 						}
 						if (!has_adjactent_bases) {
-							let base = e.game.bm.spawn_base(
-								owner,
-								tile,
-								{
-									// name: 'base name',
-								}
-							);
-							add_pops(base, e.game.random.get_int(1, 7));
-							all_bases :+base;
+							e.game.event('spawn_base', {
+								owner: owner,
+								tile: tile,
+								// name: 'base name',
+							})
+							// TODO add_pops(base, e.game.random.get_int(1, 7));
 							bases_spawned++;
 						}
 					}
@@ -149,9 +145,9 @@ return ((game) => {
 	});
 
 	game.on('turn', (e) => {
-		for (base of all_bases) {
+		/* TODO for (base of all_bases) {
 			add_pops(base, 1);
-		}
+		}*/
 		//
 	});
 

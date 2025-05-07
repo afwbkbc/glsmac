@@ -1213,6 +1213,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			delete popdef;
 			break;
 		}
+		case FrontendRequest::FR_BASE_POP_UNDEFINE: {
+			m_bm->UndefinePop( *request->data.base_pop_undefine.id );
+			break;
+		}
 		case FrontendRequest::FR_BASE_SPAWN: {
 			const auto& d = request->data.base_spawn;
 			const auto& tc = d.tile_coords;
@@ -1231,6 +1235,10 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				},
 				*d.name
 			);
+			break;
+		}
+		case FrontendRequest::FR_BASE_DESPAWN: {
+			m_bm->DespawnBase( request->data.base_despawn.base_id );
 			break;
 		}
 		case FrontendRequest::FR_BASE_UPDATE: {

@@ -15,8 +15,6 @@ class LegacyEvent {
 public:
 	enum event_type_t {
 		ET_NONE,
-		ET_BASE_DEFINE_POP,
-		ET_BASE_SPAWN,
 		ET_COMPLETE_TURN,
 		ET_UNCOMPLETE_TURN,
 		ET_FINALIZE_TURN,
