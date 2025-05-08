@@ -12,6 +12,9 @@ return (game) => {
 		'unit_skip_turn',
 		'define_base_pop',
 		'spawn_base',
+		'add_base_pop',
+		'complete_turn',
+		'uncomplete_turn',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

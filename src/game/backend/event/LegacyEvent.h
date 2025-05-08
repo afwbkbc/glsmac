@@ -15,8 +15,6 @@ class LegacyEvent {
 public:
 	enum event_type_t {
 		ET_NONE,
-		ET_COMPLETE_TURN,
-		ET_UNCOMPLETE_TURN,
 		ET_FINALIZE_TURN,
 		ET_TURN_FINALIZED,
 		ET_ADVANCE_TURN,

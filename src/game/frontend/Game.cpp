@@ -19,8 +19,6 @@
 #include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
-#include "game/backend/event/CompleteTurn.h"
-#include "game/backend/event/UncompleteTurn.h"
 #include "game/frontend/ui_legacy/bottom_bar/BottomBar.h"
 #include "game/frontend/tile/TileManager.h"
 #include "game/frontend/unit/UnitManager.h"
@@ -2017,14 +2015,20 @@ void Game::SendChatMessage( const std::string& text ) {
 
 void Game::CompleteTurn() {
 	m_is_turn_active = false;
-	const auto event = backend::event::CompleteTurn( m_slot_index, m_turn_id );
-	g_engine->GetGame()->MT_AddEvent( &event );
+	m_glsmac->WithGSE(
+		[]( GSE_CALLABLE ) {
+			g_engine->GetGame()->Event( GSE_CALL, "complete_turn", {} );
+		}
+	);
 }
 
 void Game::UncompleteTurn() {
-	m_is_turn_active = false;
-	const auto event = backend::event::UncompleteTurn( m_slot_index, m_turn_id );
-	g_engine->GetGame()->MT_AddEvent( &event );
+	m_is_turn_active = true;
+	m_glsmac->WithGSE(
+		[]( GSE_CALLABLE ) {
+			g_engine->GetGame()->Event( GSE_CALL, "uncomplete_turn", {} );
+		}
+	);
 }
 
 void Game::SelectTileAtPoint( const backend::tile_query_purpose_t tile_query_purpose, const size_t x, const size_t y ) {

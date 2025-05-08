@@ -46,6 +46,7 @@ public:
 	virtual ~Base() = default;
 
 	void AddPop( const Pop& pop );
+	void RemovePop( const size_t pop_id );
 
 	const size_t m_id;
 	slot::Slot* m_owner;

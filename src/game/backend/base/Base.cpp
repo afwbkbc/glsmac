@@ -58,6 +58,11 @@ void Base::AddPop( const Pop& pop ) {
 	m_game->GetBM()->RefreshBase( this );
 }
 
+void Base::RemovePop( const size_t pop_id ) {
+	ASSERT_NOLOG( pop_id < m_pops.size(), "pop id overflow" );
+	m_pops.erase( m_pops.begin() + pop_id );
+}
+
 const types::Buffer Base::Serialize( const Base* base ) {
 	types::Buffer buf;
 	buf.WriteInt( base->m_id );
@@ -99,21 +104,44 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	{
 		"create_pop",
 		NATIVE_CALL( this ) {
-		N_EXPECT_ARGS( 1 );
-		N_GETVALUE( data, 0, Object );
-		N_GETPROP( poptype, data, "type", String );
-		auto* def = m_game->GetBM()->GetPopDef( poptype );
-		if ( !def ) {
-			GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
-		}
-		const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
-			? 1 // aliens have 1 gender
-			: 2; // humans have 2
-		ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );
-		AddPop( Pop( this, def, m_game->GetRandom()->GetUInt(0, max_variants - 1) ) );
-		return VALUE( gse::value::Undefined );
-	} )
+
+			m_game->CheckRW( GSE_CALL );
+
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( data, 0, Object );
+			N_GETPROP( poptype, data, "type", String );
+			auto* def = m_game->GetBM()->GetPopDef( poptype );
+			if ( !def ) {
+				GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
+			}
+			const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
+				? 1 // aliens have 1 gender
+				: 2; // humans have 2
+			ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );
+
+			AddPop( Pop( this, def, m_game->GetRandom()->GetUInt(0, max_variants - 1) ) );
+
+			return VALUE( gse::value::Int,, m_pops.size() - 1 );
+		} )
 	},
+	{
+		"remove_pop",
+		NATIVE_CALL( this ) {
+
+			m_game->CheckRW( GSE_CALL );
+
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( pop_id, 0, Int );
+
+			if ( pop_id >= m_pops.size() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Base does not have pop id " + std::to_string( pop_id ) );
+			}
+
+			RemovePop( pop_id );
+
+			return VALUE( gse::value::Undefined );
+		} )
+	}
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()

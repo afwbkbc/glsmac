@@ -37,16 +37,18 @@ return (glsmac) => {
 			'Librarian',
 		];
 
-		let add_pops = (base, count) => {
+		let add_pops = (game, base, count) => {
 			for (let i = 0; i < count; i++) {
-				const type = pop_types[(e.game.random.get_int(0, #sizeof(pop_types) - 1))];
-				base.create_pop({
-					type: type,
-				});
+				game.event('add_base_pop', {
+					base: base,
+					type: pop_types[(game.random.get_int(0, #sizeof(pop_types) - 1))],
+				})
 			}
 		};
 
 		e.game.on('configure', (e) => {
+
+			const game = e.game; // TODO: rework to not use global object inside events
 
 			e.game.um.on('unit_spawn', (e) => {
 				//
@@ -56,9 +58,8 @@ return (glsmac) => {
 				//
 			});
 
-			const random = e.game.random; // TODO: rework
 			e.game.bm.on('base_spawn', (e) => {
-				add_pops(e.base, random.get_int(1, 7));
+				add_pops(game, e.base, game.random.get_int(1, 7));
 			});
 
 			units.configure(e.game);
@@ -183,7 +184,7 @@ return (glsmac) => {
 
 		e.game.on('turn', (e) => {
 			for (base of e.game.bm.get_bases()) {
-				add_pops(base, 1);
+				add_pops(e.game, base, 1);
 			}
 		});
 

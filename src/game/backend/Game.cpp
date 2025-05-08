@@ -46,6 +46,7 @@
 #include "gc/Space.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/event/EventHandler.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace backend {
@@ -453,8 +454,8 @@ void Game::Iterate() {
 					events = m_pending_events;
 					m_pending_events.clear();
 				}
-				if ( !events.empty() ) {
-					m_state->WithGSE([ this, &events ]( GSE_CALLABLE ) {
+				m_state->WithGSE([ this, &events ]( GSE_CALLABLE ) {
+					if ( !events.empty() ) {
 						const std::string* errptr = nullptr;
 						for ( const auto& event : events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
@@ -475,10 +476,13 @@ void Game::Iterate() {
 								if ( resolved ) {
 									obj->Set( "resolved", resolved, GSE_CALL );
 								}
-								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
+								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj, &event ] () {
 									auto* applied = handler->Apply( GSE_CALL, fargs );
 									if ( applied ) {
 										obj->Set( "applied", applied, GSE_CALL );
+									}
+									if ( event->GetName() == "complete_turn" ) {
+										//handler->Rollback( GSE_CALL, fargs );
 									}
 								});
 							}
@@ -487,8 +491,24 @@ void Game::Iterate() {
 								delete ( errptr );
 							}
 						}
-					});
-				}
+					}
+
+					if ( m_state->IsMaster() ) {
+						// check if all players completed their turns
+						bool is_turn_complete = true;
+						for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+							if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
+								is_turn_complete = false;
+								break;
+							}
+						}
+						if ( is_turn_complete ) {
+							GlobalFinalizeTurn( GSE_CALL );
+						}
+					}
+
+				});
+
 			});
 		}
 	}
@@ -612,6 +632,76 @@ WRAPIMPL_BEGIN( Game )
 					elements.push_back( slot.Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, elements );
+			} )
+		},
+		{
+			"is_turn_complete",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				ASSERT_NOLOG( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetPlayer(), "player is null" );
+				return VALUE( gse::value::Bool,,
+					slot.GetState() == slot::Slot::SS_PLAYER
+						? slot.GetPlayer()->IsTurnCompleted()
+						: true // ai has always turn completed during turns of players
+				);
+			} )
+		},
+		{
+			"complete_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
+				}
+				ASSERT_NOLOG( slot.GetPlayer(), "player is null" );
+				ASSERT_NOLOG( !slot.GetPlayer()->IsTurnCompleted(), "player turn already completed" );
+				CompleteTurn( GSE_CALL, slot_id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"uncomplete_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
+					GSE_ERROR( gse:: EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
+				}
+				ASSERT_NOLOG( slot.GetPlayer(), "player is null" );
+				ASSERT_NOLOG( slot.GetPlayer()->IsTurnCompleted(), "player turn not completed" );
+				UncompleteTurn( slot_id );
+
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -952,12 +1042,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
 				event = event::LegacyEvent::Unserialize( GSE_CALL, buf );
-				if ( !m_current_turn.IsActive() && event->m_type != event::LegacyEvent::ET_UNCOMPLETE_TURN ) {
-					errmsg = new std::string( "Turn not active" );
-				}
-				else {
-					errmsg = event->Validate( GSE_CALL, this );
-				}
+				errmsg = event->Validate( GSE_CALL, this );
 				if ( errmsg ) {
 					// log and do nothing
 					Log( "Event declined: " + *errmsg );
@@ -1117,20 +1202,6 @@ void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = turn::TS_WAITING_FOR_PLAYERS;
 		AddFrontendRequest( fr );
-	}
-
-	if ( m_state->IsMaster() ) {
-		// check if all players completed their turns
-		bool is_turn_complete = true;
-		for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-			if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
-				is_turn_complete = false;
-				break;
-			}
-		}
-		if ( is_turn_complete ) {
-			GlobalFinalizeTurn( GSE_CALL );
-		}
 	}
 }
 
@@ -1815,6 +1886,7 @@ void Game::CheckTurnComplete() {
 			: turn::TS_TURN_ACTIVE;
 		AddFrontendRequest( fr );
 	}
+
 }
 
 Game::Interface::Interface( gc::Space* const gc_space )

@@ -1,8 +1,6 @@
 SET( SRC ${SRC}
 
 	${PWD}/LegacyEvent.cpp
-	${PWD}/CompleteTurn.cpp
-	${PWD}/UncompleteTurn.cpp
 	${PWD}/FinalizeTurn.cpp
 	${PWD}/TurnFinalized.cpp
 	${PWD}/AdvanceTurn.cpp

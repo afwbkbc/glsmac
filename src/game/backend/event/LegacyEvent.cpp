@@ -1,7 +1,5 @@
 #include "LegacyEvent.h"
 
-#include "CompleteTurn.h"
-#include "UncompleteTurn.h"
 #include "FinalizeTurn.h"
 #include "TurnFinalized.h"
 #include "AdvanceTurn.h"
@@ -26,8 +24,6 @@ const types::Buffer LegacyEvent::Serialize( const LegacyEvent* event ) {
         break; \
     }
 	switch ( event->m_type ) {
-		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
-		SERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
 		SERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
 		SERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
 		SERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
@@ -48,8 +44,6 @@ LegacyEvent* LegacyEvent::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
         break; \
     }
 	switch ( type ) {
-		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
-		UNSERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
 		UNSERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
 		UNSERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
 		UNSERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
