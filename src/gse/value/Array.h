@@ -36,10 +36,6 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	void ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const;
 

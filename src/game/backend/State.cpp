@@ -237,13 +237,5 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string State::ToString() {
-	return "game::State()";
-}
-#endif
-
-
-
 }
 }

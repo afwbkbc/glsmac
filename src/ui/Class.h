@@ -38,10 +38,6 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	const UI* const m_ui;
 	const std::string m_name;

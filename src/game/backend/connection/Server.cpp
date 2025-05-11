@@ -8,6 +8,7 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/FactionManager.h"
+#include "game/backend/event/Event.h"
 
 namespace game {
 namespace backend {
@@ -336,15 +337,16 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						ASSERT( m_on_game_event_validate, "m_on_game_event_validate is not set" );
 						ASSERT( m_on_game_event_apply, "m_on_game_event_apply is not set" );
 						auto buf = types::Buffer( packet.data.str );
-						std::vector< event::LegacyEvent* > game_events = {};
+						std::vector< event::Event* > game_events = {};
+						THROW( "TODO: PT_GAME_EVENTS" );
 						m_state->WithGSE(
 							[ &buf, &game_events ]( GSE_CALLABLE ) {
-								event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
+								//event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
 							}
 						);
 						const size_t slot = m_state->GetCidSlots().at( event.cid );
-						std::vector< event::LegacyEvent* > valid_events = {};
-						for ( const auto& game_event : game_events ) {
+						std::vector< event::Event* > valid_events = {};
+						/*for ( const auto& game_event : game_events ) {
 							bool ok = true;
 							if ( game_event->m_initiator_slot != slot ) {
 								Log( "Event slot mismatch from " + std::to_string( event.cid ) + " ( " + std::to_string( game_event->m_initiator_slot ) + " != " + std::to_string( slot ) + " )" );
@@ -371,7 +373,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						}
 						if ( !valid_events.empty() ) {
 							SendGameEvents( valid_events );
-						}
+						}*/
 						break;
 					}
 					default: {
@@ -396,10 +398,11 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 void Server::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
+	THROW( "TODO: SendGameEvents" );
 	Broadcast(
 		[ this, game_events ]( const network::cid_t cid ) -> void {
-			std::vector< event::LegacyEvent* > events = {};
-			for ( const auto& e : game_events ) {
+			std::vector< event::Event* > events = {};
+			/*for ( const auto& e : game_events ) {
 				const auto slot_num = m_state->GetCidSlots().at( cid );
 				if ( e->IsSendableTo( slot_num ) ) {
 					Log( "Sending event to " + std::to_string( slot_num ) + ": " + e->ToString() );
@@ -409,7 +412,7 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 			if ( !events.empty() ) {
 				const auto serialized_events = event::LegacyEvent::SerializeMultiple( events ).ToString();
 				SendGameEventsTo( serialized_events, cid );
-			}
+			}*/
 		}
 	);
 }

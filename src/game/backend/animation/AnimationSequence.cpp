@@ -59,17 +59,6 @@ void AnimationSequence::GetReachableObjects( std::unordered_set< gc::Object* >& 
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string AnimationSequence::ToString() {
-	std::string result = "AnimationSequence(";
-	for ( const auto& animation : m_animations ) {
-		result += " " + animation->ToString();
-	}
-	result += " ";
-	return result;
-}
-#endif
-
 void AnimationSequence::Finish() {
 	ASSERT_NOLOG( m_is_running, "animation sequence not running" );
 	ASSERT_NOLOG( !m_locked_tiles.empty(), "locked tiles empty" );

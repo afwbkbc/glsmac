@@ -11,9 +11,6 @@
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
 #include "map_editor/MapEditor.h"
-#include "event/FinalizeTurn.h"
-#include "event/TurnFinalized.h"
-#include "event/AdvanceTurn.h"
 #include "Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
@@ -63,12 +60,12 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
-InvalidEvent::InvalidEvent( const std::string& reason, const event::LegacyEvent* event )
+InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
 	: Exception(
 	"InvalidEvent", (std::string)
 		"Event validation failed!\n" +
 		TS_OFFSET + "reason: '" + reason + "'\n" +
-		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
+		TS_OFFSET + "event: " + event->ToString( /*TS_OFFSET*/ )
 ) {}
 
 Game::Game()
@@ -137,13 +134,6 @@ common::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest 
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
-	return MT_CreateRequest( request );
-}
-
-common::mt_id_t Game::MT_AddEvent( const event::LegacyEvent* event ) {
-	MT_Request request = {};
-	request.op = OP_ADD_EVENT;
-	NEW( request.data.add_event.serialized_event, std::string, event::LegacyEvent::Serialize( event ).ToString() );
 	return MT_CreateRequest( request );
 }
 
@@ -398,23 +388,6 @@ void Game::Iterate() {
 							m_um->ProcessUnprocessed( GSE_CALL );
 							m_bm->ProcessUnprocessed( GSE_CALL );
 
-							for ( auto& it : m_unprocessed_events ) {
-								ASSERT( m_connection, "connection not set" );
-								try {
-									ValidateEvent( GSE_CALL, it );
-								}
-								catch ( const InvalidEvent& e ) {
-									for ( auto& it2 : m_unprocessed_events ) {
-										delete it2;
-									}
-									m_unprocessed_events.clear();
-									throw e;
-								}
-							}
-							for ( auto& it : m_unprocessed_events ) {
-								ProcessEvent( GSE_CALL, it );
-							}
-							m_unprocessed_events.clear();
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
@@ -490,20 +463,6 @@ void Game::Iterate() {
 								Log( "Event rejected: " + *errptr );
 								delete ( errptr );
 							}
-						}
-					}
-
-					if ( m_state->IsMaster() ) {
-						// check if all players completed their turns
-						bool is_turn_complete = true;
-						for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-							if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
-								is_turn_complete = false;
-								break;
-							}
-						}
-						if ( is_turn_complete ) {
-							GlobalFinalizeTurn( GSE_CALL );
 						}
 					}
 
@@ -589,8 +548,8 @@ WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
-			"year",
-			VALUE( gse::value::Int,, 2100/*tmp*/ + m_current_turn.GetId() )
+			"is_master",
+			VALUE( gse::value::Bool,, m_slot_num == 0 )
 		},
 		{
 			"random",
@@ -632,6 +591,14 @@ WRAPIMPL_BEGIN( Game )
 					elements.push_back( slot.Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, elements );
+			} )
+		},
+		{
+			"get_turn_id",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+
+				return VALUE( gse::value::Int,, m_current_turn.GetId() );
 			} )
 		},
 		{
@@ -700,6 +667,20 @@ WRAPIMPL_BEGIN( Game )
 				ASSERT_NOLOG( slot.GetPlayer(), "player is null" );
 				ASSERT_NOLOG( slot.GetPlayer()->IsTurnCompleted(), "player turn not completed" );
 				UncompleteTurn( slot_id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"advance_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( turn_id, 0, Int );
+
+				AdvanceTurn( turn_id );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -807,12 +788,6 @@ WRAPIMPL_BEGIN( Game )
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Game )
-
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Game::ToString() {
-	return "game::Game()";
-}
-#endif
 
 void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
@@ -1038,9 +1013,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_ADD_EVENT: {
 			const std::string* errmsg = nullptr;
-			event::LegacyEvent* event = nullptr;
+			event::Event* event = nullptr;
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
+			THROW( "TODO: OP_ADD_EVENT" );
+			/*m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
 				event = event::LegacyEvent::Unserialize( GSE_CALL, buf );
 				errmsg = event->Validate( GSE_CALL, this );
 				if ( errmsg ) {
@@ -1052,7 +1028,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				else {
 					AddEvent( GSE_CALL, event );
 				}
-			});
+			});*/
 			break;
 		}
 		default: {
@@ -1158,25 +1134,8 @@ void Game::OnGSEError( const gse::Exception& err ) {
 	AddFrontendRequest( fr );
 }
 
-gse::Value* const Game::AddEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
-	CHECKACCUM( m_state->m_gc_space );
-	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
-	if ( m_connection ) {
-		m_connection->SendGameEvent( event );
-	}
-	if ( m_state->IsMaster() ) {
-		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
-		return ProcessEvent( GSE_CALL, event );
-	}
-	return VALUEEXT( gse::value::Undefined, GetGCSpace() );
-}
-
 const size_t Game::GetTurnId() const {
 	return m_current_turn.GetId();
-}
-
-const bool Game::IsTurnActive() const {
-	return m_current_turn.IsActive();
 }
 
 const bool Game::IsTurnCompleted( const size_t slot_num ) const {
@@ -1220,11 +1179,6 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 			AddFrontendRequest( fr );
 		}
 	}
-}
-
-void Game::FinalizeTurn( GSE_CALLABLE ) {
-	m_turn_checksum = m_current_turn.FinalizeAndChecksum();
-	AddEvent( GSE_CALL, new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
@@ -1293,32 +1247,10 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 
 void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
-	ASSERT( m_current_turn.IsActive(), "current turn not active" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
 	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
-	AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
-}
-
-void Game::GlobalProcessTurnFinalized( GSE_CALLABLE, const size_t slot_num, const util::crc32::crc_t checksum ) {
-	ASSERT( m_state->IsMaster(), "not master" );
-	ASSERT( m_turn_checksum == checksum, "turn checksum mismatch" );
-	ASSERT( m_verified_turn_checksum_slots.find( slot_num ) == m_verified_turn_checksum_slots.end(), "duplicate turn finalization from " + std::to_string( slot_num ) );
-	m_verified_turn_checksum_slots.insert( slot_num );
-
-	bool is_turn_finalized = true;
-	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-		if (
-			slot.GetState() == slot::Slot::SS_PLAYER &&
-				m_verified_turn_checksum_slots.find( slot.GetIndex() ) == m_verified_turn_checksum_slots.end()
-			) {
-			is_turn_finalized = false;
-			break;
-		}
-	}
-
-	if ( is_turn_finalized ) {
-		GlobalAdvanceTurn( GSE_CALL );
-	}
+	THROW( "TODO: GLOBAL FINALIZE TURN");
+	//AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
 }
 
 static size_t s_turn_id = 0;
@@ -1331,7 +1263,11 @@ void Game::GlobalAdvanceTurn( GSE_CALLABLE ) {
 	m_turn_checksum = 0;
 
 	Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
-	AddEvent( GSE_CALL, new event::AdvanceTurn( m_slot_num, s_turn_id ) );
+	m_state->WithGSE( [ this ]( GSE_CALLABLE ){
+		Event( GSE_CALL, "advance_turn", {
+			{ "turn_id", VALUE( gse::value::Int,, s_turn_id ) }
+		} );
+	});
 }
 
 faction::Faction* Game::GetFaction( const std::string& id ) const {
@@ -1364,35 +1300,6 @@ gc::Space* const Game::GetGCSpace() const {
 	ASSERT( m_state, "state not set" );
 	ASSERT( m_state->m_gc_space, "state gc space not set" );
 	return m_state->m_gc_space;
-}
-
-void Game::ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
-	if ( !event->m_is_validated ) {
-		const auto* errmsg = event->Validate( GSE_CALL, this );
-		if ( errmsg ) {
-			InvalidEvent err( *errmsg, event );
-			delete errmsg;
-			delete event;
-			throw err;
-		}
-		event->m_is_validated = true;
-	}
-}
-
-gse::Value* const Game::ProcessEvent( GSE_CALLABLE, event::LegacyEvent* event ) {
-	if ( m_state->IsMaster() ) { // TODO: validate in either case?
-		ValidateEvent( GSE_CALL, event );
-	}
-
-	ASSERT( event->m_is_validated, "event was not validated" );
-
-	if ( m_state->IsMaster() ) {
-		// things like random outcomes must be resolved on server only
-		event->Resolve( GSE_CALL, this );
-	}
-
-	m_current_turn.AddEvent( event );
-	return event->Apply( GSE_CALL, this );
 }
 
 const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
@@ -1610,29 +1517,43 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			AddFrontendRequest( fr );
 		};
 
-		m_connection->m_on_game_event_validate = [ this ]( event::LegacyEvent* event ) -> void {
+		m_connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
+			THROW( "TODO: m_on_game_event_validate");
 			if ( m_game_state == GS_RUNNING ) {
-				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+/*				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
 					ValidateEvent( GSE_CALL, event );
-				} );
+				} );*/
 			}
 			else {
-				m_unprocessed_events.push_back( event );
+				//m_unprocessed_events.push_back( event );
 			}
 
 		};
 
-		m_connection->m_on_game_event_apply = [ this ]( event::LegacyEvent* event ) -> void {
+		m_connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
+			THROW( "TODO: m_on_game_event_apply");
 			if ( m_game_state == GS_RUNNING ) {
-				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+				/*m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
 					ProcessEvent( GSE_CALL, event );
-				});
+				});*/
+			}
+		};
+
+		m_connection->m_on_game_event_rollback = [ this ]( event::Event* event ) -> void {
+			if ( m_state->IsMaster() ) {
+				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
+			}
+			THROW( "TODO: m_on_game_event_rollback");
+			if ( m_game_state == GS_RUNNING ) {
+				/*m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+					ProcessEvent( GSE_CALL, event );
+				});*/
 			}
 		};
 
@@ -1827,11 +1748,6 @@ void Game::ResetGame() {
 	m_event_handlers.clear();
 	m_next_event_id = 0;
 
-	for ( auto& it : m_unprocessed_events ) {
-		delete it;
-	}
-	m_unprocessed_events.clear();
-
 	m_tm = nullptr;
 	m_rm = nullptr;
 	m_um = nullptr;
@@ -1863,10 +1779,6 @@ void Game::ResetGame() {
 }
 
 void Game::CheckTurnComplete() {
-	if ( !m_current_turn.IsActive() ) {
-		// turn not active
-		return;
-	}
 
 	bool is_turn_complete = true;
 

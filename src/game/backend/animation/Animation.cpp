@@ -67,12 +67,6 @@ void Animation::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Animation::ToString() {
-	return "Animation( " + m_animdef_id + ", " + m_tile->ToString() + " )";
-}
-#endif
-
 }
 }
 }

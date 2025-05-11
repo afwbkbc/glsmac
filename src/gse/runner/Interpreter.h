@@ -33,10 +33,6 @@ CLASS( Interpreter, Runner )
 
 	Value* const Execute( context::Context* ctx, ExecutionPointer& ep, const program::Program* program ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 
 	// TODO: make it multithreaded

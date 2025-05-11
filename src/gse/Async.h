@@ -32,10 +32,6 @@ CLASS2( Async, common::Class, gc::Object )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 
 	gc::Space* const m_gc_space = nullptr;

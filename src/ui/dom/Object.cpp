@@ -232,14 +232,6 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Object::ToString() {
-	return "ui::dom::Object( " + m_tag + " )";
-}
-#endif
-
-
-
 const bool Object::IsEventRelevant( const input::Event& event ) const {
 	return
 		!m_is_destroyed &&

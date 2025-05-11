@@ -43,10 +43,6 @@ public:
 
 	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects );
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	virtual const std::string ToString() = 0;
-#endif
-
 protected:
 	void Persist( Object* const obj );
 	void Unpersist( Object* const obj );

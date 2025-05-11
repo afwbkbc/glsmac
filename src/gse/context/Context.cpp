@@ -183,13 +183,6 @@ void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_obje
 
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Context::ToString() {
-	const auto& si = GetSI();
-	return "gse::Context( " + si.file + ":" + std::to_string( si.from.line ) + " )";
-}
-#endif
-
 void Context::AddChildContext( ChildContext* const child ) {
 	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
 	m_child_contexts.insert( child );

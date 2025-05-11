@@ -76,10 +76,6 @@ public:
 	virtual const si_t& GetSI() const = 0;
 	virtual const script_info_t& GetScriptInfo() const = 0;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 protected:
 
 	GSE* m_gse;

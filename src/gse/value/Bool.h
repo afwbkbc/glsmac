@@ -17,12 +17,6 @@ public:
 
 	bool value;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override {
-		return "gse::value::Bool( " + std::to_string( value ) + " )";
-	}
-#endif
-
 };
 
 }

@@ -4,7 +4,7 @@
 #include "engine/Engine.h"
 #include "network/Network.h"
 #include "ui_legacy/UI.h"
-#include "game/backend/event/LegacyEvent.h"
+#include "game/backend/event/Event.h"
 
 namespace game {
 namespace backend {
@@ -208,7 +208,7 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 	}
 }
 
-void Connection::SendGameEvent( backend::event::LegacyEvent* event ) {
+void Connection::SendGameEvent( backend::event::Event* event ) {
 	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();

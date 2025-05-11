@@ -15,11 +15,5 @@ void ValueRef::GetReachableObjects( std::unordered_set< gc::Object* >& reachable
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string ValueRef::ToString() {
-	return "gse::value::ValueRef( " + target->ToString() + ")";
-}
-#endif
-
 }
 }

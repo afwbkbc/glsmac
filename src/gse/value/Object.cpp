@@ -122,16 +122,5 @@ context::ChildContext* const Object::GetContext() const {
 	return m_ctx;
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Object::ToString() {
-	std::string result = "gse::value::Object( ";
-	for ( const auto& it : m_value ) {
-		result += it.first + ":" + it.second->ToString() + ", ";
-	}
-	result += ")";
-	return result;
-}
-#endif
-
 }
 }

@@ -17,17 +17,5 @@ void ArrayRangeRef::GetReachableObjects( std::unordered_set< gc::Object* >& reac
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string ArrayRangeRef::ToString() {
-	return "gse::value::ArrayRangeRef( " + array->ToString() + ":" + ( from.has_value()
-		? std::to_string( from.value() )
-		: ""
-	) + ":" + ( to.has_value()
-		? std::to_string( to.value() )
-		: ""
-	) + " )";
-}
-#endif
-
 }
 }

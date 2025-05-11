@@ -17,12 +17,6 @@ public:
 
 	program::loop_control_type_t value;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override {
-		return "gse::value::LoopControl()";
-	}
-#endif
-
 };
 
 }

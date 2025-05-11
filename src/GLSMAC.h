@@ -60,10 +60,6 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::GCWrappable )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;

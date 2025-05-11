@@ -39,9 +39,6 @@ CLASS2( GSEPrompt, common::Task, gc::Object )
 	void Iterate() override;
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
 
 private:
 	bool m_is_running = false;

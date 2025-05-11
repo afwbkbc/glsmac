@@ -56,10 +56,6 @@ CLASS2( UI, common::Class, gse::GCWrappable )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	friend class dom::Object;
 	typedef std::function< void() > f_iterable_t;

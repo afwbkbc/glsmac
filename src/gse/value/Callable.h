@@ -30,10 +30,6 @@ public:
 
 	context::Context* const m_ctx = nullptr;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 };
 
 }

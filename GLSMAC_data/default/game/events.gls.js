@@ -15,6 +15,7 @@ return (game) => {
 		'add_base_pop',
 		'complete_turn',
 		'uncomplete_turn',
+		'advance_turn',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

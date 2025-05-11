@@ -311,14 +311,6 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 
 }
 
-#if defined ( DEBUG ) || defined( FASTDEBUG )
-
-const std::string GSE::ToString() {
-	return "gse::GSE()";
-}
-
-#endif
-
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 	{
 		if ( context ) {

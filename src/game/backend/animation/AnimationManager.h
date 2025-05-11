@@ -39,10 +39,6 @@ public:
 	void Serialize( types::Buffer& buf ) const;
 	void Unserialize( types::Buffer& buf );
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 private:

@@ -188,12 +188,6 @@ WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( TileManager )
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string TileManager::ToString() {
-	return "game::TileManager()";
-}
-#endif
-
 const std::string TileManager::TilesToString( const tiles_t& tiles, std::string prefx ) {
 	// TODO: refactor
 	std::string result = TS_ARR_BEGIN( "Tiles" );

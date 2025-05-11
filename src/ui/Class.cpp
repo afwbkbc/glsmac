@@ -279,12 +279,6 @@ void Class::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Class::ToString() {
-	return "ui::Class( " + m_name + " )";
-}
-#endif
-
 void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* value ) {
 	const auto& it_old = m_properties.find( name );
 	if ( it_old == m_properties.end() || it_old->second != value ) {

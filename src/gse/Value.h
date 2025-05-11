@@ -235,7 +235,7 @@ public:
 
 	static const std::string& GetTypeStringStatic( const type_t type );
 	const std::string& GetTypeString() const;
-	const std::string ToString() const;
+	virtual const std::string ToString() const;
 	const std::string Dump() const;
 
 	Value* const Deref();

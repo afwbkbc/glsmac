@@ -64,12 +64,6 @@ gse::Value* const Interpreter::Execute( context::Context* ctx, ExecutionPointer&
 	return EvaluateScope( ctx, ep, program->body );
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Interpreter::ToString() {
-	return "gse::runner::Interpreter()";
-}
-#endif
-
 gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPointer& ep, const Scope* scope, bool* returnflag ) {
 	CHECKACCUM( m_gc_space );
 	gse::Value* result = nullptr;

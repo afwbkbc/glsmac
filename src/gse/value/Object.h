@@ -58,10 +58,6 @@ public:
 	const si_t m_si = {};
 	const gse::ExecutionPointer m_ep = {};
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	Value* m_this = nullptr;
 

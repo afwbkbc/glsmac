@@ -16,12 +16,6 @@ public:
 	Undefined( gc::Space* const gc_space, const Undefined& other )
 		: Undefined( gc_space ) {}
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override {
-		return "gse::value::Undefined()";
-	}
-#endif
-
 };
 
 }

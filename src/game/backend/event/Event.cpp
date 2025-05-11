@@ -40,11 +40,9 @@ void Event::Unserialize( GSE_CALLABLE, types::Buffer buffer ) {
 	}
 }
 
-#if defined(DEBUG) || defined(FASTDEBUG)
-const std::string Event::ToString() {
+const std::string Event::ToString() const {
 	return "Event#" + m_id + "( " + m_name + " )"; // TODO
 }
-#endif
 
 void Event::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
@@ -58,6 +56,10 @@ void Event::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();
+}
+
+const size_t Event::GetCaller() const {
+	return m_caller;
 }
 
 const std::string& Event::GetName() const {

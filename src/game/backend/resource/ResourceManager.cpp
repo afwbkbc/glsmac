@@ -194,12 +194,6 @@ void ResourceManager::Unserialize( types::Buffer& buf ) {
 	}
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string ResourceManager::ToString() {
-	return "game::ResourceManager()";
-}
-#endif
-
 }
 }
 }

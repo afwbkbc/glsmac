@@ -70,7 +70,7 @@ class AnimationManager;
 }
 
 namespace event {
-class LegacyEvent;
+class Event;
 }
 
 class State;
@@ -277,7 +277,7 @@ typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
 class InvalidEvent : public types::Exception {
 public:
-	InvalidEvent( const std::string& reason, const event::LegacyEvent* event );
+	InvalidEvent( const std::string& reason, const event::Event* event );
 };
 
 CLASS2( Game, MTModule, gse::GCWrappable )
@@ -311,9 +311,6 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	// send backend requests for processing
 	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
 
-	// send event
-	common::mt_id_t MT_AddEvent( const event::LegacyEvent* event );
-
 #ifdef DEBUG
 
 	common::mt_id_t MT_SaveDump( const std::string& path );
@@ -339,10 +336,6 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	WRAPDEFS_PTR( Game )
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 protected:
@@ -359,18 +352,14 @@ public:
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
 	void OnGSEError( const gse::Exception& e );
-	gse::Value* const AddEvent( GSE_CALLABLE, event::LegacyEvent* event );
 	const size_t GetTurnId() const;
-	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
 	const bool IsTurnChecksumValid( const util::crc32::crc_t checksum ) const;
 	void CompleteTurn( GSE_CALLABLE, const size_t slot_num );
 	void UncompleteTurn( const size_t slot_num );
-	void FinalizeTurn( GSE_CALLABLE );
 	void AdvanceTurn( const size_t turn_id );
 
 	void GlobalFinalizeTurn( GSE_CALLABLE );
-	void GlobalProcessTurnFinalized( GSE_CALLABLE, const size_t slot_num, const util::crc32::crc_t checksum );
 	void GlobalAdvanceTurn( GSE_CALLABLE );
 
 	faction::Faction* GetFaction( const std::string& id ) const;
@@ -386,9 +375,6 @@ public:
 	void CheckRW( GSE_CALLABLE );
 
 private:
-
-	void ValidateEvent( GSE_CALLABLE, event::LegacyEvent* event );
-	gse::Value* const ProcessEvent( GSE_CALLABLE, event::LegacyEvent* event );
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
@@ -432,8 +418,6 @@ private:
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 	map_editor::MapEditor* m_map_editor = nullptr;
-
-	std::vector< backend::event::LegacyEvent* > m_unprocessed_events = {};
 
 	turn::Turn m_current_turn = {};
 

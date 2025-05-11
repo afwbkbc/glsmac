@@ -442,12 +442,6 @@ void BaseManager::RefreshBase( const base::Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string BaseManager::ToString() {
-	return "game::BaseManager()";
-}
-#endif
-
 void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op ) {
 	auto it = m_base_updates.find( base->m_id );
 	if ( it == m_base_updates.end() ) {

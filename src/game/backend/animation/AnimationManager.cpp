@@ -334,12 +334,6 @@ void AnimationManager::Unserialize( types::Buffer& buf ) {
 	Log( "Restored next animation id: " + std::to_string( m_next_running_animation_id ) );
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string AnimationManager::ToString() {
-	return "game::AnimationManager()";
-}
-#endif
-
 const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_complete ) {
 	const auto running_animation_id = ++m_next_running_animation_id;
 	m_running_animations_callbacks.insert(

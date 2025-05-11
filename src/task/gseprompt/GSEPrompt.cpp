@@ -123,12 +123,6 @@ void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string GSEPrompt::ToString() {
-	return "gse::GSEPrompt()";
-}
-#endif
-
 void GSEPrompt::PrintPrompt() {
 	if ( m_is_tty ) {
 		util::LogHelper::Print( m_syntax + "> " );

@@ -17,11 +17,5 @@ void ArrayRef::GetReachableObjects( std::unordered_set< gc::Object* >& reachable
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string ArrayRef::ToString() {
-	return "gse::value::ArrayRef( " + array->ToString() + ")";
-}
-#endif
-
 }
 }

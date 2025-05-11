@@ -17,12 +17,6 @@ public:
 	Float( gc::Space* const gc_space, const Float& other )
 		: Float( gc_space, other.value ) {}
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override {
-		return "gse::value::Float( " + std::to_string( value ) + " )";
-	}
-#endif
-
 };
 
 }

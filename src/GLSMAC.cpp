@@ -280,12 +280,6 @@ void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	}
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string GLSMAC::ToString() {
-	return "GLSMAC()";
-}
-#endif
-
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
 	ASSERT_NOLOG( !m_load_thread, "load thread already set" );
 	ASSERT_NOLOG( !m_f_after_load, "f_after load already set" );

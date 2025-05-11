@@ -40,10 +40,6 @@ public:
 
 	WRAPDEFS_PTR( TileManager )
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	Game* m_game = nullptr;
 

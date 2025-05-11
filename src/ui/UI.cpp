@@ -199,12 +199,6 @@ void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objec
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string UI::ToString() {
-	return "ui::UI()";
-}
-#endif
-
 void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
 	ASSERT( m_iterables.find( obj ) == m_iterables.end(), "iterable already exists" );
 	m_iterables.insert( {obj, f } );

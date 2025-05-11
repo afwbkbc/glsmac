@@ -121,12 +121,6 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Async::ToString() {
-	return "gse::Async()";
-}
-#endif
-
 void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 	if ( ms < 0 ) {
 		GSE_ERROR( EC.OPERATION_FAILED, "Timeout can't be negative: " + std::to_string( ms ) );

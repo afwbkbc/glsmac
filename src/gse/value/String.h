@@ -19,12 +19,6 @@ public:
 
 	std::string value;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override {
-		return "gse::value::String( " + value + " )";
-	}
-#endif
-
 };
 
 }

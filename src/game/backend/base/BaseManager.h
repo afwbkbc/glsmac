@@ -54,10 +54,6 @@ public:
 
 	void RefreshBase( const base::Base* base );
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-	const std::string ToString() override;
-#endif
-
 private:
 	Game* m_game = nullptr;
 

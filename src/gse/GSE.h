@@ -82,8 +82,6 @@ CLASS2( GSE, common::Class, gc::Object )
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
 	const std::string& LogCaptureStopGet() const { return m_builtins.LogCaptureStopGet(); }
 
-	const std::string ToString() override;
-
 #endif
 
 private:

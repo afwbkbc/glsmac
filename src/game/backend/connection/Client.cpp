@@ -4,7 +4,7 @@
 
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
-#include "game/backend/event/LegacyEvent.h"
+#include "game/backend/event/Event.h"
 #include "types/Packet.h"
 #include "network/Network.h"
 
@@ -232,10 +232,11 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							Log( "Got game events packet" );
 							if ( m_on_game_event_validate && m_on_game_event_apply ) {
 								auto buf = types::Buffer( packet.data.str );
-								std::vector< backend::event::LegacyEvent* > game_events = {};
+								std::vector< backend::event::Event* > game_events = {};
+								THROW( "TODO: PT_GAME_EVENTS" );
 								m_state->WithGSE(
 									[ &buf, &game_events ]( GSE_CALLABLE ) {
-										backend::event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
+										//backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
 									}
 								);
 								for ( const auto& game_event : game_events ) {
@@ -277,7 +278,8 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	p.data.str = backend::event::LegacyEvent::SerializeMultiple( game_events ).ToString();
+	THROW( "TODO: SendGameEvents" );
+	//p.data.str = backend::event::LegacyEvent::SerializeMultiple( game_events ).ToString();
 	m_network->MT_SendPacket( &p );
 }
 

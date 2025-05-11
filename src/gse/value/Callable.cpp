@@ -23,11 +23,5 @@ void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable
 	GC_DEBUG_END();
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
-const std::string Callable::ToString() {
-	return "gse::value::Callable()";
-}
-#endif
-
 }
 }
