@@ -320,7 +320,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		if ( path.has_value() ) {
 			args.insert({ "last_failed_path", VALUE( gse::value::String,, path.value() ) } );
 		}
-		TriggerObject( m_ui, "smacpath_prompt", ARGS( args ) );
+		TriggerObject( this, "smacpath_prompt", ARGS( args ) );
 		return;
 	}
 	if ( path.has_value() ) {
