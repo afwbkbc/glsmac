@@ -13,5 +13,6 @@ SET( SRC ${SRC}
 	${PWD}/Button.cpp
 	${PWD}/Input.cpp
 	${PWD}/Sound.cpp
+	${PWD}/ChoiceList.cpp
 
 	PARENT_SCOPE )

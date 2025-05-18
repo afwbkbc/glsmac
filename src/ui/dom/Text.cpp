@@ -45,7 +45,7 @@ Text::Text( DOM_ARGS )
 				SetTransform( T_UPPERCASE );
 			}
 			else {
-				GSE_ERROR( gse::EC.UI_ERROR, "Unknown transform, expected: uppercase or lowercase, got: " + value );
+				GSE_ERROR( gse::EC.UI_ERROR, "Unknown transform, expected: none, uppercase or lowercase, got: " + value );
 			}
 		},
 		[ this ]( GSE_CALLABLE ) {

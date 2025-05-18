@@ -61,7 +61,9 @@ return (m) => {
 							steps.notimpl();
 						}],
 						['Multiplayer', () => {
-							steps.notimpl();
+							//m.glsmac.init();
+							e.settings.local.game_mode = 'multi';
+							steps.multiplayer();
 						}],
 						['View Credits', () => {
 							steps.notimpl();
@@ -249,7 +251,59 @@ return (m) => {
 						}],
 					]
 				});
-				#print('SETTINGS', e.settings.global);
+			},
+
+			multiplayer: () => {
+				let choices = null;
+				popup.show({
+					title: 'Multiplayer Setup',
+					width: 480,
+					height: 140,
+					generator: (body) => {
+						body.text({
+							class: 'popup-text',
+							text: 'Select a service...',
+							align: 'top center',
+							top: 5,
+						});
+						choices = body.choicelist({
+							left: 10,
+							right: 10,
+							top: 30,
+							itemclass: 'popup-list-button',
+							itemheight: 19,
+							itempadding: 1,
+							items: [
+								'Simple Internet TCP/IP Connection',
+								'Hotseat/Play-by-Email',
+							],
+						});
+					},
+					buttons: [
+						{
+							style: {
+								text: 'OK',
+								align: 'left',
+								is_ok: true,
+							},
+							onclick: (e) => {
+								steps.notimpl();
+								return true;
+							},
+						},
+						{
+							style: {
+								text: 'Cancel',
+								align: 'right',
+								is_cancel: true,
+							},
+							onclick: (e) => {
+								popup.back();
+								return true;
+							},
+						},
+					],
+				});
 			},
 
 		};

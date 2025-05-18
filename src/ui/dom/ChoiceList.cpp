@@ -1,0 +1,211 @@
+#include "ChoiceList.h"
+
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Array.h"
+#include "gse/value/Bool.h"
+
+#include "Button.h"
+#include "input/Event.h"
+
+namespace ui {
+namespace dom {
+
+ChoiceList::ChoiceList( DOM_ARGS )
+	: Container( DOM_ARGS_PASS, "choicelist", false ) {
+
+	Events(
+		{
+			input::EV_SELECT,
+		}
+	);
+
+	PROPERTY( "itemclass", gse::value::String, "", SetItemClass );
+	PROPERTY( "itemheight", gse::value::Int, 0, SetItemHeight );
+	PROPERTY( "itempadding", gse::value::Int, 0, SetItemPadding );
+	PROPERTY( "items", gse::value::Array, {}, SetItems );
+	PROPERTY( "value", gse::value::String, "", SetValue );
+}
+
+const bool ChoiceList::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
+	bool result = false;
+	if ( !m_choices.empty() ) {
+		switch ( event.type ) {
+			case input::EV_KEY_DOWN: {
+				switch ( event.data.key.code ) {
+					case input::K_UP:
+					case input::K_KP_UP: {
+						size_t next_idx = 0;
+						if ( m_selected_choice && m_selected_choice->position > next_idx ) {
+							next_idx = m_selected_choice->position - 1;
+						}
+						const auto& choice = m_choices.at( m_choices_order.at( next_idx ) );
+						if ( !m_selected_choice || m_selected_choice != &choice ) {
+							Select( GSE_CALL, choice, true );
+						}
+						break;
+					}
+					case input::K_DOWN:
+					case input::K_KP_DOWN: {
+						size_t next_idx = m_choices.size() - 1;
+						if ( m_selected_choice && m_selected_choice->position < next_idx ) {
+							next_idx = m_selected_choice->position + 1;
+						}
+						const auto& choice = m_choices.at( m_choices_order.at( next_idx ) );
+						if ( !m_selected_choice || m_selected_choice != &choice ) {
+							Select( GSE_CALL, choice, true );
+						}
+						break;
+					}
+					default: {
+					}
+				}
+				result = true;
+				break;
+			}
+			default: {
+			}
+		}
+	}
+	result |= Container::ProcessEventImpl( GSE_CALL, event );
+	return result;
+}
+
+void ChoiceList::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
+	switch ( e.type ) {
+		case input::EV_SELECT: {
+			obj.insert(
+				{
+					"value",
+					VALUE( gse::value::String, , *e.data.value.change_select.text )
+				}
+			);
+			break;
+		}
+		default: {
+			Container::WrapEvent( GSE_CALL, e, obj );
+		}
+	}
+}
+
+void ChoiceList::SetItemClass( GSE_CALLABLE, const std::string& cls ) {
+	if ( cls != m_itemclass ) {
+		m_itemclass = cls;
+		for ( auto& it : m_choices ) {
+			it.second.element->WrapSet( "class", VALUE( gse::value::String, , m_itemclass ), GSE_CALL );
+		}
+	}
+}
+
+void ChoiceList::SetItemHeight( GSE_CALLABLE, const size_t px ) {
+	if ( px != m_itemheight ) {
+		m_itemheight = px;
+		size_t top = m_itempadding;
+		for ( auto& it : m_choices ) {
+			it.second.element->WrapSet( "top", VALUE( gse::value::Int, , top ), GSE_CALL );
+			top += m_itemheight + m_itempadding;
+		}
+	}
+}
+
+void ChoiceList::SetItemPadding( GSE_CALLABLE, const size_t px ) {
+	if ( px != m_itempadding ) {
+		m_itempadding = px;
+		size_t top = m_itempadding;
+		for ( auto& it : m_choices ) {
+			it.second.element->WrapSet( "top", VALUE( gse::value::Int, , top ), GSE_CALL );
+			it.second.element->WrapSet( "left", VALUE( gse::value::Int, , m_itempadding ), GSE_CALL );
+			it.second.element->WrapSet( "right", VALUE( gse::value::Int, , m_itempadding ), GSE_CALL );
+			top += m_itemheight + m_itempadding;
+		}
+	}
+}
+
+void ChoiceList::Clear( GSE_CALLABLE ) {
+	for ( const auto& it : m_choices ) {
+		RemoveChild( GSE_CALL, it.second.element );
+	}
+	m_choices.clear();
+	m_choices_order.clear();
+	m_selected_choice = nullptr;
+}
+
+void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& items ) {
+	if ( !m_choices.empty() ) {
+		Clear( GSE_CALL );
+	}
+	m_choices.reserve( items.size() );
+	m_choices_order.reserve( items.size() );
+	size_t idx = 0;
+	size_t top = m_itempadding;
+	for ( const auto& item : items ) {
+		if ( item->type != gse::Value::T_STRING ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be strings, got " + item->GetTypeString() + ": " + item->ToString() );
+		}
+		const auto& v = ( (gse::value::String*)item )->value;
+		if ( v.empty() ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items can't be empty" );
+		}
+		if ( m_choices.find( v ) != m_choices.end() ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist duplicate item: " + v );
+		}
+		auto* element = new Button(
+			GSE_CALL, m_ui, this, {
+				{ "class", VALUE( gse::value::String, , m_itemclass ) },
+				{ "text",  VALUE( gse::value::String, , v ) },
+				{ "left",  VALUE( gse::value::Int, , m_itempadding ) },
+				{ "right", VALUE( gse::value::Int, , m_itempadding ) },
+				{ "top",   VALUE( gse::value::Int, , top ) },
+			}
+		);
+		AddChild( GSE_CALL, element, true );
+		const auto& choice = m_choices.insert(
+			{ v, {
+				v,
+				idx++,
+				element
+			} }
+		).first->second;
+		m_choices_order.push_back( v );
+		element->On( GSE_CALL, "click", NATIVE_CALL( this, choice ) {
+			if ( !m_selected_choice || m_selected_choice != &choice ) {
+				Select( GSE_CALL, choice, true );
+			}
+			return VALUE( gse::value::Bool,, true );
+		} ) );
+		top += m_itemheight + m_itempadding;
+	}
+	SetValue( GSE_CALL, m_value );
+}
+
+void ChoiceList::SetValue( GSE_CALLABLE, const std::string& value ) {
+	if ( !m_choices.empty() && ( !m_selected_choice || m_selected_choice->value != value ) ) {
+		const auto& it = m_choices.find(
+			value.empty()
+				? m_choices_order.front()
+				: value
+		);
+		if ( it == m_choices.end() ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist does not have value: " + value );
+		}
+		Select( GSE_CALL, it->second, !value.empty() );
+	}
+}
+
+void ChoiceList::Select( GSE_CALLABLE, const choice_t& choice, const bool send_event ) {
+	if ( m_selected_choice ) {
+		m_selected_choice->element->RemoveModifier( GSE_CALL, CM_SELECTED );
+	}
+	m_selected_choice = &choice;
+	m_selected_choice->element->AddModifier( GSE_CALL, CM_SELECTED );
+	UpdateProperty( "value", VALUE( gse::value::String, , m_selected_choice->value ) );
+	if ( send_event ) {
+		input::Event e;
+		e.SetType( input::EV_SELECT );
+		e.data.value.change_select.text = &m_selected_choice->value;
+		ProcessEvent( GSE_CALL, e );
+	}
+}
+
+}
+}

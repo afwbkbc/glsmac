@@ -52,14 +52,8 @@ return (ui) => {
 		font: 'arialnb.ttf:18',
 	});
 
-	ui.class('popup-button').set({
+	ui.class('popup-button-base').set({
 		background: 'interface.pcx:crop(68, 149, 134, 166)',
-		width: 230,
-		height: 21,
-		font: 'arialnb.ttf:18',
-		transform: 'uppercase',
-		sound: 'ok.wav',
-		volume: 0.5,
 		color: 'rgb(13, 23, 36)',
 		border: 'transparent,2',
 		_hover: {
@@ -67,6 +61,25 @@ return (ui) => {
 			border: 'rgb(120, 164, 212),2',
 		},
 		_active: {
+			color: 'rgb(13, 23, 36)',
+			background: 'interface.pcx:crop(68,  170, 134, 187)',
+			border: 'rgb(120, 164, 212),2',
+		},
+	});
+
+	ui.class('popup-button').extend('popup-button-base').set({
+		width: 230,
+		height: 21,
+		font: 'arialnb.ttf:18',
+		transform: 'uppercase',
+		sound: 'ok.wav',
+		volume: 0.5,
+	});
+	ui.class('popup-list-button').extend('popup-button-base').set({
+		height: 19,
+		font: 'arialnb.ttf:17',
+		_selected: {
+			color: 'rgb(13, 23, 36)',
 			background: 'interface.pcx:crop(68,  170, 134, 187)',
 			border: 'rgb(120, 164, 212),2',
 		},

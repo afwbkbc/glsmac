@@ -9,12 +9,14 @@ namespace ui {
 static const std::unordered_map< std::string, class_modifier_t > s_name_to_modifier = {
 	{ "_focus", CM_FOCUS },
 	{ "_hover", CM_HOVER },
+	{ "_selected", CM_SELECTED },
 	{ "_active", CM_ACTIVE },
 };
 
 static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_name = {
 	{ CM_FOCUS, "_focus" },
 	{ CM_HOVER, "_hover" },
+	{ CM_SELECTED, "_selected" },
 	{ CM_ACTIVE, "_active" },
 };
 
@@ -27,6 +29,7 @@ Class::Class( gc::Space* const gc_space, const UI* const ui, const std::string& 
 		m_subclasses = {
 			{ CM_HOVER, new Class( gc_space, ui, name + "._hover", false ) },
 			{ CM_ACTIVE, new Class( gc_space, ui, name + "._active", false ) },
+			{ CM_SELECTED, new Class( gc_space, ui, name + "._selected", false ) },
 			{ CM_FOCUS, new Class( gc_space, ui, name + "._focus", false ) },
 		};
 	}
@@ -131,7 +134,32 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 		modifiers.insert( modifier );
 		const auto& cls = m_subclasses.at( modifier );
 		cls->AddObject( GSE_CALL, object, {} );
-		cls->UpdateObject( GSE_CALL, object, modifier );
+
+		//cls->UpdateObject( GSE_CALL, object, modifier );
+
+		for ( const auto& p : cls->m_properties ) {
+			if ( s_name_to_modifier.find( p.first ) != s_name_to_modifier.end() ) {
+				ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
+				continue;
+			}
+			gse::Value* v = nullptr;
+			// check if this property exists in higher priority subclass
+			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
+				if ( *it <= modifier ) {
+					break;
+				}
+				const auto& props = m_subclasses.at( *it )->m_properties;
+				const auto& it_p = props.find( p.first );
+				if ( it_p != props.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+					v = it_p->second;
+					break;
+				}
+			}
+			if ( !v ) {
+				object->SetPropertyFromClass( GSE_CALL, p.first, p.second, modifier );
+			}
+		}
+
 	}
 }
 
@@ -147,12 +175,11 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 			gse::Value* v = nullptr;
 			// check if this property exists outside of subclass
 			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
-				if ( *it == modifier ) {
-					const auto& it_p = m_subclasses.at( *it )->m_properties.find( p.first );
-					if ( it_p != cls->m_properties.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
-						v = it_p->second;
-						break;
-					}
+				const auto& props = m_subclasses.at( *it )->m_properties;
+				const auto& it_p = props.find( p.first );
+				if ( it_p != props.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+					v = it_p->second;
+					break;
 				}
 			}
 			if ( !v ) {

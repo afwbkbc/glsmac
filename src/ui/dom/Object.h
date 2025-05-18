@@ -19,6 +19,17 @@
 #define DOM_ARGS_PASS GSE_CALL, ui, parent, properties
 #define DOM_ARGS_PASS_T DOM_ARGS_PASS, tag
 
+#define PROPERTY( _name, _type, _default, _setter ) \
+    Property( \
+        GSE_CALL, _name, _type::GetType(), VALUE( _type, , _default ), PF_NONE, \
+        [ this ]( GSE_CALLABLE, gse::Value* const v ) { \
+            _setter( GSE_CALL, ( (_type*)v )->value ); \
+        }, \
+        [ this ]( GSE_CALLABLE ) { \
+            _setter( GSE_CALL, _default ); \
+        } \
+    );
+
 namespace scene {
 namespace actor {
 class Actor;
@@ -69,6 +80,9 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
+	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
+
 protected:
 
 	virtual ~Object();
@@ -103,9 +117,6 @@ protected:
 	virtual void OnPropertyRemove( GSE_CALLABLE, const std::string& key );
 
 	virtual void WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& event_data ) const;
-
-	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
-	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
 
 	bool m_is_visible = false;
 

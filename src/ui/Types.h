@@ -19,6 +19,7 @@ enum class_modifier_t : uint8_t {
 	CM_NONE,
 	CM_FOCUS,
 	CM_HOVER,
+	CM_SELECTED,
 	CM_ACTIVE,
 };
 typedef std::set< class_modifier_t > class_modifiers_t;

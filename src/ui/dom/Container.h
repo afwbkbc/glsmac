@@ -34,11 +34,11 @@ public:
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
+
 protected:
 
 	virtual ~Container();
-
-	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
 
 	void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
 	void ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target );
@@ -70,8 +70,9 @@ private:
 
 	void SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords );
 
-private:
+protected:
 	friend class Object;
+	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible );
 	void RemoveChild( GSE_CALLABLE, Object* obj );
 
 };

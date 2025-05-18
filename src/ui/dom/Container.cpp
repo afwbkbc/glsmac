@@ -14,6 +14,7 @@
 #include "Button.h"
 #include "Input.h"
 #include "Sound.h"
+#include "ChoiceList.h"
 
 namespace ui {
 namespace dom {
@@ -71,6 +72,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "button", Button );
 		FACTORY( "input", Input );
 		FACTORY( "sound", Sound );
+		FACTORY( "choicelist", ChoiceList );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
@@ -305,12 +307,7 @@ void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 
 void Container::InitAndValidate( GSE_CALLABLE ) {
 	for ( const auto& it : m_embedded_objects ) {
-		auto* obj = it.first;
-		if ( m_is_visible && it.second ) {
-			obj->Show();
-		}
-		obj->InitAndValidate( GSE_CALL );
-		m_children.insert({ obj->m_id, obj });
+		AddChild( GSE_CALL, it.first, it.second );
 	}
 	m_embedded_objects.clear();
 	for ( const auto& p : m_initial_properties ) {
@@ -357,6 +354,23 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 		if ( m_mouse_over_object ) {
 			e.SetType( input::EV_MOUSE_OVER );
 			m_mouse_over_object->ProcessEvent( GSE_CALL, e );
+		}
+	}
+}
+
+void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
+	ASSERT_NOLOG( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
+	if ( m_is_visible && is_visible ) {
+		obj->Show();
+	}
+	obj->InitAndValidate( GSE_CALL );
+	m_children.insert({ obj->m_id, obj } );
+	ASSERT_NOLOG( m_mouse_over_object != obj, "unexpected child mouseover" );
+	const auto* geometry = obj->GetGeometry();
+	if ( geometry ) {
+		const auto& mousepos = m_ui->GetLastMousePosition();
+		if ( geometry->Contains( mousepos ) ) {
+			SetMouseOverChild( GSE_CALL, obj, mousepos );
 		}
 	}
 }
