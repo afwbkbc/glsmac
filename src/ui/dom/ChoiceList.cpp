@@ -23,8 +23,8 @@ ChoiceList::ChoiceList( DOM_ARGS )
 	PROPERTY( "itemclass", gse::value::String, "", SetItemClass );
 	PROPERTY( "itemheight", gse::value::Int, 0, SetItemHeight );
 	PROPERTY( "itempadding", gse::value::Int, 0, SetItemPadding );
-	PROPERTY( "items", gse::value::Array, {}, SetItems );
 	PROPERTY( "value", gse::value::String, "", SetValue );
+	PROPERTY( "items", gse::value::Array, {}, SetItems );
 }
 
 const bool ChoiceList::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -139,15 +139,17 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 	size_t idx = 0;
 	size_t top = m_itempadding;
 	for ( const auto& item : items ) {
-		if ( item->type != gse::Value::T_STRING ) {
-			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be strings, got " + item->GetTypeString() + ": " + item->ToString() );
+		if ( item->type != gse::Value::T_ARRAY ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be value-label pairs, got " + item->GetTypeString() + ": " + item->ToString() );
 		}
-		const auto& v = ( (gse::value::String*)item )->value;
-		if ( v.empty() ) {
-			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items can't be empty" );
+		const auto& kv = ( (gse::value::Array*)item )->value;
+		if ( kv.size() != 2 || kv.at( 0 )->type != gse::Value::T_STRING || kv.at( 1 )->type != gse::Value::T_STRING ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be pairs of two strings (value and label), got: " + item->ToString() );
 		}
-		if ( m_choices.find( v ) != m_choices.end() ) {
-			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist duplicate item: " + v );
+		const auto& k = ( (gse::value::String*)kv.at( 0 ) )->value;
+		const auto& v = ( (gse::value::String*)kv.at( 1 ) )->value;
+		if ( m_choices.find( k ) != m_choices.end() ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist duplicate value: " + k );
 		}
 		auto* element = new Button(
 			GSE_CALL, m_ui, this, {
@@ -160,13 +162,13 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 		);
 		AddChild( GSE_CALL, element, true );
 		const auto& choice = m_choices.insert(
-			{ v, {
-				v,
+			{ k, {
+				k,
 				idx++,
 				element
 			} }
 		).first->second;
-		m_choices_order.push_back( v );
+		m_choices_order.push_back( k );
 		element->On( GSE_CALL, "click", NATIVE_CALL( this, choice ) {
 			if ( !m_selected_choice || m_selected_choice != &choice ) {
 				Select( GSE_CALL, choice, true );
@@ -179,16 +181,16 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 }
 
 void ChoiceList::SetValue( GSE_CALLABLE, const std::string& value ) {
-	if ( !m_choices.empty() && ( !m_selected_choice || m_selected_choice->value != value ) ) {
-		const auto& it = m_choices.find(
-			value.empty()
-				? m_choices_order.front()
-				: value
-		);
-		if ( it == m_choices.end() ) {
-			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist does not have value: " + value );
+	if ( ( m_value.empty() || m_value != value ) && !m_choices.empty() && ( !m_selected_choice || m_selected_choice->value != value ) ) {
+		m_value = value;
+		if ( m_choices.find( m_value ) == m_choices.end() ) {
+			m_value = m_choices_order.front();
 		}
-		Select( GSE_CALL, it->second, !value.empty() );
+		const auto& it = m_choices.find( m_value );
+		if ( it == m_choices.end() ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist does not have value: " + m_value );
+		}
+		Select( GSE_CALL, it->second, false );
 	}
 }
 

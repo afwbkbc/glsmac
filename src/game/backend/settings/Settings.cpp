@@ -103,7 +103,8 @@ WRAPMAP( game_mode, LocalSettings::game_mode_t,
 
 WRAPMAP( network_type, LocalSettings::network_type_t,
 	{ LocalSettings::NT_NONE, "none" },
-	{ LocalSettings::NT_SIMPLETCP, "tcp" },
+	{ LocalSettings::NT_SIMPLE_TCPIP, "simple_tcpip" },
+	{ LocalSettings::NT_HOTSEAT, "hotseat" },
 )
 
 WRAPMAP( network_role, LocalSettings::network_role_t,

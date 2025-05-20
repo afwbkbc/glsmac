@@ -108,7 +108,8 @@ public:
 
 	enum network_type_t {
 		NT_NONE,
-		NT_SIMPLETCP,
+		NT_SIMPLE_TCPIP,
+		NT_HOTSEAT,
 	};
 	network_type_t network_type = NT_NONE;
 

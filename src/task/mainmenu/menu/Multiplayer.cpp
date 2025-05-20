@@ -63,7 +63,7 @@ void Multiplayer::Hide() {
 void Multiplayer::OnNext() {
 	const auto value = m_choices->GetValue();
 	if ( value == C_SIMPLE ) {
-		m_mainmenu->m_state->m_settings.local.network_type = game::backend::settings::LocalSettings::NT_SIMPLETCP;
+		m_mainmenu->m_state->m_settings.local.network_type = game::backend::settings::LocalSettings::NT_SIMPLE_TCPIP;
 		NEWV( menu, HostJoin, m_mainmenu );
 		NextMenu( menu );
 	}
