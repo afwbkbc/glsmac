@@ -3,6 +3,7 @@
 #include <string>
 
 #include "common/Module.h"
+#include "gse/Wrappable.h"
 
 #include "util/random/Types.h"
 #include "game/backend/settings/Types.h"
@@ -10,13 +11,15 @@
 
 #include "Types.h"
 
+class GLSMAC;
+
 namespace util {
 class ConfigManager;
 }
 
 namespace config {
 
-CLASS( Config, common::Module )
+CLASS2( Config, common::Module, gse::Wrappable )
 	Config( const std::string& path );
 	~Config();
 
@@ -40,7 +43,9 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
-		LF_LEGACY_UI = 1 << 16,
+		LF_HOST = 1 << 16,
+		LF_JOIN = 1 << 17,
+		LF_LEGACY_UI = 1 << 18,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -88,9 +93,8 @@ CLASS( Config, common::Module )
 	const float GetQuickstartMapNativeLifeforms() const;
 	const float GetQuickstartMapCloudCover() const;
 	const std::string& GetQuickstartFaction() const;
-
 	const std::vector< std::string >& GetModPaths() const;
-
+	const std::string& GetJoinAddress() const;
 	const std::string& GetMainScript() const;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -100,6 +104,8 @@ CLASS( Config, common::Module )
 	const std::string& GetGSETestsScript() const;
 
 #endif
+
+	WRAPDEFS_PTR( Config )
 
 private:
 
@@ -132,9 +138,8 @@ private:
 	float m_quickstart_map_native_lifeforms = 0.5f;
 	float m_quickstart_map_cloud_cover = 0.5f;
 	std::string m_quickstart_faction = "";
-
 	std::vector< std::string > m_mod_paths = {};
-
+	std::string m_join_address = "";
 	std::string m_mainscript = "main";
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -145,6 +150,7 @@ private:
 	std::string m_gse_tests_script = "";
 
 #endif
+
 };
 
 }

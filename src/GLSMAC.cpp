@@ -147,9 +147,12 @@ void GLSMAC::Iterate() {
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
-
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
+		{
+			"config",
+			g_engine->GetConfig()->Wrap( GSE_CALL, true ),
+		},
 		{
 			"ui",
 			m_ui->Wrap( GSE_CALL, true )

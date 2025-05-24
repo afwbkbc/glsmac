@@ -13,6 +13,15 @@
 
 namespace config {
 
+WRAPIMPL_BEGIN( Config )
+	WRAPIMPL_PROPS};
+	for ( const auto& it : m_manager->GetSettings() ) {
+		properties.insert( { it.first, VALUE( gse::value::String, , it.second.second ) } );
+	}
+WRAPIMPL_END_PTR()
+
+UNWRAPIMPL_PTR( Config )
+
 void Config::Error( const std::string& error ) {
 	util::LogHelper::Println(
 		(std::string)
@@ -248,6 +257,23 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"host", "Host a TCP/IP game", AH( this ) {
+			if ( HasLaunchFlag( LF_JOIN ) ) {
+				Error( "Using --host with --join is not allowed" );
+			}
+			m_launch_flags |= LF_HOST;
+		}
+	);
+	m_manager->AddRule(
+		"join", "ADDRESS", "Join a TCP/IP game", AH( this ) {
+			if ( HasLaunchFlag( LF_HOST ) ) {
+				Error( "Using --host with --join is not allowed" );
+			}
+			m_launch_flags |= LF_JOIN;
+			m_join_address = value;
+		}
+	);
+	m_manager->AddRule(
 		"legacy-ui", "Use legacy UI, development purposes only (broken, will be removed soon)", AH( this ) {
 			m_launch_flags |= LF_LEGACY_UI;
 		}
@@ -443,6 +469,10 @@ const std::string& Config::GetQuickstartFaction() const {
 
 const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
+}
+
+const std::string& Config::GetJoinAddress() const {
+	return m_join_address;
 }
 
 const std::string& Config::GetMainScript() const {

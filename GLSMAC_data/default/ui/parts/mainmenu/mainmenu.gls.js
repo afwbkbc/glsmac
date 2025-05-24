@@ -56,7 +56,13 @@ return (m) => {
 			i.steps[step] = #include('steps/' + step);
 		}
 
-		i.steps.main(i);
+		const c = m.glsmac.config;
+		if (#is_defined(c.host)) {
+			i.settings.local.network_type = 'simple_tcpip';
+			i.steps.multiplayer_lobby(i);
+		} else {
+			i.steps.main(i);
+		}
 
 	});
 
