@@ -44,8 +44,8 @@ private:
 	const si_t GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end );
+	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
@@ -136,7 +136,19 @@ private:
 		{
 			"catch",
 			Parser::Conditional::CT_CATCH
-		}
+		},
+		{
+			"switch",
+			Parser::Conditional::CT_SWITCH
+		},
+		{
+			"case",
+			Parser::Conditional::CT_CASE
+		},
+		{
+			"default",
+			Parser::Conditional::CT_DEFAULTCASE
+		},
 	};
 
 	const std::unordered_map< std::string, program::loop_control_type_t > LOOP_CONTROL_KEYWORDS = {

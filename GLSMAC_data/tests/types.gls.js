@@ -484,4 +484,47 @@ test.assert(#to_string(testobj6) == '{ key1: value1, key3: null }');
 
 ;
 ;
+
+const testswitch = (input) => {
+	let result = 0;
+	switch (input) {
+		case 'a': {
+			result = 1;
+			break;
+		}
+		case 'b': {
+			result = 2;
+			// no break
+		}
+		case 'c': {
+			result = 3;
+			break;
+		}
+		case 'd': {
+			continue;
+			result = 4;
+			break;
+		}
+		case 'e': {
+			result = 5;
+			break;
+		}
+		default: {
+			if (input == 'x') {
+				result = 6;
+			}
+		}
+	}
+	return result;
+};
+
+test.assert(testswitch('a') == 1);
+test.assert(testswitch('b') == 3); // fall-through
+test.assert(testswitch('c') == 3);
+test.assert(testswitch('d') == 5); // continue
+test.assert(testswitch('x') == 6); // default
+test.assert(testswitch('y') == 0); // default
+
+;
+;
 ;

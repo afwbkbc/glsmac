@@ -15,6 +15,8 @@ public:
 		CT_FOR,
 		CT_TRY,
 		CT_CATCH,
+		CT_SWITCH,
+		CT_CASE,
 	};
 
 	Conditional( const si_t& si, const conditional_type_t conditional_type );

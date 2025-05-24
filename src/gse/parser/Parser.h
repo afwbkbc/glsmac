@@ -134,6 +134,9 @@ protected:
 			CT_FOR,
 			CT_TRY,
 			CT_CATCH,
+			CT_SWITCH,
+			CT_CASE,
+			CT_DEFAULTCASE,
 		};
 		Conditional( const conditional_type_t conditional_type, const si_t& si )
 			: SourceElement( ET_CONDITIONAL, si )
@@ -142,7 +145,9 @@ protected:
 				conditional_type == CT_IF ||
 					conditional_type == CT_ELSEIF ||
 					conditional_type == CT_WHILE ||
-					conditional_type == CT_FOR
+					conditional_type == CT_FOR ||
+					conditional_type == CT_SWITCH ||
+					conditional_type == CT_CASE
 			) {};
 
 		const conditional_type_t m_conditional_type;
@@ -164,6 +169,12 @@ protected:
 					return "try";
 				case CT_CATCH:
 					return "catch";
+				case CT_SWITCH:
+					return "switch";
+				case CT_CASE:
+					return "case";
+				case CT_DEFAULTCASE:
+					return "defaultcase";
 				default:
 					THROW( "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}

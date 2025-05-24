@@ -25,6 +25,8 @@
 #include "gse/program/Try.h"
 #include "gse/program/Catch.h"
 #include "gse/program/LoopControl.h"
+#include "gse/program/Switch.h"
+#include "gse/program/Case.h"
 #include "gse/value/Undefined.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Int.h"
@@ -314,6 +316,55 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					throw e;
 				}
 			}
+		}
+		case Conditional::CT_SWITCH: {
+			const auto* s = (Switch*)conditional;
+			ASSERT( s->condition, "condition not set" );
+			ASSERT( s->condition->expression, "condition expression not set" );
+			const auto* a = EvaluateExpression( ctx, ep, s->condition->expression, returnflag );
+			gse::Value* result = nullptr;
+			if ( returnflag ) {
+				ASSERT( !*returnflag, "can't return from switch condition" );
+			}
+			bool matched = false;
+			for ( const auto& c : s->cases ) {
+				if ( c->condition ) {
+					ASSERT( c->condition->expression, "condition expression not set" );
+					const auto* b = EvaluateExpression( ctx, ep, c->condition->expression, returnflag );
+					if ( returnflag ) {
+						ASSERT( !*returnflag, "can't return from switch case condition" );
+					}
+					if ( a->type != b->type ) {
+						throw gse::Exception( EC.TYPE_ERROR, "Switch case type mismatch - expected " + a->GetTypeString() + ", got " + b->GetTypeString() + ": " + b->ToString(), ctx, c->m_si, ep );
+					}
+					if ( *a == *b ) {
+						matched = true;
+					}
+				}
+				else {
+					matched = true;
+				}
+				if ( matched ) {
+					bool need_break = false;
+					bool need_clear = false;
+					bool brk = false;
+					result = EvaluateScope( ctx, ep, c->body, &brk );
+					if ( brk ) {
+						CheckBreakCondition( result, &need_break, &need_clear );
+						if ( need_clear ) {
+							result = nullptr;
+						}
+						else {
+							// return to outside
+							*returnflag = true;
+						}
+						if ( need_break || ( returnflag && *returnflag ) ) {
+							break;
+						}
+					}
+				}
+			}
+			return result;
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->Dump() );

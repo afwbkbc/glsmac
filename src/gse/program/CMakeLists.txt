@@ -29,7 +29,9 @@ SET( SRC ${SRC}
 	${PWD}/Variable.cpp
 	${PWD}/While.cpp
 	${PWD}/For.cpp
+	${PWD}/Switch.cpp
+	${PWD}/Case.cpp
 
-	)
+)
 
 SET( SRC ${SRC} PARENT_SCOPE )

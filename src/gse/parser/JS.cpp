@@ -31,6 +31,8 @@
 #include "gse/program/ForConditionInOf.h"
 #include "gse/program/ForConditionExpressions.h"
 #include "gse/program/LoopControl.h"
+#include "gse/program/Switch.h"
+#include "gse/program/Case.h"
 
 namespace gse {
 
@@ -185,6 +187,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 	auto it = begin;
 	source_elements_t::const_iterator it_end;
 	std::stack< uint8_t > brackets = {};
+	source_elements_t::const_iterator pend = {};
 	while ( it != end ) {
 		it_end = it;
 		while ( it_end != end ) {
@@ -221,7 +224,9 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 										( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL || (
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSE &&
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSEIF &&
-											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CASE &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_DEFAULTCASE
 										)
 									)
 							)
@@ -232,7 +237,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
 						!IsObject( it + 1, it_end )
 					) {
-					body.push_back( GetControl( it, it_end + 1 ) );
+					body.push_back( GetControl( it, it_end + 1, &pend ) );
 					break;
 				}
 				else if (
@@ -240,7 +245,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
 					) {
 					if ( it != it_end ) {
-						body.push_back( GetControl( it, it_end ) );
+						body.push_back( GetControl( it, it_end, &pend ) );
 					}
 					break;
 				}
@@ -250,7 +255,10 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 			}
 		}
 		if ( it_end == end ) {
-			body.push_back( GetControl( it, it_end ) );
+			pend = it;
+			while ( pend != it_end ) {
+				body.push_back( GetControl( pend, it_end, &pend ) );
+			}
 		}
 		it = it_end;
 		if ( it != end ) {
@@ -260,37 +268,58 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 	return new program::Scope( GetSI( begin, end ), body );
 }
 
-const program::Control* JS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Control* JS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end ) {
 	ELS( "GetControl" );
+	ASSERT( processed_end, "processed_end is null" );
 	ASSERT( begin != end, "no elements inside" );
 	if ( ( *begin )->m_type == SourceElement::ET_CONDITIONAL ) {
-		return GetConditional( begin, end );
+		return GetConditional( begin, end, processed_end );
 	}
 	else {
-		return GetStatement( begin, end );
+		const auto* result = GetStatement( begin, end );
+		*processed_end = end;
+		return result;
 	}
 }
 
-const program::Conditional* JS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Conditional* JS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end ) {
 	ELS( "GetConditional" );
+	ASSERT( processed_end, "processed_end is null" );
 	ASSERT( ( *begin )->m_type == SourceElement::ET_CONDITIONAL, "conditional expected here" );
 	Conditional* conditional = (Conditional*)( *begin );
 	source_elements_t::const_iterator it = begin + 1, it_end;
 	const program::Condition* condition = nullptr;
-	if ( conditional->has_condition ) {
-		if (
-			it == end ||
-				( *it )->m_type != SourceElement::ET_BLOCK ||
-				( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
-				( ( Block * )( *it ) )->m_block_type != BLOCK_ROUND_BRACKETS ) {
-			throw Exception(
-				EC.PARSE_ERROR, "Expected (" + ( it == end
-					? " here"
-					: ", got: " + ( *it )->ToString()
-				), nullptr, ( *begin )->m_si, *m_ep
-			);
+	if ( conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
+		// default:
+		it++; // skip colon
+		ASSERT_NOLOG( it < end, "it overflow" );
+	}
+	else if ( conditional->has_condition ) {
+		if ( conditional->m_conditional_type == Conditional::CT_CASE ) {
+			// <condition>:
+			it_end = it + 1;
+			while ( it_end != end && !( (*it_end)->m_type == SourceElement::ET_OPERATOR && ( (Operator* )( *it_end ) )->m_op == ":" ) ) {
+				it_end++;
+			}
+			it--; // because no brackets
+			ASSERT_NOLOG( it >= begin, "it before begin" );
 		}
-		it_end = GetBracketsEnd( it, end );
+		else {
+			// (<condition>)
+			if (
+				it == end ||
+					( *it )->m_type != SourceElement::ET_BLOCK ||
+					( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
+					( ( Block * )( *it ) )->m_block_type != BLOCK_ROUND_BRACKETS ) {
+				throw Exception(
+					EC.PARSE_ERROR, "Expected (" + ( it == end
+						? " here"
+						: ", got: " + ( *it )->ToString()
+					), nullptr, ( *begin )->m_si, *m_ep
+				);
+			}
+			it_end = GetBracketsEnd( it, end );
+		}
 		if (conditional->m_conditional_type == Conditional::CT_FOR ) {
 			if (++it == end) {
 				throw Exception(
@@ -385,6 +414,7 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 			EC.PARSE_ERROR, "Expected {, got: " + ( *it )->ToString(), nullptr, ( *begin )->m_si, *m_ep
 		);
 	}
+
 	it_end = GetBracketsEnd( it, end );
 	const auto* body = GetScope( it + 1, it_end );
 
@@ -393,14 +423,45 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 		it++;
 	}
 
+	*processed_end = it_end == end ? it_end : it_end + 1;
+
 	switch ( conditional->m_conditional_type ) {
 		case Conditional::CT_IF:
-		case Conditional::CT_ELSEIF: {
+		case Conditional::CT_ELSEIF:
+		case Conditional::CT_CASE:
+		case Conditional::CT_DEFAULTCASE: {
 			const program::Conditional* els = nullptr;
-			const auto si = GetSI( begin, it );
-			if ( it != end ) {
-				els = GetConditional( it, end );
-				it++;
+			si_t si;
+			if ( conditional->m_conditional_type == Conditional::CT_CASE || conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
+				si = {
+					conditional->m_si.file,
+					conditional->m_si.from,
+					body->m_si.to
+				};
+			}
+			else {
+				si = GetSI( begin, it );
+				if ( it != end ) {
+					source_elements_t::const_iterator pend = {};
+					els = GetConditional( it, end, &pend );
+					if ( pend != end ) {
+						throw Exception( EC.PARSE_ERROR, "Unexpected code :" + ( *pend )->ToString(), nullptr, ( *pend )->m_si, *m_ep );
+					}
+					*processed_end = pend;
+				}
+			}
+			it++;
+			switch ( conditional->m_conditional_type ) {
+				case Conditional::CT_IF:
+					return new program::If( si, (SimpleCondition*)condition, body, els );
+				case Conditional::CT_ELSEIF:
+					return new program::ElseIf( si, (SimpleCondition*)condition, body, els );
+				case Conditional::CT_CASE:
+					return new program::Case( si, (SimpleCondition*)condition, body );
+				case Conditional::CT_DEFAULTCASE:
+					return new program::Case( si, nullptr, body );
+				default:
+					THROW( "conditional type not handled: " + std::to_string( conditional->m_conditional_type ) );
 			}
 			if ( conditional->m_conditional_type == Conditional::CT_IF ) {
 				return new program::If( si, (SimpleCondition*)condition, body, els );
@@ -433,10 +494,21 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				);
 			}
 			it_end = GetBracketsEnd( it + 1, end );
+			*processed_end = it_end == end ? it_end : it_end + 1;
 			return new program::Try( GetSI( begin, it ), body, new program::Catch( GetSI( it, it_end + 1 ), GetObject( it + 2, it_end ) ) );
 		}
 		case Conditional::CT_CATCH: {
 			throw Exception( EC.PARSE_ERROR, "Unexpected catch without try", nullptr, conditional->m_si, *m_ep );
+		}
+		case Conditional::CT_SWITCH: {
+			std::vector< Case* > cases = {};
+			cases.reserve( body->body.size() );
+			for ( const auto& c : body->body ) {
+				ASSERT( c->control_type == program::Control::CT_CONDITIONAL, "control type not conditional" );
+				ASSERT( ((program::Conditional*)c)->conditional_type == program::Conditional::CT_CASE, "conditional type not case" );
+				cases.push_back( (program::Case*)c );
+			}
+			return new program::Switch( GetSI( begin, end ), (SimpleCondition*)condition, cases );
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->ToString() );
