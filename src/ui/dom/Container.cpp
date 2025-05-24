@@ -15,6 +15,7 @@
 #include "Input.h"
 #include "Sound.h"
 #include "ChoiceList.h"
+#include "Select.h"
 
 namespace ui {
 namespace dom {
@@ -73,6 +74,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "input", Input );
 		FACTORY( "sound", Sound );
 		FACTORY( "choicelist", ChoiceList );
+		FACTORY( "select", Select );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
@@ -164,7 +166,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
 		const auto& child = it->second;
-		if ( child->ProcessEvent( GSE_CALL, event ) ) {
+		if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
 			return true;
 		}
 	}
@@ -217,7 +219,9 @@ void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 	auto forward_it = m_forwarded_properties.find( key ); \
 	if ( forward_it != m_forwarded_properties.end() ) { \
         if ( !m_children.empty() /* otherwise it means container is in the process of removal */ ) { \
-            forward_it->second.first->_method( GSE_CALL, forward_it->second.second __VA_ARGS__ ); \
+			for ( const auto& it : forward_it->second )\
+            	it.first->_method( GSE_CALL, it.second __VA_ARGS__ ); \
+			\
         } \
 	} \
 	else { \
@@ -232,12 +236,16 @@ void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CA
 				const auto& properties = c->GetProperties();
 				const auto it = properties.find( key );
 				if ( it != properties.end() ) {
-					forward_it->second.first->WrapSet( forward_it->second.second, it->second, GSE_CALL );
+					for ( const auto& it2 : forward_it->second ) {
+						it2.first->WrapSet( it2.second, it->second, GSE_CALL );
+					}
 					return;
 				}
 			}
 		}
-		forward_it->second.first->WrapSet( forward_it->second.second, value, GSE_CALL );
+		for ( const auto& it : forward_it->second ) {
+			it.first->WrapSet( it.second, value, GSE_CALL );
+		}
 		m_manual_properties.insert_or_assign( key, value );
 		m_properties.insert_or_assign( key, value );
 	}
@@ -256,15 +264,13 @@ void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* 
 }
 
 void Container::ForwardProperty( GSE_CALLABLE, const std::string& srcname, const std::string& dstname, Object* const target ) {
-	ASSERT_NOLOG( m_forwarded_properties.find( srcname ) == m_forwarded_properties.end(), "property '" + srcname + "' already forwarded" );
-	ASSERT_NOLOG( m_properties.find( srcname ) == m_properties.end(), "property '" + srcname + "' already taken (exists)" );
+	// ? ASSERT_NOLOG( m_properties.find( srcname ) == m_properties.end(), "property '" + srcname + "' already taken (exists)" );
 	//ASSERT_NOLOG( target->m_parent == this, "can only forward properties to direct children" ); // ?
-	m_forwarded_properties.insert(
-		{
-			srcname,
-			{ target, dstname },
-		}
-	);
+	auto fp = m_forwarded_properties.find( srcname );
+	if ( fp == m_forwarded_properties.end() ) {
+		fp = m_forwarded_properties.insert({ srcname, {} }).first;
+	}
+	fp->second.push_back({ target, dstname });
 	const auto& targetprop = target->m_properties.find( dstname );
 	if ( targetprop != target->m_properties.end() ) {
 		UpdateProperty( srcname, targetprop->second );

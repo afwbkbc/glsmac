@@ -54,7 +54,7 @@ private:
 
 	std::map< id_t, Object* > m_children = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
-	std::map< std::string, std::pair< Object*, std::string > > m_forwarded_properties = {};
+	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;
 

@@ -43,9 +43,11 @@ CLASS2( Config, common::Module, gse::Wrappable )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
-		LF_HOST = 1 << 16,
-		LF_JOIN = 1 << 17,
-		LF_LEGACY_UI = 1 << 18,
+		LF_USERNAME = 1 << 16,
+		LF_GAMENAME = 1 << 17,
+		LF_HOST = 1 << 18,
+		LF_JOIN = 1 << 19,
+		LF_LEGACY_UI = 1 << 20,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

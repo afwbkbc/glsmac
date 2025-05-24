@@ -15,6 +15,7 @@ return (i) => {
 				left: 10,
 				right: 10,
 				top: 30,
+				keyboard: true,
 				itemclass: 'popup-list-button',
 				itemheight: 19,
 				itempadding: 1,

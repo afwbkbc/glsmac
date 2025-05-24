@@ -257,6 +257,16 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"username", "USERNAME", "Specify username for hosting or joining games", AH( this ) {
+			m_launch_flags |= LF_USERNAME;
+		}
+	);
+	m_manager->AddRule(
+		"gamename", "GAMENAME", "Specify game name for hosting game", AH( this ) {
+			m_launch_flags |= LF_GAMENAME;
+		}
+	);
+	m_manager->AddRule(
 		"host", "Host a TCP/IP game", AH( this ) {
 			if ( HasLaunchFlag( LF_JOIN ) ) {
 				Error( "Using --host with --join is not allowed" );

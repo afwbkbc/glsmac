@@ -6,6 +6,14 @@ return (ui) => {
 		align: 'center',
 	});
 
+	ui.class('popup-footer').set({
+		align: 'bottom',
+		bottom: 3,
+		left: 3,
+		right: 3,
+		height: 23,
+	});
+
 	ui.class('popup-header').set({
 		background: 'interface.pcx:crop(86,  314, 109, 337)',
 		border: 'rgb(73, 108, 61),1',
@@ -16,12 +24,11 @@ return (ui) => {
 		height: 23,
 	});
 
-	ui.class('popup-footer').set({
-		align: 'bottom',
-		bottom: 3,
-		left: 3,
-		right: 3,
-		height: 23,
+	ui.class('popup-panel-header').extend('popup-header').set({
+		top: 0,
+		left: 0,
+		right: 0,
+		height: 20,
 	});
 
 	ui.class('popup-header-text').set({
@@ -31,14 +38,28 @@ return (ui) => {
 		top: 2,
 		transform: 'uppercase',
 	});
+	ui.class('popup-panel-header-text').extend('popup-header-text').set({
+		font: 'arialnb.ttf:17',
+		top: 3,
+	});
 
-	ui.class('popup-body').set({
+	ui.class('popup-panel').set({
 		border: 'rgb(73, 108, 61),1',
-		align: 'top',
-		top: 28,
+		align: 'top left',
+		top: 3,
 		left: 3,
 		right: 3,
+		bottom: 3,
+	});
+	ui.class('popup-body').extend('popup-panel').set({
+		top: 28,
 		bottom: 28,
+	});
+	ui.class('popup-panel-body').extend('popup-panel').set({
+		top: 20,
+		left: 0,
+		right: 0,
+		bottom: 0,
 	});
 	ui.class('popup-body-noheader').set({
 		top: 3,
@@ -50,6 +71,10 @@ return (ui) => {
 	ui.class('popup-text').set({
 		color: 'rgb(109, 126, 178)',
 		font: 'arialnb.ttf:18',
+	});
+
+	ui.class('popup-panel-text').extend('popup-text').set({
+		font: 'arialnb.ttf:16',
 	});
 
 	ui.class('popup-button-base').set({

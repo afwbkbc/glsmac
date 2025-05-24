@@ -25,6 +25,11 @@ private:
 	bool m_is_ok = false;
 	bool m_is_cancel = false;
 
+private:
+	friend class Select;
+	typedef std::function< void() > f_on_click_t;
+	f_on_click_t m_on_click = nullptr;
+
 };
 
 }

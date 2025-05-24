@@ -25,11 +25,12 @@ ChoiceList::ChoiceList( DOM_ARGS )
 	PROPERTY( "itempadding", gse::value::Int, 0, SetItemPadding );
 	PROPERTY( "value", gse::value::String, "", SetValue );
 	PROPERTY( "items", gse::value::Array, {}, SetItems );
+	PROPERTY( "keyboard", gse::value::Bool, false, SetKeyboard );
 }
 
 const bool ChoiceList::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	bool result = false;
-	if ( !m_choices.empty() ) {
+	if ( !m_choices.empty() && m_keyboard ) {
 		switch ( event.type ) {
 			case input::EV_KEY_DOWN: {
 				switch ( event.data.key.code ) {
@@ -164,14 +165,19 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 		const auto& choice = m_choices.insert(
 			{ k, {
 				k,
+				v,
 				idx++,
 				element
 			} }
 		).first->second;
 		m_choices_order.push_back( k );
 		element->On( GSE_CALL, "click", NATIVE_CALL( this, choice ) {
-			if ( !m_selected_choice || m_selected_choice != &choice ) {
+			const bool was_actually_changed = !m_selected_choice || m_selected_choice != &choice;
+			if ( was_actually_changed ) {
 				Select( GSE_CALL, choice, true );
+			}
+			else if ( m_on_update ) {
+				m_on_update( m_selected_choice->value, m_selected_choice->label, was_actually_changed );
 			}
 			return VALUE( gse::value::Bool,, true );
 		} ) );
@@ -201,11 +207,23 @@ void ChoiceList::Select( GSE_CALLABLE, const choice_t& choice, const bool send_e
 	m_selected_choice = &choice;
 	m_selected_choice->element->AddModifier( GSE_CALL, CM_SELECTED );
 	UpdateProperty( "value", VALUE( gse::value::String, , m_selected_choice->value ) );
-	if ( send_event ) {
-		input::Event e;
-		e.SetType( input::EV_SELECT );
-		e.data.value.change_select.text = &m_selected_choice->value;
-		ProcessEvent( GSE_CALL, e );
+	if ( m_on_update ) {
+		// managed by parent object otherwise
+		m_on_update( m_selected_choice->value, m_selected_choice->label, send_event );
+	}
+	else {
+		if ( send_event ) {
+			input::Event e;
+			e.SetType( input::EV_SELECT );
+			e.data.value.change_select.text = &m_selected_choice->value;
+			ProcessEvent( GSE_CALL, e );
+		}
+	}
+}
+
+void ChoiceList::SetKeyboard( GSE_CALLABLE, const bool value ) {
+	if ( value != m_keyboard ) {
+		m_keyboard = value;
 	}
 }
 

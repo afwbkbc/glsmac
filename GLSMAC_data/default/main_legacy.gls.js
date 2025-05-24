@@ -131,7 +131,7 @@ return ((game) => {
 								owner: owner,
 								tile: tile,
 								// name: 'base name',
-							})
+							});
 							// TODO add_pops(base, e.game.random.get_int(1, 7));
 							bases_spawned++;
 						}

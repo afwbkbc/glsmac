@@ -65,11 +65,17 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 			RemoveModifier( GSE_CALL, CM_ACTIVE );
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
 				// actual click happened
-				m_sound->Play();
-				input::Event e;
-				e.SetType( input::EV_CLICK );
-				e.data.mouse = event.data.mouse;
-				ProcessEvent( GSE_CALL, e );
+				if ( m_on_click ) {
+					// managed by parent
+					m_on_click();
+				}
+				else {
+					m_sound->Play();
+					input::Event e;
+					e.SetType( input::EV_CLICK );
+					e.data.mouse = event.data.mouse;
+					ProcessEvent( GSE_CALL, e );
+				}
 			}
 			m_last_button = input::MB_NONE;
 			result = true;
