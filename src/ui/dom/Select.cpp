@@ -20,7 +20,7 @@ Select::Select( DOM_ARGS )
 			input::EV_SELECT,
 		}
 	);
-
+	
 	m_active_element = new Button( GSE_CALL, ui, this, {} );
 	ForwardProperty( GSE_CALL, "itemclass", "class", m_active_element );
 	m_active_element->m_on_click = [ this ]() {

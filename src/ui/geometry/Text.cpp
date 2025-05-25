@@ -24,7 +24,7 @@ void Text::UpdateImpl() {
 			{
 				m_ui->ClampX( m_area.left ),
 				m_ui->ClampY( m_area.bottom ),
-				0.5f,
+				m_area.zindex,
 			}
 		);
 	}

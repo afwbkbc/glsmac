@@ -119,6 +119,26 @@
 		height: 60,
 		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
 	});
+	const child4 = parent.panel({
+		align: 'bottom left',
+		left: -10,
+		bottom: -10,
+		width: 60,
+		height: 60,
+		zindex: 0.4,
+		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
+	});
+
+	#async(300, () => {
+		if (child4.zindex == 0.4) {
+			child4.zindex = 0.6;
+		}
+		else {
+			child4.zindex = 0.4;
+		}
+		return true;
+	});
+
 	child1child2.background = '#00cc00';
 	child1child4.background = '#00ee00';
 

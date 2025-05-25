@@ -2,6 +2,7 @@
 
 #include "ui/UI.h"
 #include "types/mesh/Rectangle.h"
+#include "scene/actor/Mesh.h"
 
 namespace ui {
 namespace geometry {
@@ -13,6 +14,11 @@ Rectangle::Rectangle( const UI* const ui, Geometry* const parent )
 
 void Rectangle::SetMesh( types::mesh::Rectangle* const mesh ) {
 	m_mesh = mesh;
+	UpdateImpl();
+}
+
+void Rectangle::SetActor( scene::actor::Mesh* const actor ) {
+	m_actor = actor;
 	UpdateImpl();
 }
 
@@ -45,11 +51,14 @@ void Rectangle::UpdateImpl() {
 			}
 		);
 		if ( m_tile_dimensions.x && m_tile_dimensions.y ) {
-			m_mesh->SetCoordsTiled( top_left, bottom_right, m_tile_dimensions, 0.5f );
+			m_mesh->SetCoordsTiled( top_left, bottom_right, m_tile_dimensions, m_area.zindex );
 		}
 		else {
-			m_mesh->SetCoords( top_left, bottom_right, 0.5f );
+			m_mesh->SetCoords( top_left, bottom_right, m_area.zindex );
 		}
+	}
+	if ( m_actor ) {
+		m_actor->SetPositionZ( m_area.zindex );
 	}
 }
 

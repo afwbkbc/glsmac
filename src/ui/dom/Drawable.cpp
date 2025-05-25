@@ -4,6 +4,8 @@
 #include "ui/geometry/Rectangle.h"
 #include "input/Event.h"
 #include "util/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
 
 namespace ui {
 namespace dom {
@@ -37,22 +39,23 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::Value::_type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
+        GSE_CALL, _key, _type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
-#define GEOMPROP( _key, _method ) \
-    GEOMSETTER( _key, T_INT ) { \
-        m_geometry->_method( ( (gse::value::Int*)v )->value ); \
+#define GEOMPROP( _key, _method, _type ) \
+    GEOMSETTER( _key, gse::value::_type::GetType() ) { \
+        m_geometry->_method( ( (gse::value::_type*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
     } )
-	GEOMPROP( "left", SetLeft );
-	GEOMPROP( "top", SetTop );
-	GEOMPROP( "right", SetRight );
-	GEOMPROP( "bottom", SetBottom );
+	GEOMPROP( "left", SetLeft, Int );
+	GEOMPROP( "top", SetTop, Int );
+	GEOMPROP( "right", SetRight, Int );
+	GEOMPROP( "bottom", SetBottom, Int );
+	GEOMPROP( "zindex", SetZIndex, Float );
 #undef GEOMPROP
 
-	GEOMSETTER( "align", T_STRING ) {
+	GEOMSETTER( "align", gse::Value::T_STRING ) {
 		const auto strs = util::String::Split( ( (gse::value::String*)v )->value, ' ' );
 		uint8_t align = geometry::Geometry::ALIGN_NONE;
 		for ( const auto& str : strs ) {

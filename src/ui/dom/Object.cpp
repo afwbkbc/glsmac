@@ -263,7 +263,7 @@ void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 
 void Object::Actor( scene::actor::Actor* actor ) {
 	ASSERT_NOLOG( !m_is_destroyed, "object is destroyed" );
-	actor->SetPositionZ( 0.5f ); // TODO: proper zindex logic
+	actor->SetPositionZ( 0.5f );
 	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
