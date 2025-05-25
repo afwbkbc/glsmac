@@ -4,13 +4,17 @@
 #include "gse/value/Int.h"
 #include "gse/value/Array.h"
 #include "gse/value/Bool.h"
+#include "gse/value/Float.h"
 
 #include "Button.h"
 #include "ChoiceList.h"
 #include "input/Event.h"
+#include "ui/UI.h"
 
 namespace ui {
 namespace dom {
+
+static ChoiceList* s_choicelist = nullptr;
 
 Select::Select( DOM_ARGS )
 	: Container( DOM_ARGS_PASS, "select", false ) {
@@ -20,15 +24,22 @@ Select::Select( DOM_ARGS )
 			input::EV_SELECT,
 		}
 	);
-	
+
 	m_active_element = new Button( GSE_CALL, ui, this, {} );
+	m_active_element->AddModifier( GSE_CALL, CM_SELECTED );
 	ForwardProperty( GSE_CALL, "itemclass", "class", m_active_element );
 	m_active_element->m_on_click = [ this ]() {
 		if ( !m_choicelist->m_is_visible ) {
-			m_choicelist->Show();
+			if ( s_choicelist ) {
+				s_choicelist->Hide();
+			}
+			s_choicelist = m_choicelist;
+			s_choicelist->Show();
 		}
 		else {
+			ASSERT_NOLOG( m_choicelist == s_choicelist, "choicelist mismatch" );
 			m_choicelist->Hide();
+			s_choicelist = nullptr;
 		}
 	};
 	Embed( m_active_element );

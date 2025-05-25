@@ -1,7 +1,7 @@
 return (ui) => {
 
 	ui.class('popup').set({
-		background: 'interface.pcx:crop(86,  353, 109, 376)',
+		background: 'interface.pcx:crop(86, 353, 109, 376)',
 		border: 'rgb(73, 108, 61),2',
 		align: 'center',
 	});
@@ -74,7 +74,7 @@ return (ui) => {
 	});
 
 	ui.class('popup-panel-text').extend('popup-text').set({
-		font: 'arialnb.ttf:16',
+		font: 'arialnb.ttf:17',
 	});
 
 	ui.class('popup-button-base').set({
@@ -107,6 +107,31 @@ return (ui) => {
 			color: 'rgb(13, 23, 36)',
 			background: 'interface.pcx:crop(68,  170, 134, 187)',
 			border: 'rgb(120, 164, 212),2',
+		},
+	});
+
+	ui.class('popup-list-select').set({
+		height: 20,
+		width: 114,
+		align: 'right',
+		right: 10,
+		itemheight: 19,
+		itempadding: 0,
+		itemclass: 'popup-list-select-item',
+	});
+	ui.class('popup-list-select-item').set({
+		height: 19,
+		font: 'arialnb.ttf:18',
+		color: 'rgb(144, 184, 228)',
+		border: 'rgb(60, 82, 106),2',
+		background: 'interface.pcx:crop(86, 353, 109, 376)',
+		_hover: {
+			color: 'rgb(164, 214, 248)',
+			border: 'rgb(120, 164, 212),2',
+		},
+		_active: {
+			color: 'white',
+			border: 'white',
 		},
 	});
 

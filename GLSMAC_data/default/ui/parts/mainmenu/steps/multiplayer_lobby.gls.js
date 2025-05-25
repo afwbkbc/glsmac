@@ -32,43 +32,65 @@ return (i) => {
 				height: 358,
 			}, (body) => {
 
-				let top = 6;
-
-				const make_line = (label, choices) => {
-					body.text({
-						class: 'popup-panel-text',
-						top: top + 3,
-						text: label + ':',
-						left: 10,
-					});
-					const select = body.select({
-						top: top,
-						width: 100,
-						align: 'right',
-						right: 10,
-						itemclass: 'popup-list-button',
-						itemheight: 19,
-						itempadding: 1,
-						items: choices,
-					});
-					select.on('select', (e) => {
-						#print('SELECTED', e);
-						return true;
-					});
-					top += 21;
+				let lines = [];
+				const make_line = (label, choices, on_change) => {
+					lines :+[label, choices, on_change];
+				};
+				const make_empty_line = () => {
+					lines :+[];
 				};
 
 				make_line('Global Difficulty Level', [
 					['0', 'Citizen'],
 					['1', 'Specialist'],
-				]);
+					['2', 'Talent'],
+					['3', 'Librarian'],
+					['4', 'Thinker'],
+					['5', 'Transcend'],
+				], (value) => {
+					#print('DIFFICULTY:', value);
+				});
 
 				make_line('Time Controls', [
 					['none', 'None'],
 					['5', '5 min'],
 					['15', '15 min'],
-				]);
+				], (value) => {
+					#print('TIME CONTROLS:', value);
+				});
 
+				make_empty_line();
+
+				make_line('Type of Game', [
+					['new', 'Random map'],
+					['load', 'Load game'],
+				], (value) => {
+					#print('TYPE OF GAME', value);
+				});
+
+				// small hack until zindex is fully fixed: add lines in reverse order so that higher selects were drawn on top of lower selects
+				let top = 21 * (#sizeof(lines) - 1) + 6;
+				for (i = #sizeof(lines); i > 0; i--) {
+					const line = lines[i - 1];
+					if (#sizeof(line) > 0) {
+						body.text({
+							class: 'popup-panel-text',
+							top: top + 3,
+							text: line[0] + ':',
+							left: 10,
+						});
+						const select = body.select({
+							top: top,
+							class: 'popup-list-select',
+							items: line[1],
+						});
+						select.on('select', (e) => {
+							line[2](e.value);
+							return true;
+						});
+					}
+					top -= 21;
+				}
 			});
 
 			parts.players = make_section('Players', {
