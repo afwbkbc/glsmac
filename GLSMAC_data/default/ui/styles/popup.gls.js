@@ -112,9 +112,6 @@ return (ui) => {
 
 	ui.class('popup-list-select').set({
 		height: 20,
-		width: 114,
-		align: 'right',
-		right: 10,
 		itemheight: 19,
 		itempadding: 0,
 		itemclass: 'popup-list-select-item',
