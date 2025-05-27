@@ -1,8 +1,7 @@
 return (i) => {
 
 	const glsmac = i.glsmac;
-
-	#print('X', glsmac);
+	const game = glsmac.game;
 
 	return i.make_section(glsmac.config.gamename, {
 		width: 296,
@@ -10,14 +9,20 @@ return (i) => {
 	}, (body) => {
 
 		let lines = [];
-		const make_line = (label, choices, on_change) => {
-			lines :+[label, choices, on_change];
+		const make_line = (key, label, choices, initial_choice, on_change) => {
+			lines :+{
+				key: key,
+				label: label,
+				choices: choices,
+				initial_choice: initial_choice,
+				on_change: on_change,
+			};
 		};
 		const make_empty_line = () => {
 			lines :+[];
 		};
 
-		make_line('Difficulty Level', [
+		make_line('difficulty', 'Difficulty Level', [
 			// TODO
 			/*['0', 'Citizen'],
 			['1', 'Specialist'],
@@ -25,78 +30,78 @@ return (i) => {
 			['3', 'Librarian'],
 			['4', 'Thinker'],*/
 			['5', 'Transcend'],
-		], (value) => {
+		], '5', (value) => {
 			#print('DIFFICULTY:', value);
 		});
 
-		make_line('Time Controls', [
+		make_line('timer', 'Time Controls', [
 			['none', 'None'],
 			// TODO
 			/*['5', '5 min'],
 			['15', '15 min'],*/
-		], (value) => {
+		], 'none', (value) => {
 			#print('TIME CONTROLS:', value);
 		});
 
 		make_empty_line();
 
-		make_line('Type of Game', [
+		make_line('game_type', 'Type of Game', [
 			['new', 'Random map'],
 			//['load', 'Load game'],
-		], (value) => {
+		], 'new', (value) => {
 			#print('TYPE OF GAME', value);
 		});
 
-		make_line('Planet Size', [
+		make_line('planet_size', 'Planet Size', [
 			['68x34', 'Tiny planet'],
 			['88x44', 'Small planet'],
 			['112x56', 'Standard planet'],
 			['140x70', 'Large planet'],
 			['180x90', 'Huge planet'],
-		], (value) => {
+		], '112x56', (value) => {
 			#print('PLANET SIZE', value);
 		});
 
-		make_line('Ocean Coverage', [
+		make_line('ocean_coverage', 'Ocean Coverage', [
 			['0.4', '30-50% of surface'],
 			['0.6', '50-70% of surface'],
 			['0.8', '70-90% of surface'],
-		], (value) => {
+		], '0.6', (value) => {
 			#print('OCEAN COVERAGE', value);
 		});
 
-		make_line('Erosive Forces', [
+		make_line('erosive_forces', 'Erosive Forces', [
 			['0.5', 'Strong'],
 			['0.75', 'Average'],
 			['1.0', 'Weak'],
-		], (value) => {
+		], '0.75', (value) => {
 			#print('EROSIVE FORCES', value);
 		});
 
-		make_line('Native Lifeforms', [
+		make_line('native_lifeforms', 'Native Lifeforms', [
 			['0.25', 'Rare'],
 			['0.5', 'Average'],
 			['0.75', 'Abundant'],
-		], (value) => {
+		], '0.5', (value) => {
 			#print('NATIVE LIFEFORMS', value);
 		});
 
-		make_line('Cloud Cover', [
+		make_line('cloud_cover', 'Cloud Cover', [
 			['0.25', 'Sparse'],
 			['0.5', 'Average'],
 			['0.75', 'Dense'],
-		], (value) => {
+		], '0.5', (value) => {
 			#print('CLOUD COVER', value);
 		});
 		// small hack until zindex is fully fixed: add lines in reverse order so that higher selects were drawn on top of lower selects
 		let top = 23 * (#sizeof(lines) - 1) + 6;
-		for (i = #sizeof(lines); i > 0; i--) {
-			const line = lines[i - 1];
-			if (#sizeof(line) > 0) {
+		for (let idx = #sizeof(lines); idx > 0; idx--) {
+			const line = lines[idx - 1];
+			if (!#is_empty(line)) {
 				body.text({
 					class: 'popup-panel-text',
 					top: top + 3,
-					text: line[0] + ':',
+					text: line.label + ':',
 					left: 10,
 				});
 				const select = body.select({
@@ -105,12 +110,19 @@ return (i) => {
 					width: 140,
 					align: 'right',
 					right: 10,
-					items: line[1],
+					items: line.choices,
+					value: line.initial_choice,
 				});
 				select.on('select', (e) => {
-					line[2](e.value);
+					game.event('configure_game', {
+						changes: [
+							[line.key, e.value],
+						],
+					});
+					line.on_change(e.value);
 					return true;
 				});
+				line.on_change(line.initial_choice);
 			}
 			top -= 23;
 		}

@@ -112,12 +112,12 @@ return (ui) => {
 
 	ui.class('popup-list-select').set({
 		height: 20,
-		itemheight: 19,
+		itemheight: 20,
 		itempadding: 0,
 		itemclass: 'popup-list-select-item',
 	});
 	ui.class('popup-list-select-item').set({
-		height: 19,
+		height: 20,
 		font: 'arialnb.ttf:18',
 		color: 'rgb(144, 184, 228)',
 		border: 'rgb(60, 82, 106),2',
@@ -126,7 +126,11 @@ return (ui) => {
 			color: 'rgb(164, 214, 248)',
 			border: 'rgb(120, 164, 212),2',
 		},
-		_active: {
+		_selected: {
+			color: 'rgb(184, 238, 255)',
+			border: 'rgb(130, 178, 232),2',
+		},
+		_highlight: {
 			color: 'white',
 			border: 'white',
 		},

@@ -147,6 +147,7 @@ void GLSMAC::Iterate() {
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
+	auto* game = g_engine->GetGame();
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
 		{
@@ -188,6 +189,10 @@ WRAPIMPL_BEGIN( GLSMAC )
 				InitGameState( GSE_CALL );
 				return VALUE( gse::value::Undefined );
 			} ),
+		},
+		{
+			"game",
+			game->Wrap( GSE_CALL, true ),
 		},
 		{
 			"start_game",

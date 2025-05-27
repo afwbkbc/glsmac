@@ -11,9 +11,9 @@ return (glsmac) => {
 
 	let tiles_with_bases = {};
 
-	glsmac.on('configure_game', (e) => {
+	#include('events')(glsmac.game);
 
-		#include('events')(e.game);
+	glsmac.on('configure_game', (e) => {
 
 		let players = [];
 		let players_sz = 0;

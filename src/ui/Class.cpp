@@ -10,6 +10,7 @@ static const std::unordered_map< std::string, class_modifier_t > s_name_to_modif
 	{ "_focus", CM_FOCUS },
 	{ "_hover", CM_HOVER },
 	{ "_selected", CM_SELECTED },
+	{ "_highlight", CM_HIGHLIGHT },
 	{ "_active", CM_ACTIVE },
 };
 
@@ -17,6 +18,7 @@ static const std::unordered_map< class_modifier_t, std::string > s_modifier_to_n
 	{ CM_FOCUS, "_focus" },
 	{ CM_HOVER, "_hover" },
 	{ CM_SELECTED, "_selected" },
+	{ CM_HIGHLIGHT, "_highlight" },
 	{ CM_ACTIVE, "_active" },
 };
 
@@ -30,6 +32,7 @@ Class::Class( gc::Space* const gc_space, const UI* const ui, const std::string& 
 			{ CM_HOVER, new Class( gc_space, ui, name + "._hover", false ) },
 			{ CM_ACTIVE, new Class( gc_space, ui, name + "._active", false ) },
 			{ CM_SELECTED, new Class( gc_space, ui, name + "._selected", false ) },
+			{ CM_HIGHLIGHT, new Class( gc_space, ui, name + "._highlight", false ) },
 			{ CM_FOCUS, new Class( gc_space, ui, name + "._focus", false ) },
 		};
 	}

@@ -1,7 +1,7 @@
 return (i) => {
 
 	let parts = {};
-
+	
 	i.popup.show({
 		title: 'Multiplayer Setup',
 		width: 800,
