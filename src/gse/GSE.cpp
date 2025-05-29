@@ -275,14 +275,12 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	}
 	GC_DEBUG_END();
 
-	// parsers are reachable
 	GC_DEBUG_BEGIN( "parsers" );
 	for ( const auto& it : m_parsers ) {
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
 
-	// global contexts are reachable
 	GC_DEBUG_BEGIN( "global_contexts" );
 	for ( const auto& context : m_global_contexts ) {
 		GC_REACHABLE( context );
@@ -295,14 +293,20 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 	}
 	GC_DEBUG_END();
 
-	// modules are reachable
 	GC_DEBUG_BEGIN( "modules" );
 	for ( const auto& it : m_modules ) {
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
 
-	// root objects are reachable
+	GC_DEBUG_BEGIN( "include cache" );
+	for ( const auto& it : m_include_cache ) {
+		if ( it.second.result ) {
+			GC_REACHABLE( it.second.result );
+		}
+	}
+	GC_DEBUG_END();
+
 	GC_DEBUG_BEGIN( "root_objects" );
 	for ( const auto& object : m_root_objects ) {
 		GC_REACHABLE( object );

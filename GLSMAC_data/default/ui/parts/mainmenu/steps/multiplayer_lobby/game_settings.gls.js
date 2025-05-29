@@ -2,8 +2,9 @@ return (i) => {
 
 	const glsmac = i.glsmac;
 	const game = glsmac.game;
+	const settings = game.get_settings();
 
-	return i.make_section(glsmac.config.gamename, {
+	return i.make_section(settings.global.game_name, {
 		width: 296,
 		height: 358,
 	}, (body) => {
@@ -93,8 +94,11 @@ return (i) => {
 		], '0.5', (value) => {
 			#print('CLOUD COVER', value);
 		});
+
+		const line_height = 28;
+
 		// small hack until zindex is fully fixed: add lines in reverse order so that higher selects were drawn on top of lower selects
-		let top = 23 * (#sizeof(lines) - 1) + 6;
+		let top = line_height * (#sizeof(lines) - 1) + line_height / 2;
 		for (let idx = #sizeof(lines); idx > 0; idx--) {
 			const line = lines[idx - 1];
 			if (!#is_empty(line)) {
@@ -124,7 +128,7 @@ return (i) => {
 				});
 				line.on_change(line.initial_choice);
 			}
-			top -= 23;
+			top -= line_height;
 		}
 	});
 

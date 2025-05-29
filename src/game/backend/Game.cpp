@@ -686,6 +686,16 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_settings",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				return m_state->m_settings.Wrap( GSE_CALL, true );
+			} ),
+		},
+		{
 			"register_event",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
@@ -1810,6 +1820,14 @@ const bool Game::IsRunning() const {
 
 const std::string Game::GenerateEventId() {
 	return std::to_string( m_slot_num ) + "_" + std::to_string( ++m_next_event_id );
+}
+
+void Game::SetState( State* const state ) {
+	ASSERT_NOLOG( state, "state is null" );
+	if ( state != m_state ) {
+		ASSERT_NOLOG( !m_state, "game state already set" );
+		m_state = state;
+	}
 }
 
 }

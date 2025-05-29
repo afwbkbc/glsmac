@@ -51,6 +51,8 @@ return (m) => {
 			'select_difficulty_level',
 			'select_rules',
 			'multiplayer_type',
+			'multiplayer_role',
+			'multiplayer_host',
 			'multiplayer_lobby',
 		]) {
 			i.steps[step] = #include('steps/' + step);
@@ -59,6 +61,8 @@ return (m) => {
 		const c = m.glsmac.config;
 		if (#is_defined(c.host)) {
 			i.settings.local.network_type = 'simple_tcpip';
+			i.settings.global.game_name = c.gamename;
+			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
 		} else {
 			i.steps.main(i);

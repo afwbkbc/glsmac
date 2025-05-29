@@ -111,13 +111,13 @@ return (ui) => {
 	});
 
 	ui.class('popup-list-select').set({
-		height: 20,
-		itemheight: 20,
+		height: 21,
+		itemheight: 21,
 		itempadding: 0,
 		itemclass: 'popup-list-select-item',
 	});
 	ui.class('popup-list-select-item').set({
-		height: 20,
+		height: 21,
 		font: 'arialnb.ttf:18',
 		color: 'rgb(144, 184, 228)',
 		border: 'rgb(60, 82, 106),2',
@@ -134,6 +134,14 @@ return (ui) => {
 			color: 'white',
 			border: 'white',
 		},
+	});
+
+	ui.class('popup-input').set({
+		background: 'interface.pcx:crop(86, 353, 109, 376)',
+		color: 'rgb(159, 196, 198)',
+		border: 'rgb(60, 82, 106),2',
+		height: 23,
+		font: 'arialnb.ttf:18',
 	});
 
 };

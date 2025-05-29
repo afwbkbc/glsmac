@@ -1,31 +1,25 @@
 return (i) => {
 	let choices = null;
 	i.popup.show({
-		title: 'Multiplayer Setup',
+		title: 'Host or Join Session',
 		width: 480,
-		height: 140,
+		height: 126,
 		generator: (body) => {
-			body.text({
-				class: 'popup-text',
-				text: 'Select a service...',
-				align: 'top center',
-				top: 5,
-			});
 			choices = body.choicelist({
 				left: 10,
 				right: 10,
-				top: 30,
+				top: 16,
 				keyboard: true,
 				itemclass: 'popup-list-button',
 				itemheight: 19,
 				itempadding: 1,
 				items: [
-					['simple_tcpip', 'Simple Internet TCP/IP Connection'],
-					['hotseat', 'Hotseat/Play-by-Email'],
+					['server', 'Host'],
+					['client', 'Join'],
 				],
 			});
-			if (i.settings.local.network_type != 'none') {
-				choices.value = i.settings.local.network_type;
+			if (i.settings.local.network_role != 'none') {
+				choices.value = i.settings.local.network_role;
 			}
 		},
 		buttons: [
@@ -36,9 +30,9 @@ return (i) => {
 					is_ok: true,
 				},
 				onclick: (x) => {
-					i.settings.local.network_type = choices.value;
-					if (i.settings.local.network_type == 'simple_tcpip') {
-						i.steps.multiplayer_role(i);
+					i.settings.local.network_role = choices.value;
+					if (i.settings.local.network_role == 'server') {
+						i.steps.multiplayer_host(i);
 					} else {
 						i.steps.notimpl(i);
 					}

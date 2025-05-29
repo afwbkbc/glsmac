@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Object.cpp
 	${PWD}/Drawable.cpp
+	${PWD}/Focusable.cpp
 	${PWD}/Area.cpp
 	${PWD}/Container.cpp
 	${PWD}/Group.cpp

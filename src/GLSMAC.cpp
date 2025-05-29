@@ -269,6 +269,8 @@ void GLSMAC::WithGSE( const std::function<void( GSE_CALLABLE )>& f ) {
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
+	g_engine->GetGame()->GetReachableObjects( reachable_objects );
+
 	if ( m_state ) {
 		GC_DEBUG_BEGIN( "state" );
 		GC_REACHABLE( m_state );
@@ -286,6 +288,13 @@ void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 		GC_REACHABLE( m_ui );
 		GC_DEBUG_END();
 	}
+
+	GC_DEBUG_BEGIN( "main callables" );
+	for ( const auto& m : m_main_callables ) {
+		GC_REACHABLE( m );
+	}
+	GC_DEBUG_END();
+
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
@@ -419,8 +428,10 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
+	auto* game = g_engine->GetGame();
 	m_state->Reset();
-	m_state->SetGame( g_engine->GetGame() );
+	m_state->SetGame( game );
+	game->SetState( m_state );
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
 		TriggerObject( this, "configure_state", ARGS_F( ARGS_GSE_CALLABLE, this ) {
 			{

@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <functional>
+#include <vector>
 
 #include "common/Common.h"
 #include "gse/GCWrappable.h"
@@ -26,8 +27,8 @@ class Geometry;
 
 namespace dom {
 class Root;
-
 class Object;
+class Focusable;
 }
 
 class Class;
@@ -56,6 +57,12 @@ CLASS2( UI, common::Class, gse::GCWrappable )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+	void AddFocusable( dom::Focusable* const element );
+	void RemoveFocusable( dom::Focusable* const element );
+	void Focus( dom::Focusable* const element );
+	void Defocus( dom::Focusable* const element );
+	void FocusNext();
+
 private:
 	friend class dom::Object;
 	typedef std::function< void() > f_iterable_t;
@@ -78,9 +85,14 @@ private:
 
 	std::unordered_map< const dom::Object*, f_iterable_t > m_iterables = {};
 
+	std::vector< dom::Focusable* > m_focusable_elements = {};
+	std::unordered_map< dom::Focusable*, size_t > m_focusable_elements_idx = {};
+	dom::Focusable* m_focused_element = nullptr;
+
 private:
 	friend class dom::Object;
 	gc::Space* const GetGCSpace() const;
+
 };
 
 }

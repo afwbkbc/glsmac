@@ -490,11 +490,21 @@
 		return true;
 	});
 
-	const input = texts.panel({
+	const inputs = texts.panel({
 		align: 'center',
 		width: 300,
 		height: 120,
-	}).input({
+	});
+	const input1 = inputs.input({
+		align: 'top',
+		width: 300,
+		height: 20,
+		background: '#111116',
+		color: 'white',
+		font: ':16',
+		border: 'silver,2',
+	});
+	const input2 = inputs.input({
 		align: 'bottom',
 		width: 300,
 		height: 20,
@@ -504,7 +514,12 @@
 		border: 'silver,2',
 	});
 
-	input.on('select', (e) => {
+	input1.on('select', (e) => {
+		#print('INPUT 1 SELECT', e.value);
+		return true;
+	});
+	input2.on('select', (e) => {
+		#print('INPUT 2 SELECT', e.value);
 		return true;
 	});
 

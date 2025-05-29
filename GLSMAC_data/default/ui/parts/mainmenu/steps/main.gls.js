@@ -20,7 +20,7 @@ return (i) => {
 				i.steps.notimpl(i);
 			}],
 			['Multiplayer', () => {
-				//i.glsmac.init();
+				i.glsmac.init();
 				i.settings.local.game_mode = 'multi';
 				i.steps.multiplayer_type(i);
 			}],

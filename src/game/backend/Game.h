@@ -23,6 +23,8 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
 
+class GLSMAC;
+
 namespace types {
 namespace texture {
 class Texture;
@@ -453,6 +455,10 @@ private:
 private:
 	friend class event::Event;
 	const std::string GenerateEventId();
+
+private:
+	friend class ::GLSMAC;
+	void SetState( State* const state );
 
 };
 
