@@ -30,18 +30,7 @@ Value* const GCWrappable::Trigger( GSE_CALLABLE, const std::string& event, const
 
 void GCWrappable::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
-
-	GC_DEBUG_BEGIN( "GCWrappable" );
-
-	GC_DEBUG_BEGIN( "callbacks" );
-	for ( const auto& it1 : m_callbacks ) {
-		for ( const auto& it2 : it1.second ) {
-			GC_REACHABLE( it2.second.callable );
-		}
-	}
-	GC_DEBUG_END();
-
-	GC_DEBUG_END();
+	gse::Wrappable::GetReachableObjects( reachable_objects );
 }
 
 }

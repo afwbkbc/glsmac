@@ -391,7 +391,7 @@ void Game::Iterate() {
 							if ( m_state->IsMaster() ) {
 								try {
 									m_state->TriggerObject(
-										this, "start", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+										this, "start", ARGS_F( this ) {
 											{
 												"game",
 												Wrap( GSE_CALL )
@@ -852,7 +852,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			m_state->WithGSE(
 				[ this ]( GSE_CALLABLE ) {
 					m_state->TriggerObject(
-						this, "initialize", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+						this, "initialize", ARGS_F( this ) {
 							{
 								"game",
 								Wrap( GSE_CALL )
@@ -1207,7 +1207,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			m_state->TriggerObject(
-				m_um, "unit_turn", ARGS_F( ARGS_GSE_CALLABLE, &unit ) {
+				m_um, "unit_turn", ARGS_F( &unit ) {
 					{
 						"unit",
 						unit->Wrap( GSE_CALL, true )
@@ -1221,7 +1221,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		for ( auto& it : m_bm->GetBases() ) {
 			auto* base = it.second;
 			m_state->TriggerObject(
-				m_bm, "base_turn", ARGS_F( ARGS_GSE_CALLABLE, &base ) {
+				m_bm, "base_turn", ARGS_F( &base ) {
 					{
 						"base",
 						base->Wrap( GSE_CALL, true )
@@ -1231,7 +1231,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( this, "turn", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+		m_state->TriggerObject( this, "turn", ARGS_F( this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1375,7 +1375,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_bm = new base::BaseManager( this );
 		ASSERT_NOLOG( !m_am, "am not null" );
 		m_am = new animation::AnimationManager( this );
-		m_state->TriggerObject( this, "configure", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+		m_state->TriggerObject( this, "configure", ARGS_F( this ) {
 			{
 				"game",
 				Wrap( GSE_CALL )
@@ -1430,11 +1430,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_connection->IfServer(
 			[ this ]( connection::Server* connection ) -> void {
 
-				connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
+				/*connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " is connecting..." );
 					connection->GlobalMessage( "Connection from " + player->GetFullName() + "..." );
 					// actual join will happen after he downloads and initializes map
-				};
+				};*/
 
 				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) -> void {
 					if ( !( old_flags & slot::PF_GAME_INITIALIZED ) && ( new_flags & slot::PF_GAME_INITIALIZED ) ) {
@@ -1444,11 +1444,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 				};
 
-				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
+				/*connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
 					Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
 					m_tm->ReleaseTileLocks( slot_num );
-				};
+				};*/
 
 				connection->m_on_download_request = [ this ]() -> const std::string {
 					if ( !m_map ) {

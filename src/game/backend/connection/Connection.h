@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "common/Module.h"
+#include "gse/Wrappable.h"
 
 #include "game/backend/slot/Types.h"
 #include "network/Types.h"
@@ -40,7 +41,7 @@ class Client;
 
 class Server;
 
-CLASS( Connection, common::Module )
+CLASS2( Connection, common::Module, gse::Wrappable )
 
 	enum game_state_t : uint8_t {
 		GS_NONE,
@@ -60,8 +61,7 @@ CLASS( Connection, common::Module )
 	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
-	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_join = nullptr;
-	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
+	
 	std::function< void( const size_t slot_num, slot::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
@@ -76,7 +76,7 @@ CLASS( Connection, common::Module )
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
-	void Iterate() override;
+	const bool IterateAndMaybeDelete();
 
 	Client* AsClient() const; // for client-specific calls
 	void IfClient( std::function< void( Client* client ) > cb ); // call cb if client
@@ -90,6 +90,8 @@ CLASS( Connection, common::Module )
 	const bool IsClient() const;
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
+
+	WRAPDEFS_PTR( Connection );
 
 	virtual void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) = 0;
 	virtual void SendMessage( const std::string& message ) = 0;
@@ -116,6 +118,8 @@ protected:
 
 	size_t m_slot = 0;
 	backend::Player* m_player = nullptr;
+
+	void WTrigger( const std::string& event, const f_args_t& fargs );
 
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 

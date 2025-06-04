@@ -71,7 +71,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 	if ( it != m_callbacks.end() ) {
 		value::object_properties_t args = {};
 		if ( f_args ) {
-			f_args( args );
+			f_args( GSE_CALL, args );
 		}
 		auto e = VALUEEXT( gse::value::Object, GSE_CALL, args );
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
@@ -94,6 +94,20 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 	return result
 		? result
 		: VALUE( gse::value::Undefined );
+}
+
+void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	GC_DEBUG_BEGIN( "GCWrappable" );
+
+	GC_DEBUG_BEGIN( "callbacks" );
+	for ( const auto& it1 : m_callbacks ) {
+		for ( const auto& it2 : it1.second ) {
+			GC_REACHABLE( it2.second.callable );
+		}
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_END();
 }
 
 }

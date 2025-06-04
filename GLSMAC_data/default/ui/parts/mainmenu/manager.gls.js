@@ -19,7 +19,10 @@ const manager = {
 	},
 
 	pop: (m) => {
-		this.data_stack :~;
+		const last_entry = this.data_stack :~;
+		if (#is_defined(last_entry.data.destructor)) {
+			last_entry.data.destructor();
+		}
 		if ( !#is_empty(this.data_stack)) {
 			const entry = this.data_stack :~;
 			this.modules[entry.type].show(entry.data);

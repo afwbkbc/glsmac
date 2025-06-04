@@ -17,7 +17,7 @@
 #include "Exception.h"
 #include "Value.h"
 
-#define _ARGS_F( ... ) [ __VA_ARGS__ ]( gse::value::object_properties_t& out_args )
+#define _ARGS_F( ... ) [ __VA_ARGS__ ]( GSE_CALLABLE, gse::value::object_properties_t& out_args )
 #define ARGS_F( ... ) _ARGS_F( __VA_ARGS__ ) { out_args =
 #define ARGS( _args ) _ARGS_F( &_args ) { out_args = _args; }
 #define ARGS_GSE_CALLABLE &ctx, gc_space, &si, &ep

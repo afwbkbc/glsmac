@@ -58,7 +58,15 @@ void State::WithGSE( const gse_func_t& f ) {
 
 void State::Iterate() {
 	if ( m_connection ) {
-		m_connection->Iterate();
+		if ( m_connection->IterateAndMaybeDelete() ) {
+			m_connection = nullptr;
+			for ( auto& player : m_players ) {
+				DELETE( player );
+			}
+			m_players.clear();
+			m_slots->Clear();
+			m_cid_slots.clear();
+		}
 	}
 }
 
@@ -110,6 +118,7 @@ const std::unordered_map< network::cid_t, size_t >& State::GetCidSlots() const {
 
 void State::SetConnection( connection::Connection* connection ) {
 	ASSERT( !m_connection, "state connection already set" );
+	ASSERT( connection, "connection is null" );
 	connection->SetState( this );
 	m_connection = connection;
 }
@@ -231,6 +240,12 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 	if ( m_game ) {
 		GC_DEBUG_BEGIN( "game" );
 		GC_REACHABLE( m_game );
+		GC_DEBUG_END();
+	}
+
+	if ( m_connection ) {
+		GC_DEBUG_BEGIN( "connection" );
+		m_connection->GetReachableObjects( reachable_objects );
 		GC_DEBUG_END();
 	}
 

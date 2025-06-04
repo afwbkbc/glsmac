@@ -41,7 +41,7 @@ public:
 	gc::Space* const GetGCSpace() const;
 	gse::context::Context* const GetContext() const;
 
-	typedef std::function< void( gse::value::object_properties_t& args ) > f_args_t;
+	typedef std::function< void( GSE_CALLABLE, gse::value::object_properties_t& args ) > f_args_t;
 	gse::Value* const Trigger( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args );
 
 	State* GetState() const;

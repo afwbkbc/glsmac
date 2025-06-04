@@ -44,8 +44,16 @@ return (i) => {
 					is_ok: true,
 				},
 				onclick: (x) => {
-					settings.global.game_name = l_gamename.value;
-					settings.local.player_name = l_yourname.value;
+					settings.global.game_name = #trim(l_gamename.value);
+					settings.local.player_name = #trim(l_yourname.value);
+					if (settings.global.game_name == '') {
+						i.popup.error('Enter game name!');
+						return true;
+					}
+					if (settings.local.player_name == '') {
+						i.popup.error('Enter your name!');
+						return true;
+					}
 					i.steps.multiplayer_lobby(i);
 					return true;
 				},

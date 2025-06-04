@@ -62,12 +62,12 @@ return (m) => {
 		if (#is_defined(c.host)) {
 			i.settings.local.network_type = 'simple_tcpip';
 			i.settings.global.game_name = c.gamename;
+			i.settings.local.player_name = c.playername;
 			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
 		} else {
 			i.steps.main(i);
 		}
-
 	});
 
 	m.glsmac.on('mainmenu_hide', (e) => {

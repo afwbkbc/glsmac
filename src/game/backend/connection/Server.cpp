@@ -50,9 +50,15 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			if ( m_on_global_settings_update ) {
 				m_on_global_settings_update();
 			}
-			if ( m_on_player_join ) {
-				m_on_player_join( m_slot, &slot, m_player );
-			}
+
+			WTrigger(
+				"player_join", ARGS_F( this ) {
+					{
+						"player", m_player->Wrap( GSE_CALL, true )
+					}
+				}; }
+			);
+
 			break;
 		}
 		case network::LegacyEvent::ET_CLIENT_CONNECT: {
@@ -107,9 +113,13 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 					ClearReadyFlags();
 				}
 
-				if ( m_on_player_leave ) {
-					m_on_player_leave( slot_num, &slot, player );
-				}
+				WTrigger(
+					"player_leave", ARGS_F( &player ) {
+						{
+							"player", player->Wrap( GSE_CALL, true )
+						}
+					}; }
+				);
 
 				if ( m_game_state == GS_LOBBY ) {
 					DELETE( player );
@@ -219,9 +229,13 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
-						if ( m_on_player_join ) {
-							m_on_player_join( slot_num, &slot, player );
-						}
+						WTrigger(
+							"player_join", ARGS_F( &player ) {
+								{
+									"player", player->Wrap( GSE_CALL, true )
+								}
+							}; }
+						);
 
 						break;
 					}

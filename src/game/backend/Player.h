@@ -3,6 +3,7 @@
 #include <string>
 
 #include "types/Serializable.h"
+#include "gse/Wrappable.h"
 
 namespace game {
 namespace backend {
@@ -15,7 +16,7 @@ namespace slot {
 class Slot;
 }
 
-CLASS( Player, types::Serializable )
+CLASS2( Player, types::Serializable, gse::Wrappable )
 
 	enum role_t {
 		PR_NONE,
@@ -54,6 +55,8 @@ CLASS( Player, types::Serializable )
 	const bool IsTurnCompleted() const;
 	void CompleteTurn();
 	void UncompleteTurn();
+
+	WRAPDEFS_PTR( Player );
 
 	const types::Buffer Serialize() const override;
 	void Unserialize( types::Buffer buf ) override;

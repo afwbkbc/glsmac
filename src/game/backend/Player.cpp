@@ -1,6 +1,10 @@
 #include "Player.h"
 
 #include "game/backend/faction/Faction.h"
+#include "game/backend/slot/Slot.h"
+
+#include "gse/value/String.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace backend {
@@ -89,6 +93,23 @@ void Player::CompleteTurn() {
 void Player::UncompleteTurn() {
 	m_is_turn_completed = false;
 }
+
+WRAPIMPL_BEGIN( Player )
+	WRAPIMPL_PROPS
+			{
+				"id",
+				VALUE( gse::value::Int, , m_slot->GetCid() )
+			},
+			{
+				"name",
+				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"is_master",
+				VALUE( gse::value::Bool, , m_role == PR_SINGLE || m_role == PR_HOST )
+			},
+		};
+WRAPIMPL_END_PTR()
 
 const types::Buffer Player::Serialize() const {
 	types::Buffer buf;

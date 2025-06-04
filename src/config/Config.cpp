@@ -257,12 +257,12 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"username", "USERNAME", "Specify username for hosting or joining games", AH( this ) {
-			m_launch_flags |= LF_USERNAME;
+		"playername", "PLAYER NAME", "Specify player name for hosting or joining games", AH( this ) {
+			m_launch_flags |= LF_PLAYERNAME;
 		}
 	);
 	m_manager->AddRule(
-		"gamename", "GAMENAME", "Specify game name for hosting game", AH( this ) {
+		"gamename", "GAME NAME", "Specify game name for hosting game", AH( this ) {
 			m_launch_flags |= LF_GAMENAME;
 		}
 	);

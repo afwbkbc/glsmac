@@ -52,7 +52,7 @@ void ResourceManager::UndefineResource( const std::string& id ) {
 const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
 	map::tile::yields_t yields = {};
 	for ( const auto& it : m_resources ) {
-		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( ARGS_GSE_CALLABLE, &tile, &slot, &it ) {
+		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( &tile, &slot, &it ) {
 			{
 				"tile",
 				tile->Wrap( GSE_CALL, gc_space )

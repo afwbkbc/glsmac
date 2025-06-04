@@ -137,7 +137,7 @@ void BaseManager::SpawnBase( GSE_CALLABLE, base::Base* base ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "base_spawn", ARGS_F( ARGS_GSE_CALLABLE, &base ) {
+		state->TriggerObject( this, "base_spawn", ARGS_F( &base ) {
 			{
 				"base",
 				base->Wrap( GSE_CALL )
@@ -171,7 +171,7 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "base_despawn", ARGS_F( ARGS_GSE_CALLABLE, &base ) {
+		state->TriggerObject( this, "base_despawn", ARGS_F( &base ) {
 			{
 				"base",
 				base->Wrap( GSE_CALL )

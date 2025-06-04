@@ -25,6 +25,7 @@
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
+#include "game/backend/connection/Server.h"
 
 #include "game/frontend/Game.h"
 
@@ -193,6 +194,23 @@ WRAPIMPL_BEGIN( GLSMAC )
 		{
 			"game",
 			game->Wrap( GSE_CALL, true ),
+		},
+		{
+			"listen",
+			NATIVE_CALL( this ) {
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				if ( m_state->GetConnection() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Connection is already established" );
+				}
+				if ( m_is_game_running ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+				}
+				NEWV( connection, game::backend::connection::Server, &m_state->m_settings.local );
+				m_state->SetConnection( connection );
+				return connection->Wrap( GSE_CALL, true );
+			} ),
 		},
 		{
 			"start_game",
@@ -378,7 +396,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	TriggerObject( this, "intro", ARGS_F( &ctx, gc_space, this ) {
+	TriggerObject( this, "intro", ARGS_F( this ) {
 		{
 			"mainmenu", NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -390,7 +408,7 @@ void GLSMAC::S_Intro( GSE_CALLABLE ) {
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
-	TriggerObject( this, "mainmenu_show", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+	TriggerObject( this, "mainmenu_show", ARGS_F( this ) {
 		{
 			"settings",
 			m_state->m_settings.Wrap( GSE_CALL, true ),
@@ -433,7 +451,7 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	m_state->SetGame( game );
 	game->SetState( m_state );
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-		TriggerObject( this, "configure_state", ARGS_F( ARGS_GSE_CALLABLE, this ) {
+		TriggerObject( this, "configure_state", ARGS_F( this ) {
 			{
 				"fm",
 				m_state->GetFM()->Wrap( GSE_CALL, true ),
@@ -495,7 +513,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 	S_Game( GSE_CALL );
 
-	TriggerObject( this, "configure_game", ARGS_F( ARGS_GSE_CALLABLE, &game ) {
+	TriggerObject( this, "configure_game", ARGS_F( &game ) {
 		{
 			"game",
 			game->Wrap( GSE_CALL, true ),

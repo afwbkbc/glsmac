@@ -22,8 +22,8 @@ void Connection::ResetHandlers() {
 	m_on_cancel = nullptr;
 	m_on_disconnect = nullptr;
 	m_on_error = nullptr;
-	m_on_player_join = nullptr;
-	m_on_player_leave = nullptr;
+	//m_on_player_join = nullptr;
+	//m_on_player_leave = nullptr;
 	m_on_slot_update = nullptr;
 	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
@@ -65,7 +65,7 @@ void Connection::Connect() {
 
 	m_mt_ids.connect = m_network->MT_Connect( m_connection_mode, m_settings->remote_address );
 
-	g_engine->GetUI()->ShowLoader(
+	/*g_engine->GetUI()->ShowLoader(
 		m_connection_mode == network::CM_SERVER
 			? "Creating game"
 			: "Connecting to " + m_settings->remote_address,
@@ -78,10 +78,10 @@ void Connection::Connect() {
 
 			return true;
 		}
-	);
+	);*/
 }
 
-void Connection::Iterate() {
+const bool Connection::IterateAndMaybeDelete() {
 
 	if ( m_mt_ids.disconnect ) {
 		bool should_delete = false;
@@ -90,6 +90,11 @@ void Connection::Iterate() {
 			m_mt_ids.disconnect = 0;
 			m_game_state = GS_NONE;
 			Log( "Connection closed" );
+			if ( m_mt_ids.events ) {
+				m_network->MT_Cancel( m_mt_ids.events );
+				m_mt_ids.events = 0;
+			}
+			ClearPending();
 			if ( m_is_connected ) {
 				if ( m_on_disconnect ) {
 					should_delete |= m_on_disconnect();
@@ -106,10 +111,10 @@ void Connection::Iterate() {
 				should_delete |= m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
 			}
-		}
-		if ( should_delete ) {
-			DELETE( this );
-			return;
+			if ( should_delete ) {
+				DELETE( this );
+				return true;
+			}
 		}
 	}
 
@@ -117,14 +122,14 @@ void Connection::Iterate() {
 		auto result = m_network->MT_GetResult( m_mt_ids.connect );
 		if ( result.result != network::R_NONE ) {
 			m_mt_ids.connect = 0;
-			g_engine->GetUI()->HideLoader();
+			//g_engine->GetUI()->HideLoader();
 			switch ( result.result ) {
 				case network::R_ERROR: {
 					Log( "Connection error: " + result.message );
 					if ( m_on_error ) {
 						if ( m_on_error( result.message ) ) {
 							DELETE( this );
-							return;
+							return true;
 						}
 					}
 					break;
@@ -160,7 +165,7 @@ void Connection::Iterate() {
 					if ( m_on_error ) {
 						if ( m_on_error( result.message ) ) {
 							DELETE( this );
-							return;
+							return true;
 						}
 					}
 				}
@@ -176,6 +181,7 @@ void Connection::Iterate() {
 		}
 		ProcessPending();
 	}
+	return false;
 }
 
 Client* Connection::AsClient() const {
@@ -236,6 +242,46 @@ const Player* Connection::GetPlayer() const {
 	return m_player;
 }
 
+WRAPIMPL_BEGIN( Connection )
+	WRAPIMPL_PROPS
+		WRAPIMPL_TRIGGERS
+		{
+			"open",
+			NATIVE_CALL( this ) {
+
+				N_EXPECT_ARGS( 0 );
+
+				if ( m_is_connected ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Connection already active" );
+				}
+				if ( !m_mt_ids.connect ) {
+					Connect();
+				}
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"close",
+			NATIVE_CALL( this ) {
+
+				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+
+				if ( m_is_connected && !m_mt_ids.disconnect ) {
+
+					if ( arguments.size() >= 1 ) {
+						N_GETVALUE( reason, 0, String );
+						Disconnect( reason );
+					}
+					else {
+						Disconnect();
+					}
+				}
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+	};
+WRAPIMPL_END_PTR()
+
 void Connection::ProcessEvent( const network::LegacyEvent& event ) {
 	ASSERT( m_state, "connection state not set" );
 }
@@ -246,6 +292,13 @@ gc::Space* Connection::GetGCSpace() const {
 	return m_state->m_gc_space;
 }
 
+void Connection::WTrigger( const std::string& event, const f_args_t& fargs ) {
+	ASSERT( m_state, "state not set" );
+	m_state->WithGSE( [this, &event, &fargs]( GSE_CALLABLE ) {
+		Trigger( GSE_CALL, event, fargs );
+	});
+}
+
 void Connection::Disconnect( const std::string& reason ) {
 	if ( !reason.empty() ) {
 		m_disconnect_reason = reason;
@@ -253,17 +306,12 @@ void Connection::Disconnect( const std::string& reason ) {
 	if ( m_mt_ids.disconnect ) {
 		return; // already disconnecting
 	}
-	if ( m_mt_ids.events ) {
-		m_network->MT_Cancel( m_mt_ids.events );
-		m_mt_ids.events = 0;
-	}
 	Log(
 		"Disconnecting" + ( !reason.empty()
 			? " (reason: " + reason + ")"
 			: ""
 		)
 	);
-	ClearPending();
 	m_mt_ids.disconnect = m_network->MT_Disconnect();
 }
 

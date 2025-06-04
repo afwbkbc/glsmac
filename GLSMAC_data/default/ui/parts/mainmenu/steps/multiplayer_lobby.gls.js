@@ -35,7 +35,18 @@ return (i) => {
 				parts[section] = #include('multiplayer_lobby/' + section)(ii);
 			}
 
-		}
+			i.connection = i.glsmac.listen();
+
+			i.connection.on('player_join', (e) => {
+				#print('PLAYER JOINED', e);
+				return true;
+			});
+
+			i.connection.open();
+		},
+		destructor: () => {
+			i.connection.close();
+		},
 	});
 
 };

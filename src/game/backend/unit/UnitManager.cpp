@@ -124,7 +124,7 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_spawn", ARGS_F( ARGS_GSE_CALLABLE, &unit, this ) {
+		state->TriggerObject( this, "unit_spawn", ARGS_F( &unit, this ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL, m_game->GetGCSpace() )
@@ -156,7 +156,7 @@ void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->TriggerObject( this, "unit_despawn", ARGS_F( ARGS_GSE_CALLABLE, &unit ) {
+		state->TriggerObject( this, "unit_despawn", ARGS_F( &unit ) {
 			{
 				"unit",
 				unit->Wrap( GSE_CALL )
@@ -670,7 +670,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 }
 
 const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender ) {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -692,7 +692,7 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 }
 
 gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender ) {
+	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL )
@@ -706,7 +706,7 @@ gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, 
 
 void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
-	state->TriggerObject( this, "unit_attack_apply", ARGS_F( ARGS_GSE_CALLABLE, &attacker, &defender, &resolutions ) {
+	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &attacker, &defender, &resolutions ) {
 		{
 			"attacker",
 			attacker->Wrap( GSE_CALL, true )

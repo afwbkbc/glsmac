@@ -23,7 +23,7 @@ Lobby::Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* conne
 	ASSERT( connection, "connection is null" );
 
 	m_state->InitBindings();
-	
+
 	m_state->Configure();
 
 	SetWidth( 800 );
@@ -42,14 +42,14 @@ Lobby::Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* conne
 		m_game_settings_section->UpdateRows();
 		m_players_section->UpdateSlots( m_state->m_slots->GetSlots() );
 	};
-	connection->m_on_player_join = [ this ]( const size_t slot_num, game::backend::slot::Slot* slot, const game::backend::Player* player ) -> void {
+	/*connection->m_on_player_join = [ this ]( const size_t slot_num, game::backend::slot::Slot* slot, const game::backend::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" joined." );
 	};
 	connection->m_on_player_leave = [ this ]( const size_t slot_num, game::backend::slot::Slot* slot, const game::backend::Player* player ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 		GlobalMessage( "Player \"" + player->GetPlayerName() + "\" left." );
-	};
+	};*/
 	connection->m_on_slot_update = [ this ]( const size_t slot_num, game::backend::slot::Slot* slot ) -> void {
 		m_players_section->UpdateSlot( slot_num, slot );
 	};

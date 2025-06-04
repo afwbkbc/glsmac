@@ -53,7 +53,7 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::GCWrappable )
 
 	void ShowError( const std::string& text, const std::function< void() >& on_close );
 
-	typedef std::function< void( gse::value::object_properties_t& args ) > f_args_t;
+	typedef std::function< void( GSE_CALLABLE, gse::value::object_properties_t& args ) > f_args_t;
 	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
 
 	void WithGSE( const std::function< void( GSE_CALLABLE ) >& f );
