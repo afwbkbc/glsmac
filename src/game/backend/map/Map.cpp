@@ -367,8 +367,8 @@ void Map::CopyTextureDeferred( const tile::tile_layer_type_t tile_layer_from, co
 
 void Map::GetTexture( types::texture::Texture* dest_texture, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "GetTexture called outside of tile generation" );
-	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -386,8 +386,8 @@ void Map::GetTexture( types::texture::Texture* dest_texture, const pcx_texture_c
 
 void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile::tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
 	ASSERT( m_map_state, "map state not set" );
-	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
 		m_textures.terrain,
 		mode,
@@ -406,8 +406,8 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState* ts, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
-	ASSERT( src_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
-	ASSERT( src_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
+	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
+	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
 	m_textures.terrain->AddFrom(
 		src_texture,
 		mode,

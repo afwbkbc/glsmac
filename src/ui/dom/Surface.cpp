@@ -84,7 +84,6 @@ Surface::Surface( DOM_ARGS )
 					}
 					else if ( f == "tint" ) {
 						f_expect_args( 2 );
-						types::Color color;
 						float intensity;
 						ParseColor( GSE_CALL, args.at( 0 ), color );
 						if ( !util::String::ParseFloat( args.at( 1 ), intensity ) ) {
@@ -162,8 +161,8 @@ Surface::Surface( DOM_ARGS )
 			if ( is_tiled ) {
 				m_geometry->AsRectangle()->SetTiled(
 					{
-						m_background.texture->m_width,
-						m_background.texture->m_height
+						m_background.texture->GetWidth(),
+						m_background.texture->GetHeight()
 					}
 				);
 			}

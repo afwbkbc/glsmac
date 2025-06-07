@@ -12,6 +12,7 @@
 
 namespace types::texture {
 class Texture;
+class LazyTexture;
 }
 
 namespace loader {
@@ -22,6 +23,9 @@ CLASS( TextureLoader, Loader )
 	virtual ~TextureLoader();
 
 	typedef std::unordered_set< types::Color::rgba_t > transparent_colors_t;
+
+	// get lazy texture
+	types::texture::LazyTexture* GetLazyTexture( const std::string& filename );
 
 	// load full texture
 	types::texture::Texture* LoadTexture( const resource::resource_t res );
@@ -48,6 +52,7 @@ protected:
 private:
 	const transparent_colors_t& GetTCs( const resource::resource_t res );
 
+	std::unordered_map< std::string, types::texture::LazyTexture* > m_lazy_textures = {};
 };
 
 }

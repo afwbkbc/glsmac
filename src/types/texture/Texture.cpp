@@ -25,8 +25,8 @@ Texture::Texture( const size_t width, const size_t height ) {
 	}
 }
 
-Texture::Texture( const std::string& name, const size_t width, const size_t height )
-	: m_name( name ) {
+Texture::Texture( const std::string& filename, const size_t width, const size_t height )
+	: m_filename( filename ) {
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
@@ -74,6 +74,26 @@ void Texture::Resize( const size_t width, const size_t height ) {
 		}
 		FullUpdate();
 	}
+}
+
+const size_t Texture::GetWidth() const {
+	return m_width;
+}
+
+const size_t Texture::GetHeight() const {
+	return m_height;
+}
+
+unsigned char* const Texture::GetBitmap() const {
+	return m_bitmap;
+}
+
+const size_t Texture::GetBitmapSize() const {
+	return m_bitmap_size;
+}
+
+const std::string& Texture::GetFilename() const {
+	return m_filename;
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
@@ -921,7 +941,7 @@ unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size
 const types::Buffer Texture::Serialize() const {
 	types::Buffer buf;
 
-	buf.WriteString( m_name );
+	buf.WriteString( m_filename );
 	buf.WriteInt( m_width );
 	buf.WriteInt( m_height );
 	buf.WriteFloat( m_aspect_ratio );
@@ -937,7 +957,7 @@ const types::Buffer Texture::Serialize() const {
 
 void Texture::Unserialize( types::Buffer buf ) {
 
-	m_name = buf.ReadString();
+	m_filename = buf.ReadString();
 	size_t width = buf.ReadInt();
 	if ( width != m_width ) {
 		THROW( "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
@@ -962,6 +982,10 @@ void Texture::Unserialize( types::Buffer buf ) {
 	m_is_tiled = buf.ReadBool();
 
 	FullUpdate();
+}
+
+void Texture::SetBitmap( void* const pixels ) {
+
 }
 
 }

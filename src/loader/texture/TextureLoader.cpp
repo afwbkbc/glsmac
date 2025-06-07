@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "types/texture/Texture.h"
+#include "types/texture/LazyTexture.h"
 #include "engine/Engine.h"
 #include "resource/ResourceManager.h"
 
@@ -251,6 +252,9 @@ TextureLoader::~TextureLoader() {
 	for ( const auto& it : m_color_textures ) {
 		DELETE( it.second );
 	}
+	for ( const auto& it : m_lazy_textures ) {
+		DELETE( it.second );
+	}
 }
 
 const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource::resource_t res ) {
@@ -261,6 +265,14 @@ const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource
 	else {
 		return s_no_transparent_colors;
 	}
+}
+
+types::texture::LazyTexture* TextureLoader::GetLazyTexture( const std::string& filename ) {
+	const auto& it = m_lazy_textures.find( filename );
+	if ( it != m_lazy_textures.end() ) {
+		return it->second;
+	}
+	return m_lazy_textures.insert( { filename, new types::texture::LazyTexture( this, filename ) } ).first->second;
 }
 
 types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res ) {

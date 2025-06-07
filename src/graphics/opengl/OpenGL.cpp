@@ -342,6 +342,9 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 	glActiveTexture( GL_TEXTURE0 );
 
+	const auto tw = texture->GetWidth();
+	const auto th = texture->GetHeight();
+
 	if ( it == m_textures.end() ) {
 
 		//Log( "Initializing texture '" + texture->m_name + "'" );
@@ -352,8 +355,8 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 					0,
 					texture->UpdatedCount(),
 					{
-						texture->m_width,
-						texture->m_height,
+						tw,
+						th,
 					}
 				}
 			}
@@ -366,11 +369,11 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 	}
 
 	auto& t = it->second;
-	if ( t.last_dimensions.x != texture->m_width || t.last_dimensions.y != texture->m_height ) {
+	if ( t.last_dimensions.x != tw || t.last_dimensions.y != th ) {
 		is_reload_needed = true;
 		need_full_update = true;
-		t.last_dimensions.x = texture->m_width;
-		t.last_dimensions.y = texture->m_height;
+		t.last_dimensions.x = tw;
+		t.last_dimensions.y = th;
 	}
 
 	if ( t.last_texture_update_counter != texture_update_counter ) {
@@ -382,7 +385,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
-			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {
+			t.obj, [ &need_full_update, &texture, &smoothen, &tw, &th ]() {
 
 				if ( need_full_update ) {
 					ASSERT( !glGetError(), "Texture parameter error" );
@@ -392,12 +395,12 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						GL_TEXTURE_2D,
 						0,
 						GL_RGBA8,
-						(GLsizei)texture->m_width,
-						(GLsizei)texture->m_height,
+						(GLsizei)tw,
+						(GLsizei)th,
 						0,
 						GL_RGBA,
 						GL_UNSIGNED_BYTE,
-						ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
+						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
 
 					if ( smoothen ) {
@@ -564,7 +567,7 @@ void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f )
 	GLuint obj;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
-		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
+		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->GetFilename() + " ) not found" );
 		obj = it->second.obj;
 	}
 	else {

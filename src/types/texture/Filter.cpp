@@ -7,8 +7,8 @@ namespace texture {
 
 Filter::Filter( types::texture::Texture* const source_texture )
 	: m_source_texture( source_texture )
-	, m_width( source_texture->m_width )
-	, m_height( source_texture->m_height ) {
+	, m_width( source_texture->GetWidth() )
+	, m_height( source_texture->GetHeight() ) {
 	ASSERT( m_source_texture, "texture not set" );
 }
 
@@ -32,7 +32,7 @@ const Filter::texture_data_t Filter::GetTexture() {
 
 		// export color map to texture
 		const auto* in = m_colormap;
-		auto* out = (types::Color::rgba_t*)texture->m_bitmap;
+		auto* out = (types::Color::rgba_t*)texture->GetBitmap();
 		for ( auto y = 0 ; y < m_height ; y++ ) {
 			const auto yw = y * m_width;
 			for ( auto x = 0 ; x < m_width ; x++ ) {
@@ -166,7 +166,7 @@ void Filter::Prepare() {
 		m_colormap = (types::Color::color_t*)malloc( sizeof( types::Color::color_t ) * m_height * m_width );
 
 		// export texture to color map
-		const auto* in = (types::Color::rgba_t*)m_source_texture->m_bitmap;
+		const auto* in = (types::Color::rgba_t*)m_source_texture->GetBitmap();
 		auto* out = m_colormap;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
 			const auto yw = y * m_width;

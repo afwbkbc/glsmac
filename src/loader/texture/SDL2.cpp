@@ -46,6 +46,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		}
 
 		NEWV( texture, types::texture::Texture, filename, image->w, image->h );
+		texture->SetBitmap( image->pixels );
 		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface( image );

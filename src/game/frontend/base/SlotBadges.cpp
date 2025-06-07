@@ -120,13 +120,16 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 		);
 
 		// add border
-		const auto w = texture->m_width - 1;
-		const auto h = texture->m_height - 1;
+		const auto w = texture->GetWidth() - 1;
+		const auto h = texture->GetHeight() - 1;
 		const auto b = 2;
 		texture->Fill( 0, 0, w, b, border );
 		texture->Fill( 0, h - b, w, h, border );
 		texture->Fill( 0, 0, b, h, border );
 		texture->Fill( w - b, 0, w, h, border );
+
+		const uint32_t tw = texture->GetWidth();
+		const uint32_t th = texture->GetHeight();
 
 		it2 = it1->second.insert(
 			{
@@ -144,16 +147,16 @@ sprite::InstancedSprite* SlotBadges::GetBadgeSprite( const size_t population, co
 							0,
 						},
 						{
-							(uint32_t)texture->m_width,
-							(uint32_t)texture->m_height,
+							tw,
+							th,
 						},
 						{
-							(uint32_t)std::round( texture->m_width / 2 ),
-							(uint32_t)std::round( texture->m_height / 2 ),
+							(uint32_t)std::round( tw / 2 ),
+							(uint32_t)std::round( th / 2 ),
 						},
 						{
-							backend::map::s_consts.tile.scale.x * s_consts.scale.x * texture->m_width,
-							backend::map::s_consts.tile.scale.y * s_consts.scale.y * backend::map::s_consts.sprite.y_scale * texture->m_height
+							backend::map::s_consts.tile.scale.x * s_consts.scale.x * tw,
+							backend::map::s_consts.tile.scale.y * s_consts.scale.y * backend::map::s_consts.sprite.y_scale * th
 						},
 						ZL_TERRAIN_TEXT,
 						0.008f

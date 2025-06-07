@@ -258,7 +258,7 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 			GL_READ_FRAMEBUFFER, m_fbo, [ &w, &h, &top_left, &texture ]() {
 				glReadBuffer( GL_COLOR_ATTACHMENT0 );
 
-				glReadPixels( top_left.x, top_left.y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+				glReadPixels( top_left.x, top_left.y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, texture->GetBitmap() );
 
 				glReadBuffer( GL_NONE );
 			}

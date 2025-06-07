@@ -12,6 +12,7 @@
 #include "loader/txt/FactionTXTLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
+#include "types/texture/LazyTexture.h"
 
 namespace game {
 namespace backend {
@@ -99,7 +100,10 @@ WRAPIMPL_BEGIN( FactionManager )
 				NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
-				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
+				const auto* texture = g_engine->GetTextureLoader()->GetLazyTexture( filename )->Get();
+				if ( !texture ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Could not import colors from file: " + filename );
+				}
 				const auto properties = gse::value::object_properties_t{
 					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap( GSE_CALL ) },
 					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap( GSE_CALL ) },

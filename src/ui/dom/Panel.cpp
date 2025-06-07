@@ -70,8 +70,9 @@ void Panel::UpdateBorderTexture() {
 	auto* texture = m_border_surface->GetOwnedTexturePtr();
 	const auto& a = m_geometry->AsRectangle()->m_area;
 	texture->Resize( a.width, a.height );
-	if ( texture->m_bitmap ) {
-		memset( texture->m_bitmap, 0, texture->m_bitmap_size );
+	auto* bitmap = texture->GetBitmap();
+	if ( bitmap ) {
+		memset( bitmap, 0, texture->GetBitmapSize() );
 		if ( m_border_color != types::Color{} ) {
 			long int r = std::ceil( std::fmin( m_border_corners, std::min( a.width, a.height ) / 2 - 1 ) );
 			for ( auto x = r ; x < a.width - r ; x++ ) {

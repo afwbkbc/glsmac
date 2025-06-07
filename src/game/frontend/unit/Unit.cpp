@@ -484,8 +484,8 @@ void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* spr
 			sprite->xy.y + sprite->wh.y
 		},
 		{
-			texture->m_width,
-			texture->m_height
+			texture->GetWidth(),
+			texture->GetHeight()
 		},
 		0.8f
 	);

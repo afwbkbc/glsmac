@@ -52,15 +52,17 @@ void Surface::ApplyStyle() {
 		auto* texture = (types::texture::Texture*)GetObject( A_TEXTURE );
 		if ( texture ) {
 			SetTexture( texture );
+			const auto tw = texture->GetWidth();
+			const auto th = texture->GetHeight();
 			if ( Has( A_SIZE_FROM_TEXTURE ) ) {
-				SetWidth( texture->m_width );
-				SetHeight( texture->m_height );
+				SetWidth( tw );
+				SetHeight( th );
 			}
 			if ( Has( A_STRETCH_TEXTURE ) ) {
 				SetStretchTexture( true );
 			}
 			if ( Has( A_KEEP_TEXTURE_ASPECT_RATIO ) ) {
-				ForceAspectRatio( (float)texture->m_height / texture->m_width );
+				ForceAspectRatio( (float)th / tw );
 			}
 		}
 		else {
@@ -101,13 +103,13 @@ void Surface::ResizeNow() {
 		}
 
 		if ( m_texture && (
-			m_last_texture_size.x != m_texture->m_width ||
-				m_last_texture_size.y != m_texture->m_height
+			m_last_texture_size.x != m_texture->GetWidth() ||
+				m_last_texture_size.y != m_texture->GetHeight()
 		) ) {
 			//Log( "Resizing because texture size has changed" );
 			m_surface_texture_size = {
-				m_texture->m_width,
-				m_texture->m_height
+				m_texture->GetWidth(),
+				m_texture->GetHeight()
 			};
 			need_resize = true;
 		}
@@ -134,8 +136,8 @@ void Surface::ResizeNow() {
 
 				m_background_mesh->SetCoordsTiled(
 					pos, size, {
-						m_texture->m_width,
-						m_texture->m_height
+						m_texture->GetWidth(),
+						m_texture->GetHeight()
 					}, -m_z_index
 				);
 			}

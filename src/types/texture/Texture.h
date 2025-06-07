@@ -9,6 +9,10 @@
 
 #include "types/Color.h"
 
+namespace loader::texture {
+class SDL2;
+}
+
 namespace common {
 class ObjectLink;
 }
@@ -29,30 +33,23 @@ CLASS( Texture, Serializable )
 	Texture( const std::string& name, const size_t width, const size_t height );
 	virtual ~Texture();
 
-	std::string m_name = "";
-	size_t m_width = 0;
-	size_t m_height = 0;
-	float m_aspect_ratio = 0;
-	unsigned char m_bpp = 4; // always RGBA format
-	unsigned char* m_bitmap = nullptr;
-	size_t m_bitmap_size = 0;
-
-	bool m_is_tiled = false;
-
-	common::ObjectLink* m_graphics_object = nullptr;
-
-	const bool IsEmpty() const;
-	void Resize( const size_t width, const size_t height );
+	virtual const bool IsEmpty() const;
+	virtual void Resize( const size_t width, const size_t height );
+	virtual const size_t GetWidth() const;
+	virtual const size_t GetHeight() const;
+	virtual unsigned char* const GetBitmap() const;
+	virtual const size_t GetBitmapSize() const;
+	virtual const std::string& GetFilename() const;
 
 	// these methods won't update counter because it would happen too often (and is bad for performance)
 	// call Update() manually after you're done
-	void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
-	void SetPixel( const size_t x, const size_t y, const Color& color );
-	void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
+	virtual void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
+	virtual void SetPixel( const size_t x, const size_t y, const Color& color );
+	virtual void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 
-	const Color::rgba_t GetPixel( const size_t x, const size_t y ) const;
+	virtual const Color::rgba_t GetPixel( const size_t x, const size_t y ) const;
 
-	void Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
+	virtual void Erase( const size_t x1, const size_t y1, const size_t x2, const size_t y2 );
 
 	/**
 	 * TODO: refactor this huge parameter list somehow!!!
@@ -70,18 +67,18 @@ CLASS( Texture, Serializable )
 	 * @param rng - (optional) random generator for random-related flags
 	 * @param perlin - (optional) perlin generator for perlin-related flags
 	 */
-	void AddFrom( const types::texture::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f, util::random::Random* rng = nullptr, util::Perlin* perlin = nullptr );
+	virtual void AddFrom( const types::texture::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x = 0, const size_t dest_y = 0, const rotate_t rotate = 0, const float alpha = 1.0f, util::random::Random* rng = nullptr, util::Perlin* perlin = nullptr );
 
-	void Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color );
+	virtual void Fill( const size_t x1, const size_t y1, const size_t x2, const size_t y2, const types::Color& color );
 
-	void RepaintFrom( const types::texture::Texture* original, const repaint_rules_t& rules );
-	void ColorizeFrom( const types::texture::Texture* original, const types::Color& color, const types::Color& shadow_color );
+	virtual void RepaintFrom( const types::texture::Texture* original, const repaint_rules_t& rules );
+	virtual void ColorizeFrom( const types::texture::Texture* original, const types::Color& color, const types::Color& shadow_color );
 
-	void Rotate();
-	void FlipV();
+	virtual void Rotate();
+	virtual void FlipV();
 	//void FlipH(); // TODO
-	void SetAlpha( const float alpha );
-	void SetContrast( const float contrast );
+	virtual void SetAlpha( const float alpha );
+	virtual void SetContrast( const float contrast );
 
 	static Texture* FromColor( const Color& color );
 
@@ -98,22 +95,38 @@ CLASS( Texture, Serializable )
 	typedef std::vector< updated_area_t > updated_areas_t;
 	updated_areas_t m_updated_areas = {};
 
-	void Update( const updated_area_t updated_area );
-	void FullUpdate();
-	const size_t UpdatedCount() const;
-	const updated_areas_t& GetUpdatedAreas() const;
-	void ClearUpdatedAreas();
+	virtual void Update( const updated_area_t updated_area );
+	virtual void FullUpdate();
+	virtual const size_t UpdatedCount() const;
+	virtual const updated_areas_t& GetUpdatedAreas() const;
+	virtual void ClearUpdatedAreas();
 
 	// allocates and returns copy of bitmap from specified area
 	// don't forget to free() it later
 	// supposed to be faster than AddFrom
-	unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const;
+	virtual unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const;
 
-	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	virtual const types::Buffer Serialize() const override;
+	virtual void Unserialize( types::Buffer buf ) override;
 
 private:
 	size_t m_update_counter = 0;
+
+	std::string m_filename = "";
+	size_t m_width = 0;
+	size_t m_height = 0;
+	float m_aspect_ratio = 0;
+	unsigned char m_bpp = 4; // always RGBA format
+	unsigned char* m_bitmap = nullptr;
+	size_t m_bitmap_size = 0;
+
+	bool m_is_tiled = false;
+
+	common::ObjectLink* m_graphics_object = nullptr;
+
+private:
+	friend class loader::texture::SDL2;
+	void SetBitmap( void* const pixels );
 };
 
 }

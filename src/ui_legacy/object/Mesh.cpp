@@ -179,11 +179,13 @@ void Mesh::Align() {
 		m_last_object_area = m_object_area;
 		need_resize = true;
 	}
-	if ( m_texture && ( m_last_texture_size.x != m_texture->m_width || m_last_texture_size.y != m_texture->m_height ) ) {
+	const auto tw = m_texture->GetWidth();
+	const auto th = m_texture->GetHeight();
+	if ( m_texture && ( m_last_texture_size.x != tw || m_last_texture_size.y != th ) ) {
 		//Log( "Resizing because texture size has changed" );
 		m_last_texture_size = {
-			m_texture->m_width,
-			m_texture->m_height
+			tw,
+			th
 		};
 		need_resize = true;
 	}

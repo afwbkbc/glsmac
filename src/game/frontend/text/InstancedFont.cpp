@@ -263,7 +263,7 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 
 	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h );
 
-	texture->Fill( 0, 0, texture->m_width - 1, texture->m_height - 1, background );
+	texture->Fill( 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1, background );
 
 	uint32_t x = margin;
 	uint32_t y = margin;
@@ -285,8 +285,8 @@ types::texture::Texture* InstancedFont::GetColorizedTexture( const types::Color&
 			texture,
 			types::texture::Texture,
 			"InstancedFont_" + m_name + "_" + std::to_string( texture_key ),
-			m_base_texture->m_width,
-			m_base_texture->m_height
+			m_base_texture->GetWidth(),
+			m_base_texture->GetHeight()
 		);
 		texture->ColorizeFrom( m_base_texture, color, shadow_color );
 		texture_it = m_color_textures.insert(

@@ -50,6 +50,9 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 
 		Log( "Creating instanced sprite: " + key );
 
+		const auto tw = texture->GetWidth();
+		const auto th = texture->GetHeight();
+
 		NEWV(
 			sprite,
 			scene::actor::Sprite,
@@ -61,12 +64,12 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 			texture,
 			{
 				{
-					(float)1.0f / texture->m_width * ( src_xy.x ),
-					(float)1.0f / texture->m_height * ( src_xy.y )
+					(float)1.0f / tw * ( src_xy.x ),
+					(float)1.0f / th * ( src_xy.y )
 				},
 				{
-					(float)1.0f / texture->m_width * ( src_xy.x + src_wh.x ),
-					(float)1.0f / texture->m_height * ( src_xy.y + src_wh.y )
+					(float)1.0f / tw * ( src_xy.x + src_wh.x ),
+					(float)1.0f / th * ( src_xy.y + src_wh.y )
 				}
 			},
 			{
@@ -166,7 +169,7 @@ types::texture::Texture* InstancedSpriteManager::GetRepaintedSourceTexture( cons
 	if ( it != m_repainted_textures.end() ) {
 		return it->second;
 	}
-	NEWV( texture, types::texture::Texture, original->m_name, original->m_width, original->m_height );
+	NEWV( texture, types::texture::Texture, original->GetFilename(), original->GetWidth(), original->GetHeight() );
 	texture->RepaintFrom( original, rules );
 	m_repainted_textures.insert(
 		{
