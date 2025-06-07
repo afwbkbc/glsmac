@@ -6,7 +6,7 @@
 #include <vector>
 #include <functional>
 
-#include "common/Common.h"
+#include "gc/Object.h"
 
 #include "Types.h"
 
@@ -43,7 +43,7 @@ class Callable;
 
 class Async;
 
-CLASS2( GSE, common::Class, gc::Object )
+CLASS( GSE, gc::Object )
 	GSE();
 	virtual ~GSE();
 

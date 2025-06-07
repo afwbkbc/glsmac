@@ -108,8 +108,8 @@ void Host::OnNext() {
 		m_mainmenu->m_state->m_settings.local.banned_addresses.clear(); // TODO: persist?
 
 		Hide();
-		NEWV( connection, game::backend::connection::Server, &m_mainmenu->m_state->m_settings.local );
-		SetConnection( connection );
+		/*NEWV( connection, game::backend::connection::Server, &m_mainmenu->m_state->m_settings.local );
+		SetConnection( connection );*/
 	}
 
 }

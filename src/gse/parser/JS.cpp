@@ -292,7 +292,7 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 	if ( conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
 		// default:
 		it++; // skip colon
-		ASSERT_NOLOG( it < end, "it overflow" );
+		ASSERT( it < end, "it overflow" );
 	}
 	else if ( conditional->has_condition ) {
 		if ( conditional->m_conditional_type == Conditional::CT_CASE ) {
@@ -302,7 +302,7 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				it_end++;
 			}
 			it--; // because no brackets
-			ASSERT_NOLOG( it >= begin, "it before begin" );
+			ASSERT( it >= begin, "it before begin" );
 		}
 		else {
 			// (<condition>)

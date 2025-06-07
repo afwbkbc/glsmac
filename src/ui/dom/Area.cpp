@@ -111,7 +111,7 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 						break;
 					}
 					default: {
-						ASSERT_NOLOG( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
+						ASSERT( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
 					}
 				}
 				obj.insert(

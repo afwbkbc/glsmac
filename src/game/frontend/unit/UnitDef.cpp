@@ -58,8 +58,8 @@ const bool UnitDef::IsArtillery() const {
 }
 
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
-	ASSERT_NOLOG( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
-	ASSERT_NOLOG( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
+	ASSERT( m_type == backend::unit::DT_STATIC, "only static units are supported for now" );
+	ASSERT( static_.render.is_sprite, "only sprite unitdefs are supported for now" );
 
 	if ( m_render.morale_based_xshift ) {
 		if ( !static_.render.morale_based_sprites ) {

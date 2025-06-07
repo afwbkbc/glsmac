@@ -89,14 +89,14 @@ void Tile::SetActiveUnit( unit::Unit* unit ) {
 }
 
 void Tile::SetBase( base::Base* base ) {
-	ASSERT_NOLOG( !m_base, "base already set" );
+	ASSERT( !m_base, "base already set" );
 	m_base = base;
 	m_is_objects_reorder_needed = true;
 	Render();
 }
 
 void Tile::UnsetBase( base::Base* base ) {
-	ASSERT_NOLOG( m_base == base, "different or no base set" );
+	ASSERT( m_base == base, "different or no base set" );
 	m_base->Hide();
 	m_base = nullptr;
 	Render();
@@ -128,13 +128,13 @@ void Tile::Render( size_t selected_unit_id ) {
 	}
 	if ( should_show_units ) {
 		const auto units_order = GetUnitsOrder( m_units );
-		ASSERT_NOLOG( !units_order.empty(), "units order is empty" );
+		ASSERT( !units_order.empty(), "units order is empty" );
 
 		const auto most_important_unit_id = units_order.front();
 
 		// also display badges from stacked units that are not visible themselves
 		// TODO: refactor
-		ASSERT_NOLOG( m_render.currently_rendered_fake_badges.empty(), "orphan badges already rendered" );
+		ASSERT( m_render.currently_rendered_fake_badges.empty(), "orphan badges already rendered" );
 		size_t fake_badge_idx = 1;
 		for ( const auto& unit_id : units_order ) {
 			const auto& unit = m_units.at( unit_id );

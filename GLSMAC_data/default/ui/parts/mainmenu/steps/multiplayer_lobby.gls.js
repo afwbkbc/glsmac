@@ -11,30 +11,25 @@ return (i) => {
 			i.connection = i.glsmac.connect();
 
 			i.connection.on('error', (e) => {
-				#print('ERROR BEGIN');
-				i.connection = #undefined;
-				i.popup.back();
-				i.popup.error(e.message);
-				#print('ERROR END');
+				if (#is_defined(i.connection)) {
+					i.connection.close();
+					i.connection = #undefined;
+					i.popup.back();
+					i.popup.error(e.message);
+				}
 			});
 
 			i.connection.on('connect', (e) => {
 				#print('CONNECTED');
 			});
 			i.connection.on('disconnect', (e) => {
-				#print('DISCONNECT BEGIN');
+				#print('DISCONNECTED');
 				if (#is_defined(i.connection)) {
+					i.connection.close();
 					i.connection = #undefined;
 					i.popup.back();
 					i.popup.error('Connection lost');
 				}
-				#print('DISCONNECT END');
-				/*#print('DISCONNECTED');
-				if (#is_defined(i.connection)) {
-					i.connection = #undefined;
-					i.popup.back();
-					i.popup.error('Connection lost');
-				}*/
 			});
 			i.connection.on('player_join', (e) => {
 				#print('PLAYER JOINED', e);
@@ -74,13 +69,11 @@ return (i) => {
 
 		},
 		destructor: () => {
-			#print('DESTRUCTOR BEGIN');
 			if (#is_defined(i.connection)) {
-				let c = i.connection;
+				i.connection.close();
 				i.connection = #undefined;
-				c.close();
+				i.popup.back();
 			}
-			#print('DESTRUCTOR END');
 		},
 	});
 

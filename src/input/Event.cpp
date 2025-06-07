@@ -107,7 +107,7 @@ const std::unordered_map< event_type_t, std::string > g_type_str = {
 };
 
 const std::string& Event::GetTypeStr() const {
-	ASSERT_NOLOG( g_type_str.find( type ) != g_type_str.end(), "code str not found: " + std::to_string( type ) );
+	ASSERT( g_type_str.find( type ) != g_type_str.end(), "code str not found: " + std::to_string( type ) );
 	return g_type_str.at( type );
 }
 
@@ -219,7 +219,7 @@ const std::unordered_map< key_code_t, std::string > g_keycode_str = {
 };
 
 const std::string& Event::GetKeyCodeStr() const {
-	ASSERT_NOLOG( g_keycode_str.find( data.key.code ) != g_keycode_str.end(), "code str not found: " + std::to_string( data.key.code ) );
+	ASSERT( g_keycode_str.find( data.key.code ) != g_keycode_str.end(), "code str not found: " + std::to_string( data.key.code ) );
 	return g_keycode_str.at( data.key.code );
 }
 
@@ -248,7 +248,7 @@ const std::string Event::ToString() const {
 			break;
 		}
 		default:
-			ASSERT_NOLOG( false, "unknown event type: " + std::to_string( type ) );
+			ASSERT( false, "unknown event type: " + std::to_string( type ) );
 	}
 	return "event::" + GetTypeStr() + "( " + result + " )";
 }

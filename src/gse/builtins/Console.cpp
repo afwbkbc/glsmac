@@ -14,12 +14,12 @@ namespace builtins {
 static bool s_is_capturing = false;
 static std::string s_capture_buffer = "";
 void Console::CaptureStart() const {
-	ASSERT_NOLOG( !s_is_capturing, "already capturing" );
+	ASSERT( !s_is_capturing, "already capturing" );
 	s_capture_buffer.clear();
 	s_is_capturing = true;
 }
 const std::string& Console::CaptureStopGet() const {
-	ASSERT_NOLOG( s_is_capturing, "not capturing" );
+	ASSERT( s_is_capturing, "not capturing" );
 	s_is_capturing = false;
 	return s_capture_buffer;
 }

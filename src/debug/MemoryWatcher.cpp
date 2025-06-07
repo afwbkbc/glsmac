@@ -23,6 +23,10 @@ void free_real( void* ptr ) {
 	free( ptr );
 }
 
+SDL_GLContext SDL_GL_CreateContext_real( SDL_Window* window ) {
+	return SDL_GL_CreateContext( window );
+}
+
 void glGenBuffers_real( GLsizei n, GLuint* buffers ) {
 	glGenBuffers( n, buffers );
 }
@@ -331,9 +335,20 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	m_allocated_memory.erase( it );
 }
 
+SDL_GLContext MemoryWatcher::SDLGLCreateContext( SDL_Window* window, const std::string& file, const size_t line ) {
+	std::lock_guard guard( m_mutex );
+	const std::string source = file + ":" + std::to_string( line );
+
+	ASSERT( !m_gl_thread_id, "gl thread already exists @" + source );
+	m_gl_thread_id = std::hash< std::thread::id >()( std::this_thread::get_id() );
+	return SDL_GL_CreateContext_real( window );
+}
+
 void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glGenBuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -361,6 +376,8 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string&
 void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER,
 		"glBindBuffer unknown target " + std::to_string( target ) + " @" + source
@@ -440,6 +457,8 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* da
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT(
 		target == GL_ARRAY_BUFFER ||
 			target == GL_ELEMENT_ARRAY_BUFFER,
@@ -481,6 +500,8 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* da
 void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glDeleteBuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -531,6 +552,8 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::strin
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( n == 1, "glGenTextures with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
 	glGenTextures_real( n, textures );
@@ -559,6 +582,8 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::strin
 void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_TEXTURE_2D, "glBindTexture unknown target " + std::to_string( target ) + " @" + source );
 
@@ -605,6 +630,8 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexImage2D unknown level " + std::to_string( level ) + " @" + source );
@@ -686,6 +713,8 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( target == GL_TEXTURE_2D, "glTexSubImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexSubImage2D unknown level " + std::to_string( level ) + " @" + source );
 	ASSERT( width > 0, "glTexSubImage2D zero width" );
@@ -714,6 +743,8 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glDeleteTextures with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -757,6 +788,8 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::st
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( n == 1, "glGenFramebuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
 	glGenFramebuffers_real( n, buffers );
@@ -771,6 +804,8 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::st
 void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER,
 		"glBindFramebuffer unknown target " + std::to_string( target ) + " @" + source
@@ -830,6 +865,8 @@ void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GL
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( target == GL_FRAMEBUFFER,
 		"glFramebufferTexture2D unknown target " + std::to_string( target ) + " @" + source
 	);
@@ -877,6 +914,8 @@ void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, cons
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( n == 1, "glDeleteFramebuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
 	auto it = m_opengl.framebuffers.find( *buffers );
@@ -901,6 +940,8 @@ GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t lin
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( !m_opengl.current_program, "glCreateProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glCreateProgram while some framebuffer is bound @" + source );
 	ASSERT( !m_opengl.current_vertex_buffer, "glCreateProgram while some vertex buffer is bound @" + source );
@@ -917,6 +958,8 @@ GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t lin
 void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glLinkProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glLinkProgram while some framebuffer is bound @" + source );
@@ -935,6 +978,8 @@ void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, cons
 void MemoryWatcher::GLValidateProgram( GLuint program, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glValidateProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glValidateProgram while some framebuffer is bound @" + source );
@@ -955,6 +1000,8 @@ void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	if ( program ) {
 		ASSERT( !m_opengl.current_program, "glUseProgram starting but other program is already active @" + source );
 		auto it = m_opengl.programs.find( program );
@@ -974,6 +1021,8 @@ void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, co
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( !m_opengl.current_program, "glDeleteProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glDeleteProgram while some framebuffer is bound @" + source );
 	ASSERT( !m_opengl.current_vertex_buffer, "glDeleteProgram while some vertex buffer is bound @" + source );
@@ -990,6 +1039,8 @@ void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, co
 void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void* indices, const std::string& file, const size_t line ) {
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( mode == GL_QUADS || mode == GL_TRIANGLES, "glDrawElements unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( type == GL_UNSIGNED_INT, "glDrawElements unknown type " + std::to_string( type ) + " @" + source );
@@ -1013,6 +1064,8 @@ void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum 
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+
 	ASSERT( mode == GL_QUADS || mode == GL_TRIANGLES, "glDrawElementsInstanced unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( type == GL_UNSIGNED_INT, "glDrawElementsInstanced unknown type " + std::to_string( type ) + " @" + source );
 	ASSERT( indices == nullptr, "glDrawElementsInstanced indices non-null @" + source );
@@ -1035,6 +1088,8 @@ void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const
 	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+	
 	ASSERT( mode == GL_TRIANGLE_STRIP, "glDrawArrays unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawArrays vertex buffer not bound @" + source );
 	ASSERT( !m_opengl.current_index_buffer, "glDrawArrays index buffer is bound but not supposed to be @" + source );
@@ -1097,6 +1152,10 @@ void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 		}
 		g_debug_stats._mutex.unlock();
 	}
+}
+
+void MemoryWatcher::CheckGLThread( const std::string& source ) {
+	ASSERT( m_gl_thread_id == std::hash< std::thread::id >()( std::this_thread::get_id() ), "gl thread mismatch @" + source );
 }
 
 }

@@ -36,7 +36,7 @@ const std::string& GlobalContext::GetSourceLine( const size_t line_num ) const {
 	if ( line_num == 0 ) {
 		return s_empty;
 	}
-	ASSERT_NOLOG( line_num <= m_source_lines.size(), "source line overflow" );
+	ASSERT( line_num <= m_source_lines.size(), "source line overflow" );
 	return m_source_lines.at( line_num - 1 );
 }
 

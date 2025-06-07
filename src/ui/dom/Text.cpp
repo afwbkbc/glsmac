@@ -122,7 +122,7 @@ void Text::SetTransform( const transform_t transform ) {
 }
 
 void Text::UpdateFont() {
-	ASSERT_NOLOG( m_fontsize, "font size is zero" );
+	ASSERT( m_fontsize, "font size is zero" );
 	types::Font* font;
 	if ( m_fontname.empty() ) {
 		font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );

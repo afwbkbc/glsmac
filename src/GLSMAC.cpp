@@ -130,7 +130,7 @@ void GLSMAC::Iterate() {
 	}
 	if ( m_load_thread ) {
 		if ( !m_is_loading ) {
-			ASSERT_NOLOG( m_f_after_load, "f_after_load not set" );
+			ASSERT( m_f_after_load, "f_after_load not set" );
 			m_load_thread.load()->join();
 			delete m_load_thread;
 			m_load_thread = nullptr;
@@ -212,11 +212,11 @@ WRAPIMPL_BEGIN( GLSMAC )
 				game::backend::connection::Connection* connection = nullptr;
 				switch ( m_state->m_settings.local.network_role ) {
 					case game::backend::settings::LocalSettings::NR_SERVER: {
-						NEW( connection, game::backend::connection::Server, &m_state->m_settings.local );
+						NEW( connection, game::backend::connection::Server, gc_space, &m_state->m_settings.local );
 						break;
 					}
 					case game::backend::settings::LocalSettings::NR_CLIENT: {
-						NEW( connection, game::backend::connection::Client, &m_state->m_settings.local );
+						NEW( connection, game::backend::connection::Client, gc_space, &m_state->m_settings.local );
 						break;
 					}
 					default:
@@ -330,8 +330,8 @@ void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 }
 
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
-	ASSERT_NOLOG( !m_load_thread, "load thread already set" );
-	ASSERT_NOLOG( !m_f_after_load, "f_after load already set" );
+	ASSERT( !m_load_thread, "load thread already set" );
+	ASSERT( !m_f_after_load, "f_after load already set" );
 	m_is_loading = true;
 	m_f_after_load = f_after_load;
 	ShowLoader( text );
@@ -384,7 +384,7 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		game::backend::faction::Faction* faction = nullptr;
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 			const auto* fm = m_state->GetFM();
-			ASSERT_NOLOG( fm, "fm is null" );
+			ASSERT( fm, "fm is null" );
 			faction = fm->Get( c->GetQuickstartFaction() );
 			if ( !faction ) {
 				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
@@ -513,7 +513,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	m_is_game_running = true;
 
 	auto* game = g_engine->GetGame();
-	ASSERT_NOLOG( game, "game not set" );
+	ASSERT( game, "game not set" );
 
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
@@ -536,11 +536,11 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 }
 
 void GLSMAC::RunMain() {
-	ASSERT_NOLOG( m_gc_space, "gc space is null" );
+	ASSERT( m_gc_space, "gc space is null" );
 	for ( const auto& main : m_main_callables ) {
-		ASSERT_NOLOG( main->type == gse::Value::T_CALLABLE, "main not callable" );
+		ASSERT( main->type == gse::Value::T_CALLABLE, "main not callable" );
 		m_gc_space->Accumulate( [ this, &main ] (){
-			ASSERT_NOLOG( !m_wrapobj, "GLSMAC wrapobj already set" );
+			ASSERT( !m_wrapobj, "GLSMAC wrapobj already set" );
 			gse::ExecutionPointer ep;
 			m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
 			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {

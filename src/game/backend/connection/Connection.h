@@ -2,8 +2,7 @@
 
 #include <vector>
 
-#include "common/Module.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 
 #include "game/backend/slot/Types.h"
 #include "network/Types.h"
@@ -41,7 +40,8 @@ class Client;
 
 class Server;
 
-CLASS2( Connection, common::Module, gse::Wrappable )
+class Connection : public gse::GCWrappable {
+public:
 
 	enum game_state_t : uint8_t {
 		GS_NONE,
@@ -50,7 +50,7 @@ CLASS2( Connection, common::Module, gse::Wrappable )
 		GS_RUNNING,
 	};
 
-	Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings );
+	Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings );
 	virtual ~Connection();
 
 	std::function< void() > m_on_connect = nullptr;
@@ -61,7 +61,7 @@ CLASS2( Connection, common::Module, gse::Wrappable )
 	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
-	
+
 	std::function< void( const size_t slot_num, slot::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
@@ -119,7 +119,7 @@ protected:
 	size_t m_slot = 0;
 	backend::Player* m_player = nullptr;
 
-	void WTrigger( const std::string& event, const f_args_t& fargs );
+	void WTrigger( const std::string& event, const f_args_t& fargs, const std::function< void() >& f_after = nullptr );
 
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 

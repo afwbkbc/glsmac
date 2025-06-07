@@ -14,7 +14,7 @@ Animation::Animation( const size_t animation_id, AnimationDef* def, const types:
 	: m_def( def )
 	, m_render_coords( render_coords )
 	, m_frames( def->GetSprites() ) {
-	ASSERT_NOLOG( !m_def->GetSprites().empty(), "animation has no sprites defined" );
+	ASSERT( !m_def->GetSprites().empty(), "animation has no sprites defined" );
 	m_sound = new scene::actor::Sound( "Animation_Sound_" + std::to_string( animation_id ), def->GetSound() );
 	g_engine->GetAudio()->AddActor( m_sound );
 	m_timer.SetInterval( m_def->GetDurationMs() / m_frames.size() );

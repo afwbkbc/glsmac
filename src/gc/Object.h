@@ -4,6 +4,8 @@
 #include <mutex>
 #include <string>
 
+#include "common/Common.h"
+
 #define GC_REACHABLE( _var ) \
     if ( reachable_objects.find( _var ) == reachable_objects.end() ) { \
         (_var)->GetReachableObjects( reachable_objects ); \
@@ -36,8 +38,8 @@ namespace gc {
 
 class Space;
 
-class Object {
-public:
+CLASS( Object, common::Class )
+
 	Object( gc::Space* const gc_space );
 	virtual ~Object() = default;
 

@@ -16,11 +16,11 @@ AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const backend::
 	, m_duration_ms( def->m_duration_ms )
 	, m_sound_file( def->m_sound_file ) {
 
-	ASSERT_NOLOG( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
+	ASSERT( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 
 	const auto* d = (backend::animation::FramesRow*)def;
 	m_render = d->m_render;
-	ASSERT_NOLOG( m_render.frames_count > 0, "animation has no frames defined" );
+	ASSERT( m_render.frames_count > 0, "animation has no frames defined" );
 }
 
 AnimationDef::~AnimationDef() {

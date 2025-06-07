@@ -78,7 +78,7 @@ void Population::Update( base::Base* base ) {
 			}
 		}
 	}
-	ASSERT_NOLOG( m_pops.size() == pops_count, "resulting pops size mismatch" );
+	ASSERT( m_pops.size() == pops_count, "resulting pops size mismatch" );
 }
 
 void Population::HideIcons() {

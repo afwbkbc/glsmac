@@ -26,7 +26,7 @@ const manager = {
 
 	pop: (m) => {
 		const last_entry = this.data_stack :~;
-		if (#is_defined(last_entry.data.destructor)) {
+		if (#is_defined(last_entry) && #is_defined(last_entry.data.destructor)) {
 			last_entry.data.destructor();
 		}
 		if ( !#is_empty(this.data_stack)) {

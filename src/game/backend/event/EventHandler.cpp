@@ -20,9 +20,9 @@ EventHandler::EventHandler(
 	, m_resolve( resolve )
 	, m_apply( apply )
 	, m_rollback( rollback ) {
-	ASSERT_NOLOG( validate, "validate not set" );
-	ASSERT_NOLOG( apply, "apply not set" );
-	ASSERT_NOLOG( rollback, "rollback not set" );
+	ASSERT( validate, "validate not set" );
+	ASSERT( apply, "apply not set" );
+	ASSERT( rollback, "rollback not set" );
 }
 
 void EventHandler::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {

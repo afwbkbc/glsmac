@@ -186,7 +186,7 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 	std::vector< sprite::InstancedSprite* > sprites = {};
 	auto* texture = GetColorizedTexture( color, shadow_color );
 	for ( const auto symbol : text ) {
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 		sprites.push_back(
 			m_ism->GetInstancedSprite(
@@ -213,7 +213,7 @@ const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const
 	const size_t middle = text.size() / 2 - 1;
 	for ( size_t i = 0 ; i < text.size() ; i++ ) {
 		const auto symbol = text.at( i );
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 
 		const float ox = (float)pos.src.width_height.x + pos.dst.top_left.x;
@@ -253,7 +253,7 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 	uint32_t w = 0;
 	uint32_t h = 0;
 	for ( const auto symbol : text ) {
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 		w += pos.src.width_height.x;
 		h = std::max( h, pos.src.width_height.y );

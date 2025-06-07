@@ -52,7 +52,7 @@ const std::pair< gse::Value*, class_modifier_t > Class::GetProperty( const std::
 	if ( m_is_master ) {
 		// search in modifiers
 		for ( const auto& m : modifiers ) {
-			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			ASSERT( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			v = m_subclasses.at( m )->GetProperty( key, {} );
 			if ( v.first ) {
 				v.second = m;
@@ -61,7 +61,7 @@ const std::pair< gse::Value*, class_modifier_t > Class::GetProperty( const std::
 		}
 	}
 	else {
-		ASSERT_NOLOG( modifiers.empty(), "modifiers passed to non-master class" );
+		ASSERT( modifiers.empty(), "modifiers passed to non-master class" );
 	}
 
 	// search in own properties
@@ -83,11 +83,11 @@ const properties_t&  Class::GetProperties() const {
 }
 
 void Class::AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_t& modifiers ) {
-	ASSERT_NOLOG( m_objects.find( object ) == m_objects.end(), "object already exists in class" );
+	ASSERT( m_objects.find( object ) == m_objects.end(), "object already exists in class" );
 	m_objects.insert( { object, modifiers } );
 	if ( m_is_master ) {
 		for ( const auto& m : modifiers ) {
-			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			ASSERT( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			m_subclasses.at( m )->AddObject( GSE_CALL, object, {} );
 		}
 		UpdateObject( GSE_CALL, object, CM_NONE );
@@ -95,10 +95,10 @@ void Class::AddObject( GSE_CALLABLE, dom::Object* object, const class_modifiers_
 }
 
 void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
-	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found in class" );
+	ASSERT( m_objects.find( object ) != m_objects.end(), "object not found in class" );
 	if ( m_is_master ) {
 		for ( const auto& m : m_objects.at( object ) ) {
-			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			ASSERT( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			m_subclasses.at( m )->RemoveObject( GSE_CALL, object );
 		}
 	}
@@ -115,25 +115,25 @@ void Class::RemoveObject( GSE_CALLABLE, dom::Object* object ) {
 void Class::UpdateObject( GSE_CALLABLE, dom::Object* const object, const class_modifier_t modifier ) {
 	for ( const auto& property : m_properties ) {
 		if ( s_name_to_modifier.find( property.first ) != s_name_to_modifier.end() ) {
-			ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
+			ASSERT( m_is_master, "modifier received by non-master" );
 			continue;
 		}
 		object->SetPropertyFromClass( GSE_CALL, property.first, property.second, modifier );
 	}
 	if ( m_is_master ) {
-		ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+		ASSERT( m_objects.find( object ) != m_objects.end(), "object not found" );
 		for ( const auto& m : m_objects.at( object ) ) {
-			ASSERT_NOLOG( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
+			ASSERT( m_subclasses.find( m ) != m_subclasses.end(), "subclass not found" );
 			m_subclasses.at( m )->UpdateObject( GSE_CALL, object, m );
 		}
 	}
 }
 
 void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier ) {
-	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+	ASSERT( m_objects.find( object ) != m_objects.end(), "object not found" );
 	auto& modifiers = m_objects.at( object );
 	if ( modifiers.find( modifier ) == modifiers.end() ) {
-		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
+		ASSERT( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
 		modifiers.insert( modifier );
 		const auto& cls = m_subclasses.at( modifier );
 		cls->AddObject( GSE_CALL, object, {} );
@@ -142,7 +142,7 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 
 		for ( const auto& p : cls->m_properties ) {
 			if ( s_name_to_modifier.find( p.first ) != s_name_to_modifier.end() ) {
-				ASSERT_NOLOG( m_is_master, "modifier received by non-master" );
+				ASSERT( m_is_master, "modifier received by non-master" );
 				continue;
 			}
 			gse::Value* v = nullptr;
@@ -167,10 +167,10 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 }
 
 void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class_modifier_t modifier ) {
-	ASSERT_NOLOG( m_objects.find( object ) != m_objects.end(), "object not found" );
+	ASSERT( m_objects.find( object ) != m_objects.end(), "object not found" );
 	auto& modifiers = m_objects.at( object );
 	if ( modifiers.find( modifier ) != modifiers.end() ) {
-		ASSERT_NOLOG( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
+		ASSERT( m_subclasses.find( modifier ) != m_subclasses.end(), "subclass not found" );
 		modifiers.erase( modifier );
 		const auto& cls = m_subclasses.at( modifier );
 		m_subclasses.at( modifier )->RemoveObject( GSE_CALL, object );
@@ -269,7 +269,7 @@ void Class::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLAB
 }
 
 void Class::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
-	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
+	ASSERT( wrapobj, "wrapobj not set" );
 	( (Class*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
 
@@ -314,7 +314,7 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* valu
 	if ( it_old == m_properties.end() || it_old->second != value ) {
 		const auto& it = s_name_to_modifier.find( name );
 		if ( it != s_name_to_modifier.end() ) {
-			ASSERT_NOLOG( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
+			ASSERT( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
 			if ( value->type != gse::Value::T_OBJECT ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Class " + name + " definition must be Object, found " + value->GetTypeString() + ": " + value->ToString() );
 			}
@@ -346,7 +346,7 @@ void Class::SetPropertyFromParent( GSE_CALLABLE, const std::string& name, gse::V
 }
 
 void Class::SetPropertiesFromParent( GSE_CALLABLE ) {
-	ASSERT_NOLOG( m_parent_class, "parent class not set" );
+	ASSERT( m_parent_class, "parent class not set" );
 	for ( const auto& it : m_parent_class->m_properties ) {
 		SetPropertyFromParent( GSE_CALL, it.first, it.second );
 	}
@@ -396,20 +396,20 @@ void Class::UnsetProperties( GSE_CALLABLE, const std::vector< std::string >& pro
 }
 
 void Class::UnsetPropertiesFromParent( GSE_CALLABLE ) {
-	ASSERT_NOLOG( m_parent_class, "parent class not set" );
+	ASSERT( m_parent_class, "parent class not set" );
 	for ( const auto& it : m_parent_class->m_properties ) {
 		UnsetPropertyFromParent( GSE_CALL, it.first );
 	}
 }
 
 void Class::AddChildClass( GSE_CALLABLE, Class* const cls ) {
-	ASSERT_NOLOG( m_child_classes.find( cls ) == m_child_classes.end(), "child class already exists" );
+	ASSERT( m_child_classes.find( cls ) == m_child_classes.end(), "child class already exists" );
 	m_child_classes.insert( cls );
 	cls->SetPropertiesFromParent( GSE_CALL );
 }
 
 void Class::RemoveChildClass( GSE_CALLABLE, Class* const cls ) {
-	ASSERT_NOLOG( m_child_classes.find( cls ) != m_child_classes.end(), "child class not found" );
+	ASSERT( m_child_classes.find( cls ) != m_child_classes.end(), "child class not found" );
 	cls->UnsetPropertiesFromParent( GSE_CALL );
 	m_child_classes.erase( cls );
 }

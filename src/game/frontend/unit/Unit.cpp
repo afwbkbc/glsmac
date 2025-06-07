@@ -319,8 +319,8 @@ const bool Unit::CanMove() const {
 }
 
 void Unit::SetTile( tile::Tile* dst_tile ) {
-	ASSERT_NOLOG( m_tile, "source tile not set" );
-	ASSERT_NOLOG( dst_tile, "destination tile not set" );
+	ASSERT( m_tile, "source tile not set" );
+	ASSERT( dst_tile, "destination tile not set" );
 
 	m_tile->RemoveUnit( this );
 
@@ -332,10 +332,10 @@ void Unit::SetTile( tile::Tile* dst_tile ) {
 }
 
 void Unit::MoveToTile( tile::Tile* dst_tile ) {
-	m_mover.Stop(); //ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
-	//ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
-	ASSERT_NOLOG( m_tile, "source tile not set" );
-	ASSERT_NOLOG( dst_tile, "destination tile not set" );
+	m_mover.Stop(); //ASSERT( !m_mover.IsRunning(), "unit already moving" );
+	//ASSERT( m_tile != dst_tile, "can't move to same tile" );
+	ASSERT( m_tile, "source tile not set" );
+	ASSERT( dst_tile, "destination tile not set" );
 
 	StopBadgeBlink( true );
 	HideFakeBadge();
@@ -362,7 +362,7 @@ void* Unit::CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const {
 	const types::mesh::Mesh* mesh;
 	::ui_legacy::object::Mesh* ui_mesh;
 #define X( _key, _class ) \
-    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
+    ASSERT( render._key.mesh, #_key " mesh not defined" ); \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
     NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectsListPreview" _class ); \
     ui_mesh->SetMesh( mesh ); \

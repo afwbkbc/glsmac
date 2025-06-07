@@ -79,7 +79,7 @@ void TilePreview::PreviewTile( const tile::Tile* tile ) {
 	const auto& yields = tile->GetYields();
 	const bool need_to_add = m_texts.yields.empty();
 	if ( !need_to_add ) {
-		ASSERT_NOLOG( m_texts.yields.size() == yields.size(), "yields lines count mismatch" );
+		ASSERT( m_texts.yields.size() == yields.size(), "yields lines count mismatch" );
 	}
 	/* DEPRECATED
 	for ( const auto& it : yields ) {
@@ -177,7 +177,7 @@ void TilePreview::HideTilePreview() {
 }
 
 void TilePreview::HideYields() {
-	ASSERT_NOLOG( m_pages.yields, "yields page not initialized" );
+	ASSERT( m_pages.yields, "yields page not initialized" );
 	for ( auto& label : m_texts.yields ) {
 		m_pages.yields->RemoveChild( label );
 	}

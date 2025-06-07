@@ -6,9 +6,10 @@ namespace game {
 namespace backend {
 namespace connection {
 
-CLASS( Client, Connection )
+class Client : public Connection {
+public:
 
-	Client( settings::LocalSettings* const settings );
+	Client( gc::Space* const gc_space, settings::LocalSettings* const settings );
 
 	std::function< void() > m_on_players_list_update = nullptr;
 	std::function< void( const game_state_t game_state ) > m_on_game_state_change = nullptr;

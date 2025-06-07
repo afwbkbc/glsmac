@@ -18,7 +18,7 @@ ConnectionPopupMenu::ConnectionPopupMenu( MainMenu* mainmenu, const std::string&
 void ConnectionPopupMenu::Iterate() {
 	auto* connection = m_mainmenu->m_state->GetConnection();
 	if ( connection ) {
-		connection->Iterate();
+		//connection->Iterate();
 	}
 }
 

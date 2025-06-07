@@ -1,8 +1,7 @@
 #pragma once
 
-#include "common/Common.h"
-
 #include "gse/GCWrappable.h"
+
 #include "gse/value/Object.h"
 
 namespace game {
@@ -19,7 +18,7 @@ namespace animation {
 class Def;
 class AnimationSequence;
 
-CLASS2( AnimationManager, common::Class, gse::GCWrappable )
+CLASS( AnimationManager, gse::GCWrappable )
 public:
 	AnimationManager( Game* game );
 	~AnimationManager();

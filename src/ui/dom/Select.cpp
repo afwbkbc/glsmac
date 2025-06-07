@@ -43,10 +43,10 @@ Select::Select( DOM_ARGS )
 			s_active_element->AddModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 		}
 		else {
-			ASSERT_NOLOG( m_choicelist == s_choicelist, "choicelist mismatch" );
+			ASSERT( m_choicelist == s_choicelist, "choicelist mismatch" );
 			s_choicelist->Hide();
 			s_choicelist = nullptr;
-			ASSERT_NOLOG( m_active_element == s_active_element, "active_element mismatch" );
+			ASSERT( m_active_element == s_active_element, "active_element mismatch" );
 			s_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 			s_active_element = nullptr;
 		}

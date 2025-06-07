@@ -107,8 +107,8 @@ void Join::OnNext() {
 		m_mainmenu->m_state->m_settings.local.account.SetLastRemoteAddress( m_mainmenu->m_state->m_settings.local.remote_address );
 
 		Hide();
-		NEWV( connection, game::backend::connection::Client, &m_mainmenu->m_state->m_settings.local );
-		SetConnection( connection );
+		/*NEWV( connection, game::backend::connection::Client, &m_mainmenu->m_state->m_settings.local );
+		SetConnection( connection );*/
 	}
 
 }

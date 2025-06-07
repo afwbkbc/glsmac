@@ -21,7 +21,7 @@ Object::Object( GSE_CALLABLE, object_properties_t initial_value, const object_cl
 	, wrapsetter( wrapsetter )
 	, m_si( si )
 	, m_ep( ep ) {
-	ASSERT_NOLOG( ctx, "object ctx is null" );
+	ASSERT( ctx, "object ctx is null" );
 	ctx->ForkAndExecute(
 		GSE_CALL, false, [ this, &gc_space, &si, &ep, &wrapobj ]( context::ChildContext* const subctx ) {
 			m_ctx = subctx;
@@ -89,9 +89,10 @@ Value* const Object::GetRef( const object_key_t& key ) {
 }
 
 void Object::Unlink() {
-	ASSERT_NOLOG( wrapobj, "wrapobj not linked" );
+	ASSERT( wrapobj, "wrapobj not linked" );
 	wrapobj = nullptr;
 	wrapsetter = nullptr;
+	type = T_UNDEFINED; // make sure all corresponding variables are inaccessible in scripts
 }
 
 void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -99,12 +100,12 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 
 	GC_DEBUG_BEGIN( "Object" );
 
-	ASSERT_NOLOG( m_ctx, "object ctx not set" );
+	ASSERT( m_ctx, "object ctx not set" );
 	GC_DEBUG_BEGIN( "internal_context" );
 	GC_REACHABLE( m_ctx );
 	GC_DEBUG_END();
 
-	ASSERT_NOLOG( m_this, "this not set" );
+	ASSERT( m_this, "this not set" );
 	GC_REACHABLE( m_this );
 
 	GC_DEBUG_BEGIN( "properties" );

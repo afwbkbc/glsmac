@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <unordered_map>
 
-#include "common/Common.h"
 #include "gc/Object.h"
 
 #include "gse/Types.h"
@@ -20,7 +19,7 @@ class Program;
 
 namespace parser {
 
-CLASS2( Parser, common::Class, gc::Object )
+CLASS( Parser, gc::Object )
 
 	Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser();

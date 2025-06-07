@@ -30,12 +30,12 @@ void Object::GetReachableObjects( std::unordered_set< Object* >& reachable_objec
 }
 
 void Object::Persist( Object* const obj ) {
-	ASSERT_NOLOG( m_persisted_objects.find( obj ) == m_persisted_objects.end(), "object already persisted" );
+	ASSERT( m_persisted_objects.find( obj ) == m_persisted_objects.end(), "object already persisted" );
 	m_persisted_objects.insert( obj );
 }
 
 void Object::Unpersist( Object* const obj ) {
-	ASSERT_NOLOG( m_persisted_objects.find( obj ) != m_persisted_objects.end(), "object not persisted" );
+	ASSERT( m_persisted_objects.find( obj ) != m_persisted_objects.end(), "object not persisted" );
 	m_persisted_objects.erase( obj );
 }
 

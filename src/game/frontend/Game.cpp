@@ -161,7 +161,7 @@ void Game::Stop() {
 
 	auto* game = g_engine->GetGame();
 	if ( game ) {
-		ASSERT_NOLOG( !m_state || game->GetState() == m_state, "backend has different state" );
+		ASSERT( !m_state || game->GetState() == m_state, "backend has different state" );
 	}
 	else if ( m_state ) {
 		m_state = nullptr;
@@ -1587,7 +1587,7 @@ void Game::Initialize(
 										auto* unit = um->GetUnit( selected_unit->GetId() );
 										const auto& c = tile->GetCoords();
 										auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
-										ASSERT_NOLOG( unit, "unit not found" );
+										ASSERT( unit, "unit not found" );
 										game->Event(
 											GSE_CALL, "move_unit", {
 												{ "unit", unit->Wrap( GSE_CALL, true ) },
@@ -1598,9 +1598,9 @@ void Game::Initialize(
 									else {
 										// attack
 										auto* attacker = um->GetUnit( selected_unit->GetId() );
-										ASSERT_NOLOG( attacker, "attacker unit not found" );
+										ASSERT( attacker, "attacker unit not found" );
 										auto* defender = um->GetUnit( foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() )->GetId() );
-										ASSERT_NOLOG( attacker, "defender unit not found" );
+										ASSERT( attacker, "defender unit not found" );
 										game->Event(
 											GSE_CALL, "attack_unit", {
 												{ "attacker", attacker->Wrap( GSE_CALL, true ) },

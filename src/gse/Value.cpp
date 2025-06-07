@@ -408,7 +408,7 @@ const bool Value::operator>=( const Value& other ) const {
 
 Value* const Value::New( const Value* value ) {
 	auto* gc_space = value->m_gc_space;
-	ASSERT_NOLOG( gc_space, "value gc space is null" );
+	ASSERT( gc_space, "value gc space is null" );
 	CHECKACCUM( gc_space );
 	switch ( type ) {
 		case T_UNDEFINED:
@@ -497,9 +497,9 @@ void Value::Serialize( types::Buffer* buf, Value* const value ) {
 			}
 			case T_OBJECT: {
 				const auto* obj = (value::Object*)value;
-				ASSERT_NOLOG( obj->object_class.empty(), "serialization of custom object classes is not supported" );
-				ASSERT_NOLOG( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
-				ASSERT_NOLOG( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+				ASSERT( obj->object_class.empty(), "serialization of custom object classes is not supported" );
+				ASSERT( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
+				ASSERT( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
 				const auto& properties = obj->value;
 				buf->WriteInt( properties.size() );
 				for ( const auto& p : properties ) {

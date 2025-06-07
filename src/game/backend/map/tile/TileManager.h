@@ -2,9 +2,8 @@
 
 #include <unordered_set>
 
-#include "common/Common.h"
-
 #include "gse/GCWrappable.h"
+
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -20,7 +19,7 @@ namespace tile {
 
 class Tile;
 
-CLASS2( TileManager, common::Class, gse::GCWrappable )
+CLASS( TileManager, gse::GCWrappable )
 public:
 	TileManager( Game* game );
 	~TileManager();

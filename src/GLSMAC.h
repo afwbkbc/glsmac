@@ -39,7 +39,7 @@ class Faction;
 class State;
 }
 
-CLASS3( GLSMAC, common::Class, gse::Bindings, gse::GCWrappable )
+CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	GLSMAC();
 	~GLSMAC();
 

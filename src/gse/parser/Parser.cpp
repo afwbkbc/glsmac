@@ -29,7 +29,7 @@ Parser::~Parser() {
 }
 
 const program::Program* Parser::Parse() {
-	ASSERT_NOLOG( !m_is_parsed, "already parsed" );
+	ASSERT( !m_is_parsed, "already parsed" );
 	m_is_parsed = true;
 	source_elements_t elements = {};
 	GetElements( elements );

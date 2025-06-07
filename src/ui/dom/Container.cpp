@@ -103,7 +103,7 @@ void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
 }
 
 void Container::Embed( Object* object, const bool is_visible ) {
-	ASSERT_NOLOG( !m_is_initialized, "container already initialized" );
+	ASSERT( !m_is_initialized, "container already initialized" );
 	m_embedded_objects.push_back( { object, is_visible } );
 }
 
@@ -182,13 +182,13 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 }
 
 void Container::Destroy( GSE_CALLABLE ) {
-	ASSERT_NOLOG( !m_processing_mouse_overs, "destruction is requested but still processing mouseovers" );
+	ASSERT( !m_processing_mouse_overs, "destruction is requested but still processing mouseovers" );
 	const auto children = m_children;
 	for ( const auto& it : children ) {
 		RemoveChild( GSE_CALL,it.second );
 	}
-	ASSERT_NOLOG( m_children.empty(), "destruction is requested but was unable to remove all children" );
-	ASSERT_NOLOG( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
+	ASSERT( m_children.empty(), "destruction is requested but was unable to remove all children" );
+	ASSERT( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
 
 	Area::Destroy( GSE_CALL );
 }
@@ -255,7 +255,7 @@ void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CA
 }
 
 void Container::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
-	ASSERT_NOLOG( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
+	ASSERT( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
 	Object::Property( GSE_CALL, name, type, default_value, flags, f_on_set, f_on_unset );
 }
 
@@ -264,8 +264,8 @@ void Container::ForwardProperty( GSE_CALLABLE, const std::string& name, Object* 
 }
 
 void Container::ForwardProperty( GSE_CALLABLE, const std::string& srcname, const std::string& dstname, Object* const target ) {
-	// ? ASSERT_NOLOG( m_properties.find( srcname ) == m_properties.end(), "property '" + srcname + "' already taken (exists)" );
-	//ASSERT_NOLOG( target->m_parent == this, "can only forward properties to direct children" ); // ?
+	// ? ASSERT( m_properties.find( srcname ) == m_properties.end(), "property '" + srcname + "' already taken (exists)" );
+	//ASSERT( target->m_parent == this, "can only forward properties to direct children" ); // ?
 	auto fp = m_forwarded_properties.find( srcname );
 	if ( fp == m_forwarded_properties.end() ) {
 		fp = m_forwarded_properties.insert({ srcname, {} }).first;
@@ -295,7 +295,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			initial_properties = ((gse::value::Object*)v)->value;
 		}
 		auto* obj = f( GSE_CALL, initial_properties );
-		ASSERT_NOLOG( obj, "object not created" );
+		ASSERT( obj, "object not created" );
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
 		m_children.insert({ obj->m_id, obj });
@@ -365,13 +365,13 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 }
 
 void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
-	ASSERT_NOLOG( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
+	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
 	if ( m_is_visible && is_visible ) {
 		obj->Show();
 	}
 	obj->InitAndValidate( GSE_CALL );
 	m_children.insert({ obj->m_id, obj } );
-	ASSERT_NOLOG( m_mouse_over_object != obj, "unexpected child mouseover" );
+	ASSERT( m_mouse_over_object != obj, "unexpected child mouseover" );
 	const auto* geometry = obj->GetGeometry();
 	if ( geometry ) {
 		const auto& mousepos = m_ui->GetLastMousePosition();
@@ -382,7 +382,7 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 }
 
 void Container::RemoveChild( GSE_CALLABLE, Object* obj ) {
-	ASSERT_NOLOG( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
+	ASSERT( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
 	m_children.erase( obj->m_id );
 	if ( m_mouse_over_object == obj ) {
 		SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );

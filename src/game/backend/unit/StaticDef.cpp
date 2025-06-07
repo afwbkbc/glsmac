@@ -38,7 +38,7 @@ const std::unordered_map< movement_type_t, std::string > StaticDef::s_movement_t
 };
 const std::string& StaticDef::GetMovementTypeString( const movement_type_t movement_type ) {
 	const auto& it = s_movement_type_str.find( movement_type );
-	ASSERT_NOLOG( it != s_movement_type_str.end(), "unknown movement type: " + std::to_string( movement_type ) );
+	ASSERT( it != s_movement_type_str.end(), "unknown movement type: " + std::to_string( movement_type ) );
 	return it->second;
 }
 
@@ -84,7 +84,7 @@ StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, co
 	const auto movement_type = (movement_type_t)buf.ReadInt();
 	const auto movement_per_turn = buf.ReadFloat();
 	const auto* moraleset = g_engine->GetGame()->GetUM()->GetMoraleSet( moraleset_name );
-	ASSERT_NOLOG( moraleset, "could not find morale set: " + moraleset_name );
+	ASSERT( moraleset, "could not find morale set: " + moraleset_name );
 	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
 }
 

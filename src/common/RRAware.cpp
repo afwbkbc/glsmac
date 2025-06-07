@@ -17,8 +17,8 @@ const rr::id_t RRAware::RR_Send( RRClass* rr ) {
 template< class RRClass >
 RRClass* RRAware::RR_GetResponse( const rr::id_t id ) {
 	auto it = m_rrs.find( id );
-	ASSERT_NOLOG( it != m_rrs.end(), "invalid rr id" );
-	ASSERT_NOLOG( it->second->GetType() == RRClass::Type(), "rr type mismatch" );
+	ASSERT( it != m_rrs.end(), "invalid rr id" );
+	ASSERT( it->second->GetType() == RRClass::Type(), "rr type mismatch" );
 	if ( it->second->IsProcessed() ) {
 		auto* r = (RRClass*)it->second;
 		m_rrs.erase( it );
@@ -32,7 +32,7 @@ RRClass* RRAware::RR_GetResponse( const rr::id_t id ) {
 template< class RRClass >
 void RRAware::RR_Cancel( const rr::id_t id ) {
 	auto it = m_rrs.find( id );
-	ASSERT_NOLOG( it != m_rrs.end(), "invalid rr id" );
+	ASSERT( it != m_rrs.end(), "invalid rr id" );
 	DELETE( (RRClass*)it->second );
 	m_rrs.erase( it );
 }

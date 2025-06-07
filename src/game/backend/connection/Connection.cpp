@@ -22,8 +22,6 @@ void Connection::ResetHandlers() {
 	m_on_cancel = nullptr;
 	m_on_disconnect = nullptr;
 	m_on_error = nullptr;
-	//m_on_player_join = nullptr;
-	//m_on_player_leave = nullptr;
 	m_on_slot_update = nullptr;
 	m_on_flags_update = nullptr;
 	m_on_message = nullptr;
@@ -36,8 +34,9 @@ void Connection::ResetHandlers() {
 	}
 }
 
-Connection::Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
-	: m_connection_mode( connection_mode )
+Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
+	: gse::GCWrappable( gc_space )
+	, m_connection_mode( connection_mode )
 	, m_settings( settings )
 	, m_network( g_engine->GetNetwork() ) {
 	//
@@ -45,10 +44,24 @@ Connection::Connection( const network::connection_mode_t connection_mode, settin
 
 Connection::~Connection() {
 	if ( m_mt_ids.disconnect ) {
-		Log( "WARNING: connection destroyed while still disconnecting!" );
+		for ( uint8_t tries = 25 ; tries > 0 ; tries-- ) {
+			IterateAndMaybeDelete();
+			if ( m_mt_ids.disconnect ) {
+				std::this_thread::sleep_for( std::chrono::milliseconds( 40 ) );
+			}
+			else {
+				break;
+			}
+		}
+		if ( m_mt_ids.disconnect ) {
+			Log( "WARNING: connection destroyed while still disconnecting!" );
+		}
 	}
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
+	}
+	if ( m_state ) {
+		m_state->DetachConnection();
 	}
 	ClearPending();
 }
@@ -115,7 +128,6 @@ const bool Connection::IterateAndMaybeDelete() {
 				m_disconnect_reason.clear();
 			}
 //			if ( should_delete ) {
-			DELETE( this );
 			return true;
 //			}
 		}
@@ -131,18 +143,16 @@ const bool Connection::IterateAndMaybeDelete() {
 					Log( "Connection error: " + result.message );
 					if ( m_on_error ) {
 						if ( m_on_error( result.message ) ) {
-							DELETE( this );
 							return true;
 						}
 					}
 					WTrigger(
-						"error", ARGS_F( &result ) {
+						"error", ARGS_F( result ) {
 							{
 								"message", VALUE( gse::value::String,, result.message )
 							}
 						}; }
 					);
-					DELETE( this );
 					return true;
 				}
 				case network::R_SUCCESS: {
@@ -178,7 +188,6 @@ const bool Connection::IterateAndMaybeDelete() {
 					Log( "received error event" );
 					if ( m_on_error ) {
 						if ( m_on_error( result.message ) ) {
-							DELETE( this );
 							return true;
 						}
 					}
@@ -238,7 +247,7 @@ void Connection::SendGameEvent( backend::event::Event* event ) {
 }
 
 const bool Connection::IsConnected() const {
-	return m_connection_mode != network::CM_NONE;
+	return m_is_connected && m_connection_mode != network::CM_NONE;
 }
 
 const bool Connection::IsServer() const {
@@ -307,11 +316,14 @@ gc::Space* Connection::GetGCSpace() const {
 	return m_state->m_gc_space;
 }
 
-void Connection::WTrigger( const std::string& event, const f_args_t& fargs ) {
+void Connection::WTrigger( const std::string& event, const f_args_t& fargs, const std::function<void()>& f_after ) {
 	ASSERT( m_state, "state not set" );
-	m_state->WithGSE( [this, &event, &fargs]( GSE_CALLABLE ) {
+	m_state->WithGSE( [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
 		Trigger( GSE_CALL, event, fargs );
-	});
+		if ( f_after ) {
+			f_after();
+		}
+	}, { this } );
 }
 
 void Connection::Disconnect( const std::string& reason ) {

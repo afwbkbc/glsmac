@@ -357,7 +357,7 @@ void AnimationManager::GetReachableObjects( std::unordered_set< gc::Object* >& r
 }
 
 void AnimationManager::RemoveAnimationSequence( const size_t sequence_id ) {
-	ASSERT_NOLOG( m_animation_sequences.find( sequence_id ) != m_animation_sequences.end(), "animation sequence not found" );
+	ASSERT( m_animation_sequences.find( sequence_id ) != m_animation_sequences.end(), "animation sequence not found" );
 	m_animation_sequences.erase( sequence_id );
 }
 

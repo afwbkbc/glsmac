@@ -48,7 +48,7 @@ Base::Base(
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
-	ASSERT_NOLOG( !tile->base, "tile already has base" );
+	ASSERT( !tile->base, "tile already has base" );
 	tile->base = this;
 	m_tile = tile;
 }
@@ -59,7 +59,7 @@ void Base::AddPop( const Pop& pop ) {
 }
 
 void Base::RemovePop( const size_t pop_id ) {
-	ASSERT_NOLOG( pop_id < m_pops.size(), "pop id overflow" );
+	ASSERT( pop_id < m_pops.size(), "pop id overflow" );
 	m_pops.erase( m_pops.begin() + pop_id );
 }
 
@@ -79,7 +79,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 }
 
 Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
-	ASSERT_NOLOG( game, "game is null" );
+	ASSERT( game, "game is null" );
 	const auto id = buf.ReadInt();
 	auto* slot = &game->GetState()->m_slots->GetSlot( buf.ReadInt() );
 	const auto faction_id = buf.ReadString();
@@ -117,7 +117,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
 				? 1 // aliens have 1 gender
 				: 2; // humans have 2
-			ASSERT_NOLOG( max_variants > 0, "no variants found for pop type: " + poptype );
+			ASSERT( max_variants > 0, "no variants found for pop type: " + poptype );
 
 			AddPop( Pop( this, def, m_game->GetRandom()->GetUInt(0, max_variants - 1) ) );
 

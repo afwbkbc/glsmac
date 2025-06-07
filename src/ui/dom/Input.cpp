@@ -145,7 +145,7 @@ void Input::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_p
 	switch ( e.type ) {
 		case input::EV_CHANGE:
 		case input::EV_SELECT: {
-			ASSERT_NOLOG( e.data.value.change_select.text, "change text not set" );
+			ASSERT( e.data.value.change_select.text, "change text not set" );
 			obj.insert(
 				{
 					"value",

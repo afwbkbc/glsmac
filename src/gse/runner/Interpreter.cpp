@@ -110,8 +110,8 @@ gse::Value* const Interpreter::EvaluateScope( context::Context* ctx, ExecutionPo
 
 gse::Value* const Interpreter::EvaluateStatement( context::Context* ctx, ExecutionPointer& ep, const Statement* statement, bool* returnflag ) {
 	CHECKACCUM( m_gc_space );
-	ASSERT_NOLOG( returnflag, "statement returnflag ptr not set" );
-	ASSERT_NOLOG( !*returnflag, "statement but returnflag is already true" );
+	ASSERT( returnflag, "statement returnflag ptr not set" );
+	ASSERT( !*returnflag, "statement but returnflag is already true" );
 	const auto result = EvaluateExpression( ctx, ep, statement->body, returnflag );
 	if ( *returnflag ) {
 		return result;
@@ -1233,7 +1233,7 @@ void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object*
 
 	GC_DEBUG_BEGIN( "Function" );
 
-	ASSERT_NOLOG( context, "function ctx not set" );
+	ASSERT( context, "function ctx not set" );
 	GC_DEBUG_BEGIN( "owner_context" );
 	GC_REACHABLE( context );
 	GC_DEBUG_END();

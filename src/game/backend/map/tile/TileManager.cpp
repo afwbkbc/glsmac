@@ -34,7 +34,7 @@ void TileManager::Clear() {
 
 void TileManager::LockTiles( const size_t initiator_slot, const tiles_t& tiles ) {
 	for ( const auto& tile : tiles ) {
-		ASSERT_NOLOG( !tile->IsLocked(), "tile " + tile->coord.ToString() + " is already locked" );
+		ASSERT( !tile->IsLocked(), "tile " + tile->coord.ToString() + " is already locked" );
 		tile->Lock( initiator_slot );
 	}
 	for ( auto it = m_tile_lock_callbacks.begin() ; it != m_tile_lock_callbacks.end() ; it++ ) {
@@ -69,7 +69,7 @@ const Tile* TileManager::FindLockedTile( const tiles_t& tiles ) {
 
 void TileManager::UnlockTiles( const size_t initiator_slot, const tiles_t& tiles ) {
 	for ( const auto& tile : tiles ) {
-		ASSERT_NOLOG( tile->IsLockedBy( initiator_slot ), "tile " + tile->coord.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
+		ASSERT( tile->IsLockedBy( initiator_slot ), "tile " + tile->coord.ToString() + " is not locked by " + std::to_string( initiator_slot ) );
 		tile->Unlock();
 	}
 }

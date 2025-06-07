@@ -19,6 +19,7 @@ const char GSE::PATH_SEPARATOR = '/';
 GSE::GSE()
 	: gc::Object( nullptr ) {
 	m_gc_space = new gc::Space( this );
+	m_gc_space->SetThreadId( std::this_thread::get_id() );
 	m_bindings.push_back( &m_builtins );
 	m_gc_space->Accumulate(
 		[ this ]() {
@@ -47,7 +48,10 @@ GSE::~GSE() {
 
 void GSE::Iterate() {
 	ExecutionPointer ep;
-	m_async->Iterate( ep );
+	if ( m_async ) {
+		m_async->Iterate( ep );
+	}
+	m_gc_space->ProcessAccumulations();
 }
 
 void GSE::Finish() {
@@ -241,12 +245,12 @@ Value* const GSE::GetGlobal( const std::string& identifier ) {
 }
 
 void GSE::AddRootObject( gc::Object* const object ) {
-	ASSERT_NOLOG( m_root_objects.find( object ) == m_root_objects.end(), "root object already exists" );
+	ASSERT( m_root_objects.find( object ) == m_root_objects.end(), "root object already exists" );
 	m_root_objects.insert( object );
 }
 
 void GSE::RemoveRootObject( gc::Object* const object ) {
-	ASSERT_NOLOG( m_root_objects.find( object ) != m_root_objects.end(), "root object not found" );
+	ASSERT( m_root_objects.find( object ) != m_root_objects.end(), "root object not found" );
 	m_root_objects.erase( object );
 }
 
@@ -263,7 +267,7 @@ Async* GSE::GetAsync() {
 }
 
 gc::Space* const GSE::GetGCSpace() const {
-	ASSERT_NOLOG( m_gc_space, "gse gc space not set" );
+	ASSERT( m_gc_space, "gse gc space not set" );
 	return m_gc_space;
 }
 

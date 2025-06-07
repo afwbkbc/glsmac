@@ -34,7 +34,7 @@ const std::unordered_map< direction_t, std::string > Tile::s_direction_str = {
 
 const std::string& Tile::GetDirectionString( const direction_t direction ) {
 	const auto& s = s_direction_str.find( direction );
-	ASSERT_NOLOG( s != s_direction_str.end(), "unknown direction: " + std::to_string( direction ) );
+	ASSERT( s != s_direction_str.end(), "unknown direction: " + std::to_string( direction ) );
 	return s->second;
 }
 
@@ -132,7 +132,7 @@ void Tile::Unserialize( types::Buffer buf ) {
 	features = buf.ReadInt();
 	terraforming = buf.ReadInt();
 
-	ASSERT_NOLOG( yields.empty(), "yields not empty" );
+	ASSERT( yields.empty(), "yields not empty" );
 	const auto yields_size = buf.ReadInt();
 	yields.reserve( yields_size );
 	for ( size_t i = 0 ; i < yields_size ; i++ ) {
@@ -260,12 +260,12 @@ WRAPIMPL_END_PTR()
 UNWRAPIMPL_PTR( Tile )
 
 void Tile::Lock( const size_t initiator_slot ) {
-	ASSERT_NOLOG( !m_is_locked, "tile already locked" );
+	ASSERT( !m_is_locked, "tile already locked" );
 	m_lock_initiator_slot = initiator_slot;
 	m_is_locked = true;
 }
 void Tile::Unlock() {
-	ASSERT_NOLOG( m_is_locked, "tile not locked" );
+	ASSERT( m_is_locked, "tile not locked" );
 	m_is_locked = false;
 }
 const bool Tile::IsLocked() const {

@@ -71,7 +71,7 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 	if ( m_tile ) {
 		m_tile->units.erase( m_id );
 	}
-	ASSERT_NOLOG( tile->units.find( m_id ) == tile->units.end(), "duplicate unit id in tile" );
+	ASSERT( tile->units.find( m_id ) == tile->units.end(), "duplicate unit id in tile" );
 	tile->units.insert(
 		{
 			m_id,
@@ -97,7 +97,7 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 }
 
 Unit* Unit::Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
-	ASSERT_NOLOG( um, "um is null" );
+	ASSERT( um, "um is null" );
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
 	auto* def = Def::Unserialize( defbuf );

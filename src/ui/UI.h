@@ -4,8 +4,8 @@
 #include <functional>
 #include <vector>
 
-#include "common/Common.h"
 #include "gse/GCWrappable.h"
+
 #include "gc/Object.h"
 
 #include "Types.h"
@@ -33,7 +33,7 @@ class Focusable;
 
 class Class;
 
-CLASS2( UI, common::Class, gse::GCWrappable )
+CLASS( UI, gse::GCWrappable )
 
 	UI( GSE_CALLABLE );
 	~UI();

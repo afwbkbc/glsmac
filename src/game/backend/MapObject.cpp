@@ -19,9 +19,9 @@ map::tile::Tile* MapObject::GetTile() const {
 }
 
 const types::Vec3 MapObject::GetRenderCoords() const {
-	ASSERT_NOLOG( m_tile, "tile not set" );
+	ASSERT( m_tile, "tile not set" );
 	const auto* ts = m_map->GetTileState( m_tile );
-	ASSERT_NOLOG( ts, "ts not found" );
+	ASSERT( ts, "ts not found" );
 	const auto c = ts->layers[
 		m_tile->is_water_tile
 			? map::tile::LAYER_WATER

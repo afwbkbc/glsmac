@@ -472,14 +472,14 @@ void UI::HideError() const {
 }
 
 void UI::ShowLoader( const std::string& text, const loader_cancel_handler_t on_cancel ) const {
-	ASSERT_NOLOG( m_loader, "legacy loader not available" );
+	ASSERT( m_loader, "legacy loader not available" );
 	if ( !m_loader->IsActive() ) {
 		m_loader->Show( text, on_cancel );
 	}
 }
 
 void UI::SetLoaderText( const std::string& text, bool is_cancelable ) const {
-	ASSERT_NOLOG( m_loader, "legacy loader not available" );
+	ASSERT( m_loader, "legacy loader not available" );
 	if ( m_loader->IsActive() ) {
 		m_loader->SetText( text );
 		m_loader->SetIsCancelable( is_cancelable );
@@ -487,7 +487,7 @@ void UI::SetLoaderText( const std::string& text, bool is_cancelable ) const {
 }
 
 void UI::HideLoader() const {
-	ASSERT_NOLOG( m_loader, "legacy loader not available" );
+	ASSERT( m_loader, "legacy loader not available" );
 	if ( m_loader->IsActive() ) {
 		m_loader->Hide();
 	}

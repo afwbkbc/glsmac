@@ -7,6 +7,8 @@
 #include <chrono>
 #include <functional>
 #include <thread>
+#include <vector>
+#include <optional>
 
 #include "common/Common.h"
 
@@ -14,7 +16,7 @@
 namespace gse::runner {
 class Interpreter;
 }
-#define CHECKACCUM( _gcspace ) ASSERT_NOLOG( _gcspace->IsAccumulating(), "GC not in accumulation mode" )
+#define CHECKACCUM( _gcspace ) ASSERT( _gcspace->IsAccumulating(), "GC not in accumulation mode" )
 #else
 #define CHECKACCUM( _gcspace )
 #endif
@@ -29,8 +31,14 @@ CLASS( Space, common::Class )
 	Space( Object* const root );
 	~Space();
 
-	void Accumulate( const std::function< void() >& f );
+	typedef std::function< void() > f_accum_t;
+	typedef std::vector< Object* > accum_dependencies_t;
+
+	void Accumulate( const f_accum_t& f, const accum_dependencies_t& dependencies = {} );
 	const bool IsAccumulating();
+
+	void SetThreadId( const std::thread::id& thread_id );
+	void ProcessAccumulations(); // scripts will actually execute here
 
 private:
 	// if true - it means space is about to be destroyed and doing final cleanups/collects
@@ -56,6 +64,12 @@ private:
 
 	// to avoid reallocations
 	std::unordered_set< Object* > m_reachable_objects_tmp = {};
+
+	// for now let's isolate all script stuff to one thread
+	std::optional< std::thread::id > m_thread_id = {}; // callbacks from same thread will be executed immediately
+	std::mutex m_pending_accumulations_mutex; // callbacks from other threads will be deferred and executed on Iterate()
+	std::vector< std::pair< f_accum_t, accum_dependencies_t > > m_pending_accumulations = {};
+	void AccumulateImpl( const std::function< void() >& f );
 
 private:
 	friend class GC;

@@ -76,7 +76,7 @@ const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path
 		std::transform( file.begin(), file.end(), file.begin(), ::tolower );
 		lowercase_files.push_back( file );
 	}
-	ASSERT_NOLOG( files.size() == lowercase_files.size(), "files vector mismatch" );
+	ASSERT( files.size() == lowercase_files.size(), "files vector mismatch" );
 	std::transform( case_insensitive_path.begin(), case_insensitive_path.begin() + 1, str_lower.begin(), ::tolower );
 	for ( size_t i = 0 ; i < lowercase_files.size() ; i++ ) {
 		if ( lowercase_files.at( i ) == str_lower ) {
@@ -141,7 +141,7 @@ const bool FS::IsWindowsDriveLabel( const std::string& directory ) {
 const std::vector< std::string > FS::GetWindowsDrives() {
 	std::vector< std::string > result = {};
 	const auto drives = GetLogicalDrives();
-	ASSERT_NOLOG( sizeof( drives ) == 4, "drives bitmask is not 32-bit" );
+	ASSERT( sizeof( drives ) == 4, "drives bitmask is not 32-bit" );
 	for ( uint8_t i = 0; i < ( 'Z' - 'A' ); i++ ) {
 		if ( drives & ( 1 << i ) ) {
 			result.push_back( std::string(1, 'A' + i) + ":" );
@@ -280,7 +280,7 @@ void FS::CreateDirectoryIfNotExists( const std::string& path, const char path_se
 
 #ifdef _WIN32
 std::vector< std::string > FS::ListDirectory( std::string directory, const bool return_absolute_paths, const char path_separator ) {
-	ASSERT_NOLOG( !directory.empty(), "directory is empty" );
+	ASSERT( !directory.empty(), "directory is empty" );
 #else
 
 std::vector< std::string > FS::ListDirectory( const std::string& directory, const bool return_absolute_paths, const char path_separator ) {
@@ -315,7 +315,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 			const uint8_t prefix_len = ( directory.empty() || directory[ directory.size() - 1 ] == path_separator )
 				? 0
 				: 1;
-			ASSERT_NOLOG( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );
+			ASSERT( item_str.substr( 0, directory.size() ) == directory, "unexpected path in directory list results: " + item_str );
 			result.push_back(
 				ConvertPath(
 					return_absolute_paths
@@ -336,7 +336,7 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 
 void FS::ReadFile( std::vector< unsigned char >& buffer, const std::string& path, const char path_separator ) {
 	//Log( "Reading file: " + path );
-	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
+	ASSERT( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
 	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
 	in.seekg( 0, std::ios::end );
 	const auto sz = in.tellg();
@@ -348,7 +348,7 @@ void FS::ReadFile( std::vector< unsigned char >& buffer, const std::string& path
 
 const std::string FS::ReadTextFile( const std::string& path, const char path_separator ) {
 	//Log( "Reading file: " + path );
-	ASSERT_NOLOG( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
+	ASSERT( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
 	std::stringstream data;
 	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
 	while ( data << in.rdbuf() ) {}
@@ -365,7 +365,7 @@ const void FS::WriteFile( const std::string& path, const std::string& data, cons
 
 const std::vector< unsigned char >& FS::GetEmbeddedFile( const std::string& key ) {
 	//Log( "Reading embedded file: " + key );
-	ASSERT_NOLOG( s_embedded_files.find( key ) != s_embedded_files.end(), "embedded file \"" + key + "\" does not exist" );
+	ASSERT( s_embedded_files.find( key ) != s_embedded_files.end(), "embedded file \"" + key + "\" does not exist" );
 	return s_embedded_files.at( key );
 }
 

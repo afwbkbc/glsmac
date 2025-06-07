@@ -58,11 +58,11 @@ Faction* FactionManager::Get( const std::string& id ) const {
 }
 
 const std::vector< Faction* > FactionManager::GetAll() const {
-	ASSERT_NOLOG( m_factions.size() == m_factions_order.size(), "factions order size mismatch" );
+	ASSERT( m_factions.size() == m_factions_order.size(), "factions order size mismatch" );
 	std::vector< Faction* > result = {};
 	result.reserve( m_factions.size() );
 	for ( const auto& it : m_factions_order ) {
-		ASSERT_NOLOG( m_factions.find( it.second ) != m_factions.end(), "faction not found" );
+		ASSERT( m_factions.find( it.second ) != m_factions.end(), "faction not found" );
 		result.push_back( m_factions.at( it.second ).faction );
 	}
 	return result;
@@ -229,7 +229,7 @@ void FactionManager::Unserialize( types::Buffer buf ) {
 	const size_t factions_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
 		const auto faction_id = buf.ReadString();
-		ASSERT_NOLOG( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
+		ASSERT( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
 		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Unserialize( buf.ReadString() );
 		m_factions_order.insert( { m_next_faction_idx, faction_id } );
 	}

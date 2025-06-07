@@ -48,8 +48,8 @@ void Animation::Run( GSE_CALLABLE ) {
 }
 
 void Animation::Abort() {
-	ASSERT_NOLOG( !m_is_finished, "animation already finished" );
-	ASSERT_NOLOG( m_animation_id, "animation id is zero" );
+	ASSERT( !m_is_finished, "animation already finished" );
+	ASSERT( m_animation_id, "animation id is zero" );
 	m_sequence->m_am->AbortAnimation( m_animation_id );
 }
 

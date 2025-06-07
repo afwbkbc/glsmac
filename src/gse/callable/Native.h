@@ -35,10 +35,10 @@ namespace callable {
     } \
     N_ARGS
 #define N_GET( _var, _index ) \
-    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    ASSERT( _index < arguments.size(), "argument index overflow" ); \
     const auto& _var = arguments.at( _index );
 #define N_GETPTR( _var, _index ) \
-    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    ASSERT( _index < arguments.size(), "argument index overflow" ); \
     const auto* _var = arguments.at( _index );
 #define N_CHECKTYPE( _var, _type ) \
     if ( _var->type != gse::value::_type::GetType() ) { \
@@ -49,7 +49,7 @@ namespace callable {
         GSE_ERROR( gse::EC.INVALID_CALL, "Argument " + std::to_string( _index ) + " is expected to be " + #_type + ", found: " + _var->GetTypeString() ); \
     }
 #define N_GET_CALLABLE( _var, _index ) \
-    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    ASSERT( _index < arguments.size(), "argument index overflow" ); \
     callable_val = arguments.at( _index ); \
     arg = callable_val; \
     N_CHECKARG( arg, _index, Callable ); \
@@ -63,12 +63,12 @@ namespace callable {
         _var = (gse::value::Callable*)arg; \
     }
 #define N_GETVALUE_NONCONST( _var, _index, _type ) \
-    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    ASSERT( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index )->Deref(); \
     N_CHECKARG( arg, _index, _type ); \
     auto _var = ((gse::value::_type*)arg)->value;
 #define N_GETELEMENT( _var, _arr, _index, _type ) \
-    ASSERT_NOLOG( _index < _arr.size(), #_arr " index overflow" ); \
+    ASSERT( _index < _arr.size(), #_arr " index overflow" ); \
     arg = _arr.at( _index )->Deref(); \
     N_CHECKARG( arg, _index, _type ); \
     const auto& _var = ((gse::value::_type*)arg)->value;
@@ -85,7 +85,7 @@ namespace callable {
     N_GETOBJ( _value, _type::WRAP_CLASS ); \
     auto* _var = _type::Unwrap( obj_val );
 #define N_GETVALUE_OBJ( _index, _class ) \
-    ASSERT_NOLOG( _index < arguments.size(), "argument index overflow" ); \
+    ASSERT( _index < arguments.size(), "argument index overflow" ); \
     arg = arguments.at( _index )->Deref(); \
     N_CHECKARG( arg, _index, Object ); \
     if ( ((gse::value::Object*)arg)->object_class != _class ) { \

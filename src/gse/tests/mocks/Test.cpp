@@ -39,7 +39,7 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 					std::string reason = "";
 					if ( arguments.size() == 2 ) {
 						const auto& reasonv = arguments.at( 1 );
-						ASSERT_NOLOG( reasonv->type == Value::T_STRING, "test.assert reason is not string: " + reasonv->ToString() );
+						ASSERT( reasonv->type == Value::T_STRING, "test.assert reason is not string: " + reasonv->ToString() );
 						reason = ( (value::String*)reasonv )->value;
 					}
 					GSE_ERROR( "TestError", "Assertion failed: " + reason );

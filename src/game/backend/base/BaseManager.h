@@ -1,8 +1,7 @@
 #pragma once
 
-#include "common/Common.h"
-
 #include "gse/GCWrappable.h"
+
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -28,7 +27,7 @@ namespace base {
 class Base;
 class PopDef;
 
-CLASS2( BaseManager, common::Class, gse::GCWrappable )
+CLASS( BaseManager, gse::GCWrappable )
 public:
 	BaseManager( Game* game );
 	~BaseManager();

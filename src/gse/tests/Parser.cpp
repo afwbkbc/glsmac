@@ -324,7 +324,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
 					const auto* program = parser->Parse();
 					const auto* reference_program = gse::tests::GetTestProgram( gc_space );
-					ASSERT_NOLOG( reference_program, "reference program is null" );
+					ASSERT( reference_program, "reference program is null" );
 					result = validate_program( reference_program, program );
 					if ( program ) {
 						DELETE( program );

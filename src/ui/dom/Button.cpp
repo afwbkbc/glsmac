@@ -119,7 +119,7 @@ void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 					break;
 				}
 				default: {
-					ASSERT_NOLOG( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
+					ASSERT( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
 				}
 			}
 			obj.insert(

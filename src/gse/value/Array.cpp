@@ -38,13 +38,13 @@ Value* const Array::GetSubArray( const std::optional< size_t > from, const std::
 }
 
 void Array::Set( const size_t index, Value* const new_value ) {
-	ASSERT_NOLOG( index < value.size(), "index out of bounds" );
+	ASSERT( index < value.size(), "index out of bounds" );
 	value[ index ] = new_value;
 }
 
 const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, Value* const new_subarray ) {
 	ValidateFromTo( from, to );
-	ASSERT_NOLOG( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
+	ASSERT( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
 	auto* v = (value::Array*)new_subarray;
 	const auto dest_begin = from.has_value()
 		? value.begin() + from.value()
@@ -53,7 +53,7 @@ const void Array::SetSubArray( const std::optional< size_t > from, const std::op
 	const auto dest_end = to.has_value()
 		? value.begin() + to.value() + 1
 		: value.end();
-	ASSERT_NOLOG( v->value.size() == dest_end - dest_begin, "range assignment value size mismatch ( " + std::to_string( v->value.size() ) + " != " + std::to_string( dest_end - dest_begin ) + " ): " + v->ToString() );
+	ASSERT( v->value.size() == dest_end - dest_begin, "range assignment value size mismatch ( " + std::to_string( v->value.size() ) + " != " + std::to_string( dest_end - dest_begin ) + " ): " + v->ToString() );
 #endif
 	std::copy( v->value.begin(), v->value.end(), dest_begin );
 }
@@ -95,12 +95,12 @@ void Array::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 
 void Array::ValidateFromTo( const std::optional< size_t >& from, const std::optional< size_t >& to ) const {
 	if ( from.has_value() ) {
-		ASSERT_NOLOG( from.value() < value.size(), "range beginning overflow ( " + std::to_string( from.value() ) + " >= " + std::to_string( value.size() ) + " )" );
+		ASSERT( from.value() < value.size(), "range beginning overflow ( " + std::to_string( from.value() ) + " >= " + std::to_string( value.size() ) + " )" );
 	}
 	if ( to.has_value() ) {
-		ASSERT_NOLOG( to.value() < value.size(), "range end overflow ( " + std::to_string( to.value() ) + " >= " + std::to_string( value.size() ) + " )" );
+		ASSERT( to.value() < value.size(), "range end overflow ( " + std::to_string( to.value() ) + " >= " + std::to_string( value.size() ) + " )" );
 		if ( from.has_value() ) {
-			ASSERT_NOLOG( from.value() <= to.value(), "invalid range definition: [" + std::to_string( from.value() ) + ":" + std::to_string( to.value() ) );
+			ASSERT( from.value() <= to.value(), "invalid range definition: [" + std::to_string( from.value() ) + ":" + std::to_string( to.value() ) );
 		}
 	}
 }

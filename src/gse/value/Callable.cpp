@@ -8,7 +8,7 @@ namespace value {
 Callable::Callable( gc::Space* const gc_space, context::Context* ctx )
 	: Value( gc_space, GetType() )
 	, m_ctx( ctx ) {
-	ASSERT_NOLOG( ctx, "callable ctx is null" );
+	ASSERT( ctx, "callable ctx is null" );
 }
 
 void Callable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {

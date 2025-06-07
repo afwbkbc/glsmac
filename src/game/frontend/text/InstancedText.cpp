@@ -37,7 +37,7 @@ void InstancedText::ShowAt( const types::Vec3& coords ) {
 
 void InstancedText::Hide() {
 	if ( !m_instance_ids.empty() ) {
-		ASSERT_NOLOG( m_instance_ids.size() == m_text_sprites.size(), "instance ids size mismatch" );
+		ASSERT( m_instance_ids.size() == m_text_sprites.size(), "instance ids size mismatch" );
 		for ( size_t i = 0 ; i < m_instance_ids.size() ; i++ ) {
 			m_text_sprites.at( i )->actor->RemoveInstance( m_instance_ids.at( i ) );
 		}

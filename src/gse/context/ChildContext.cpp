@@ -10,8 +10,8 @@ ChildContext::ChildContext( GSE* gse, Context* parent_context, const si_t& si, c
 	, m_parent_context( parent_context )
 	, m_si( si )
 	, m_is_traceable( is_traceable ) {
-	ASSERT_NOLOG( m_parent_context, "parent context not set" );
-	ASSERT_NOLOG( m_parent_context->GetParentContext() != this, "circular context dependency" );
+	ASSERT( m_parent_context, "parent context not set" );
+	ASSERT( m_parent_context->GetParentContext() != this, "circular context dependency" );
 	m_parent_context->AddChildContext( this );
 }
 
@@ -58,7 +58,7 @@ const std::string& ChildContext::GetSourceLine( const size_t line_num ) const {
 }
 
 void ChildContext::Detach() {
-	ASSERT_NOLOG( m_parent_context, "detach but parent context not set" );
+	ASSERT( m_parent_context, "detach but parent context not set" );
 	m_parent_context = nullptr;
 }
 

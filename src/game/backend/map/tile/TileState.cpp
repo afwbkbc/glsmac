@@ -46,7 +46,7 @@ TileState* TileState::GetNeighbour( const direction_t direction ) {
 }
 
 const types::Vec3& TileState::GetCenterCoords( tile_layer_type_t layer ) const {
-	ASSERT_NOLOG( layer <= LAYER_MAX, "layer overflow" );
+	ASSERT( layer <= LAYER_MAX, "layer overflow" );
 	return layers[ layer ].coords.center;
 }
 

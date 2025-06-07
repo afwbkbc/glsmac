@@ -100,6 +100,9 @@ extern debug_stats_t g_debug_stats;
 #define ptr( _ptr, _offset, _size ) debug::g_memory_watcher->Ptr( (unsigned char*)_ptr, _offset, _size, __FILE__, __LINE__ )
 #define free( __ptr ) debug::g_memory_watcher->Free( __ptr, __FILE__, __LINE__ )
 
+#undef SDL_GL_CreateContext
+#define SDL_GL_CreateContext( _window ) debug::g_memory_watcher->SDLGLCreateContext( _window, __FILE__, __LINE__ )
+
 #undef glGenBuffers
 #define glGenBuffers( _size, _ptr ) debug::g_memory_watcher->GLGenBuffers( _size, _ptr, __FILE__, __LINE__ )
 

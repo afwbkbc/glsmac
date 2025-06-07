@@ -14,9 +14,10 @@ class Slot;
 
 namespace connection {
 
-CLASS( Server, Connection )
+class Server : public Connection {
+public:
 
-	Server( settings::LocalSettings* const settings );
+	Server( gc::Space* const gc_space, settings::LocalSettings* const settings );
 
 	std::function< void() > m_on_listen = nullptr;
 	std::function< const std::string() > m_on_download_request = nullptr; // return serialized snapshot of world

@@ -146,7 +146,7 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 
 		const auto res = s_consts.healthbars.resolution;
 
-		ASSERT_NOLOG( m_healthbar_textures.find( step ) == m_healthbar_textures.end(), "healthbar texture already exists" );
+		ASSERT( m_healthbar_textures.find( step ) == m_healthbar_textures.end(), "healthbar texture already exists" );
 		auto* texture = m_healthbar_textures.insert(
 			{
 				step,

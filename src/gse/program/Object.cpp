@@ -11,7 +11,7 @@ Object::Object( const si_t& si, const ordered_properties_t& ordered_properties )
 	: Operand( si, OT_OBJECT )
 	, ordered_properties( ordered_properties ) {
 	for ( const auto& it : ordered_properties ) {
-		ASSERT_NOLOG( properties.find( it.first ) == properties.end(), "duplicate property" );
+		ASSERT( properties.find( it.first ) == properties.end(), "duplicate property" );
 		properties.insert( it );
 	}
 }

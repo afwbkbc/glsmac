@@ -189,7 +189,7 @@ void* Base::CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const {
 	const types::mesh::Mesh* mesh;
 	::ui_legacy::object::Mesh* ui_mesh;
 #define X( _key, _class ) \
-    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
+    ASSERT( render._key.mesh, #_key " mesh not defined" ); \
     NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
     NEW( ui_mesh, ::ui_legacy::object::Mesh, (std::string)"BBObjectsListPreview" + (_class) ); \
     ui_mesh->SetMesh( mesh ); \

@@ -459,7 +459,7 @@ WRAPIMPL_BEGIN( UnitManager )
 				if ( !def ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unit type '" + def_name + "' is not defined" );
 				}
-				ASSERT_NOLOG( def->m_type == unit::DT_STATIC, "only static defs are supported for now" );
+				ASSERT( def->m_type == unit::DT_STATIC, "only static defs are supported for now" );
 				const auto* staticdef = (unit::StaticDef*)def;
 				auto* unit = new unit::Unit(
 					GSE_CALL,
@@ -656,7 +656,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 	};
 	fr.data.unit_move.running_animation_id = unit->m_animation_id = am->AddAnimationCallback(
 		[ this, tm, tiles_to_lock, on_complete, unit, dst_tile, ctx, gc_space, ep, si ]( const size_t animation_id ) {
-			ASSERT_NOLOG( unit->m_animation_id, "animation id gone" );
+			ASSERT( unit->m_animation_id, "animation id gone" );
 			unit->m_animation_id = 0;
 			tm->UnlockTiles( m_game->GetSlotNum(), tiles_to_lock );
 			gse::ExecutionPointer ep2 = ep;

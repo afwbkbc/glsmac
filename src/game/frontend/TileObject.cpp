@@ -12,7 +12,7 @@ TileObject::TileObject( const tile_object_type_t type, tile::Tile* tile )
 }
 
 void TileObject::UpdateFromTile() {
-	ASSERT_NOLOG( m_tile, "tile not set" );
+	ASSERT( m_tile, "tile not set" );
 	SetRenderCoords( m_tile->GetRenderData().coords.InvertY() );
 }
 

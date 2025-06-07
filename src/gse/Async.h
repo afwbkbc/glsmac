@@ -4,7 +4,6 @@
 #include <vector>
 #include <atomic>
 
-#include "common/Common.h"
 #include "gc/Object.h"
 
 #include "Value.h"
@@ -16,7 +15,7 @@ namespace context {
 class Context;
 }
 
-CLASS2( Async, common::Class, gc::Object )
+CLASS( Async, gc::Object )
 
 	Async( gc::Space* const gc_space );
 

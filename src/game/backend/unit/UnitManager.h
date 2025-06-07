@@ -1,8 +1,7 @@
 #pragma once
 
-#include "common/Common.h"
-
 #include "gse/GCWrappable.h"
+
 #include "gse/value/Object.h"
 
 #include "Types.h"
@@ -29,7 +28,7 @@ class MoraleSet;
 class Def;
 class Unit;
 
-CLASS2( UnitManager, common::Class, gse::GCWrappable )
+CLASS( UnitManager, gse::GCWrappable )
 public:
 	UnitManager( Game* game );
 	~UnitManager();

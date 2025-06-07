@@ -36,7 +36,7 @@ GSEPrompt::GSEPrompt( const std::string& syntax )
 GSEPrompt::~GSEPrompt() {}
 
 void GSEPrompt::Start() {
-	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
+	Task::Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
 	m_gse = new gse::GSE();
 	m_gse->AddRootObject( this );
 	m_gc_space = m_gse->GetGCSpace();
@@ -53,7 +53,7 @@ void GSEPrompt::Start() {
 }
 
 void GSEPrompt::Stop() {
-	Log( "Exiting GSE prompt" );
+	Task::Log( "Exiting GSE prompt" );
 	for ( const auto& it : m_programs ) {
 		delete ( it );
 	}

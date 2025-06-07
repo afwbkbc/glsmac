@@ -158,7 +158,7 @@ x( MT_LoadDump, OP_LOAD_DUMP )
 void Game::Start() {
 	MTModule::Start();
 
-	Log( "Starting thread" );
+	MTModule::Log( "Starting thread" );
 
 	m_game_state = GS_NONE;
 	m_init_cancel = false;
@@ -176,7 +176,7 @@ void Game::Start() {
 }
 
 void Game::Stop() {
-	Log( "Stopping thread" );
+	MTModule::Log( "Stopping thread" );
 
 	if ( m_state ) {
 	   m_state = nullptr;
@@ -217,7 +217,7 @@ void Game::Iterate() {
 
 			bool ready = true;
 
-			ASSERT_NOLOG( m_state, "state is null" );
+			ASSERT( m_state, "state is null" );
 
 			if ( m_state->IsMaster() ) {
 #ifdef DEBUG
@@ -239,7 +239,7 @@ void Game::Iterate() {
 				if ( waiting_for_players != waiting_for_players_old ) {
 					waiting_for_players_old = waiting_for_players;
 					if ( !ready ) {
-						Log( "Waiting for players:" + waiting_for_players );
+						MTModule::Log( "Waiting for players:" + waiting_for_players );
 					}
 				}
 #endif
@@ -276,7 +276,7 @@ void Game::Iterate() {
 					m_initialization_error = error_text;
 
 					if ( m_old_map ) {
-						Log( "Restoring old map state" );
+						MTModule::Log( "Restoring old map state" );
 						DELETE( m_map );
 						m_map = m_old_map; // restore old state // TODO: test
 					}
@@ -296,7 +296,7 @@ void Game::Iterate() {
 							config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
 							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
 						) {
-						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
+						MTModule::Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
 						SetLoaderText( "Saving dump" );
 						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 					}
@@ -331,7 +331,7 @@ void Game::Iterate() {
 					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
 					if ( m_old_map ) {
-						Log( "Destroying old map state" );
+						MTModule::Log( "Destroying old map state" );
 						DELETE( m_old_map );
 						m_old_map = nullptr;
 					}
@@ -400,7 +400,7 @@ void Game::Iterate() {
 									);
 								}
 								catch ( const gse::Exception& e ) {
-									Log( (std::string)"Initialization failed: " + e.ToString() );
+									MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
 									f_init_failed( e.what() );
 									return;
 								}
@@ -418,7 +418,7 @@ void Game::Iterate() {
 			}
 		}
 		else if ( m_game_state == GS_RUNNING ) {
-			ASSERT_NOLOG( m_state, "state not set" );
+			ASSERT( m_state, "state not set" );
 
 			m_state->m_gc_space->Accumulate([this]() {
 				std::vector< event::Event* > events;
@@ -432,7 +432,7 @@ void Game::Iterate() {
 						const std::string* errptr = nullptr;
 						for ( const auto& event : events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
-							Log( "Processing event: " + event->ToString() );
+							MTModule::Log( "Processing event: " + event->ToString() );
 #endif
 							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 							const auto fargs = gse::value::function_arguments_t{ obj };
@@ -460,7 +460,7 @@ void Game::Iterate() {
 								});
 							}
 							else {
-								Log( "Event rejected: " + *errptr );
+								MTModule::Log( "Event rejected: " + *errptr );
 								delete ( errptr );
 							}
 						}
@@ -472,7 +472,7 @@ void Game::Iterate() {
 		}
 	}
 	catch ( const InvalidEvent& e ) {
-		Log( (std::string)e.what() );
+		MTModule::Log( (std::string)e.what() );
 		Quit( "Event validation error" ); // TODO: fix reason
 	}
 	if ( m_um ) {
@@ -613,7 +613,7 @@ WRAPIMPL_BEGIN( Game )
 				}
 
 				const auto& slot = slots.at( slot_id );
-				ASSERT_NOLOG( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetPlayer(), "player is null" );
+				ASSERT( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetPlayer(), "player is null" );
 				return VALUE( gse::value::Bool,,
 					slot.GetState() == slot::Slot::SS_PLAYER
 						? slot.GetPlayer()->IsTurnCompleted()
@@ -639,8 +639,8 @@ WRAPIMPL_BEGIN( Game )
 				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
 				}
-				ASSERT_NOLOG( slot.GetPlayer(), "player is null" );
-				ASSERT_NOLOG( !slot.GetPlayer()->IsTurnCompleted(), "player turn already completed" );
+				ASSERT( slot.GetPlayer(), "player is null" );
+				ASSERT( !slot.GetPlayer()->IsTurnCompleted(), "player turn already completed" );
 				CompleteTurn( GSE_CALL, slot_id );
 
 				return VALUE( gse::value::Undefined );
@@ -664,8 +664,8 @@ WRAPIMPL_BEGIN( Game )
 				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
 					GSE_ERROR( gse:: EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
 				}
-				ASSERT_NOLOG( slot.GetPlayer(), "player is null" );
-				ASSERT_NOLOG( slot.GetPlayer()->IsTurnCompleted(), "player turn not completed" );
+				ASSERT( slot.GetPlayer(), "player is null" );
+				ASSERT( slot.GetPlayer()->IsTurnCompleted(), "player turn not completed" );
 				UncompleteTurn( slot_id );
 
 				return VALUE( gse::value::Undefined );
@@ -844,7 +844,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 	switch ( request.op ) {
 		case OP_INIT: {
-			//Log( "Got init request" );
+			//MTModule::Log( "Got init request" );
 			ASSERT( request.data.init.state, "state not received" );
 			ASSERT( !m_state, "state already set" );
 			m_state = request.data.init.state;
@@ -868,7 +868,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_GET_MAP_DATA: {
-			//Log( "Got get-map-data request" );
+			//MTModule::Log( "Got get-map-data request" );
 			if ( m_game_state != GS_RUNNING ) {
 				if ( m_initialization_error.empty() ) {
 					response.result = R_PENDING;
@@ -893,18 +893,18 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_RESET: {
-			//Log( "Got reset request" );
+			//MTModule::Log( "Got reset request" );
 			ResetGame();
 			response.result = R_SUCCESS;
 			break;
 		}
 		case OP_PING: {
-			//Log( "Got ping request" );
+			//MTModule::Log( "Got ping request" );
 			response.result = R_SUCCESS;
 			break;
 		}
 		case OP_SAVE_MAP: {
-			//Log( "got save map request" );
+			//MTModule::Log( "got save map request" );
 			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
@@ -918,7 +918,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_EDIT_MAP: {
-			//Log( "got edit map request" );
+			//MTModule::Log( "got edit map request" );
 
 			m_map_editor->SelectTool( request.data.edit_map.tool );
 			m_map_editor->SelectBrush( request.data.edit_map.brush );
@@ -969,7 +969,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_CHAT: {
-			Log( "got chat message request: " + *request.data.chat.message );
+			MTModule::Log( "got chat message request: " + *request.data.chat.message );
 
 			if ( m_connection ) {
 				m_connection->SendMessage( *request.data.chat.message );
@@ -982,9 +982,9 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_GET_FRONTEND_REQUESTS: {
-			//Log( "got events request" );
+			//MTModule::Log( "got events request" );
 			if ( !m_pending_frontend_requests->empty() ) {
-				//Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
+				//MTModule::Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
 				response.data.get_frontend_requests.requests = m_pending_frontend_requests; // will be destroyed in DestroyResponse
 				NEW( m_pending_frontend_requests, std::vector< FrontendRequest > ); // reset
 			}
@@ -1031,7 +1031,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				errmsg = event->Validate( GSE_CALL, this );
 				if ( errmsg ) {
 					// log and do nothing
-					Log( "Event declined: " + *errmsg );
+					MTModule::Log( "Event declined: " + *errmsg );
 					delete errmsg;
 					delete event;
 				}
@@ -1195,7 +1195,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	auto* gc_space = GetGCSpace();
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
-	Log( "Turn started: " + std::to_string( turn_id ) );
+	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
 
 	{
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ADVANCE );
@@ -1258,7 +1258,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
-	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
+	MTModule::Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
 	THROW( "TODO: GLOBAL FINALIZE TURN");
 	//AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
 }
@@ -1272,7 +1272,7 @@ void Game::GlobalAdvanceTurn( GSE_CALLABLE ) {
 	m_verified_turn_checksum_slots.clear();
 	m_turn_checksum = 0;
 
-	Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
+	MTModule::Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ){
 		Event( GSE_CALL, "advance_turn", {
 			{ "turn_id", VALUE( gse::value::Int,, s_turn_id ) }
@@ -1348,7 +1348,7 @@ void Game::CheckRW( GSE_CALLABLE ) {
 }
 
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
-	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
+	//MTModule::Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
 }
 
@@ -1357,7 +1357,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
 	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
-	Log( "Initializing game" );
+	MTModule::Log( "Initializing game" );
 
 	auto* gc_space = GetGCSpace();
 
@@ -1365,15 +1365,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
 	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
-		ASSERT_NOLOG( !m_tm, "tm not null" );
+		ASSERT( !m_tm, "tm not null" );
 		m_tm = new map::tile::TileManager( this );
-		ASSERT_NOLOG( !m_rm, "rm not null" );
+		ASSERT( !m_rm, "rm not null" );
 		m_rm = new resource::ResourceManager( this );
-		ASSERT_NOLOG( !m_um, "um not null" );
+		ASSERT( !m_um, "um not null" );
 		m_um = new unit::UnitManager( this );
-		ASSERT_NOLOG( !m_bm, "bm not null" );
+		ASSERT( !m_bm, "bm not null" );
 		m_bm = new base::BaseManager( this );
-		ASSERT_NOLOG( !m_am, "am not null" );
+		ASSERT( !m_am, "am not null" );
 		m_am = new animation::AnimationManager( this );
 		m_state->TriggerObject( this, "configure", ARGS_F( this ) {
 			{
@@ -1431,7 +1431,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			[ this ]( connection::Server* connection ) -> void {
 
 				/*connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
-					Log( "Player " + player->GetFullName() + " is connecting..." );
+					MTModule::Log( "Player " + player->GetFullName() + " is connecting..." );
 					connection->GlobalMessage( "Connection from " + player->GetFullName() + "..." );
 					// actual join will happen after he downloads and initializes map
 				};*/
@@ -1439,13 +1439,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) -> void {
 					if ( !( old_flags & slot::PF_GAME_INITIALIZED ) && ( new_flags & slot::PF_GAME_INITIALIZED ) ) {
 						const auto* player = slot->GetPlayer();
-						Log( player->GetFullName() + " joined the game." );
+						MTModule::Log( player->GetFullName() + " joined the game." );
 						connection->GlobalMessage( player->GetFullName() + " joined the game." );
 					}
 				};
 
 				/*connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
-					Log( "Player " + player->GetFullName() + " left the game." );
+					MTModule::Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
 					m_tm->ReleaseTileLocks( slot_num );
 				};*/
@@ -1455,7 +1455,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						// map not generated yet
 						return "";
 					}
-					Log( "Preparing snapshot for download" );
+					MTModule::Log( "Preparing snapshot for download" );
 					types::Buffer buf;
 
 					// map
@@ -1490,7 +1490,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 
 					// send turn info
-					Log( "Sending turn ID: " + std::to_string( s_turn_id ) );
+					MTModule::Log( "Sending turn ID: " + std::to_string( s_turn_id ) );
 					buf.WriteInt( s_turn_id );
 
 					return buf.ToString();
@@ -1503,7 +1503,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		m_connection->IfClient(
 			[ this ]( connection::Client* connection ) -> void {
 				connection->m_on_disconnect = [ this ]() -> bool {
-					Log( "Connection lost" );
+					MTModule::Log( "Connection lost" );
 					m_state->DetachConnection();
 					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
@@ -1579,7 +1579,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	if ( m_state->IsMaster() ) {
 		// generate map
 
-		Log( "Game seed: " + m_random->GetStateString() );
+		MTModule::Log( "Game seed: " + m_random->GetStateString() );
 
 		ASSERT( !m_old_map, "old map not null" );
 		m_old_map = nullptr;
@@ -1601,7 +1601,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
-			Log( (std::string)"Loading map dump from " + filename );
+			MTModule::Log( (std::string)"Loading map dump from " + filename );
 			SetLoaderText( "Loading dump" );
 			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
@@ -1666,7 +1666,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
 						connection->m_on_download_complete = nullptr;
 						connection->m_on_download_progress = nullptr;
-						Log( "Unpacking world snapshot" );
+						MTModule::Log( "Unpacking world snapshot" );
 						auto buf = types::Buffer( serialized_snapshot );
 
 						// map
@@ -1704,7 +1704,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 								// get turn info
 								const auto turn_id = buf.ReadInt();
 								if ( turn_id > 0 ) {
-									Log( "Received turn ID: " + std::to_string( turn_id ) );
+									MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
 									AdvanceTurn( turn_id );
 								}
 
@@ -1713,7 +1713,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 							m_game_state = GS_INITIALIZING;
 						}
 						else {
-							Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
+							MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
 							connection->Disconnect( "Snapshot format mismatch" );
 						}
 					};
@@ -1765,7 +1765,7 @@ void Game::ResetGame() {
 	m_am = nullptr;
 
 	if ( m_map ) {
-		Log( "Resetting map" );
+		MTModule::Log( "Resetting map" );
 		DELETE( m_map );
 		m_map = nullptr;
 	}
@@ -1801,7 +1801,7 @@ void Game::CheckTurnComplete() {
 
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
-		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
+		MTModule::Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 		fr.data.turn_status.status = m_is_turn_complete
 			? turn::TS_TURN_COMPLETE
@@ -1823,9 +1823,9 @@ const std::string Game::GenerateEventId() {
 }
 
 void Game::SetState( State* const state ) {
-	ASSERT_NOLOG( state, "state is null" );
+	ASSERT( state, "state is null" );
 	if ( state != m_state ) {
-		ASSERT_NOLOG( !m_state, "game state already set" );
+		ASSERT( !m_state, "game state already set" );
 		m_state = state;
 	}
 }

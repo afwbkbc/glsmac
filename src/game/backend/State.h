@@ -6,8 +6,6 @@
 
 #include "gse/GCWrappable.h"
 
-#include "common/Common.h"
-
 #include "network/Types.h"
 
 #include "gse/Exception.h"
@@ -35,7 +33,7 @@ namespace slot {
 class Slots;
 }
 
-CLASS2( State, common::Class, gse::GCWrappable )
+CLASS( State, gse::GCWrappable )
 
 	State( gc::Space* const gc_space, gse::context::Context* const ctx, GLSMAC* glsmac );
 	virtual ~State();
@@ -46,7 +44,7 @@ CLASS2( State, common::Class, gse::GCWrappable )
 
 	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
 
-	void WithGSE( const gse_func_t& f );
+	void WithGSE( const gse_func_t& f, const std::vector< gc::Object* >& dependencies = {} );
 
 	settings::Settings m_settings = {};
 	slot::Slots* m_slots;

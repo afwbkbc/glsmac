@@ -95,19 +95,16 @@ return (m) => {
 
 		error: (text) => {
 			const that = this;
-			#print('ERROR BEGIN');
 			this.show({
 				title: 'ERROR',
 				width: 400,
 				height: 120,
 				generator: (body) => {
-					#print('ERROR GENERATOR BEGIN');
 					body.text({
 						class: 'popup-text',
 						align: 'center',
 						text: text,
 					});
-					#print('ERROR GENERATOR END');
 				},
 				buttons: [
 					{
@@ -124,7 +121,6 @@ return (m) => {
 					},
 				],
 			});
-			#print('ERROR END');
 		},
 
 		hide: () => {

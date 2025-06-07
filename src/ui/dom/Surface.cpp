@@ -43,7 +43,7 @@ Surface::Surface( DOM_ARGS )
 				//   texture.pcx
 				//   texture.pcx:filter1(arg1,arg2,...):filter2():...
 				const auto params = util::String::Split( str, ':' );
-				ASSERT_NOLOG( !params.empty(), "texture params empty" );
+				ASSERT( !params.empty(), "texture params empty" );
 				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front() );
 				if ( !texture ) {
 					GSE_ERROR( gse::EC.LOADER_ERROR, "Could not load texture: " + params.front() );
@@ -205,7 +205,7 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 		CreateTexture();
 	}
 	else {
-		ASSERT_NOLOG( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
+		ASSERT( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
 	}
 	return m_background.texture;
 }

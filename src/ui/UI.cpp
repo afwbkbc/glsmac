@@ -228,9 +228,9 @@ gc::Space* const UI::GetGCSpace() const {
 }
 
 void UI::AddFocusable( dom::Focusable* const element ) {
-	ASSERT_NOLOG( element, "element is null" );
-	ASSERT_NOLOG( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) == m_focusable_elements.end(), "focusable already exists");
-	ASSERT_NOLOG( m_focusable_elements_idx.find( element ) == m_focusable_elements_idx.end(), "focusable idx already exists");
+	ASSERT( element, "element is null" );
+	ASSERT( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) == m_focusable_elements.end(), "focusable already exists");
+	ASSERT( m_focusable_elements_idx.find( element ) == m_focusable_elements_idx.end(), "focusable idx already exists");
 	m_focusable_elements_idx.insert({ element, m_focusable_elements_idx.size() });
 	m_focusable_elements.push_back( element );
 	if ( !m_focused_element ) {
@@ -239,12 +239,12 @@ void UI::AddFocusable( dom::Focusable* const element ) {
 }
 
 void UI::RemoveFocusable( dom::Focusable* const element ) {
-	ASSERT_NOLOG( element, "element is null" );
+	ASSERT( element, "element is null" );
 	const auto& it = m_focusable_elements_idx.find( element );
-	ASSERT_NOLOG( it != m_focusable_elements_idx.end(), "focusable idx not found");
-	ASSERT_NOLOG( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) != m_focusable_elements.end(), "focusable not found");
+	ASSERT( it != m_focusable_elements_idx.end(), "focusable idx not found");
+	ASSERT( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) != m_focusable_elements.end(), "focusable not found");
 	const auto idx = it->second;
-	ASSERT_NOLOG( idx < m_focusable_elements.size(), "focusable idx overflow" );
+	ASSERT( idx < m_focusable_elements.size(), "focusable idx overflow" );
 	m_focusable_elements.erase( m_focusable_elements.begin() + idx );
 	m_focusable_elements_idx.erase( it );
 	for ( auto& e : m_focusable_elements_idx ) {
@@ -259,7 +259,7 @@ void UI::RemoveFocusable( dom::Focusable* const element ) {
 }
 
 void UI::Focus( dom::Focusable* const element ) {
-	ASSERT_NOLOG( element, "element is null" );
+	ASSERT( element, "element is null" );
 	if ( m_focused_element ) {
 		Defocus( m_focused_element );
 	}
@@ -268,8 +268,8 @@ void UI::Focus( dom::Focusable* const element ) {
 }
 
 void UI::FocusNext() {
-	ASSERT_NOLOG( !m_focused_element || !m_focusable_elements.empty(), "something is focused but focusable elements empty" );
-	ASSERT_NOLOG( m_focusable_elements.size() == m_focusable_elements_idx.size(), "focusables size mismatch" );
+	ASSERT( !m_focused_element || !m_focusable_elements.empty(), "something is focused but focusable elements empty" );
+	ASSERT( m_focusable_elements.size() == m_focusable_elements_idx.size(), "focusables size mismatch" );
 	const auto idx = m_focused_element ? m_focusable_elements_idx.at( m_focused_element ) : 0;
 	const auto nextidx = idx < m_focusable_elements_idx.size() - 1 ? idx + 1 : 0;
 	if ( nextidx < m_focusable_elements.size() ) {
@@ -278,7 +278,7 @@ void UI::FocusNext() {
 }
 
 void UI::Defocus( dom::Focusable* const element ) {
-	ASSERT_NOLOG( element, "element is null" );
+	ASSERT( element, "element is null" );
 	if ( element == m_focused_element ) {
 		m_focused_element->OnDefocus();
 		m_focused_element = nullptr;

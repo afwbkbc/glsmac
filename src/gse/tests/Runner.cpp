@@ -39,7 +39,7 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 
 					gse->LogCaptureStart();
 					const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
-					ASSERT_NOLOG( test_program, "test program is null" );
+					ASSERT( test_program, "test program is null" );
 					try {
 						ExecutionPointer ep;
 						interpreter->Execute( context, ep, test_program );

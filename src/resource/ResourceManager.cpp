@@ -360,12 +360,12 @@ const resource_t ResourceManager::GetResource( const std::string& filename ) con
 }
 
 const std::string& ResourceManager::GetFilename( const resource_t res ) const {
-	ASSERT_NOLOG( m_resources_to_filenames.find( res ) != m_resources_to_filenames.end(), "filename for " + std::to_string( res ) + " not found" );
+	ASSERT( m_resources_to_filenames.find( res ) != m_resources_to_filenames.end(), "filename for " + std::to_string( res ) + " not found" );
 	return m_resources_to_filenames.at( res );
 }
 
 const std::string& ResourceManager::GetPath( const resource_t res ) const {
-	ASSERT_NOLOG( m_resource_paths.find( res ) != m_resource_paths.end(), "resource path for " + std::to_string( res ) + " not found" );
+	ASSERT( m_resource_paths.find( res ) != m_resource_paths.end(), "resource path for " + std::to_string( res ) + " not found" );
 	return m_resource_paths.at( res );
 }
 
@@ -485,8 +485,8 @@ const bool ResourceManager::ResolveBuiltins( const std::string& path, const exte
 			}
 		);
 	}
-	ASSERT_NOLOG( resolved_files.size() == m_resources_to_filenames.size(), "some files were not resolved" );
-	ASSERT_NOLOG( m_resource_paths.empty(), "resource paths not empty" );
+	ASSERT( resolved_files.size() == m_resources_to_filenames.size(), "some files were not resolved" );
+	ASSERT( m_resource_paths.empty(), "resource paths not empty" );
 	m_smac_path = path;
 	m_resource_paths = resolved_files;
 	m_extension_path_map = extension_path_map;

@@ -18,18 +18,18 @@ AnimationSequence::AnimationSequence( gc::Space* const gc_space, AnimationManage
 }
 
 void AnimationSequence::AddAnimation( Animation* const animation ) {
-	ASSERT_NOLOG( !animation->m_sequence, "animation sequence already set" );
+	ASSERT( !animation->m_sequence, "animation sequence already set" );
 	animation->m_sequence = this;
 	m_locked_tiles.insert( animation->m_tile );
 	m_animations.push_back( animation );
 }
 
 void AnimationSequence::Run( GSE_CALLABLE ) {
-	ASSERT_NOLOG( !m_is_running, "animation sequence already running" );
-	ASSERT_NOLOG( m_animations.size() == m_expected_size, "animation sequence incomplete" );
+	ASSERT( !m_is_running, "animation sequence already running" );
+	ASSERT( m_animations.size() == m_expected_size, "animation sequence incomplete" );
 	m_is_running = true;
 	if ( !m_animations.empty() ) {
-		ASSERT_NOLOG( !m_locked_tiles.empty(), "locked tiles empty" );
+		ASSERT( !m_locked_tiles.empty(), "locked tiles empty" );
 		m_am->m_game->GetTM()->LockTiles( m_am->m_game->GetSlotNum(), m_locked_tiles );
 		const auto& first = m_animations.front();
 		first->Run( GSE_CALL );
@@ -37,8 +37,8 @@ void AnimationSequence::Run( GSE_CALLABLE ) {
 }
 
 void AnimationSequence::Abort() {
-	ASSERT_NOLOG( m_is_running, "animation sequence not running" );
-	ASSERT_NOLOG( m_current_animation_idx < m_animations.size(), "animation idx overflow" );
+	ASSERT( m_is_running, "animation sequence not running" );
+	ASSERT( m_current_animation_idx < m_animations.size(), "animation idx overflow" );
 	m_animations.at( m_current_animation_idx )->Abort();
 	Finish();
 }
@@ -60,8 +60,8 @@ void AnimationSequence::GetReachableObjects( std::unordered_set< gc::Object* >& 
 }
 
 void AnimationSequence::Finish() {
-	ASSERT_NOLOG( m_is_running, "animation sequence not running" );
-	ASSERT_NOLOG( !m_locked_tiles.empty(), "locked tiles empty" );
+	ASSERT( m_is_running, "animation sequence not running" );
+	ASSERT( !m_locked_tiles.empty(), "locked tiles empty" );
 	m_am->m_game->GetTM()->UnlockTiles( m_am->m_game->GetSlotNum(), m_locked_tiles );
 	m_am->RemoveAnimationSequence( m_sequence_id );
 }

@@ -26,6 +26,9 @@ State::~State() {
 	if ( m_bindings ) {
 		delete m_bindings;
 	}
+	if ( m_connection ) {
+		m_connection->SetState( nullptr );
+	}
 	delete m_slots;
 	DELETE( m_fm );
 }
@@ -47,12 +50,13 @@ Game* State::GetGame() const {
 	return m_game;
 }
 
-void State::WithGSE( const gse_func_t& f ) {
+void State::WithGSE( const gse_func_t& f, const gc::Space::accum_dependencies_t& dependencies ) {
 	m_gc_space->Accumulate(
-		[ this, &f ]() {
+		[ this, f ]() {
 			gse::ExecutionPointer ep;
 			f( m_gc_space, m_ctx, {}, ep );
-		}
+		},
+		dependencies
 	);
 }
 
@@ -133,9 +137,9 @@ connection::Connection* State::GetConnection() {
 }
 
 void State::InitBindings() {
-	ASSERT_NOLOG( !m_glsmac, "do not use state bindings with new ui" );
+	ASSERT( !m_glsmac, "do not use state bindings with new ui" );
 	if ( !m_bindings ) {
-		ASSERT_NOLOG( !m_gc_space, "init bindings but gc space already set" );
+		ASSERT( !m_gc_space, "init bindings but gc space already set" );
 		Log( "Initializing bindings" );
 		m_bindings = new Bindings( this );
 		m_gc_space = m_bindings->GetGCSpace();
@@ -194,8 +198,9 @@ void State::Reset() {
 }
 
 void State::DetachConnection() {
-	ASSERT( m_connection, "state connection not set" );
-	m_connection = nullptr;
+	if ( m_connection ) {
+		m_connection = nullptr;
+	}
 }
 
 faction::FactionManager* State::GetFM() const {
@@ -251,13 +256,10 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 		GC_DEBUG_END();
 	}
 
-	{
-		//std::lock_guard guard( m_connection_mutex );
-		if ( m_connection ) {
-			GC_DEBUG_BEGIN( "connection" );
-			m_connection->GetReachableObjects( reachable_objects );
-			GC_DEBUG_END();
-		}
+	if ( m_connection ) {
+		GC_DEBUG_BEGIN( "connection" );
+		GC_REACHABLE( m_connection );
+		GC_DEBUG_END();
 	}
 
 	GC_DEBUG_END();

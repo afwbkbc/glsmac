@@ -9,7 +9,7 @@ Filter::Filter( types::texture::Texture* const source_texture )
 	: m_source_texture( source_texture )
 	, m_width( source_texture->m_width )
 	, m_height( source_texture->m_height ) {
-	ASSERT_NOLOG( m_source_texture, "texture not set" );
+	ASSERT( m_source_texture, "texture not set" );
 }
 
 Filter::~Filter() {
@@ -54,7 +54,7 @@ const Filter::texture_data_t Filter::GetTexture() {
 }
 
 void Filter::Tint( const types::Color& color, const float intensity ) {
-	ASSERT_NOLOG( intensity >= 0.0f && intensity <= 1.0f, "intensity overflow" );
+	ASSERT( intensity >= 0.0f && intensity <= 1.0f, "intensity overflow" );
 	Prepare();
 
 	const float a = 1.0f - intensity;
@@ -69,10 +69,10 @@ void Filter::Tint( const types::Color& color, const float intensity ) {
 }
 
 void Filter::Crop( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
-	ASSERT_NOLOG( x2 >= x1, "crop x2 less than x1" );
-	ASSERT_NOLOG( y2 >= y1, "crop x2 less than x1" );
-	ASSERT_NOLOG( x2 < m_width, "crop x2 overflow" );
-	ASSERT_NOLOG( y2 < m_height, "crop y2 overflow" );
+	ASSERT( x2 >= x1, "crop x2 less than x1" );
+	ASSERT( y2 >= y1, "crop x2 less than x1" );
+	ASSERT( x2 < m_width, "crop x2 overflow" );
+	ASSERT( y2 < m_height, "crop y2 overflow" );
 
 	const auto w = x2 - x1 + 1;
 	const auto h = y2 - y1 + 1;
@@ -138,7 +138,7 @@ void Filter::FlipH() {
 }
 
 void Filter::Contrast( const float value ) {
-	ASSERT_NOLOG( value >= 0.0f && value <= 10.0f, "contrast overflow" );
+	ASSERT( value >= 0.0f && value <= 10.0f, "contrast overflow" );
 
 	Prepare();
 

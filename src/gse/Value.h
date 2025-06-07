@@ -191,19 +191,19 @@ static const gse::Wrappable::wrapmap_t< _type > __wrap_##_name = { \
 #define UNWRAPIMPL_PTR( _type ) \
 _type* _type::Unwrap( gse::Value* const value ) { \
     const auto* valueobj = value->Deref(); \
-    ASSERT_NOLOG( valueobj->type == gse::Value::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
+    ASSERT( valueobj->type == gse::Value::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
     const auto* obj = (gse::value::Object*)valueobj; \
-    ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
-    ASSERT_NOLOG( obj->wrapobj, "can't unwrap object without internal link" ); \
+    ASSERT( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
+    ASSERT( obj->wrapobj, "can't unwrap object without internal link" ); \
     return (_type*)obj->wrapobj; \
 }
 
 #define UNWRAPIMPL_NOPTR_BEGIN( _type ) \
 _type _type::Unwrap( gse::Value* const value ) { \
     const auto* valueobj = value->Deref(); \
-    ASSERT_NOLOG( valueobj->type == gse::Value::T_OBJECT, "can only unwrap objects" ); \
+    ASSERT( valueobj->type == gse::Value::T_OBJECT, "can only unwrap objects" ); \
     const auto* obj = (gse::value::Object*)valueobj; \
-    ASSERT_NOLOG( obj->object_class == WRAP_CLASS, "can only unwrap objects of same class" ); \
+    ASSERT( obj->object_class == WRAP_CLASS, "can only unwrap objects of same class" ); \
     const auto& properties = obj->value;
 
 #define UNWRAPIMPL_NOPTR_END() \
@@ -250,7 +250,7 @@ public:
 	OP( >= )
 #undef OP
 
-	const type_t type = T_UNDEFINED;
+	type_t type = T_UNDEFINED;
 
 	Value* const New( const Value* value );
 

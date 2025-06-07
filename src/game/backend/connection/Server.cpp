@@ -14,8 +14,8 @@ namespace game {
 namespace backend {
 namespace connection {
 
-Server::Server( settings::LocalSettings* const settings )
-	: Connection( network::CM_SERVER, settings ) {}
+Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settings )
+	: Connection( gc_space, network::CM_SERVER, settings ) {}
 
 void Server::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
@@ -50,10 +50,11 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 				m_on_global_settings_update();
 			}
 
+			auto* player = m_player;
 			WTrigger(
-				"player_join", ARGS_F( this ) {
+				"player_join", ARGS_F( player ) {
 					{
-						"player", m_player->Wrap( GSE_CALL, true )
+						"player", player->Wrap( GSE_CALL, true )
 					}
 				}; }
 			);
@@ -112,17 +113,20 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 					ClearReadyFlags();
 				}
 
+				const bool gs = m_game_state;
 				WTrigger(
-					"player_leave", ARGS_F( &player ) {
+					"player_leave", ARGS_F( player ) {
 						{
 							"player", player->Wrap( GSE_CALL, true )
 						}
-					}; }
+					}; },
+					[ gs, player ]() {
+						if ( gs == GS_LOBBY ) {
+							DELETE( player );
+						}
+					}
 				);
 
-				if ( m_game_state == GS_LOBBY ) {
-					DELETE( player );
-				}
 			}
 			break;
 		}
@@ -229,7 +233,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
 
 						WTrigger(
-							"player_join", ARGS_F( &player ) {
+							"player_join", ARGS_F( player ) {
 								{
 									"player", player->Wrap( GSE_CALL, true )
 								}

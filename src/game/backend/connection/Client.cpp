@@ -12,8 +12,8 @@ namespace game {
 namespace backend {
 namespace connection {
 
-Client::Client( settings::LocalSettings* const settings )
-	: Connection( network::CM_CLIENT, settings ) {
+Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings )
+	: Connection( gc_space, network::CM_CLIENT, settings ) {
 	//
 }
 

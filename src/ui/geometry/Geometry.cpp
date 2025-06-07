@@ -29,12 +29,12 @@ Geometry::~Geometry() {
 }
 
 Rectangle* Geometry::AsRectangle() const {
-	ASSERT_NOLOG( m_type == GT_RECTANGLE, "invalid geometry type" );
+	ASSERT( m_type == GT_RECTANGLE, "invalid geometry type" );
 	return (Rectangle*)this;
 }
 
 Text* Geometry::AsText() const {
-	ASSERT_NOLOG( m_type == GT_TEXT, "invalid geometry type" );
+	ASSERT( m_type == GT_TEXT, "invalid geometry type" );
 	return (Text*)this;
 }
 
@@ -149,8 +149,8 @@ const geometry_handler_id_t Geometry::AddHandler( const geometry_handler_type_t 
 		THROW( "bug: too many handlers" );
 	}
 	m_next_handler_id++;
-	ASSERT_NOLOG( m_handlers[ type ].find( m_next_handler_id ) == m_handlers[ type ].end(), "handler id already exists" );
-	ASSERT_NOLOG( m_handler_types.find( m_next_handler_id ) == m_handler_types.end(), "handler id already exists" );
+	ASSERT( m_handlers[ type ].find( m_next_handler_id ) == m_handlers[ type ].end(), "handler id already exists" );
+	ASSERT( m_handler_types.find( m_next_handler_id ) == m_handler_types.end(), "handler id already exists" );
 	m_handlers[ type ].insert(
 		{
 			m_next_handler_id,
@@ -167,10 +167,10 @@ const geometry_handler_id_t Geometry::AddHandler( const geometry_handler_type_t 
 }
 
 void Geometry::RemoveHandler( const geometry_handler_id_t id ) {
-	ASSERT_NOLOG( m_handler_types.find( id ) != m_handler_types.end(), "handler id not found" );
+	ASSERT( m_handler_types.find( id ) != m_handler_types.end(), "handler id not found" );
 	const auto type = m_handler_types.at( id );
-	ASSERT_NOLOG( m_handlers.find( type ) != m_handlers.end(), "handler type not found" );
-	ASSERT_NOLOG( m_handlers.at( type ).find( id ) != m_handlers.at( type ).end(), "handler id not found" );
+	ASSERT( m_handlers.find( type ) != m_handlers.end(), "handler type not found" );
+	ASSERT( m_handlers.at( type ).find( id ) != m_handlers.at( type ).end(), "handler id not found" );
 	m_handlers.at( type ).erase( id );
 	m_handler_types.erase( id );
 }
@@ -199,7 +199,7 @@ void Geometry::Hide() {
 }
 
 void Geometry::Detach() {
-	ASSERT_NOLOG( m_parent, "parent not set" );
+	ASSERT( m_parent, "parent not set" );
 	m_parent = nullptr;
 }
 

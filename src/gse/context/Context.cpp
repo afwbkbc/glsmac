@@ -47,7 +47,7 @@ Value* const Context::GetVariable( const std::string& name, const si_t& si, gse:
 	const auto ref_it = m_ref_contexts.find( name );
 	if ( ref_it != m_ref_contexts.end() ) {
 		const auto ref = ref_it->second;
-		ASSERT_NOLOG( ref != this, "unexpected ref context recursion (was this context freed while in use?)" );
+		ASSERT( ref != this, "unexpected ref context recursion (was this context freed while in use?)" );
 		return ref->GetVariable( name, si, ep );
 	}
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
@@ -59,7 +59,7 @@ void Context::SetVariable( const std::string& name, const var_info_t& var_info )
 }
 
 void Context::CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	ASSERT_NOLOG( value, "value is null" );
+	ASSERT( value, "value is null" );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
@@ -72,7 +72,7 @@ void Context::CreateVariable( const std::string& name, Value* const value, CONTE
 }
 
 void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	ASSERT_NOLOG( value, "value is null" );
+	ASSERT( value, "value is null" );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
@@ -85,7 +85,7 @@ void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_
 }
 
 void Context::UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
-	ASSERT_NOLOG( value, "value is null" );
+	ASSERT( value, "value is null" );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		if ( it->second.is_const ) {
@@ -184,13 +184,13 @@ void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_obje
 }
 
 void Context::AddChildContext( ChildContext* const child ) {
-	ASSERT_NOLOG( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
+	ASSERT( m_child_contexts.find( child ) == m_child_contexts.end(), "child context already added" );
 	m_child_contexts.insert( child );
 }
 
 void Context::RemoveChildContext( ChildContext* const child ) {
 	if ( !m_child_contexts.empty() ) { // ?
-		ASSERT_NOLOG( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
+		ASSERT( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );
 	}
 }

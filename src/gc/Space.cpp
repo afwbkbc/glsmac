@@ -1,11 +1,9 @@
 #include "Space.h"
 
 #include <thread>
-#include <chrono>
 
 #include "engine/Engine.h"
 #include "GC.h"
-#include "util/Time.h"
 #include "util/String.h"
 #include "util/LogHelper.h"
 #include "graphics/Graphics.h"
@@ -20,7 +18,7 @@ namespace gc {
 
 Space::Space( Object* const root_object )
 	: m_root_object( root_object ) {
-	ASSERT_NOLOG( root_object, "root object is null" );
+	ASSERT( root_object, "root object is null" );
 	g_engine->GetGC()->AddSpace( this );
 }
 
@@ -55,14 +53,43 @@ Space::~Space() {
 }
 
 void Space::Add( Object* object ) {
-	ASSERT_NOLOG( !m_is_destroying, "space is destroying" );
-	ASSERT_NOLOG( IsAccumulating(), "GC not in accumulation mode" );
+	ASSERT( !m_is_destroying, "space is destroying" );
+	ASSERT( IsAccumulating(), "GC not in accumulation mode" );
 	//GC_LOG( "Adding object: " + std::to_string( (unsigned long long)object ) );
 	ASSERT( m_accumulated_objects.find( object ) == m_accumulated_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " already exists" );
 	m_accumulated_objects.insert( object );
 }
 
-void Space::Accumulate( const std::function< void() >& f ) {
+void Space::Accumulate( const f_accum_t& f, const accum_dependencies_t& dependencies ) {
+	ASSERT( m_thread_id.has_value(), "gc space thread id not set" );
+	if ( m_thread_id == std::this_thread::get_id() ) {
+		AccumulateImpl( f );
+	}
+	else {
+		std::lock_guard guard( m_pending_accumulations_mutex );
+		m_pending_accumulations.push_back( { f, dependencies } );
+	}
+}
+
+const bool Space::IsAccumulating() {
+	std::lock_guard guard( m_accumulations_mutex );
+	return m_accumulations.find( std::this_thread::get_id() ) != m_accumulations.end();
+}
+
+void Space::SetThreadId( const std::thread::id& thread_id ) {
+	ASSERT( !m_thread_id.has_value(), "gc space thread id already set" );
+	m_thread_id = thread_id;
+}
+
+void Space::ProcessAccumulations() {
+	std::lock_guard guard( m_pending_accumulations_mutex );
+	for ( const auto& it : m_pending_accumulations ) {
+		AccumulateImpl( it.first );
+	}
+	m_pending_accumulations.clear();
+}
+
+void Space::AccumulateImpl( const f_accum_t& f ) {
 	bool is_accumulating;
 	const auto tid = std::this_thread::get_id();
 	{
@@ -78,7 +105,7 @@ void Space::Accumulate( const std::function< void() >& f ) {
 		const auto& commit = [ this, &tid ]() {
 			{
 				std::lock_guard guard( m_accumulations_mutex );
-				ASSERT_NOLOG( m_accumulations.find( tid ) != m_accumulations.end(), "accumulations thread not found" );
+				ASSERT( m_accumulations.find( tid ) != m_accumulations.end(), "accumulations thread not found" );
 				m_accumulations.erase( tid );
 			}
 			if ( !m_accumulated_objects.empty() ) {
@@ -88,10 +115,10 @@ void Space::Accumulate( const std::function< void() >& f ) {
 				m_accumulated_objects.clear();
 			}
 		};
-		ASSERT_NOLOG( m_accumulated_objects.empty(), "accumulated objects not empty" );
+		ASSERT( m_accumulated_objects.empty(), "accumulated objects not empty" );
 		{
 			std::lock_guard guard3( m_accumulations_mutex );
-			ASSERT_NOLOG( m_accumulations.find( tid ) == m_accumulations.end(), "accumulations thread already exists" );
+			ASSERT( m_accumulations.find( tid ) == m_accumulations.end(), "accumulations thread already exists" );
 			m_accumulations.insert( tid );
 		}
 		try {
@@ -105,11 +132,6 @@ void Space::Accumulate( const std::function< void() >& f ) {
 	}
 }
 
-const bool Space::IsAccumulating() {
-	std::lock_guard guard( m_accumulations_mutex );
-	return m_accumulations.find( std::this_thread::get_id() ) != m_accumulations.end();
-}
-
 const bool Space::Collect() {
 	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
@@ -119,6 +141,19 @@ const bool Space::Collect() {
 	m_root_object->GetReachableObjects( m_reachable_objects_tmp );
 	GC_DEBUG_END();
 	GC_DEBUG_UNLOCK();
+
+	{
+		std::lock_guard guard2( m_pending_accumulations_mutex );
+		if ( !m_pending_accumulations.empty() ) {
+			GC_DEBUG_BEGIN( "pending accumulations dependencies" );
+			for ( const auto& it : m_pending_accumulations ) {
+				for ( const auto& dependency : it.second ) {
+					dependency->GetReachableObjects( m_reachable_objects_tmp );
+				}
+			}
+			GC_DEBUG_END();
+		}
+	}
 
 	std::unordered_set< Object* > removed_objects = {};
 	{

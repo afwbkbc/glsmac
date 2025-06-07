@@ -61,12 +61,12 @@ public:
 		}
 
 		const std::string& GetString( const T& value ) const {
-			ASSERT_NOLOG( m_type_to_string.find( value ) != m_type_to_string.end(), "value not in wrapmap" );
+			ASSERT( m_type_to_string.find( value ) != m_type_to_string.end(), "value not in wrapmap" );
 			return m_type_to_string.at( value );
 		}
 
 		const T& GetValueUnsafe( const std::string& value ) const {
-			ASSERT_NOLOG( m_string_to_type.find( value ) != m_string_to_type.end(), "string not in wrapmap" );
+			ASSERT( m_string_to_type.find( value ) != m_string_to_type.end(), "string not in wrapmap" );
 			return m_string_to_type.at( value );
 		}
 
