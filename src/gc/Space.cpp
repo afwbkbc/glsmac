@@ -6,6 +6,7 @@
 #include "GC.h"
 #include "util/String.h"
 #include "util/LogHelper.h"
+#include "util/FinallyGuard.h"
 #include "graphics/Graphics.h"
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -24,10 +25,21 @@ Space::Space( Object* const root_object )
 
 Space::~Space() {
 	g_engine->GetGC()->RemoveSpace( this );
+	
+	{
+		// cleanup anything that didn't execute in time
+		std::lock_guard guard( m_pending_accumulations_mutex );
+		for ( const auto& it : m_pending_accumulations ) {
+			if ( it.second.cleanup ) {
+				it.second.cleanup();
+			}
+		}
+	}
+	
 	m_collect_mutex.lock(); // wait for any ongoing collects to finish
 	m_is_destroying = true;
 	m_collect_mutex.unlock();
-
+	
 	// collect until there's nothing to collect
 	GC_LOG( "Destroying remaining objects" );
 	{
@@ -60,14 +72,19 @@ void Space::Add( Object* object ) {
 	m_accumulated_objects.insert( object );
 }
 
-void Space::Accumulate( const f_accum_t& f, const accum_dependencies_t& dependencies ) {
+void Space::Accumulate( gc::Object* const owner, const f_accum_t& f, const f_accum_t& f_cleanup ) {
 	ASSERT( m_thread_id.has_value(), "gc space thread id not set" );
 	if ( m_thread_id == std::this_thread::get_id() ) {
 		AccumulateImpl( f );
 	}
 	else {
 		std::lock_guard guard( m_pending_accumulations_mutex );
-		m_pending_accumulations.push_back( { f, dependencies } );
+		m_pending_accumulations.push_back(
+			{ f, {
+				owner,
+				f_cleanup,
+			} }
+		);
 	}
 }
 
@@ -85,6 +102,11 @@ void Space::ProcessAccumulations() {
 	std::lock_guard guard( m_pending_accumulations_mutex );
 	for ( const auto& it : m_pending_accumulations ) {
 		AccumulateImpl( it.first );
+	}
+	for ( const auto& it : m_pending_accumulations ) {
+		if ( it.second.cleanup ) {
+			it.second.cleanup();
+		}
 	}
 	m_pending_accumulations.clear();
 }
@@ -135,30 +157,30 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 const bool Space::Collect() {
 	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
-
+	
 	GC_DEBUG_LOCK();
 	GC_DEBUG_BEGIN( "Root" );
 	m_root_object->GetReachableObjects( m_reachable_objects_tmp );
 	GC_DEBUG_END();
 	GC_DEBUG_UNLOCK();
-
+	
 	{
 		std::lock_guard guard2( m_pending_accumulations_mutex );
 		if ( !m_pending_accumulations.empty() ) {
-			GC_DEBUG_BEGIN( "pending accumulations dependencies" );
+			GC_DEBUG_BEGIN( "pending accumulations owners" );
 			for ( const auto& it : m_pending_accumulations ) {
-				for ( const auto& dependency : it.second ) {
-					dependency->GetReachableObjects( m_reachable_objects_tmp );
+				if ( it.second.owner ) {
+					it.second.owner->GetReachableObjects( m_reachable_objects_tmp );
 				}
 			}
 			GC_DEBUG_END();
 		}
 	}
-
+	
 	std::unordered_set< Object* > removed_objects = {};
 	{
 		std::lock_guard guard3( m_accumulations_mutex ); // prevent collection during accumulation // TODO: improve
-
+		
 		g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
 			[ this, &removed_objects ]() {
 				std::lock_guard guard2( m_objects_mutex );
@@ -169,19 +191,19 @@ const bool Space::Collect() {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 						GC_LOG( "Destroying unreachable object: " + util::String::ToHexString( (unsigned long long)object ) /* TODO + "[ " + object->ToString() + " ]"*/ );
 #endif
-						delete object;
 #if defined( DEBUG ) || defined( FASTDEBUG )
 						debug::g_memory_watcher->MaybeDelete( object );
 #endif
 						removed_objects.insert( object );
+						delete object;
 					}
 				}
 				GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
 			}
 		);
-
+		
 		m_reachable_objects_tmp.clear();
-
+		
 		{
 			std::lock_guard guard2( m_objects_mutex );
 			for ( const auto& object : removed_objects ) {
@@ -190,7 +212,7 @@ const bool Space::Collect() {
 			}
 		}
 	}
-
+	
 	return !removed_objects.empty();
 }
 

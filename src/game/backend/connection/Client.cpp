@@ -5,8 +5,10 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/Event.h"
+#include "game/backend/Player.h"
 #include "types/Packet.h"
 #include "network/Network.h"
+#include "gse/value/Array.h"
 
 namespace game {
 namespace backend {
@@ -19,9 +21,9 @@ Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settin
 
 void Client::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
-
+	
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
-
+	
 	switch ( event.type ) {
 		case network::LegacyEvent::ET_PACKET: {
 			try {
@@ -50,7 +52,8 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								m_state->m_slots->Clear();
 							}
 							m_state->m_slots->Unserialize( packet.data.str );
-							for ( auto i = 0 ; i < m_state->m_slots->GetCount() ; i++ ) {
+							const auto c = m_state->m_slots->GetCount();
+							for ( auto i = 0 ; i < c ; i++ ) {
 								const auto& slot = m_state->m_slots->GetSlot( i );
 								if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 									const auto& player = slot.GetPlayer();
@@ -58,6 +61,18 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 									if ( i == m_slot ) {
 										m_player = player;
 									}
+									
+									auto* player_copy = new Player( player );
+									WTrigger(
+										"player_join", ARGS_F( player_copy ) {
+											{
+												"player", player_copy->Wrap( GSE_CALL, true )
+											}
+										}; },
+										[ player_copy ]() {
+											delete player_copy;
+										}
+									);
 								}
 							}
 							if ( m_on_players_list_update ) {
@@ -234,7 +249,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								auto buf = types::Buffer( packet.data.str );
 								std::vector< backend::event::Event* > game_events = {};
 								THROW( "TODO: PT_GAME_EVENTS" );
-								m_state->WithGSE(
+								/*m_state->WithGSE(
 									[ &buf, &game_events ]( GSE_CALLABLE ) {
 										//backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
 									}
@@ -243,7 +258,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 									Log( "Got game event: " + game_event->ToString() );
 									m_on_game_event_validate( game_event );
 									m_on_game_event_apply( game_event );
-								}
+								}*/
 							}
 							else {
 								Log( "WARNING: game event handler not set" );

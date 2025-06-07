@@ -17,7 +17,7 @@ namespace gse {
 namespace tests {
 
 void AddRunnerTests( task::gsetests::GSETests* task ) {
-
+	
 	const std::string expected_output = GetExpectedResult();
 
 #define VALIDATE() { \
@@ -27,16 +27,17 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 		"test if interpreter executes programs correctly",
 		GT( expected_output ) {
 			auto* gc_space = gse->GetGCSpace();
-
+			
 			gc_space->Accumulate(
+				nullptr,
 				[ &gse, &gc_space ]() {
-
+					
 					NEWV( interpreter, runner::Interpreter, gc_space );
-
+					
 					context::GlobalContext* context = gse->CreateGlobalContext();
 					context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
 					mocks::AddMocks( gc_space, context, {} );
-
+					
 					gse->LogCaptureStart();
 					const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
 					ASSERT( test_program, "test program is null" );
@@ -51,17 +52,17 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 					}
 					delete test_program;
 					context->Clear();
-
+					
 				}
 			);
 			const auto actual_output = gse->LogCaptureStopGet();
-
+			
 			VALIDATE();
-
+			
 			GT_OK();
 		}
 	);
-
+	
 }
 
 }

@@ -22,8 +22,10 @@ Player::Player(
 	: m_name( name )
 	, m_role( role )
 	, m_faction( faction )
-	, m_difficulty_level( difficulty_level ) {
-	//
+	, m_difficulty_level( difficulty_level ) {}
+
+Player::Player( const Player* const other ) {
+	*this = *other;
 }
 
 const std::string& Player::GetPlayerName() const {
@@ -73,7 +75,7 @@ const std::string& Player::GetDifficultyLevel() const {
 void Player::SetSlot( slot::Slot* slot ) {
 	m_slot = slot;
 	if ( m_slot ) {
-		m_slotnum = m_slot->GetCid();
+		m_slotnum = m_slot->GetIndex();
 	}
 }
 
@@ -116,7 +118,7 @@ WRAPIMPL_END_PTR()
 
 const types::Buffer Player::Serialize() const {
 	types::Buffer buf;
-
+	
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
 	buf.WriteBool( m_faction != nullptr );
@@ -124,12 +126,12 @@ const types::Buffer Player::Serialize() const {
 		buf.WriteString( m_faction->Serialize().ToString() );
 	}
 	buf.WriteString( m_difficulty_level );
-
+	
 	return buf;
 }
 
 void Player::Unserialize( types::Buffer buf ) {
-
+	
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
 	m_faction = {};
@@ -138,7 +140,7 @@ void Player::Unserialize( types::Buffer buf ) {
 		m_faction->Unserialize( buf.ReadString() );
 	}
 	m_difficulty_level = buf.ReadString();
-
+	
 }
 
 }

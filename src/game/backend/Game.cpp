@@ -321,7 +321,7 @@ void Game::Iterate() {
 					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-					m_state->WithGSE([ this ]( GSE_CALLABLE ) {
+					m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 						for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
 							UpdateYields( GSE_CALL, tile );
 						}
@@ -384,7 +384,7 @@ void Game::Iterate() {
 
 						auto* gc_space = m_state->m_gc_space;
 
-						m_state->WithGSE([ this, &f_init_failed ]( GSE_CALLABLE ) {
+						m_state->WithGSE( this, [ this, f_init_failed ]( GSE_CALLABLE ) {
 							m_um->ProcessUnprocessed( GSE_CALL );
 							m_bm->ProcessUnprocessed( GSE_CALL );
 
@@ -420,14 +420,14 @@ void Game::Iterate() {
 		else if ( m_game_state == GS_RUNNING ) {
 			ASSERT( m_state, "state not set" );
 
-			m_state->m_gc_space->Accumulate([this]() {
+			m_state->m_gc_space->Accumulate( this, [ this ]() {
 				std::vector< event::Event* > events;
 				{
 					std::lock_guard guard( m_pending_events_mutex );
 					events = m_pending_events;
 					m_pending_events.clear();
 				}
-				m_state->WithGSE([ this, &events ]( GSE_CALLABLE ) {
+				m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
 					if ( !events.empty() ) {
 						const std::string* errptr = nullptr;
 						for ( const auto& event : events ) {
@@ -850,6 +850,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			m_state = request.data.init.state;
 
 			m_state->WithGSE(
+				this,
 				[ this ]( GSE_CALLABLE ) {
 					m_state->TriggerObject(
 						this, "initialize", ARGS_F( this ) {
@@ -1000,7 +1001,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							gc_space->Accumulate( [ this, &r ] () {
+							gc_space->Accumulate( this, [ this, &r ] () {
 								m_am->FinishAnimation( r.data.animation_finished.animation_id );
 							});
 							break;
@@ -1203,7 +1204,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		AddFrontendRequest( fr );
 	}
 
-	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		for ( auto& it : m_um->GetUnits() ) {
 			auto* unit = it.second;
 			m_state->TriggerObject(
@@ -1273,7 +1274,7 @@ void Game::GlobalAdvanceTurn( GSE_CALLABLE ) {
 	m_turn_checksum = 0;
 
 	MTModule::Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
-	m_state->WithGSE( [ this ]( GSE_CALLABLE ){
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ){
 		Event( GSE_CALL, "advance_turn", {
 			{ "turn_id", VALUE( gse::value::Int,, s_turn_id ) }
 		} );
@@ -1364,7 +1365,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	// init map editor
 	NEW( m_map_editor, map_editor::MapEditor, this );
 
-	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		ASSERT( !m_tm, "tm not null" );
 		m_tm = new map::tile::TileManager( this );
 		ASSERT( !m_rm, "rm not null" );
@@ -1533,7 +1534,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 			THROW( "TODO: m_on_game_event_validate");
 			if ( m_game_state == GS_RUNNING ) {
-/*				m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+/*				m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
 					ValidateEvent( GSE_CALL, event );
 				} );*/
 			}
@@ -1549,7 +1550,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 			THROW( "TODO: m_on_game_event_apply");
 			if ( m_game_state == GS_RUNNING ) {
-				/*m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+				/*m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
 					ProcessEvent( GSE_CALL, event );
 				});*/
 			}
@@ -1561,7 +1562,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 			THROW( "TODO: m_on_game_event_rollback");
 			if ( m_game_state == GS_RUNNING ) {
-				/*m_state->WithGSE( [ this, &event ]( GSE_CALLABLE ) {
+				/*m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
 					ProcessEvent( GSE_CALL, event );
 				});*/
 			}
@@ -1675,7 +1676,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						const auto ec = m_map->LoadFromBuffer( b );
 						if ( ec == map::Map::EC_NONE ) {
 
-							m_state->WithGSE( [ this, &buf ]( GSE_CALLABLE ) {
+							m_state->WithGSE( this, [ this, &buf ]( GSE_CALLABLE ) {
 
 								// resources
 								{
@@ -1707,10 +1708,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 									MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
 									AdvanceTurn( turn_id );
 								}
-
+								
+								m_game_state = GS_INITIALIZING;
+								
 							});
 
-							m_game_state = GS_INITIALIZING;
 						}
 						else {
 							MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );

@@ -64,7 +64,7 @@ UI::UI( GSE_CALLABLE )
 			return true;
 		}
 		bool result = false;
-		m_gc_space->Accumulate( [ this, &ctx, &gc_space, &si, &event, &result ] () {
+		m_gc_space->Accumulate( this, [ this, &ctx, &gc_space, &si, &event, &result ] () {
 			gse::ExecutionPointer ep;
 			result = m_root->ProcessEvent( GSE_CALL, event );
 		});

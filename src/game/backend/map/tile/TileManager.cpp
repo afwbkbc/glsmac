@@ -83,6 +83,7 @@ void TileManager::ProcessTileLockRequests() {
 			const auto slot_num = m_game->GetSlotNum();
 			if ( !tile_lock_requests.empty() ) {
 				m_game->GetState()->WithGSE(
+					this,
 					[ this, &tile_lock_requests, &state, &slot_num ]( GSE_CALLABLE ) {
 						for ( const auto& req : tile_lock_requests ) {
 							const auto slot_state = state->m_slots->GetSlot( req.initiator_slot ).GetState();

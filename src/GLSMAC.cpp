@@ -61,7 +61,7 @@ GLSMAC::GLSMAC()
 	;
 
 	{
-		m_gc_space->Accumulate( [ this, &entry_script ]() {
+		m_gc_space->Accumulate( this, [ this, &entry_script ]() {
 			gse::ExecutionPointer ep;
 
 			// global objects
@@ -104,7 +104,7 @@ GLSMAC::~GLSMAC() {
 
 	m_gse->GetAsync()->StopTimers();
 
-	m_gc_space->Accumulate( [ this ](){
+	m_gc_space->Accumulate( this, [ this ](){
 		gse::ExecutionPointer ep;
 		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
 	});
@@ -134,7 +134,7 @@ void GLSMAC::Iterate() {
 			m_load_thread.load()->join();
 			delete m_load_thread;
 			m_load_thread = nullptr;
-			m_gc_space->Accumulate( [ this ](){
+			m_gc_space->Accumulate( this, [ this ](){
 				HideLoader();
 				m_f_after_load();
 			});
@@ -255,7 +255,7 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		m_gc_space->Accumulate( [ this ] () {
+		m_gc_space->Accumulate( this, [ this ] () {
 			TriggerObject( m_ui, "loader_show" );
 		});
 	}
@@ -276,7 +276,7 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		m_gc_space->Accumulate( [ this ](){
+		m_gc_space->Accumulate( this, [ this ](){
 			TriggerObject( m_ui, "loader_hide" );
 		});
 	}
@@ -284,7 +284,7 @@ void GLSMAC::HideLoader() {
 
 void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
 	Log( text );
-	m_gc_space->Accumulate([ this ](){
+	m_gc_space->Accumulate( this, [ this ](){
 		TriggerObject( m_ui, "error_popup" );
 	});
 }
@@ -295,7 +295,7 @@ gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::stri
 }
 
 void GLSMAC::WithGSE( const std::function<void( GSE_CALLABLE )>& f ) {
-	m_state->WithGSE( f );
+	m_state->WithGSE( this, f );
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -438,7 +438,7 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	m_gc_space->Accumulate( [ this, &text ]() {
+	m_gc_space->Accumulate( this, [ this, &text ]() {
 		TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
 			{
 				"text", VALUEEXT( gse::value::String, m_gc_space, text )
@@ -464,7 +464,7 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	m_state->Reset();
 	m_state->SetGame( game );
 	game->SetState( m_state );
-	m_state->WithGSE( [ this ]( GSE_CALLABLE ) {
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		TriggerObject( this, "configure_state", ARGS_F( this ) {
 			{
 				"fm",
@@ -517,7 +517,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 
 	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
-		m_gc_space->Accumulate( [ this ](){
+		m_gc_space->Accumulate( this, [ this ](){
 			TriggerObject( this, "start_game" );
 		});
 	}, UH( this, real_state ) {
@@ -539,7 +539,7 @@ void GLSMAC::RunMain() {
 	ASSERT( m_gc_space, "gc space is null" );
 	for ( const auto& main : m_main_callables ) {
 		ASSERT( main->type == gse::Value::T_CALLABLE, "main not callable" );
-		m_gc_space->Accumulate( [ this, &main ] (){
+		m_gc_space->Accumulate( this, [ this, &main ] (){
 			ASSERT( !m_wrapobj, "GLSMAC wrapobj already set" );
 			gse::ExecutionPointer ep;
 			m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );

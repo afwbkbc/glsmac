@@ -50,13 +50,14 @@ Game* State::GetGame() const {
 	return m_game;
 }
 
-void State::WithGSE( const gse_func_t& f, const gc::Space::accum_dependencies_t& dependencies ) {
+void State::WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup ) {
 	m_gc_space->Accumulate(
+		owner,
 		[ this, f ]() {
 			gse::ExecutionPointer ep;
 			f( m_gc_space, m_ctx, {}, ep );
 		},
-		dependencies
+		f_cleanup
 	);
 }
 
@@ -64,6 +65,7 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
+			m_connection->SetState( nullptr );
 			m_connection = nullptr;
 			for ( auto& player : m_players ) {
 				DELETE( player );
@@ -184,6 +186,7 @@ void State::Reset() {
 				};
 				m_connection->Disconnect();
 			}
+			m_connection->SetState( nullptr );
 			m_connection = nullptr;
 		}
 	}
@@ -199,6 +202,7 @@ void State::Reset() {
 
 void State::DetachConnection() {
 	if ( m_connection ) {
+		m_connection->SetState( nullptr );
 		m_connection = nullptr;
 	}
 }

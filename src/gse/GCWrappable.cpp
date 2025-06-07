@@ -24,10 +24,6 @@ const bool GCWrappable::HasHandlers( const std::string& event ) {
 	return Wrappable::HasHandlers( event );
 }
 
-Value* const GCWrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< Value::type_t > expected_return_type ) {
-	return Wrappable::Trigger( GSE_CALL, event, f_args, expected_return_type );
-}
-
 void GCWrappable::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
 	gse::Wrappable::GetReachableObjects( reachable_objects );

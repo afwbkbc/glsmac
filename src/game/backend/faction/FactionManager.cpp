@@ -100,7 +100,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
-				const auto* texture = g_engine->GetTextureLoader()->GetLazyTexture( filename )->Get();
+				const auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( filename );
 				if ( !texture ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Could not import colors from file: " + filename );
 				}

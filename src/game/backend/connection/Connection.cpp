@@ -11,9 +11,9 @@ namespace backend {
 namespace connection {
 
 void Connection::SetState( State* state ) {
-	if ( m_state ) {
+	/*if ( m_state ) {
 		m_state->DetachConnection();
-	}
+	}*/
 	m_state = state;
 }
 
@@ -36,6 +36,7 @@ void Connection::ResetHandlers() {
 
 Connection::Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings )
 	: gse::GCWrappable( gc_space )
+	, m_gc_space( gc_space )
 	, m_connection_mode( connection_mode )
 	, m_settings( settings )
 	, m_network( g_engine->GetNetwork() ) {
@@ -60,9 +61,9 @@ Connection::~Connection() {
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 	}
-	if ( m_state ) {
+	/* if ( m_state ) {
 		m_state->DetachConnection();
-	}
+	}*/
 	ClearPending();
 }
 
@@ -318,12 +319,9 @@ gc::Space* Connection::GetGCSpace() const {
 
 void Connection::WTrigger( const std::string& event, const f_args_t& fargs, const std::function<void()>& f_after ) {
 	ASSERT( m_state, "state not set" );
-	m_state->WithGSE( [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
+	m_state->WithGSE( this, [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
 		Trigger( GSE_CALL, event, fargs );
-		if ( f_after ) {
-			f_after();
-		}
-	}, { this } );
+	}, f_after );
 }
 
 void Connection::Disconnect( const std::string& reason ) {

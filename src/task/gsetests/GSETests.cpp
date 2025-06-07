@@ -39,6 +39,7 @@ void GSETests::Iterate() {
 		gse::GSE gse;
 		gse::context::GlobalContext* ctx;
 		gse.GetGCSpace()->Accumulate(
+			nullptr,
 			[ &gse, &ctx ]() {
 				ctx = gse.CreateGlobalContext();
 			}

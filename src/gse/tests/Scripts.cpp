@@ -21,7 +21,7 @@ namespace gse {
 namespace tests {
 
 void AddScriptsTests( task::gsetests::GSETests* task ) {
-
+	
 	const std::string tests_path = util::FS::GeneratePath(
 		{
 			".",
@@ -29,7 +29,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 			"tests",
 		}, GSE::PATH_SEPARATOR
 	);
-
+	
 	const auto* c = g_engine->GetConfig();
 	if ( !c->HasDebugFlag( config::Config::DF_GSE_TESTS_SCRIPT ) ) {
 		task->AddTest(
@@ -53,12 +53,12 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 			"testing " + script,
 			GT( script ) {
 				auto* gc_space = gse->GetGCSpace();
-
+				
 				parser::Parser* parser = nullptr;
 				runner::Runner* runner = nullptr;
 				const program::Program* program = nullptr;
 				context::GlobalContext* context = nullptr;
-
+				
 				std::string last_error = "";
 				try {
 					const auto source = util::FS::ReadTextFile( script, GSE::PATH_SEPARATOR );
@@ -68,6 +68,7 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 					runner = gse->GetRunner();
 					ExecutionPointer ep;
 					gc_space->Accumulate(
+						nullptr,
 						[ &runner, &context, &ep, &program, &parser ]() {
 							program = parser->Parse();
 							runner->Execute( context, ep, program );
@@ -83,13 +84,13 @@ void AddScriptsTests( task::gsetests::GSETests* task ) {
 				catch ( std::runtime_error const& e ) {
 					last_error = (std::string)"Internal error: " + e.what();
 				};
-
+				
 				gse->Finish();
-
+				
 				if ( program ) {
 					DELETE( program );
 				}
-
+				
 				return last_error;
 			}
 		);

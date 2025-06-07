@@ -168,7 +168,7 @@ WRAPIMPL_BEGIN( Slot )
 	WRAPIMPL_PROPS
 			{
 				"id",
-				VALUE( gse::value::Int, , m_player_data.cid )
+				VALUE( gse::value::Int, , m_index )
 			},
 			{
 				"type",

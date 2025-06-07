@@ -54,7 +54,7 @@ void Bindings::AddToContext( gc::Space* const gc_space, gse::context::Context* c
 
 void Bindings::RunMainScript() {
 	auto* gc_space = m_gse->GetGCSpace();
-	gc_space->Accumulate( [ this ]( ) {
+	gc_space->Accumulate( nullptr, [ this ]( ) {
 		gse::ExecutionPointer ep;
 		m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, m_entry_script );
 		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
@@ -65,7 +65,7 @@ void Bindings::RunMainScript() {
 
 void Bindings::RunMain() {
 	auto* gc_space = m_gse->GetGCSpace();
-	gc_space->Accumulate( [ this, &gc_space ]( ) {
+	gc_space->Accumulate( nullptr, [ this, &gc_space ]( ) {
 		auto si = m_si_internal;
 		auto* ctx = m_gse_context;
 		gse::ExecutionPointer ep;

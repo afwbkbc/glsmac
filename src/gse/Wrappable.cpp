@@ -67,20 +67,31 @@ const bool Wrappable::HasHandlers( const std::string& event ) {
 
 Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< Value::type_t > expected_return_type ) {
 	Value* result = nullptr;
-	const auto& it = m_callbacks.find( event );
-	if ( it != m_callbacks.end() ) {
+	if ( m_callbacks.find( event ) != m_callbacks.end() ) {
 		value::object_properties_t args = {};
 		if ( f_args ) {
 			f_args( GSE_CALL, args );
 		}
-		auto e = VALUEEXT( gse::value::Object, GSE_CALL, args );
+		auto* args_obj = VALUEEXT( gse::value::Object, GSE_CALL, args );
+		result = Trigger( GSE_CALL, event, args_obj, expected_return_type );
+	}
+	return result
+		? result
+		: VALUE( gse::value::Undefined );
+}
+
+Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* const args_obj, const std::optional< Value::type_t > expected_return_type ) {
+	ASSERT( args_obj, "args_obj is null" );
+	Value* result = nullptr;
+	const auto& it = m_callbacks.find( event );
+	if ( it != m_callbacks.end() ) {
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
 		for ( const auto& it2 : callbacks ) {
 			const auto& cb = it2.second.callable;
 			if ( cb->type != Value::T_CALLABLE ) {
 				ASSERT( cb->type == Value::T_CALLABLE, "callback not callable" );
 			}
-			result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { e } );
+			result = ( (value::Callable*)cb )->Run( gc_space, it2.second.ctx, it2.second.si, ep, { args_obj } );
 			if ( expected_return_type.has_value() ) {
 				if ( !result || result->type != expected_return_type.value() ) {
 					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + result->GetTypeString() + ": " + result->ToString(), it2.second.ctx, it2.second.si, ep );
@@ -98,7 +109,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 
 void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "GCWrappable" );
-
+	
 	GC_DEBUG_BEGIN( "callbacks" );
 	for ( const auto& it1 : m_callbacks ) {
 		for ( const auto& it2 : it1.second ) {
@@ -106,7 +117,7 @@ void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 		}
 	}
 	GC_DEBUG_END();
-
+	
 	GC_DEBUG_END();
 }
 

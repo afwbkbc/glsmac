@@ -31,7 +31,7 @@ using namespace program;
 namespace tests {
 
 void AddParserTests( task::gsetests::GSETests* task ) {
-
+	
 	const auto validate_program = []( const Program* program, const Program* reference_program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
 
@@ -40,13 +40,13 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 #define VALIDATE( _func, _a, _b ) \
         errmsg = _func( (_a), (_b) ); \
         if (!errmsg.empty()) return errmsg;
-
+		
 		std::string errmsg = "";
-
+		
 		VALIDATOR_FORWARD_DEF( scope, Scope );
 		VALIDATOR_FORWARD_DEF( expression, Expression );
 		VALIDATOR_FORWARD_DEF( operand, Operand );
-
+		
 		const auto si = []( const si_t& a, const si_t& b ) -> std::string {
 			if ( !a.file.empty() ) { // skip checks
 				GT_ASSERT( a.file == b.file, "si filename differs ( " + a.file + " != " + b.file + " )" );
@@ -55,31 +55,31 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			}
 			GT_OK();
 		};
-
+		
 		const auto value = VALIDATOR( program::Value, &errmsg, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( *a->value == *b->value, "values differ ( " + a->value->ToString() + " != " + b->value->ToString() + " )" );
 			GT_OK();
 		};
-
+		
 		const auto variable = VALIDATOR( Variable, &errmsg, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( a->name == b->name, "variables names differ ( \"" + a->name + "\" != \"" + b->name + "\" )" );
 			GT_ASSERT( a->hints == b->hints, "variables hints differ ( \"" + std::to_string( a->hints ) + "\" != \"" + std::to_string( b->hints ) + "\" )" );
 			GT_OK();
 		};
-
+		
 		const auto array = VALIDATOR( Array, &errmsg, &expression, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( a->elements.size() == b->elements.size(), "arrays have different sizes ( " + std::to_string( a->elements.size() ) + " != " + std::to_string( b->elements.size() ) + " )" );
-
+			
 			for ( size_t i = 0 ; i < a->elements.size() ; i++ ) {
 				VALIDATE( expression, a->elements[ i ], b->elements[ i ] );
 			}
-
+			
 			GT_OK();
 		};
-
+		
 		const auto object = VALIDATOR( Object, &errmsg, &expression, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			for ( const auto& it : a->properties ) {
@@ -93,7 +93,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			}
 			GT_OK();
 		};
-
+		
 		const auto function = VALIDATOR( Function, &errmsg, &scope, &variable, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( a->parameters.size() == b->parameters.size(), "parameters sizes differ ( " + std::to_string( a->parameters.size() ) + " != " + std::to_string( b->parameters.size() ) + " )" );
@@ -103,7 +103,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			VALIDATE( scope, a->body, b->body );
 			GT_OK();
 		};
-
+		
 		const auto call = VALIDATOR( Call, &errmsg, &expression, &operand, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
 			VALIDATE( expression, a->callable, b->callable );
@@ -113,7 +113,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			}
 			GT_OK();
 		};
-
+		
 		operand = VALIDATOR( Operand,
 			&errmsg,
 			&value,
@@ -306,20 +306,21 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			}
 			GT_OK();
 		};
-
+		
 		VALIDATE( scope, program->body, reference_program->body );
 
 #undef VALIDATOR
 #undef VALIDATE
 		GT_OK();
 	};
-
+	
 	task->AddTest(
 		"test if JS parser produces valid output",
 		GT( validate_program ) {
 			auto* gc_space = gse->GetGCSpace();
 			std::string result = "";
 			gc_space->Accumulate(
+				nullptr,
 				[ &gc_space, &validate_program, &result ]() {
 					NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
 					const auto* program = parser->Parse();
@@ -335,7 +336,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			return result;
 		}
 	);
-
+	
 }
 
 }

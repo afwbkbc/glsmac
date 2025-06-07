@@ -76,6 +76,7 @@ void Graphics::Unlock() {
 }
 
 void Graphics::NoRender( const std::function< void() >& f ) {
+	std::lock_guard guard( m_render_lock );
 	f();
 }
 

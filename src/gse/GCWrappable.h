@@ -32,14 +32,13 @@ class GCWrappable : public Wrappable, public gc::Object {
 public:
 	GCWrappable( gc::Space* const gc_space );
 	virtual ~GCWrappable();
-
+	
 	const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback ) override;
 	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id ) override;
 	const bool HasHandlers( const std::string& event ) override;
-	Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} ) override;
-
+	
 	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
-
+	
 };
 
 }

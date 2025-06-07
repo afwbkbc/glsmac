@@ -138,6 +138,8 @@ private:
 	void ProcessPending();
 	void ClearPending();
 
+	gc::Space* const m_gc_space;
+	
 };
 
 }
