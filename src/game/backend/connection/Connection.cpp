@@ -99,6 +99,9 @@ const bool Connection::IterateAndMaybeDelete() {
 				if ( m_on_disconnect ) {
 					should_delete |= m_on_disconnect();
 				}
+				WTrigger(
+					"disconnect", ARGS_F() {}; }
+				);
 			}
 			if ( m_is_canceled ) {
 				if ( m_on_cancel ) {
@@ -111,10 +114,10 @@ const bool Connection::IterateAndMaybeDelete() {
 				should_delete |= m_on_error( m_disconnect_reason );
 				m_disconnect_reason.clear();
 			}
-			if ( should_delete ) {
-				DELETE( this );
-				return true;
-			}
+//			if ( should_delete ) {
+			DELETE( this );
+			return true;
+//			}
 		}
 	}
 
@@ -132,7 +135,15 @@ const bool Connection::IterateAndMaybeDelete() {
 							return true;
 						}
 					}
-					break;
+					WTrigger(
+						"error", ARGS_F( &result ) {
+							{
+								"message", VALUE( gse::value::String,, result.message )
+							}
+						}; }
+					);
+					DELETE( this );
+					return true;
 				}
 				case network::R_SUCCESS: {
 					Log( "Connection open" );
@@ -140,6 +151,9 @@ const bool Connection::IterateAndMaybeDelete() {
 					if ( m_on_connect ) {
 						m_on_connect();
 					}
+					WTrigger(
+						"connect", ARGS_F() {}; }
+					);
 					break;
 				}
 				case network::R_CANCELED: {
@@ -168,6 +182,7 @@ const bool Connection::IterateAndMaybeDelete() {
 							return true;
 						}
 					}
+					return false;
 				}
 				else if ( result.result == network::R_SUCCESS ) {
 					if ( !result.events.empty() ) {
@@ -266,7 +281,7 @@ WRAPIMPL_BEGIN( Connection )
 
 				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
 
-				if ( m_is_connected && !m_mt_ids.disconnect ) {
+				if ( !m_mt_ids.disconnect ) {
 
 					if ( arguments.size() >= 1 ) {
 						N_GETVALUE( reason, 0, String );

@@ -15,9 +15,7 @@ namespace backend {
 namespace connection {
 
 Server::Server( settings::LocalSettings* const settings )
-	: Connection( network::CM_SERVER, settings ) {
-	//
-}
+	: Connection( network::CM_SERVER, settings ) {}
 
 void Server::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
@@ -26,6 +24,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 	switch ( event.type ) {
 		case network::LegacyEvent::ET_LISTEN: {
+			m_game_state = GS_LOBBY; // tmp: start with lobby for now
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();

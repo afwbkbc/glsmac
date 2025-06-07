@@ -38,6 +38,7 @@ UIObject::UIObject( const std::string& class_name ) {
 }
 
 UIObject::~UIObject() {
+	ASSERT( !m_created, "some actors still present on destruction" );
 	if ( m_created ) {
 		Destroy();
 	}

@@ -72,6 +72,9 @@ const std::string& Player::GetDifficultyLevel() const {
 
 void Player::SetSlot( slot::Slot* slot ) {
 	m_slot = slot;
+	if ( m_slot ) {
+		m_slotnum = m_slot->GetCid();
+	}
 }
 
 slot::Slot* Player::GetSlot() const {
@@ -98,7 +101,7 @@ WRAPIMPL_BEGIN( Player )
 	WRAPIMPL_PROPS
 			{
 				"id",
-				VALUE( gse::value::Int, , m_slot->GetCid() )
+				VALUE( gse::value::Int, , m_slotnum )
 			},
 			{
 				"name",

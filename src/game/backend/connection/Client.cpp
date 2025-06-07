@@ -163,7 +163,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							break;
 						}
 						case types::Packet::PT_GAME_STATE: {
-							Log( "Got game state: " + std::to_string( packet.data.num ) );
+							Log( "Got game state: " + std::to_string( packet.udata.game_state.state ) );
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
 								if ( m_on_game_state_change ) {

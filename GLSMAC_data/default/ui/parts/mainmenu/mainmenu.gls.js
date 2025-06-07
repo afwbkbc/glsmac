@@ -63,6 +63,13 @@ return (m) => {
 			i.settings.local.network_type = 'simple_tcpip';
 			i.settings.global.game_name = c.gamename;
 			i.settings.local.player_name = c.playername;
+			i.settings.local.network_role = 'server';
+			m.glsmac.init();
+			i.steps.multiplayer_lobby(i);
+		} elseif (#is_defined(c.join)) {
+			i.settings.local.network_role = 'client';
+			i.settings.local.player_name = c.playername;
+			i.settings.local.remote_address = c.join;
 			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
 		} else {

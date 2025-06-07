@@ -57,6 +57,7 @@ void State::WithGSE( const gse_func_t& f ) {
 }
 
 void State::Iterate() {
+	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
 			m_connection = nullptr;
@@ -70,11 +71,13 @@ void State::Iterate() {
 	}
 }
 
-bool State::IsMaster() const {
+bool State::IsMaster() {
+	//std::lock_guard guard( m_connection_mutex );
 	return !m_connection || m_connection->IsServer();
 }
 
-bool State::IsSlave() const {
+bool State::IsSlave() {
+	//std::lock_guard guard( m_connection_mutex );
 	return m_connection && m_connection->IsClient();
 }
 
@@ -117,13 +120,15 @@ const std::unordered_map< network::cid_t, size_t >& State::GetCidSlots() const {
 }
 
 void State::SetConnection( connection::Connection* connection ) {
+	//std::lock_guard guard( m_connection_mutex );
 	ASSERT( !m_connection, "state connection already set" );
 	ASSERT( connection, "connection is null" );
 	connection->SetState( this );
 	m_connection = connection;
 }
 
-connection::Connection* State::GetConnection() const {
+connection::Connection* State::GetConnection() {
+	//std::lock_guard guard( m_connection_mutex );
 	return m_connection;
 }
 
@@ -164,16 +169,19 @@ void State::Configure() {
 }
 
 void State::Reset() {
-	if ( m_connection ) {
-		if ( m_connection->IsConnected() ) {
-			auto* connection = m_connection;
-			m_connection->m_on_disconnect = [ connection ]() -> bool {
-				// TODO: do this synchronously?
-				return true;
-			};
-			m_connection->Disconnect();
+	{
+		//std::lock_guard guard( m_connection_mutex );
+		if ( m_connection ) {
+			if ( m_connection->IsConnected() ) {
+				auto* connection = m_connection;
+				m_connection->m_on_disconnect = [ connection ]() -> bool {
+					// TODO: do this synchronously?
+					return true;
+				};
+				m_connection->Disconnect();
+			}
+			m_connection = nullptr;
 		}
-		m_connection = nullptr;
 	}
 	for ( auto& player : m_players ) {
 		DELETE( player );
@@ -243,10 +251,13 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 		GC_DEBUG_END();
 	}
 
-	if ( m_connection ) {
-		GC_DEBUG_BEGIN( "connection" );
-		m_connection->GetReachableObjects( reachable_objects );
-		GC_DEBUG_END();
+	{
+		//std::lock_guard guard( m_connection_mutex );
+		if ( m_connection ) {
+			GC_DEBUG_BEGIN( "connection" );
+			m_connection->GetReachableObjects( reachable_objects );
+			GC_DEBUG_END();
+		}
 	}
 
 	GC_DEBUG_END();

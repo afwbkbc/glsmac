@@ -69,6 +69,7 @@ private:
 	role_t m_role = PR_NONE;
 
 	slot::Slot* m_slot = nullptr;
+	size_t m_slotnum = 0;
 
 	faction::Faction* m_faction = {};
 	std::string m_difficulty_level = "";

@@ -57,8 +57,8 @@ CLASS2( State, common::Class, gse::GCWrappable )
 
 	void Iterate();
 
-	bool IsMaster() const;
-	bool IsSlave() const;
+	bool IsMaster();
+	bool IsSlave();
 
 	void AddPlayer( Player* player );
 	void RemovePlayer( Player* player );
@@ -70,7 +70,7 @@ CLASS2( State, common::Class, gse::GCWrappable )
 	const std::unordered_map< network::cid_t, size_t >& GetCidSlots() const;
 
 	void SetConnection( connection::Connection* connection );
-	connection::Connection* GetConnection() const;
+	connection::Connection* GetConnection();
 	void InitBindings();
 	void Configure();
 	void Reset();
@@ -101,6 +101,7 @@ private:
 	std::unordered_set< Player* > m_players = {}; // persistent
 	std::unordered_map< network::cid_t, size_t > m_cid_slots = {}; // volatile ( { cid, slot_num } )
 
+	std::mutex m_connection_mutex;
 	connection::Connection* m_connection = nullptr;
 
 };

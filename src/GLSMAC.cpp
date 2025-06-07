@@ -26,6 +26,7 @@
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
 #include "game/backend/connection/Server.h"
+#include "game/backend/connection/Client.h"
 
 #include "game/frontend/Game.h"
 
@@ -196,8 +197,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 			game->Wrap( GSE_CALL, true ),
 		},
 		{
-			"listen",
+			"connect",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -207,7 +209,19 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_game_running ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 				}
-				NEWV( connection, game::backend::connection::Server, &m_state->m_settings.local );
+				game::backend::connection::Connection* connection = nullptr;
+				switch ( m_state->m_settings.local.network_role ) {
+					case game::backend::settings::LocalSettings::NR_SERVER: {
+						NEW( connection, game::backend::connection::Server, &m_state->m_settings.local );
+						break;
+					}
+					case game::backend::settings::LocalSettings::NR_CLIENT: {
+						NEW( connection, game::backend::connection::Client, &m_state->m_settings.local );
+						break;
+					}
+					default:
+						GSE_ERROR( gse::EC.GAME_ERROR, "Network role not set" );
+				}
 				m_state->SetConnection( connection );
 				return connection->Wrap( GSE_CALL, true );
 			} ),
