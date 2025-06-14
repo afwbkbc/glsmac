@@ -25,7 +25,7 @@ Space::Space( Object* const root_object )
 
 Space::~Space() {
 	g_engine->GetGC()->RemoveSpace( this );
-	
+
 	{
 		// cleanup anything that didn't execute in time
 		std::lock_guard guard( m_pending_accumulations_mutex );
@@ -35,15 +35,16 @@ Space::~Space() {
 			}
 		}
 	}
-	
+
 	m_collect_mutex.lock(); // wait for any ongoing collects to finish
 	m_is_destroying = true;
 	m_collect_mutex.unlock();
-	
+
 	// collect until there's nothing to collect
 	GC_LOG( "Destroying remaining objects" );
 	{
 		m_objects_mutex.lock();
+		size_t tries = 10;
 		while ( !m_objects.empty() ) {
 			GC_LOG( std::to_string( m_objects.size() ) + " objects are still reachable" );
 			m_objects_mutex.unlock();
@@ -57,6 +58,9 @@ Space::~Space() {
 			m_objects_mutex.lock();
 			if ( !m_objects.empty() ) {
 				Log( "WARNING: collect finished but objects still not empty" );
+				if ( !--tries ) {
+					break;
+				}
 			}
 		}
 		m_objects_mutex.unlock();
@@ -157,13 +161,13 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 const bool Space::Collect() {
 	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
-	
+
 	GC_DEBUG_LOCK();
 	GC_DEBUG_BEGIN( "Root" );
 	m_root_object->GetReachableObjects( m_reachable_objects_tmp );
 	GC_DEBUG_END();
 	GC_DEBUG_UNLOCK();
-	
+
 	{
 		std::lock_guard guard2( m_pending_accumulations_mutex );
 		if ( !m_pending_accumulations.empty() ) {
@@ -176,11 +180,11 @@ const bool Space::Collect() {
 			GC_DEBUG_END();
 		}
 	}
-	
+
 	std::unordered_set< Object* > removed_objects = {};
 	{
 		std::lock_guard guard3( m_accumulations_mutex ); // prevent collection during accumulation // TODO: improve
-		
+
 		g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
 			[ this, &removed_objects ]() {
 				std::lock_guard guard2( m_objects_mutex );
@@ -201,9 +205,9 @@ const bool Space::Collect() {
 				GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
 			}
 		);
-		
+
 		m_reachable_objects_tmp.clear();
-		
+
 		{
 			std::lock_guard guard2( m_objects_mutex );
 			for ( const auto& object : removed_objects ) {
@@ -212,7 +216,7 @@ const bool Space::Collect() {
 			}
 		}
 	}
-	
+
 	return !removed_objects.empty();
 }
 

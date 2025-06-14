@@ -19,6 +19,9 @@ Button::Button( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "transform", m_label );
 	ForwardProperty( GSE_CALL, "color", m_label );
 	ForwardProperty( GSE_CALL, "font", m_label );
+	ForwardProperty( GSE_CALL, "textalign", "align", m_label );
+	ForwardProperty( GSE_CALL, "textleft", "left", m_label );
+	ForwardProperty( GSE_CALL, "texttop", "top", m_label );
 
 	m_sound = new Sound( GSE_CALL, ui, this, {} );
 	Embed( m_sound );
