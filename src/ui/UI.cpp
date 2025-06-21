@@ -285,4 +285,30 @@ void UI::Defocus( dom::Focusable* const element ) {
 	}
 }
 
+void UI::SetGlobalSingleton( GSE_CALLABLE, dom::Object* const object, const std::function< void() >& f_on_deglobalize ) {
+	ASSERT( object, "object is null" );
+	if ( m_global_singleton != object ) {
+		if ( m_global_singleton ) {
+			RemoveGlobalSingleton( GSE_CALL, m_global_singleton );
+		}
+		m_global_singleton = object;
+		m_f_global_singleton_on_deglobalize = f_on_deglobalize;
+		m_global_singleton->Show();
+		m_root->AddChild( GSE_CALL, m_global_singleton, false );
+	}
+}
+
+void UI::RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object ) {
+	ASSERT( object, "object is null" );
+	if ( m_global_singleton == object ) {
+		if ( m_f_global_singleton_on_deglobalize ) {
+			m_f_global_singleton_on_deglobalize();
+		}
+		m_root->RemoveChild( GSE_CALL, m_global_singleton, true );
+		m_global_singleton->Hide();
+		m_global_singleton = nullptr;
+		m_f_global_singleton_on_deglobalize = nullptr;
+	}
+}
+
 }

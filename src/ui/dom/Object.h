@@ -83,6 +83,9 @@ public:
 	void AddModifier( GSE_CALLABLE, const class_modifier_t modifier );
 	void RemoveModifier( GSE_CALLABLE, const class_modifier_t modifier );
 
+	void Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglobalize = nullptr );
+	void Deglobalize( GSE_CALLABLE );
+
 protected:
 
 	virtual ~Object();
@@ -153,6 +156,7 @@ private:
 	gse::value::Object* m_wrapobj = nullptr;
 
 	bool m_is_iterable_set = false;
+	bool m_is_globalized = false;
 
 private:
 	friend class Container;

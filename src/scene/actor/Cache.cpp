@@ -10,7 +10,8 @@ Cache::Cache( const std::string& name )
 
 Cache::~Cache() {
 	// detach children
-	for ( const auto& child : m_cache_children ) {
+	const auto children = m_cache_children;
+	for ( const auto& child : children ) {
 		child->SetCacheParent( nullptr );
 	}
 }

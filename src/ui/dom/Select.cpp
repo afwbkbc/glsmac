@@ -3,8 +3,6 @@
 #include "gse/value/String.h"
 #include "gse/value/Int.h"
 #include "gse/value/Array.h"
-#include "gse/value/Bool.h"
-#include "gse/value/Float.h"
 
 #include "Button.h"
 #include "ChoiceList.h"
@@ -13,9 +11,6 @@
 
 namespace ui {
 namespace dom {
-
-static ChoiceList* s_choicelist = nullptr;
-static Button* s_active_element = nullptr;
 
 Select::Select( DOM_ARGS )
 	: Container( DOM_ARGS_PASS, "select", false ) {
@@ -31,24 +26,19 @@ Select::Select( DOM_ARGS )
 	m_active_element->m_on_click = [ this, ctx, si, ep ]() {
 		auto ep2 = ep;
 		if ( !m_choicelist->m_is_visible ) {
-			if ( s_choicelist ) {
-				s_choicelist->Hide();
-			}
-			if ( s_active_element ) {
-				s_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
-			}
-			s_choicelist = m_choicelist;
-			s_active_element = m_active_element;
-			s_choicelist->Show();
-			s_active_element->AddModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
+			m_choicelist->Globalize(
+				m_gc_space, ctx, si, ep2, [ this, ctx, si, ep2 ]() {
+					auto ep3 = ep2;
+					m_active_element->RemoveModifier( m_gc_space, ctx, si, ep3, CM_HIGHLIGHT );
+				}
+			);
+			m_choicelist->Show();
+			m_active_element->AddModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 		}
 		else {
-			ASSERT( m_choicelist == s_choicelist, "choicelist mismatch" );
-			s_choicelist->Hide();
-			s_choicelist = nullptr;
-			ASSERT( m_active_element == s_active_element, "active_element mismatch" );
-			s_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
-			s_active_element = nullptr;
+			m_choicelist->Hide();
+			m_choicelist->Deglobalize( m_gc_space, ctx, si, ep2 );
+			m_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 		}
 	};
 	Embed( m_active_element );
@@ -58,6 +48,7 @@ Select::Select( DOM_ARGS )
 		auto ep2 = ep;
 		m_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 		m_choicelist->Hide();
+		m_choicelist->Deglobalize( m_gc_space, ctx, si, ep2 );
 		m_active_element->WrapSet( "text", VALUE( gse::value::String, , label ), gc_space, ctx, si, ep2 );
 		if ( send_event ) {
 			input::Event e;

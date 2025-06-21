@@ -198,19 +198,19 @@ void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 
 	GC_DEBUG_BEGIN( "Container" );
 
-	// children are reachable
 	GC_DEBUG_BEGIN( "children" );
 	for ( const auto& it : m_children ) {
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
 
-	// embedded objects are reachable
-	GC_DEBUG_BEGIN( "embedded_objects" );
-	for ( const auto& it : m_embedded_objects ) {
-		GC_REACHABLE( it.first );
+	if ( !m_embedded_objects.empty() ) {
+		GC_DEBUG_BEGIN( "embedded_objects" );
+		for ( const auto& it : m_embedded_objects ) {
+			GC_REACHABLE( it.first );
+		}
+		GC_DEBUG_END();
 	}
-	GC_DEBUG_END();
 
 	GC_DEBUG_END();
 }
@@ -381,13 +381,18 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	}
 }
 
-void Container::RemoveChild( GSE_CALLABLE, Object* obj ) {
-	ASSERT( m_children.find( obj->m_id ) != m_children.end(), "child not found" );
+void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
+	if ( m_children.find( obj->m_id ) == m_children.end() ) {
+		// this can happen if globalized child deglobalizes during root object destruction
+		return;
+	}
 	m_children.erase( obj->m_id );
 	if ( m_mouse_over_object == obj ) {
 		SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
 	}
-	obj->Destroy( GSE_CALL );
+	if ( !nodestroy ) {
+		obj->Destroy( GSE_CALL );
+	}
 }
 
 }

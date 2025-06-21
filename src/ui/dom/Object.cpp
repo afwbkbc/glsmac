@@ -86,6 +86,7 @@ Object::Object( DOM_ARGS_T )
 }
 
 Object::~Object() {
+	ASSERT( m_is_destroyed, "object was not destroyed properly!" );
 	if ( !m_is_destroyed ) {
 		util::LogHelper::Println( "WARNING: object was not destroyed properly!" );
 	}
@@ -169,6 +170,9 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 
 void Object::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_is_destroyed, "already destroyed" );
+	if ( m_is_globalized ) {
+		Deglobalize( GSE_CALL );
+	}
 	Hide();
 	SetClasses( GSE_CALL, {} );
 	if ( m_is_iterable_set ) {
@@ -442,8 +446,7 @@ void Object::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 }
 
 void Object::AddModifier( GSE_CALLABLE, const class_modifier_t modifier ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
-	if ( m_modifiers.find( modifier ) == m_modifiers.end() ) {
+	if ( !m_is_destroyed && m_modifiers.find( modifier ) == m_modifiers.end() ) {
 		m_modifiers.insert( modifier );
 		for ( const auto& c : m_classes ) {
 			c->AddObjectModifier( GSE_CALL, this, modifier );
@@ -452,12 +455,26 @@ void Object::AddModifier( GSE_CALLABLE, const class_modifier_t modifier ) {
 }
 
 void Object::RemoveModifier( GSE_CALLABLE , const class_modifier_t modifier ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
-	if ( m_modifiers.find( modifier ) != m_modifiers.end() ) {
+	if ( !m_is_destroyed && m_modifiers.find( modifier ) != m_modifiers.end() ) {
 		m_modifiers.erase( modifier );
 		for ( const auto& c : m_classes ) {
 			c->RemoveObjectModifier( GSE_CALL, this, modifier );
 		}
+	}
+}
+
+void Object::Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglobalize ) {
+	if ( m_is_globalized ) {
+		Deglobalize( GSE_CALL );
+	}
+	m_ui->SetGlobalSingleton( GSE_CALL, this, f_on_deglobalize );
+	m_is_globalized = true;
+}
+
+void Object::Deglobalize( GSE_CALLABLE ) {
+	if ( m_is_globalized ) {
+		m_ui->RemoveGlobalSingleton( GSE_CALL, this );
+		m_is_globalized = false;
 	}
 }
 

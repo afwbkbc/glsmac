@@ -54,6 +54,7 @@ private:
 
 	std::map< id_t, Object* > m_children = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
+	std::vector< Object* > m_lazy_embedded_objects = {};
 	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;
@@ -73,7 +74,7 @@ private:
 protected:
 	friend class Object;
 	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible );
-	void RemoveChild( GSE_CALLABLE, Object* obj );
+	void RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy = false );
 
 };
 

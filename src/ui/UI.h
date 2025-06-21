@@ -68,7 +68,8 @@ private:
 	typedef std::function< void() > f_iterable_t;
 	void AddIterable( const dom::Object* const obj, const f_iterable_t& f );
 	void RemoveIterable( const dom::Object* const obj );
-
+	void SetGlobalSingleton( GSE_CALLABLE, dom::Object* const object, const std::function< void() >& f_on_deglobalize = nullptr );
+	void RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object );
 private:
 	dom::Root* m_root;
 
@@ -88,6 +89,9 @@ private:
 	std::vector< dom::Focusable* > m_focusable_elements = {};
 	std::unordered_map< dom::Focusable*, size_t > m_focusable_elements_idx = {};
 	dom::Focusable* m_focused_element = nullptr;
+
+	dom::Object* m_global_singleton = nullptr;
+	std::function< void() > m_f_global_singleton_on_deglobalize = nullptr;
 
 private:
 	friend class dom::Object;
