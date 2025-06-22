@@ -57,6 +57,8 @@ CLASS( UI, gse::GCWrappable )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+	dom::Root* const GetRoot() const;
+
 	void AddFocusable( dom::Focusable* const element );
 	void RemoveFocusable( dom::Focusable* const element );
 	void Focus( dom::Focusable* const element );

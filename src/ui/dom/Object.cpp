@@ -16,6 +16,7 @@
 #include "graphics/Graphics.h"
 #include "gse/callable/Native.h"
 #include "gse/value/Object.h"
+#include "Root.h"
 
 #include "Object.colormap.cpp"
 
@@ -467,12 +468,14 @@ void Object::Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglob
 	if ( m_is_globalized ) {
 		Deglobalize( GSE_CALL );
 	}
+	ASSERT( m_parent == m_ui->GetRoot(), "can only globalize children of root object" );
 	m_ui->SetGlobalSingleton( GSE_CALL, this, f_on_deglobalize );
 	m_is_globalized = true;
 }
 
 void Object::Deglobalize( GSE_CALLABLE ) {
 	if ( m_is_globalized ) {
+		ASSERT( m_parent == m_ui->GetRoot(), "can only deglobalize children of root object" );
 		m_ui->RemoveGlobalSingleton( GSE_CALL, this );
 		m_is_globalized = false;
 	}

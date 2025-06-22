@@ -38,6 +38,17 @@ Text* Geometry::AsText() const {
 	return (Text*)this;
 }
 
+void Geometry::SetParent( Geometry* const other ) {
+	ASSERT( other, "other geometry is null" );
+	if ( m_parent ) {
+		m_parent->m_children.erase( this );
+		m_parent->UpdateEffectiveArea();
+	}
+	m_parent = other;
+	m_parent->m_children.insert( this );
+	m_parent->UpdateEffectiveArea();
+}
+
 void Geometry::SetLeft( const coord_t px ) {
 	m_left = px;
 	m_stick_bits |= STICK_LEFT;
@@ -216,6 +227,7 @@ void Geometry::UpdateArea() {
 	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
 	area_t object_area = {};
 	object_area.zindex = m_zindex;
+
 	if ( m_parent ) {
 		area_t area;
 		switch ( m_position ) {

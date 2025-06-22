@@ -60,6 +60,8 @@ public:
 	Rectangle* AsRectangle() const;
 	Text* AsText() const;
 
+	void SetParent( Geometry* const other );
+
 	void SetLeft( const coord_t px );
 	void SetTop( const coord_t px );
 	void SetRight( const coord_t px );

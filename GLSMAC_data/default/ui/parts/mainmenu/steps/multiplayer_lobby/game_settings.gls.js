@@ -97,10 +97,10 @@ return (i) => {
 
 		const line_height = 28;
 
-		// small hack until zindex is fully fixed: add lines in reverse order so that higher selects were drawn on top of lower selects
-		let top = line_height * (#sizeof(lines) - 1) + line_height / 2;
-		for (let idx = #sizeof(lines); idx > 0; idx--) {
-			const line = lines[idx - 1];
+		let top = line_height / 2;
+		let sz = #sizeof(lines);
+		for (let idx = 0; idx < sz; idx++) {
+			const line = lines[idx];
 			if (!#is_empty(line)) {
 				body.text({
 					class: 'popup-panel-text',
@@ -128,7 +128,7 @@ return (i) => {
 				});
 				line.on_change(line.initial_choice);
 			}
-			top -= line_height;
+			top += line_height;
 		}
 	});
 

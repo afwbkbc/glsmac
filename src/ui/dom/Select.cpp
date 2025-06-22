@@ -8,6 +8,8 @@
 #include "ChoiceList.h"
 #include "input/Event.h"
 #include "ui/UI.h"
+#include "ui/geometry/Rectangle.h"
+#include "Root.h"
 
 namespace ui {
 namespace dom {
@@ -43,7 +45,7 @@ Select::Select( DOM_ARGS )
 	};
 	Embed( m_active_element );
 
-	m_choicelist = new ChoiceList( GSE_CALL, ui, this, {} );
+	m_choicelist = new ChoiceList( GSE_CALL, ui, m_ui->GetRoot(), {} );
 	m_choicelist->m_on_update = [ this, gc_space, ctx, si, ep ]( const std::string& value, const std::string& label, const bool send_event ) {
 		auto ep2 = ep;
 		m_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );

@@ -238,6 +238,10 @@ void UI::AddFocusable( dom::Focusable* const element ) {
 	}
 }
 
+dom::Root* const UI::GetRoot() const {
+	return m_root;
+}
+
 void UI::RemoveFocusable( dom::Focusable* const element ) {
 	ASSERT( element, "element is null" );
 	const auto& it = m_focusable_elements_idx.find( element );

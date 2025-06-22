@@ -104,6 +104,10 @@ void Container::ForwardFactories( GSE_CALLABLE, Object* child ) {
 
 void Container::Embed( Object* object, const bool is_visible ) {
 	ASSERT( !m_is_initialized, "container already initialized" );
+	if ( object->m_parent != this ) {
+		ASSERT( m_geometry, "object with custom parent but we have no geometry" );
+		object->GetGeometry()->SetParent( m_geometry );
+	}
 	m_embedded_objects.push_back( { object, is_visible } );
 }
 
