@@ -33,6 +33,8 @@ CLASS( String, Util )
 	static const bool ParseFloat( const std::string& s, float& result );
 	static const bool ParseColorHex( const std::string& s, types::Color& result );
 
+	static const std::string FloatToString( const float& f );
+
 };
 
 }

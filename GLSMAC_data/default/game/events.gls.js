@@ -1,7 +1,7 @@
 return (game) => {
 
 	for (e of [
-		'configure_game',
+		'game_settings',
 		'define_resource',
 		'define_animation',
 		'define_moraleset',

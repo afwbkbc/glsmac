@@ -290,4 +290,24 @@ const bool String::ParseColorHex( const std::string& s, types::Color& result ) {
 	return true;
 }
 
+const std::string String::FloatToString( const float& f ) {
+	std::string result = std::to_string( f );
+	auto pos = result.find( '.' );
+	if ( pos != std::string::npos ) {
+		// filter trailing zeroes (but keep at least one digit after .)
+		const auto begin = result.begin() + pos + 1;
+		if ( begin != result.end() ) {
+			auto zbegin = result.end() - 1;
+			while ( zbegin > begin ) {
+				if ( ( *zbegin ) != '0' ) {
+					break;
+				}
+				zbegin--;
+			}
+			result.erase( zbegin + 1, result.end() );
+		}
+	}
+	return result;
+}
+
 }

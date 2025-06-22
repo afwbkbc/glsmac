@@ -417,8 +417,7 @@ void Game::Iterate() {
 				}
 			}
 		}
-		else if ( m_game_state == GS_RUNNING ) {
-			ASSERT( m_state, "state not set" );
+		if ( m_state ) {
 
 			m_state->m_gc_space->Accumulate( this, [ this ]() {
 				std::vector< event::Event* > events;
@@ -427,8 +426,8 @@ void Game::Iterate() {
 					events = m_pending_events;
 					m_pending_events.clear();
 				}
-				m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
-					if ( !events.empty() ) {
+				if ( !events.empty() ) {
+					m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
 						const std::string* errptr = nullptr;
 						for ( const auto& event : events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
@@ -464,10 +463,8 @@ void Game::Iterate() {
 								delete ( errptr );
 							}
 						}
-					}
-
-				});
-
+					});
+				}
 			});
 		}
 	}
@@ -686,14 +683,33 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
-			"get_settings",
+			"get_settings", // deprecated
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
 				return m_state->m_settings.Wrap( GSE_CALL, true );
-			} ),
+			} )
+		},
+		{
+			"get_setting",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( key, 0, String );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"set_setting",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( key, 0, String );
+				N_GETVALUE( value, 1, String );
+
+				return VALUE( gse::value::Undefined );
+			} )
 		},
 		{
 			"register_event",

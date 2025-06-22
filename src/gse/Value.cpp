@@ -21,6 +21,7 @@
 #include "types/Buffer.h"
 
 #include "gc/Space.h"
+#include "util/String.h"
 
 namespace gse {
 
@@ -97,7 +98,7 @@ const std::string Value::ToString() const {
 		case T_INT:
 			return std::to_string( ( (value::Int*)this )->value );
 		case T_FLOAT:
-			return std::to_string( ( (value::Float*)this )->value );
+			return util::String::FloatToString( ( (value::Float*)this )->value );
 		case T_STRING:
 			return ( (value::String*)this )->value;
 		case T_ARRAY: {

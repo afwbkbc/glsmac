@@ -160,6 +160,8 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 
 const bool Space::Collect() {
 	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
+	std::lock_guard guard2( m_pending_accumulations_mutex );
+	
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
 
 	GC_DEBUG_LOCK();
@@ -168,17 +170,14 @@ const bool Space::Collect() {
 	GC_DEBUG_END();
 	GC_DEBUG_UNLOCK();
 
-	{
-		std::lock_guard guard2( m_pending_accumulations_mutex );
-		if ( !m_pending_accumulations.empty() ) {
-			GC_DEBUG_BEGIN( "pending accumulations owners" );
-			for ( const auto& it : m_pending_accumulations ) {
-				if ( it.second.owner ) {
-					it.second.owner->GetReachableObjects( m_reachable_objects_tmp );
-				}
+	if ( !m_pending_accumulations.empty() ) {
+		GC_DEBUG_BEGIN( "pending accumulations owners" );
+		for ( const auto& it : m_pending_accumulations ) {
+			if ( it.second.owner ) {
+				it.second.owner->GetReachableObjects( m_reachable_objects_tmp );
 			}
-			GC_DEBUG_END();
 		}
+		GC_DEBUG_END();
 	}
 
 	std::unordered_set< Object* > removed_objects = {};

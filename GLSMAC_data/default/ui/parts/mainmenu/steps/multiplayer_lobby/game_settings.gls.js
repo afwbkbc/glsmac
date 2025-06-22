@@ -10,13 +10,15 @@ return (i) => {
 	}, (body) => {
 
 		let lines = [];
-		const make_line = (key, label, choices, initial_choice, on_change) => {
+		let line_keys = {};
+		const make_line = (key, label, choices, initial_choice, converter) => {
+			line_keys[key] = #sizeof(lines);
 			lines :+{
 				key: key,
 				label: label,
 				choices: choices,
 				initial_choice: initial_choice,
-				on_change: on_change,
+				converter: converter,
 			};
 		};
 		const make_empty_line = () => {
@@ -31,8 +33,8 @@ return (i) => {
 			['3', 'Librarian'],
 			['4', 'Thinker'],*/
 			['5', 'Transcend'],
-		], '5', (value) => {
-			#print('DIFFICULTY:', value);
+		], '5', (v) => {
+			return #to_int(v);
 		});
 
 		make_line('timer', 'Time Controls', [
@@ -40,8 +42,8 @@ return (i) => {
 			// TODO
 			/*['5', '5 min'],
 			['15', '15 min'],*/
-		], 'none', (value) => {
-			#print('TIME CONTROLS:', value);
+		], 'none', (v) => {
+			return v;
 		});
 
 		make_empty_line();
@@ -49,8 +51,8 @@ return (i) => {
 		make_line('game_type', 'Type of Game', [
 			['new', 'Random map'],
 			//['load', 'Load game'],
-		], 'new', (value) => {
-			#print('TYPE OF GAME', value);
+		], 'new', (v) => {
+			return v;
 		});
 
 		make_line('planet_size', 'Planet Size', [
@@ -59,48 +61,59 @@ return (i) => {
 			['112x56', 'Standard planet'],
 			['140x70', 'Large planet'],
 			['180x90', 'Huge planet'],
-		], '112x56', (value) => {
-			#print('PLANET SIZE', value);
+		], '112x56', (v) => {
+			return v; // TODO
 		});
 
 		make_line('ocean_coverage', 'Ocean Coverage', [
 			['0.4', '30-50% of surface'],
 			['0.6', '50-70% of surface'],
 			['0.8', '70-90% of surface'],
-		], '0.6', (value) => {
-			#print('OCEAN COVERAGE', value);
+		], '0.6', (v) => {
+			return #to_float(v);
 		});
 
 		make_line('erosive_forces', 'Erosive Forces', [
 			['0.5', 'Strong'],
 			['0.75', 'Average'],
 			['1.0', 'Weak'],
-		], '0.75', (value) => {
-			#print('EROSIVE FORCES', value);
+		], '0.75', (v) => {
+			return #to_float(v);
 		});
 
 		make_line('native_lifeforms', 'Native Lifeforms', [
 			['0.25', 'Rare'],
 			['0.5', 'Average'],
 			['0.75', 'Abundant'],
-		], '0.5', (value) => {
-			#print('NATIVE LIFEFORMS', value);
+		], '0.5', (v) => {
+			return #to_float(v);
 		});
 
 		make_line('cloud_cover', 'Cloud Cover', [
 			['0.25', 'Sparse'],
 			['0.5', 'Average'],
 			['0.75', 'Dense'],
-		], '0.5', (value) => {
-			#print('CLOUD COVER', value);
+		], '0.5', (v) => {
+			return #to_float(v);
 		});
 
 		const line_height = 28;
 
+		game.on('game_settings', (e) => {
+			const c = e.settings;
+			for (s of e.settings) {
+				if (#is_defined(line_keys[s[0]])) {
+					// TODO: one line
+					const el = lines[line_keys[s[0]]].select;
+					el.value = #to_string(s[1]);
+				}
+			}
+		});
+
 		let top = line_height / 2;
 		let sz = #sizeof(lines);
 		for (let idx = 0; idx < sz; idx++) {
-			const line = lines[idx];
+			let line = lines[idx];
 			if (!#is_empty(line)) {
 				body.text({
 					class: 'popup-panel-text',
@@ -108,7 +121,7 @@ return (i) => {
 					text: line.label + ':',
 					left: 10,
 				});
-				const select = body.select({
+				line.select = body.select({
 					top: top,
 					class: 'popup-list-select',
 					width: 140,
@@ -117,16 +130,14 @@ return (i) => {
 					items: line.choices,
 					value: line.initial_choice,
 				});
-				select.on('select', (e) => {
-					game.event('configure_game', {
+				line.select.on('select', (e) => {
+					game.event('game_settings', {
 						changes: [
-							[line.key, e.value],
+							[line.key, line.converter(e.value)],
 						],
 					});
-					line.on_change(e.value);
 					return true;
 				});
-				line.on_change(line.initial_choice);
 			}
 			top += line_height;
 		}
