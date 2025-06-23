@@ -11,7 +11,7 @@ public:
 
 	Client( gc::Space* const gc_space, settings::LocalSettings* const settings );
 
-	std::function< void() > m_on_players_list_update = nullptr;
+	std::function< void( const size_t slot ) > m_on_players_list_update = nullptr;
 	std::function< void( const game_state_t game_state ) > m_on_game_state_change = nullptr;
 	std::function< void( const float progress ) > m_on_download_progress = nullptr; // progress is from 0.0f to 1.0f
 	std::function< void( const std::string serialized_tiles ) > m_on_download_complete = nullptr;

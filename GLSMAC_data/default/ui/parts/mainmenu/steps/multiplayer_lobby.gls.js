@@ -38,35 +38,36 @@ return (i) => {
 				#print('PLAYER LEFT', e);
 			});
 
-			i.connection.open();
+			i.connection.open(() => {
 
-			const ii = i + {
-				make_section: (title, properties, generator) => {
-					let section = body.panel({
-						class: 'popup-panel',
-					} + properties);
-					section.panel({
-						class: 'popup-panel-header',
-					}).text({
-						class: 'popup-panel-header-text',
-						text: title,
-					});
-					let inner = section.panel({
-						class: 'popup-panel-body',
-					});
-					generator(inner);
-					return section;
-				},
-			};
+				const ii = i + {
+					make_section: (title, properties, generator) => {
+						let section = body.panel({
+							class: 'popup-panel',
+						} + properties);
+						section.panel({
+							class: 'popup-panel-header',
+						}).text({
+							class: 'popup-panel-header-text',
+							text: title,
+						});
+						let inner = section.panel({
+							class: 'popup-panel-body',
+						});
+						generator(inner);
+						return section;
+					},
+				};
 
-			for (section of [
-				'game_settings',
-				'players',
-				'custom_game_options',
-			]) {
-				parts[section] = #include('multiplayer_lobby/' + section)(ii);
-			}
+				for (section of [
+					'game_settings',
+					'players',
+					'custom_game_options',
+				]) {
+					parts[section] = #include('multiplayer_lobby/' + section)(ii);
+				}
 
+			});
 		},
 		destructor: () => {
 			if (#is_defined(i.connection)) {

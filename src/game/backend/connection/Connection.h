@@ -135,11 +135,13 @@ private:
 	const size_t PENDING_GAME_EVENTS_LIMIT = 256;
 	game_events_t m_pending_game_events = {};
 
+	gse::value::Callable* m_f_on_open = nullptr;
+
 	void ProcessPending();
 	void ClearPending();
 
 	gc::Space* const m_gc_space;
-	
+
 };
 
 }

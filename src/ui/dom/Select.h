@@ -24,7 +24,9 @@ private:
 	Button* m_active_element = nullptr;
 	ChoiceList* m_choicelist = nullptr;
 
-	void SetItemHeight( GSE_CALLABLE, const size_t px );
+	bool m_readonly = false;
+
+	void SetReadOnly( GSE_CALLABLE, const bool readonly );
 };
 
 }

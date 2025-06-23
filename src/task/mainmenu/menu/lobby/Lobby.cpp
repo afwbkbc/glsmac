@@ -105,7 +105,7 @@ Lobby::Lobby( MainMenu* mainmenu, ::game::backend::connection::Connection* conne
 
 	connection->IfClient(
 		[ this ]( game::backend::connection::Client* connection ) -> void {
-			connection->m_on_players_list_update = [ this ]() -> void {
+			connection->m_on_players_list_update = [ this ]( const size_t slot ) -> void {
 				size_t slots_i = 0;
 				for ( auto& slot : m_state->m_slots->GetSlots() ) {
 					m_players_section->UpdateSlot( slots_i++, &slot );

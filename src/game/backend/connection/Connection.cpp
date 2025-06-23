@@ -141,6 +141,10 @@ const bool Connection::IterateAndMaybeDelete() {
 			//g_engine->GetUI()->HideLoader();
 			switch ( result.result ) {
 				case network::R_ERROR: {
+					if ( m_f_on_open ) {
+						Unpersist( m_f_on_open );
+						m_f_on_open = nullptr;
+					}
 					Log( "Connection error: " + result.message );
 					if ( m_on_error ) {
 						if ( m_on_error( result.message ) ) {
@@ -165,9 +169,20 @@ const bool Connection::IterateAndMaybeDelete() {
 					WTrigger(
 						"connect", ARGS_F() {}; }
 					);
+					if ( m_f_on_open ) {
+						m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+							m_f_on_open->Run( GSE_CALL, {} );
+							Unpersist( m_f_on_open );
+							m_f_on_open = nullptr;
+						});
+					}
 					break;
 				}
 				case network::R_CANCELED: {
+					if ( m_f_on_open ) {
+						Unpersist( m_f_on_open );
+						m_f_on_open = nullptr;
+					}
 					Log( "Connection canceled" );
 					break;
 				}
@@ -274,7 +289,12 @@ WRAPIMPL_BEGIN( Connection )
 			"open",
 			NATIVE_CALL( this ) {
 
-				N_EXPECT_ARGS( 0 );
+				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+				N_GET_CALLABLE_OPT( f_on_open, 0 );
+				if ( f_on_open ) {
+					m_f_on_open = f_on_open;
+					Persist( m_f_on_open );
+				}
 
 				if ( m_is_connected ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Connection already active" );
@@ -292,6 +312,11 @@ WRAPIMPL_BEGIN( Connection )
 				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
 
 				if ( !m_mt_ids.disconnect ) {
+
+					if ( m_f_on_open ) {
+						Unpersist( m_f_on_open );
+						m_f_on_open = nullptr;
+					}
 
 					if ( arguments.size() >= 1 ) {
 						N_GETVALUE( reason, 0, String );

@@ -39,6 +39,7 @@ return (ui) => {
 		top: 0, // TODO: why not 2?
 	});
 	ui.class('lobby-player-choice').extend('lobby-player-block').set({
+		background: 'interface.pcx:crop(86, 353, 109, 376)',
 		color: 'white',
 		font: 'arialnb.ttf:18',
 		textalign: 'left',

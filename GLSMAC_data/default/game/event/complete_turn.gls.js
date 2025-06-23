@@ -8,7 +8,7 @@ return {
 
 	apply: (e) => {
 		e.game.complete_turn(e.caller);
-		if (e.game.is_master) {
+		if (e.game.is_master()) {
 			let everybody_completed_turn = true;
 			for (player of e.game.get_players()) {
 				if (!e.game.is_turn_complete(player.id)) {

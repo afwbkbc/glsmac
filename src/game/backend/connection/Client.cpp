@@ -6,6 +6,8 @@
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/Event.h"
 #include "game/backend/Player.h"
+#include "game/backend/Game.h"
+#include "engine/Engine.h"
 #include "types/Packet.h"
 #include "network/Network.h"
 #include "gse/value/Array.h"
@@ -21,9 +23,9 @@ Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settin
 
 void Client::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
-	
+
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
-	
+
 	switch ( event.type ) {
 		case network::LegacyEvent::ET_PACKET: {
 			try {
@@ -46,6 +48,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							if ( packet.data.num ) {
 								// initial players list
 								m_slot = packet.data.num;
+								g_engine->GetGame()->SetSlotNum( m_slot );
 							}
 							else {
 								// players list update (i.e. after resolving random players )
@@ -61,7 +64,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 									if ( i == m_slot ) {
 										m_player = player;
 									}
-									
+
 									auto* player_copy = new Player( player );
 									WTrigger(
 										"player_join", ARGS_F( player_copy ) {
@@ -76,7 +79,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								}
 							}
 							if ( m_on_players_list_update ) {
-								m_on_players_list_update();
+								m_on_players_list_update( m_slot );
 							}
 							break;
 						}

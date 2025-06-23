@@ -4,6 +4,8 @@ return (i) => {
 	const game = glsmac.game;
 	const settings = game.get_settings();
 
+	const readonly = game.is_slave();
+
 	return i.make_section(settings.global.game_name, {
 		width: 296,
 		height: 358,
@@ -129,6 +131,7 @@ return (i) => {
 					right: 10,
 					items: line.choices,
 					value: line.initial_choice,
+					readonly: readonly,
 				});
 				line.select.on('select', (e) => {
 					game.event('game_settings', {

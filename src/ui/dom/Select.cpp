@@ -3,6 +3,7 @@
 #include "gse/value/String.h"
 #include "gse/value/Int.h"
 #include "gse/value/Array.h"
+#include "gse/value/Bool.h"
 
 #include "Button.h"
 #include "ChoiceList.h"
@@ -26,6 +27,9 @@ Select::Select( DOM_ARGS )
 	m_active_element = new Button( GSE_CALL, ui, this, {} );
 	ForwardProperty( GSE_CALL, "itemclass", "class", m_active_element );
 	m_active_element->m_on_click = [ this, ctx, si, ep ]() {
+		if ( m_readonly ) {
+			return;
+		}
 		auto ep2 = ep;
 		if ( !m_choicelist->m_is_visible ) {
 			m_choicelist->Globalize(
@@ -63,7 +67,6 @@ Select::Select( DOM_ARGS )
 	m_choicelist->Hide();
 
 	ForwardProperty( GSE_CALL, "itemclass", "itemclass", m_choicelist );
-
 	Property(
 		GSE_CALL, "itemheight", gse::value::Int::GetType(), VALUE( gse::value::Int, , 0 ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
@@ -76,10 +79,20 @@ Select::Select( DOM_ARGS )
 			m_choicelist->WrapSet( "top", v, GSE_CALL );
 		}
 	);
-
 	ForwardProperty( GSE_CALL, "itempadding", "itempadding", m_choicelist );
 	ForwardProperty( GSE_CALL, "value", "value", m_choicelist );
 	ForwardProperty( GSE_CALL, "items", "items", m_choicelist );
+
+	Property(
+		GSE_CALL, "readonly", gse::value::Bool::GetType(), VALUE( gse::value::Bool, , false ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetReadOnly( GSE_CALL, ( (gse::value::Bool*)v )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			SetReadOnly( GSE_CALL, false );
+		}
+	);
+	SetReadOnly( GSE_CALL, false );
 }
 
 const bool Select::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -103,8 +116,17 @@ void Select::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 	}
 }
 
-void Select::SetItemHeight( GSE_CALLABLE, const size_t px ) {
-	m_choicelist->SetItemHeight( GSE_CALL, px );
+void Select::SetReadOnly( GSE_CALLABLE, const bool readonly ) {
+	if ( m_readonly != readonly ) {
+		m_readonly = readonly;
+		if ( readonly ) {
+			if ( m_choicelist->m_is_visible ) {
+				m_choicelist->Hide();
+				m_choicelist->Deglobalize( GSE_CALL );
+				m_active_element->RemoveModifier( GSE_CALL, CM_HIGHLIGHT );
+			}
+		}
+	}
 }
 
 }

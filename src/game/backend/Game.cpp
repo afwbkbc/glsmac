@@ -546,14 +546,22 @@ WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_TRIGGERS
 		{
 			"is_master",
-			VALUE( gse::value::Bool,, m_slot_num == 0 )
+			NATIVE_CALL( this ) {
+				return VALUE( gse::value::Bool, , m_state->IsMaster() );
+			} ),
+		},
+		{
+			"is_slave",
+			NATIVE_CALL( this ) {
+			return VALUE( gse::value::Bool, , m_state->IsSlave() );
+		} ),
 		},
 		{
 			"random",
 			m_random->Wrap( GSE_CALL, true )
 		},
 		{
-		"message",
+			"message",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( text, 0, String );
@@ -1362,6 +1370,10 @@ void Game::CheckRW( GSE_CALLABLE ) {
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}
+}
+
+void Game::SetSlotNum( const size_t slotnum ) {
+	m_slot_num = slotnum;
 }
 
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
