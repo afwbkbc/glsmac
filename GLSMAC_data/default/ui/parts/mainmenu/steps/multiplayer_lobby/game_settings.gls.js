@@ -102,7 +102,6 @@ return (i) => {
 		const line_height = 28;
 
 		game.on('game_settings', (e) => {
-			const c = e.settings;
 			for (s of e.settings) {
 				if (#is_defined(line_keys[s[0]])) {
 					// TODO: one line

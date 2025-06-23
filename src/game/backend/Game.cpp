@@ -420,6 +420,35 @@ void Game::Iterate() {
 		if ( m_state ) {
 
 			m_state->m_gc_space->Accumulate( this, [ this ]() {
+
+				{
+					std::lock_guard guard( m_pending_event_responses_mutex );
+					for ( const auto& it : m_pending_event_responses ) {
+						ASSERT( m_events_waiting_for_responses.find( it.first ) != m_events_waiting_for_responses.end(), "event for response not found" );
+						if ( !it.second ) {
+							// event was rejected, rollback
+							const auto& event_data = m_events_waiting_for_responses.at( it.first );
+							m_state->WithGSE( this, [ this, event_data ]( GSE_CALLABLE ) {
+								const auto* const event = event_data.event;
+								auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+								if ( event_data.rollback_data ) {
+									obj->Set( "applied", event_data.rollback_data, GSE_CALL );
+								}
+								const auto fargs = gse::value::function_arguments_t{ obj };
+								const auto& it = m_event_handlers.find( event->GetEventName() );
+								if ( it != m_event_handlers.end() ) {
+									it->second->Rollback( GSE_CALL, fargs );
+								}
+								else {
+									MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+								}
+							});
+						}
+						m_events_waiting_for_responses.erase( it.first );
+					}
+					m_pending_event_responses.clear();
+				}
+
 				std::vector< event::Event* > events;
 				{
 					std::lock_guard guard( m_pending_events_mutex );
@@ -450,11 +479,12 @@ void Game::Iterate() {
 									if ( applied ) {
 										obj->Set( "applied", applied, GSE_CALL );
 									}
+									return applied;
 								};
 
 								if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
 									ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
-									// process event immediately
+									// process event
 									if ( handler->HasResolve() ) {
 										auto* resolved = handler->Resolve( GSE_CALL, fargs );
 										if ( resolved ) {
@@ -462,9 +492,13 @@ void Game::Iterate() {
 										}
 									}
 									if ( m_state->m_connection ) {
+										if ( event->GetCaller() != 0 ) {
+											// notify caller of acceptance
+											m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true );
+										}
 										// broadcast to clients
 										ASSERT( m_state->m_connection->IsServer(), "master but not server" );
-										m_state->m_connection->AsServer()->SendGameEvent( event );
+										m_state->m_connection->SendGameEvent( event );
 									}
 									WithRW( f_process );
 								}
@@ -482,13 +516,34 @@ void Game::Iterate() {
 										}
 									}
 									else {
-										// process event immediately
-										WithRW( f_process );
+										// process event
+										gse::Value* rollback_data = nullptr;
+										WithRW( [ &f_process, &rollback_data ](){
+											rollback_data = f_process();
+										} );
+										if ( event->GetSource() == event::Event::ES_LOCAL ) {
+											// send to server and wait for response asynchonously
+											ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
+											m_events_waiting_for_responses.insert(
+												{
+													event->GetId(),
+													{
+														event,
+														rollback_data
+													}
+												}
+											);
+											m_state->m_connection->SendGameEvent( event );
+										}
 									}
 								}
 							}
 							else {
 								MTModule::Log( "Event rejected: " + *errptr );
+								if ( m_state->m_connection && m_state->IsMaster() ) {
+									// notify caller of rejection
+									m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false );
+								}
 								delete ( errptr );
 							}
 						}
@@ -560,6 +615,11 @@ void Game::HideLoader() {
 void Game::AddEvent( event::Event* const event ) {
 	std::lock_guard guard( m_pending_events_mutex );
 	m_pending_events.push_back( event );
+}
+
+void Game::AddEventResponse( const std::string& event_id, const bool result ) {
+	std::lock_guard guard( m_pending_event_responses_mutex );
+	m_pending_event_responses.push_back({ event_id, result });
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
@@ -884,6 +944,17 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
+
+	if ( !m_events_waiting_for_responses.empty() ) {
+		GC_DEBUG_BEGIN( "events_waiting_for_responses" );
+		for ( const auto& it : m_events_waiting_for_responses ) {
+			GC_REACHABLE( it.second.event );
+			if ( it.second.rollback_data ) {
+				GC_REACHABLE( it.second.rollback_data );
+			}
+		}
+		GC_DEBUG_END();
+	}
 
 	GC_DEBUG_END();
 }
@@ -1806,6 +1877,7 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
+	m_events_waiting_for_responses.clear();
 	{
 		std::lock_guard guard( m_pending_events_mutex );
 		m_pending_events.clear();

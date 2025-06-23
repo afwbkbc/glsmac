@@ -336,6 +336,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
 	void AddEvent( event::Event* const event );
+	void AddEventResponse( const std::string& event_id, const bool result );
 
 	WRAPDEFS_PTR( Game )
 
@@ -439,6 +440,15 @@ private:
 
 	std::vector< event::Event* > m_pending_events = {};
 	std::mutex m_pending_events_mutex;
+
+	struct event_waiting_for_response_t {
+		event::Event* event;
+		gse::Value* rollback_data;
+	};
+	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};
+
+	std::vector< std::pair< std::string, bool > > m_pending_event_responses = {};
+	std::mutex m_pending_event_responses_mutex;
 
 	std::atomic< uint64_t > m_next_event_id = 0;
 

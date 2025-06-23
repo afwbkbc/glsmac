@@ -28,7 +28,8 @@ CLASS( Packet, Serializable )
 		PT_DOWNLOAD_RESPONSE, // S->C
 		PT_DOWNLOAD_NEXT_CHUNK_REQUEST, // C->S
 		PT_DOWNLOAD_NEXT_CHUNK_RESPONSE, // S->C
-		PT_GAME_EVENTS, // *->*
+		PT_GAME_EVENT, // *->*
+		PT_GAME_EVENT_RESPONSE, // S->C
 	};
 
 	Packet( const packet_type_t type );

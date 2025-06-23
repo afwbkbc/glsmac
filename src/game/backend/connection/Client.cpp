@@ -246,29 +246,21 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							}
 							break;
 						}
-						case types::Packet::PT_GAME_EVENTS: {
-							Log( "Got game events packet" );
+						case types::Packet::PT_GAME_EVENT: {
+							Log( "Got game event packet" );
 							m_state->WithGSE(
 								this,
 								[ packet ]( GSE_CALLABLE ) {
 									auto buf = types::Buffer( packet.data.str );
-									const auto events_count = buf.ReadInt();
 									auto* const game = g_engine->GetGame();
-									for ( size_t i = 0 ; i < events_count ; i++ ) {
-										game->AddEvent( event::Event::Unserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
-									}
+									game->AddEvent( event::Event::Unserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 								}
 							);
-							/*m_state->WithGSE(
-								[ &buf, &game_events ]( GSE_CALLABLE ) {
-									//backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
-								}
-							);
-							for ( const auto& game_event : game_events ) {
-								Log( "Got game event: " + game_event->ToString() );
-								m_on_game_event_validate( game_event );
-								m_on_game_event_apply( game_event );
-							}*/
+							break;
+						}
+						case types::Packet::PT_GAME_EVENT_RESPONSE: {
+							Log( "Got game event response packet" );
+							g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean );
 							break;
 						}
 						default: {
@@ -298,10 +290,13 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	THROW( "TODO: SendGameEvents" );
-	//p.data.str = backend::event::LegacyEvent::SerializeMultiple( game_events ).ToString();
-	m_network->MT_SendPacket( &p );
+	for ( const auto& event : game_events ) {
+		types::Buffer buf;
+		buf.WriteString( event->Serialize().ToString() );
+		types::Packet p( types::Packet::PT_GAME_EVENT );
+		p.data.str = buf.ToString();
+		m_network->MT_SendPacket( &p );
+	}
 }
 
 void Client::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags ) {

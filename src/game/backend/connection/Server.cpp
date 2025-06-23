@@ -357,48 +357,27 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						}
 						break;
 					}
-					case types::Packet::PT_GAME_EVENTS: {
-						Log( "Got game events packet" );
-						ASSERT( m_on_game_event_validate, "m_on_game_event_validate is not set" );
-						ASSERT( m_on_game_event_apply, "m_on_game_event_apply is not set" );
-						auto buf = types::Buffer( packet.data.str );
-						std::vector< event::Event* > game_events = {};
-						THROW( "TODO: PT_GAME_EVENTS" );
-						/*m_state->WithGSE(
-							[ &buf, &game_events ]( GSE_CALLABLE ) {
-								//event::LegacyEvent::UnserializeMultiple( GSE_CALL, buf, game_events );
-							}
-						);*/
-						const size_t slot = m_state->GetCidSlots().at( event.cid );
-						std::vector< event::Event* > valid_events = {};
-						/*for ( const auto& game_event : game_events ) {
-							bool ok = true;
-							if ( game_event->m_initiator_slot != slot ) {
-								Log( "Event slot mismatch from " + std::to_string( event.cid ) + " ( " + std::to_string( game_event->m_initiator_slot ) + " != " + std::to_string( slot ) + " )" );
-								ok = false;
-							}
-							else {
-								try {
-									m_on_game_event_validate( game_event );
+					case types::Packet::PT_GAME_EVENT: {
+						Log( "Got game event packet" );
+						m_state->WithGSE(
+							this,
+							[ this, packet, event ]( GSE_CALLABLE ) {
+								auto* const game = g_engine->GetGame();
+								auto buf = types::Buffer( packet.data.str );
+								auto* const ev = event::Event::Unserialize( game, event::Event::ES_CLIENT, GSE_CALL, buf.ReadString() );
+								const auto caller_slot = ev->GetCaller();
+								if ( caller_slot >= m_state->m_slots->GetCount() ) {
+									Error( event.cid, "event caller slot overflow" );
+									return;
 								}
-								catch ( const InvalidEvent& e ) {
-									Log( "Invalid event received from " + std::to_string( event.cid ) );
-									Log( e.what() );
-									ok = false;
+								const auto& slot = m_state->m_slots->GetSlot( caller_slot );
+								if ( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetCid() != event.cid ) {
+									Error( event.cid, "event caller slot mismatch" );
+									return;
 								}
+								game->AddEvent( ev );
 							}
-							if ( ok ) {
-								valid_events.push_back( game_event );
-							}
-						}
-						for ( const auto& game_event : valid_events ) {
-							if ( game_event->m_is_validated ) {
-								m_on_game_event_apply( game_event );
-							}
-						}
-						if ( !valid_events.empty() ) {
-							SendGameEvents( valid_events );
-						}*/
+						);
 						break;
 					}
 					default: {
@@ -423,15 +402,17 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 void Server::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	types::Buffer buf;
-	buf.WriteInt( game_events.size() );
-	for ( const auto& event : game_events ) {
-		buf.WriteString( event->Serialize().ToString() );
-	}
-	const auto& serialized_events = buf.ToString();
 	Broadcast(
-		[ this, serialized_events ]( const network::cid_t cid ) -> void {
-			SendGameEventsTo( serialized_events, cid );
+		[ this, &game_events ]( const network::cid_t cid ) -> void {
+			for ( const auto& event : game_events ) {
+				if ( m_state->m_slots->GetSlot( event->GetCaller() ).GetCid() != cid ) {
+					types::Buffer buf;
+					buf.WriteString( event->Serialize().ToString() );
+					types::Packet p( types::Packet::PT_GAME_EVENT );
+					p.data.str = buf.ToString();
+					m_network->MT_SendPacket( &p, cid );
+				}
+			}
 			/*std::vector< event::Event* > events = {};
 			for ( const auto& e : game_events ) {
 				const auto slot_num = m_state->GetCidSlots().at( cid );
@@ -490,6 +471,14 @@ void Server::SendPlayersList() {
 			SendPlayersList( cid );
 		}
 	);
+}
+
+void Server::SendGameEventResponse( const size_t slot_num, const std::string& event_id, const bool result ) {
+	const auto cid = m_state->m_slots->GetSlot( slot_num ).GetCid();
+	types::Packet p( types::Packet::PT_GAME_EVENT_RESPONSE );
+	p.data.str = event_id;
+	p.data.boolean = result;
+	m_network->MT_SendPacket( &p, cid );
 }
 
 void Server::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags ) {
@@ -613,12 +602,6 @@ void Server::SendFlagsUpdate( const size_t slot_num, const slot::Slot* slot, net
 
 const std::string Server::FormatChatMessage( const Player* player, const std::string& message ) const {
 	return "<" + player->GetPlayerName() + "> " + message;
-}
-
-void Server::SendGameEventsTo( const std::string& serialized_events, const network::cid_t cid ) {
-	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	p.data.str = serialized_events;
-	m_network->MT_SendPacket( &p, cid );
 }
 
 void Server::ClearReadyFlags() {

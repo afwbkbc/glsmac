@@ -75,8 +75,13 @@ const types::Buffer Packet::Serialize() const {
 			buf.WriteString( data.str ); // serialized chunk
 			break;
 		}
-		case PT_GAME_EVENTS: {
-			buf.WriteString( data.str ); // serialized game events
+		case PT_GAME_EVENT: {
+			buf.WriteString( data.str ); // serialized game event
+			break;
+		}
+		case PT_GAME_EVENT_RESPONSE: {
+			buf.WriteString( data.str ); // event id
+			buf.WriteBool( data.boolean ); // is accepted or not
 			break;
 		}
 		default: {
@@ -159,8 +164,13 @@ void Packet::Unserialize( types::Buffer buf ) {
 			data.str = buf.ReadString(); // serialized chunk
 			break;
 		}
-		case PT_GAME_EVENTS: {
-			data.str = buf.ReadString(); // serialized game events
+		case PT_GAME_EVENT: {
+			data.str = buf.ReadString(); // serialized game event
+			break;
+		}
+		case PT_GAME_EVENT_RESPONSE: {
+			data.str = buf.ReadString(); // event id
+			data.boolean = buf.ReadBool(); // is accepted or not
 			break;
 		}
 		default: {

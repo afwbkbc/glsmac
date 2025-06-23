@@ -30,8 +30,9 @@ public:
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
-	const size_t GetCaller() const;
 	const source_t GetSource() const;
+	const size_t GetCaller() const;
+	const std::string& GetId() const;
 	const std::string& GetEventName() const;
 	const gse::value::object_properties_t& GetData() const;
 

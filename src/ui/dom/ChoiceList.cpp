@@ -205,6 +205,7 @@ void ChoiceList::Select( GSE_CALLABLE, const choice_t& choice, const bool send_e
 		m_selected_choice->element->RemoveModifier( GSE_CALL, CM_SELECTED );
 	}
 	m_selected_choice = &choice;
+	m_value = m_selected_choice->value;
 	m_selected_choice->element->AddModifier( GSE_CALL, CM_SELECTED );
 	UpdateProperty( "value", VALUE( gse::value::String, , m_selected_choice->value ) );
 	if ( m_on_update ) {

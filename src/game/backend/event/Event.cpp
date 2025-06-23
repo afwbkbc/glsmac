@@ -77,6 +77,10 @@ const Event::source_t Event::GetSource() const {
 	return m_source;
 }
 
+const std::string& Event::GetId() const {
+	return m_id;
+}
+
 const std::string& Event::GetEventName() const {
 	return m_name;
 }
