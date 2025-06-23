@@ -335,6 +335,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void HideLoader();
 
 	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
+	void AddEvent( event::Event* const event );
 
 	WRAPDEFS_PTR( Game )
 
@@ -418,7 +419,6 @@ private:
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
 	State* m_state = nullptr;
-	connection::Connection* m_connection = nullptr;
 
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed

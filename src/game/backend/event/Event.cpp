@@ -7,11 +7,16 @@ namespace game {
 namespace backend {
 namespace event {
 
-Event::Event( Game* game, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data )
+Event::Event( Game* game, const source_t source, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data, const std::string& id )
 	: gc::Object( gc_space )
 	, m_game( game )
+	, m_source( source )
 	, m_caller( caller )
-	, m_id( game->GenerateEventId() )
+	, m_id(
+		id.empty()
+			? game->GenerateEventId()
+			: id
+	)
 	, m_name( name )
 	, m_original_data( data ) {
 	UpdateData( GSE_CALL );
@@ -20,8 +25,12 @@ Event::Event( Game* game, const size_t caller, GSE_CALLABLE, const std::string& 
 const types::Buffer Event::Serialize() const {
 	types::Buffer buf;
 
+	buf.WriteString( m_id );
 	buf.WriteString( m_name );
-	for ( const auto& it : m_data ) {
+	buf.WriteInt( m_caller );
+	buf.WriteInt( m_original_data.size() );
+	for ( const auto& it : m_original_data ) {
+		ASSERT( it.second->type != gse::Value::T_OBJECT || ( (gse::value::Object*)it.second )->object_class.empty(), "custom object in event data" );
 		buf.WriteString( it.first );
 		it.second->Serialize( &buf, it.second );
 	}
@@ -29,15 +38,17 @@ const types::Buffer Event::Serialize() const {
 	return buf;
 }
 
-void Event::Unserialize( GSE_CALLABLE, types::Buffer buffer ) {
-	m_name = buffer.ReadString();
-
-	m_data.clear();
+Event* const Event::Unserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer ) {
+	const auto id = buffer.ReadString();
+	const auto name = buffer.ReadString();
+	const auto caller = buffer.ReadInt();
+	gse::value::object_properties_t data = {};
 	const auto sz = buffer.ReadInt();
 	for ( auto i = 0 ; i < sz ; i++ ) {
 		const auto k = buffer.ReadString();
-		m_data.insert( { k, gse::Value::Unserialize( GSE_CALL, &buffer ) } );
+		data.insert( { k, gse::Value::Unserialize( GSE_CALL, &buffer ) } );
 	}
+	return new Event( game, source, caller, GSE_CALL, name, data, id );
 }
 
 const std::string Event::ToString() const {
@@ -62,7 +73,11 @@ const size_t Event::GetCaller() const {
 	return m_caller;
 }
 
-const std::string& Event::GetName() const {
+const Event::source_t Event::GetSource() const {
+	return m_source;
+}
+
+const std::string& Event::GetEventName() const {
 	return m_name;
 }
 

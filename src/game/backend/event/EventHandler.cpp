@@ -71,10 +71,13 @@ const std::string* const EventHandler::Validate( GSE_CALLABLE, const gse::value:
 	}
 }
 
+const bool EventHandler::HasResolve() const {
+	return m_resolve != nullptr;
+}
+
 gse::Value* const EventHandler::Resolve( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const {
-	return m_resolve
-		? m_resolve->Run( GSE_CALL, args )
-		: nullptr;
+	ASSERT( m_resolve, "resolve not set" );
+	return m_resolve->Run( GSE_CALL, args );
 }
 
 gse::Value* const EventHandler::Apply( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const {

@@ -159,9 +159,9 @@ void Space::AccumulateImpl( const f_accum_t& f ) {
 }
 
 const bool Space::Collect() {
-	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
 	std::lock_guard guard2( m_pending_accumulations_mutex );
-	
+	std::lock_guard guard( m_collect_mutex ); // allow only one collection at same space at same time
+
 	ASSERT( m_reachable_objects_tmp.empty(), "reachable objects tmp not empty" );
 
 	GC_DEBUG_LOCK();

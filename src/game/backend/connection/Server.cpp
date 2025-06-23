@@ -19,9 +19,9 @@ Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settin
 
 void Server::ProcessEvent( const network::LegacyEvent& event ) {
 	Connection::ProcessEvent( event );
-	
+
 	ASSERT( event.cid || event.type == network::LegacyEvent::ET_LISTEN, "server connection received event without cid" );
-	
+
 	switch ( event.type ) {
 		case network::LegacyEvent::ET_LISTEN: {
 			m_game_state = GS_LOBBY; // tmp: start with lobby for now
@@ -49,7 +49,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			if ( m_on_global_settings_update ) {
 				m_on_global_settings_update();
 			}
-			
+
 			auto* const player_copy = new Player( m_player );
 			WTrigger(
 				"player_join", ARGS_F( player_copy ) {
@@ -61,19 +61,19 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 					delete player_copy;
 				}
 			);
-			
+
 			break;
 		}
 		case network::LegacyEvent::ET_CLIENT_CONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
-			
+
 			const auto& banned = m_settings->banned_addresses;
 			if ( banned.find( event.data.remote_address ) != banned.end() ) {
 				Kick( event.cid, "You are banned" );
 				break;
 			}
-			
+
 			{
 				types::Packet packet( types::Packet::PT_REQUEST_AUTH ); // ask to authenticate
 				m_network->MT_SendPacket( &packet, event.cid );
@@ -86,9 +86,9 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			if ( it != m_state->GetCidSlots().end() ) {
 				const auto slot_num = it->second;
 				m_state->RemoveCIDSlot( event.cid );
-				
+
 				ASSERT( m_game_state != GS_NONE, "player disconnected but game state is not set" );
-				
+
 				auto& slot = m_state->m_slots->GetSlot( slot_num );
 				Player* player = nullptr;
 				if ( m_game_state == GS_LOBBY ) {
@@ -105,17 +105,17 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 					player->Disconnect();
 				}
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
-				
+
 				// cleanup
 				const auto& download_data_it = m_download_data.find( event.cid );
 				if ( download_data_it != m_download_data.end() ) {
 					m_download_data.erase( download_data_it );
 				}
-				
+
 				if ( m_game_state == GS_LOBBY ) {
 					ClearReadyFlags();
 				}
-				
+
 				auto* player_copy = new Player( player );
 				WTrigger(
 					"player_leave", ARGS_F( player_copy ) {
@@ -127,7 +127,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						DELETE( player_copy );
 					}
 				);
-				
+
 				if ( m_game_state == GS_LOBBY ) {
 					DELETE( player );
 				}
@@ -148,20 +148,20 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
-						
+
 						if ( m_state->GetCidSlots().find( event.cid ) != m_state->GetCidSlots().end() ) {
 							Log( "Duplicate authentication from cid " + std::to_string( event.cid ) + ", disconnecting" );
 							m_network->MT_DisconnectClient( event.cid );
 							break;
 						}
-						
+
 						Log( "Got authentication from " + gsid + " (cid " + std::to_string( event.cid ) + ") as '" + player_name + "'" );
 						ASSERT( m_game_state != GS_NONE, "player connected but game state not set" );
-						
+
 						// TODO: implementing 'load game' from lobby will need extra gsid logic
-						
+
 						size_t slot_num = 0;
-						
+
 						// check if not already in game
 						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots->GetSlots() ) {
@@ -183,7 +183,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 							Kick( event.cid, "You are already in this game" );
 							break;
 						}
-						
+
 						if ( m_game_state == GS_LOBBY ) {
 							// on lobby stage everyone can connect and occupy first free slot
 							for ( auto& slot : m_state->m_slots->GetSlots() ) {
@@ -206,11 +206,11 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 								break;
 							}
 						}
-						
+
 						const auto& rules = m_state->m_settings.global.rules;
 						m_state->AddCIDSlot( event.cid, slot_num );
 						auto& slot = m_state->m_slots->GetSlot( slot_num );
-						
+
 						Player* player = nullptr;
 						if ( m_game_state == GS_LOBBY ) {
 							ClearReadyFlags();
@@ -229,13 +229,13 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						}
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
 						player->Connect();
-						
+
 						SendGameState( event.cid );
 						SendPlayersList( event.cid, slot_num );
 						SendGlobalSettings( event.cid );
-						
+
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
-						
+
 						auto* player_copy = new Player( player );
 						WTrigger(
 							"player_join", ARGS_F( player_copy ) {
@@ -247,7 +247,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 								delete player_copy;
 							}
 						);
-						
+
 						break;
 					}
 					case types::Packet::PT_UPDATE_SLOT:
@@ -423,11 +423,17 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 void Server::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	THROW( "TODO: SendGameEvents" );
+	types::Buffer buf;
+	buf.WriteInt( game_events.size() );
+	for ( const auto& event : game_events ) {
+		buf.WriteString( event->Serialize().ToString() );
+	}
+	const auto& serialized_events = buf.ToString();
 	Broadcast(
-		[ this, game_events ]( const network::cid_t cid ) -> void {
-			std::vector< event::Event* > events = {};
-			/*for ( const auto& e : game_events ) {
+		[ this, serialized_events ]( const network::cid_t cid ) -> void {
+			SendGameEventsTo( serialized_events, cid );
+			/*std::vector< event::Event* > events = {};
+			for ( const auto& e : game_events ) {
 				const auto slot_num = m_state->GetCidSlots().at( cid );
 				if ( e->IsSendableTo( slot_num ) ) {
 					Log( "Sending event to " + std::to_string( slot_num ) + ": " + e->ToString() );

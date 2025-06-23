@@ -21,6 +21,7 @@ public:
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 	const std::string* const Validate( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const;
+	const bool HasResolve() const;
 	gse::Value* const Resolve( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const;
 	gse::Value* const Apply( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const;
 	void Rollback( GSE_CALLABLE, const gse::value::function_arguments_t& args ) const;

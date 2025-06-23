@@ -15,21 +15,29 @@ namespace event {
 class Event : public gc::Object {
 public:
 
-	Event( Game* game, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data );
+	enum source_t {
+		ES_LOCAL,
+		ES_SERVER,
+		ES_CLIENT,
+	};
+
+	Event( Game* game, const source_t source, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data, const std::string& id = "" );
 
 	const types::Buffer Serialize() const;
-	void Unserialize( GSE_CALLABLE, types::Buffer buffer );
+	static Event* const Unserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer );
 
 	const std::string ToString() const;
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 	const size_t GetCaller() const;
-	const std::string& GetName() const;
+	const source_t GetSource() const;
+	const std::string& GetEventName() const;
 	const gse::value::object_properties_t& GetData() const;
 
 private:
-	Game* m_game = nullptr;
+	Game* const m_game = nullptr;
+	const source_t m_source = ES_LOCAL;
 	const size_t m_caller = 0;
 	std::string m_id = 0;
 	std::string m_name = "";

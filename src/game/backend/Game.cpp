@@ -180,7 +180,6 @@ void Game::Stop() {
 
 	if ( m_state ) {
 	   m_state = nullptr;
-	   m_connection = nullptr;
 	}
 
 	ResetGame();
@@ -245,9 +244,10 @@ void Game::Iterate() {
 #endif
 			}
 			else {
+				ASSERT( m_state->m_connection, "not master but no connection" );
 				// notify server of successful download and continue initialization
 				m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
-				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
 
 			if ( ready ) {
@@ -281,8 +281,8 @@ void Game::Iterate() {
 						m_map = m_old_map; // restore old state // TODO: test
 					}
 
-					if ( m_connection ) {
-						m_connection->Disconnect( "Failed to initialize game" );
+					if ( m_state->m_connection ) {
+						m_state->m_connection->Disconnect( "Failed to initialize game" );
 					}
 				};
 
@@ -338,8 +338,8 @@ void Game::Iterate() {
 
 					// notify server of successful initialization
 					m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
-					if ( m_connection ) {
-						m_connection->UpdateSlot( m_slot_num, m_slot, true );
+					if ( m_state->m_connection ) {
+						m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
 					}
 
 					{
@@ -435,28 +435,57 @@ void Game::Iterate() {
 #endif
 							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 							const auto fargs = gse::value::function_arguments_t{ obj };
-							const auto& it = m_event_handlers.find( event->GetName() );
+							const auto& it = m_event_handlers.find( event->GetEventName() );
 							const auto* handler = it != m_event_handlers.end() ? it->second : nullptr;
 							if ( handler ) {
 								errptr = handler->Validate( GSE_CALL, fargs );
 							}
 							else {
-								errptr = new std::string( "Unknown event: " + event->GetName() );
+								errptr = new std::string( "Unknown event: " + event->GetEventName() );
 							}
 							if ( !errptr ) {
-								auto* resolved = handler->Resolve( GSE_CALL, fargs );
-								if ( resolved ) {
-									obj->Set( "resolved", resolved, GSE_CALL );
-								}
-								WithRW( [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj, &event ] () {
+
+								const auto f_process = [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
 									auto* applied = handler->Apply( GSE_CALL, fargs );
 									if ( applied ) {
 										obj->Set( "applied", applied, GSE_CALL );
 									}
-									if ( event->GetName() == "complete_turn" ) {
-										//handler->Rollback( GSE_CALL, fargs );
+								};
+
+								if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
+									ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
+									// process event immediately
+									if ( handler->HasResolve() ) {
+										auto* resolved = handler->Resolve( GSE_CALL, fargs );
+										if ( resolved ) {
+											obj->Set( "resolved", resolved, GSE_CALL );
+										}
 									}
-								});
+									if ( m_state->m_connection ) {
+										// broadcast to clients
+										ASSERT( m_state->m_connection->IsServer(), "master but not server" );
+										m_state->m_connection->AsServer()->SendGameEvent( event );
+									}
+									WithRW( f_process );
+								}
+								else { // multiplayer non-host
+									ASSERT( event->GetSource() != event::Event::ES_CLIENT, "got event from client to client" );
+									ASSERT( m_state->m_connection, "not master but no connection" );
+									if ( handler->HasResolve() ) {
+										if ( event->GetSource() == event::Event::ES_LOCAL ) {
+											// resolve on server first
+											THROW( "TODO: resolve event on server" );
+										}
+										else {
+											// get resolutions from event
+											THROW( "TODO: parse resolutions" );
+										}
+									}
+									else {
+										// process event immediately
+										WithRW( f_process );
+									}
+								}
 							}
 							else {
 								MTModule::Log( "Event rejected: " + *errptr );
@@ -498,8 +527,8 @@ State* Game::GetState() const {
 
 const Player* Game::GetPlayer() const {
 	ASSERT( m_state, "state not set" );
-	if ( m_connection ) {
-		return m_connection->GetPlayer();
+	if ( m_state->m_connection ) {
+		return m_state->m_connection->GetPlayer();
 	}
 	else {
 		return m_state->m_slots->GetSlot( 0 ).GetPlayer();
@@ -528,17 +557,18 @@ void Game::HideLoader() {
 	AddFrontendRequest( fr );
 }
 
+void Game::AddEvent( event::Event* const event ) {
+	std::lock_guard guard( m_pending_events_mutex );
+	m_pending_events.push_back( event );
+}
+
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
 	const auto& it = m_event_handlers.find( name );
 	if ( it == m_event_handlers.end() ) {
 		GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
 	}
 	const auto& handler = it->second;
-	auto* event = new event::Event( this, m_slot_num, GSE_CALL, name, args );
-	{
-		std::lock_guard guard( m_pending_events_mutex );
-		m_pending_events.push_back( event );
-	}
+	AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 }
 
 WRAPIMPL_BEGIN( Game )
@@ -769,11 +799,7 @@ WRAPIMPL_BEGIN( Game )
 				}
 				const auto& handler = it->second;
 				N_GETVALUE( args, 1, Object );
-				auto* event = new event::Event( this, m_slot_num, GSE_CALL, name, args );
-				{
-					std::lock_guard guard( m_pending_events_mutex );
-					m_pending_events.push_back( event );
-				}
+				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -996,8 +1022,8 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		case OP_CHAT: {
 			MTModule::Log( "got chat message request: " + *request.data.chat.message );
 
-			if ( m_connection ) {
-				m_connection->SendMessage( *request.data.chat.message );
+			if ( m_state->m_connection ) {
+				m_state->m_connection->SendMessage( *request.data.chat.message );
 			}
 			else {
 				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
@@ -1383,7 +1409,7 @@ void Game::AddFrontendRequest( const FrontendRequest& request ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
-	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
+	ASSERT( !m_state || !m_state->m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
 	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
 
 	MTModule::Log( "Initializing game" );
@@ -1418,7 +1444,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_game_state = GS_PREPARING_MAP;
 	m_initialization_error = "";
 
-	m_connection = m_state->GetConnection();
+	auto* const connection = m_state->m_connection;
 
 	if ( m_state->IsMaster() ) {
 
@@ -1445,18 +1471,18 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				}
 			}
 		}
-		if ( m_connection ) {
-			m_connection->AsServer()->SendPlayersList();
+		if ( connection ) {
+			connection->AsServer()->SendPlayersList();
 		}
 
 	}
 
-	if ( m_connection ) {
+	if ( connection ) {
 
-		m_slot_num = m_connection->GetSlotNum();
+		m_slot_num = connection->GetSlotNum();
 
-		m_connection->ResetHandlers();
-		m_connection->IfServer(
+		connection->ResetHandlers();
+		connection->IfServer(
 			[ this ]( connection::Server* connection ) -> void {
 
 				/*connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
@@ -1529,12 +1555,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		);
 
-		m_connection->IfClient(
+		connection->IfClient(
 			[ this ]( connection::Client* connection ) -> void {
 				connection->m_on_disconnect = [ this ]() -> bool {
 					MTModule::Log( "Connection lost" );
 					m_state->DetachConnection();
-					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
 						m_initialization_error = "Lost connection to server";
 					}
@@ -1550,13 +1575,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		);
 
-		m_connection->m_on_message = [ this ]( const std::string& message ) -> void {
+		connection->m_on_message = [ this ]( const std::string& message ) -> void {
 			auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
 			NEW( fr.data.global_message.message, std::string, message );
 			AddFrontendRequest( fr );
 		};
 
-		m_connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
+		connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
@@ -1572,7 +1597,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		};
 
-		m_connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
+		connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
@@ -1584,7 +1609,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		};
 
-		m_connection->m_on_game_event_rollback = [ this ]( event::Event* event ) -> void {
+		connection->m_on_game_event_rollback = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
@@ -1627,7 +1652,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 
 #ifdef DEBUG
-		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
+		if ( !connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			MTModule::Log( (std::string)"Loading map dump from " + filename );
@@ -1638,7 +1663,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		else
 #endif
 		{
-			if ( !m_connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
+			if ( !connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
 				ec = m_map->LoadFromFile( filename );
 			}
@@ -1661,13 +1686,13 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		if ( !ec ) {
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
-			if ( m_connection ) {
-				m_connection->IfServer(
+			if ( connection ) {
+				connection->IfServer(
 					[ this ]( connection::Server* connection ) -> void {
 						connection->SetGameState( connection::Connection::GS_RUNNING ); // allow clients to download map
 					}
 				);
-				m_connection->UpdateSlot( m_slot_num, m_slot, true );
+				connection->UpdateSlot( m_slot_num, m_slot, true );
 				SetLoaderText( "Waiting for players" );
 			}
 			else {
@@ -1679,7 +1704,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		}
 	}
 	else {
-		m_connection->IfClient(
+		connection->IfClient(
 			[ this, &response, ui ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
@@ -1809,10 +1834,9 @@ void Game::ResetGame() {
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state->UnsetGame();
-		if ( m_connection ) {
-			m_connection->Disconnect();
-			m_connection->ResetHandlers();
-			m_connection = nullptr;
+		if ( m_state->m_connection ) {
+			m_state->m_connection->Disconnect();
+			m_state->m_connection->ResetHandlers();
 		}
 		m_state = nullptr;
 	}

@@ -248,24 +248,27 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 						}
 						case types::Packet::PT_GAME_EVENTS: {
 							Log( "Got game events packet" );
-							if ( m_on_game_event_validate && m_on_game_event_apply ) {
-								auto buf = types::Buffer( packet.data.str );
-								std::vector< backend::event::Event* > game_events = {};
-								THROW( "TODO: PT_GAME_EVENTS" );
-								/*m_state->WithGSE(
-									[ &buf, &game_events ]( GSE_CALLABLE ) {
-										//backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+							m_state->WithGSE(
+								this,
+								[ packet ]( GSE_CALLABLE ) {
+									auto buf = types::Buffer( packet.data.str );
+									const auto events_count = buf.ReadInt();
+									auto* const game = g_engine->GetGame();
+									for ( size_t i = 0 ; i < events_count ; i++ ) {
+										game->AddEvent( event::Event::Unserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 									}
-								);
-								for ( const auto& game_event : game_events ) {
-									Log( "Got game event: " + game_event->ToString() );
-									m_on_game_event_validate( game_event );
-									m_on_game_event_apply( game_event );
-								}*/
-							}
-							else {
-								Log( "WARNING: game event handler not set" );
-							}
+								}
+							);
+							/*m_state->WithGSE(
+								[ &buf, &game_events ]( GSE_CALLABLE ) {
+									//backend::event::Event::UnserializeMultiple( GSE_CALL, buf, game_events );
+								}
+							);
+							for ( const auto& game_event : game_events ) {
+								Log( "Got game event: " + game_event->ToString() );
+								m_on_game_event_validate( game_event );
+								m_on_game_event_apply( game_event );
+							}*/
 							break;
 						}
 						default: {
