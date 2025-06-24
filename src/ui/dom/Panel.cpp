@@ -4,6 +4,7 @@
 #include "types/texture/Texture.h"
 #include "ui/geometry/Rectangle.h"
 #include "util/String.h"
+#include "scene/actor/Cache.h"
 
 namespace ui {
 namespace dom {
@@ -96,6 +97,7 @@ void Panel::UpdateBorderTexture() {
 		}
 	}
 	texture->FullUpdate(); // TODO: optimize?
+	m_cache->Update();
 }
 
 }
