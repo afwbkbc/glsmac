@@ -791,25 +791,6 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
-			"get_setting",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_GETVALUE( key, 0, String );
-
-				return VALUE( gse::value::Undefined );
-			} )
-		},
-		{
-			"set_setting",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 2 );
-				N_GETVALUE( key, 0, String );
-				N_GETVALUE( value, 1, String );
-
-				return VALUE( gse::value::Undefined );
-			} )
-		},
-		{
 			"register_event",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );

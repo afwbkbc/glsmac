@@ -18,6 +18,10 @@ void Connection::SetState( State* state ) {
 }
 
 void Connection::ResetHandlers() {
+	if ( m_f_on_open ) {
+		Unpersist( m_f_on_open );
+		m_f_on_open = nullptr;
+	}
 	m_on_connect = nullptr;
 	m_on_cancel = nullptr;
 	m_on_disconnect = nullptr;
@@ -169,13 +173,6 @@ const bool Connection::IterateAndMaybeDelete() {
 					WTrigger(
 						"connect", ARGS_F() {}; }
 					);
-					if ( m_f_on_open ) {
-						m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
-							m_f_on_open->Run( GSE_CALL, {} );
-							Unpersist( m_f_on_open );
-							m_f_on_open = nullptr;
-						});
-					}
 					break;
 				}
 				case network::R_CANCELED: {
@@ -347,6 +344,16 @@ void Connection::WTrigger( const std::string& event, const f_args_t& fargs, cons
 	m_state->WithGSE( this, [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
 		Trigger( GSE_CALL, event, fargs );
 	}, f_after );
+}
+
+void Connection::OnOpen() {
+	if ( m_f_on_open ) {
+		m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+			m_f_on_open->Run( GSE_CALL, {} );
+			Unpersist( m_f_on_open );
+			m_f_on_open = nullptr;
+		});
+	}
 }
 
 void Connection::Disconnect( const std::string& reason ) {

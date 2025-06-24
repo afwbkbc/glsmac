@@ -52,6 +52,11 @@ return (i) => {
 			}
 		};
 
+		const players = i.glsmac.game.get_players();
+		for (player of players) {
+			add_row(player);
+		}
+
 		i.connection.on('player_join', (e) => {
 			add_row(e.player);
 		});

@@ -117,6 +117,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								m_on_global_settings_update();
 							}
 							m_are_global_settings_received = true;
+							OnOpen();
 							break;
 						}
 						case types::Packet::PT_SLOT_UPDATE:

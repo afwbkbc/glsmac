@@ -2,11 +2,11 @@ return (i) => {
 
 	const glsmac = i.glsmac;
 	const game = glsmac.game;
-	const settings = game.get_settings();
+	const settings = game.get_settings().global;
 
 	const readonly = game.is_slave();
 
-	return i.make_section(settings.global.game_name, {
+	return i.make_section(settings.game_name, {
 		width: 296,
 		height: 358,
 	}, (body) => {
@@ -63,7 +63,7 @@ return (i) => {
 			['112x56', 'Standard planet'],
 			['140x70', 'Large planet'],
 			['180x90', 'Huge planet'],
-		], '112x56', (v) => {
+		], #to_string(settings.map.size_x) + 'x' + #to_string(settings.map.size_y), (v) => {
 			return v; // TODO
 		});
 
@@ -71,7 +71,7 @@ return (i) => {
 			['0.4', '30-50% of surface'],
 			['0.6', '50-70% of surface'],
 			['0.8', '70-90% of surface'],
-		], '0.6', (v) => {
+		], #to_string(settings.map.ocean_coverage), (v) => {
 			return #to_float(v);
 		});
 
@@ -79,7 +79,7 @@ return (i) => {
 			['0.5', 'Strong'],
 			['0.75', 'Average'],
 			['1.0', 'Weak'],
-		], '0.75', (v) => {
+		], #to_string(settings.map.erosive_forces), (v) => {
 			return #to_float(v);
 		});
 
@@ -87,7 +87,7 @@ return (i) => {
 			['0.25', 'Rare'],
 			['0.5', 'Average'],
 			['0.75', 'Abundant'],
-		], '0.5', (v) => {
+		], #to_string(settings.map.native_lifeforms), (v) => {
 			return #to_float(v);
 		});
 
@@ -95,7 +95,7 @@ return (i) => {
 			['0.25', 'Sparse'],
 			['0.5', 'Average'],
 			['0.75', 'Dense'],
-		], '0.5', (v) => {
+		], #to_string(settings.map.cloud_cover), (v) => {
 			return #to_float(v);
 		});
 

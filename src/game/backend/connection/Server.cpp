@@ -62,6 +62,8 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 				}
 			);
 
+			OnOpen();
+
 			break;
 		}
 		case network::LegacyEvent::ET_CLIENT_CONNECT: {

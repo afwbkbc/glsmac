@@ -121,6 +121,8 @@ protected:
 
 	void WTrigger( const std::string& event, const f_args_t& fargs, const std::function< void() >& f_after = nullptr );
 
+	void OnOpen();
+
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 
 private:
