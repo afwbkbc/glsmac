@@ -523,7 +523,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 		}
 	}
 	else {
-		if ( it->second != value ) {
+		if ( ( ( it->second == nullptr ) != ( value == nullptr ) ) || *it->second != *value ) {
 			it->second = value;
 			if ( m_is_initialized && properties == &m_properties ) {
 				OnPropertyChange( GSE_CALL, key, value );

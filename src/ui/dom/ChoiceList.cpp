@@ -172,7 +172,7 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 		).first->second;
 		m_choices_order.push_back( k );
 		element->On( GSE_CALL, "click", NATIVE_CALL( this, choice ) {
-			const bool was_actually_changed = !m_selected_choice || m_selected_choice != &choice;
+			const bool was_actually_changed = !m_selected_choice || m_selected_choice->value != choice.value;
 			if ( was_actually_changed ) {
 				Select( GSE_CALL, choice, true );
 			}
