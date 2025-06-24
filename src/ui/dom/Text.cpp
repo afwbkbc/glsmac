@@ -54,10 +54,18 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "color", gse::Value::T_STRING, nullptr, PF_NONE,
+		GSE_CALL, "color", gse::Value::T_NOTHING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			types::Color color = {};
-			ParseColor( GSE_CALL, ( (gse::value::String*)v )->value, color );
+			if ( v->type == gse::Value::T_STRING ) {
+				ParseColor( GSE_CALL, ( (gse::value::String*)v )->value, color );
+			}
+			else if ( v->type == gse::Value::T_OBJECT && ( (gse::value::Object*)v )->object_class == "Color" ) {
+				color = types::Color::Unwrap( v );
+			}
+			else {
+				GSE_ERROR( gse::EC.UI_ERROR, "Property 'color' is expected to be String or Color, got " + v->GetTypeString() + ": " + v->ToString() );
+			}
 			m_actor->SetColor( color );
 		},
 		[ this ]( GSE_CALLABLE ) {

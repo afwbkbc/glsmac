@@ -6,6 +6,19 @@ return (i) => {
 		height: 358,
 	}, (body) => {
 
+		const factions = i.glsmac.game.get_fm().list();
+		let faction_choices = [
+			['random', 'Random', {
+				color: 'white',
+			}],
+		];
+		for (faction of factions) {
+			#print('F', faction);
+			faction_choices :+[faction.id, faction.name, {
+				color: faction.text_color,
+			}];
+		}
+
 		let rows = {};
 
 		const add_row = (player) => {
@@ -26,11 +39,7 @@ return (i) => {
 					}),
 					faction: row.select({
 						class: 'lobby-player-faction',
-						items: [
-							['random', 'Random'],
-							['fac1', 'Fac1'],
-							['fac2', 'Fac2'],
-						],
+						items: faction_choices,
 						value: 'random', // TODO
 					}),
 					difficulty: row.select({

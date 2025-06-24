@@ -844,6 +844,16 @@ WRAPIMPL_BEGIN( Game )
 				return VALUE( gse::value::Undefined );
 			} )
 		},
+		{
+			"get_fm",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return m_state
+					? m_state->GetFM()->Wrap( GSE_CALL, true )
+					: VALUE( gse::value::Undefined )
+					;
+			} )
+		},
 	};
 	if ( m_tm ) {
 		properties.insert(

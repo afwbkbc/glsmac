@@ -165,27 +165,9 @@ void Slot::Unserialize( types::Buffer buf ) {
 WRAPIMPL_BEGIN( Slot )
 	ASSERT( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
 	auto* player = m_player_data.player;
-	WRAPIMPL_PROPS
-			{
-				"id",
-				VALUE( gse::value::Int, , m_index )
-			},
-			{
-				"type",
-				VALUE( gse::value::String, , "human" )
-			},
-			{
-				"name",
-				VALUE( gse::value::String, , player->GetPlayerName() )
-			},
-			{
-				"faction",
-				player->GetFaction()
-					? player->GetFaction()->Wrap( GSE_CALL, gc_space )
-					: VALUE( gse::value::Undefined )
-			},
-		};
-WRAPIMPL_END_PTR()
+	ASSERT( player, "can't wrap slot without player" );
+	return player->Wrap( GSE_CALL );
+}
 
 UNWRAPIMPL_PTR( Slot )
 

@@ -6,6 +6,7 @@
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "resource/ResourceManager.h"
+#include "util/String.h"
 
 namespace game {
 namespace backend {
@@ -69,23 +70,27 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
-		{
-			"id",
-			VALUE( gse::value::String,, m_id )
-		},
-		{
-			"name",
-			VALUE( gse::value::String,, m_name )
-		},
-		{
-			"is_naval",
-			VALUE( gse::value::Bool,, m_flags & Faction::FF_NAVAL )
-		},
-		{
-			"is_progenitor",
-			VALUE( gse::value::Bool,, m_flags & Faction::FF_PROGENITOR )
-		},
-	};
+			{
+				"id",
+				VALUE( gse::value::String, , m_id )
+			},
+			{
+				"name",
+				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"text_color",
+				m_colors.text.Wrap( GSE_CALL ),
+			},
+			{
+				"is_naval",
+				VALUE( gse::value::Bool, , m_flags & Faction::FF_NAVAL )
+			},
+			{
+				"is_progenitor",
+				VALUE( gse::value::Bool, , m_flags & Faction::FF_PROGENITOR )
+			},
+		};
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Faction )

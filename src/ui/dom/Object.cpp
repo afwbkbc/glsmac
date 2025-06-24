@@ -383,10 +383,12 @@ void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value*
 	ASSERT( !m_is_destroyed, "object is destroyed" );
 	const auto& def = m_property_defs.find( key );
 	ASSERT( def != m_property_defs.end(), "property def not found" );
-	const auto t1 = value->type;
-	const auto t2 = def->second.type;
-	if ( t1 != t2 ) {
-		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
+	const auto t1 = def->second.type;
+	if ( t1 != gse::Value::T_NOTHING ) {
+		const auto t2 = value->type;
+		if ( t1 != t2 ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
+		}
 	}
 	for ( const auto& obj : m_wrapobjs ) {
 		obj->Assign( key, value );

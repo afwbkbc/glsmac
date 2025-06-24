@@ -216,6 +216,7 @@ public:
 
 	enum type_t : uint8_t {
 		T_NULLPTR, // special type only for serialization/deserialization
+		T_NOTHING, // special type meaning 'no type'
 		T_UNDEFINED,
 		T_NULL,
 		T_BOOL,

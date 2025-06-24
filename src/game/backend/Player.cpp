@@ -106,8 +106,18 @@ WRAPIMPL_BEGIN( Player )
 				VALUE( gse::value::Int, , m_slotnum )
 			},
 			{
+				"type",
+				VALUE( gse::value::String, , "human" )
+			},
+			{
 				"name",
 				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"faction",
+				m_faction
+					? m_faction->Wrap( GSE_CALL, gc_space )
+					: VALUE( gse::value::Undefined )
 			},
 			{
 				"is_master",
@@ -118,7 +128,7 @@ WRAPIMPL_END_PTR()
 
 const types::Buffer Player::Serialize() const {
 	types::Buffer buf;
-	
+
 	buf.WriteString( m_name );
 	buf.WriteInt( m_role );
 	buf.WriteBool( m_faction != nullptr );
@@ -126,12 +136,12 @@ const types::Buffer Player::Serialize() const {
 		buf.WriteString( m_faction->Serialize().ToString() );
 	}
 	buf.WriteString( m_difficulty_level );
-	
+
 	return buf;
 }
 
 void Player::Unserialize( types::Buffer buf ) {
-	
+
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
 	m_faction = {};
@@ -140,7 +150,7 @@ void Player::Unserialize( types::Buffer buf ) {
 		m_faction->Unserialize( buf.ReadString() );
 	}
 	m_difficulty_level = buf.ReadString();
-	
+
 }
 
 }

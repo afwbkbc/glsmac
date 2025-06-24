@@ -209,6 +209,18 @@ WRAPIMPL_BEGIN( FactionManager )
 				return VALUE( gse::value::Undefined );
 			} )
 		},
+		{
+			"list",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				gse::value::array_elements_t arr = {};
+				for ( const auto& f : m_factions_order ) {
+					ASSERT( m_factions.find( f.second ) != m_factions.end(), "faction id not found: " + f.second );
+					arr.push_back( m_factions.at( f.second ).faction->Wrap( GSE_CALL ) );
+				}
+				return VALUE( gse::value::Array,, arr );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR()
 
