@@ -26,7 +26,7 @@ Select::Select( DOM_ARGS )
 
 	m_active_element = new Button( GSE_CALL, ui, this, {} );
 	ForwardProperty( GSE_CALL, "itemclass", "class", m_active_element );
-	m_active_element->m_on_click = [ this, ctx, si, ep ]() {
+	m_active_element->m_on_mousedown = [ this, ctx, si, ep ]() {
 		if ( m_readonly ) {
 			return;
 		}

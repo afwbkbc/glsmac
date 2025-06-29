@@ -64,7 +64,7 @@ return (i) => {
 			['140x70', 'Large planet'],
 			['180x90', 'Huge planet'],
 		], #to_string(settings.map.size_x) + 'x' + #to_string(settings.map.size_y), (v) => {
-			return v; // TODO
+			return v; // parsed in event
 		});
 
 		make_line('ocean_coverage', 'Ocean Coverage', [
