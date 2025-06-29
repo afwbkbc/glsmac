@@ -6,6 +6,9 @@
 #include "gse/value/String.h"
 #include "gse/value/Bool.h"
 
+#include "engine/Engine.h"
+#include "Game.h"
+
 namespace game {
 namespace backend {
 
@@ -100,6 +103,7 @@ void Player::UncompleteTurn() {
 }
 
 WRAPIMPL_BEGIN( Player )
+	auto* const game = g_engine->GetGame();
 	WRAPIMPL_PROPS
 			{
 				"id",
@@ -114,10 +118,45 @@ WRAPIMPL_BEGIN( Player )
 				VALUE( gse::value::String, , m_name )
 			},
 			{
-				"faction",
-				m_faction
-					? m_faction->Wrap( GSE_CALL, gc_space )
-					: VALUE( gse::value::Undefined )
+				"get_faction",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					return m_faction
+						? m_faction->Wrap( GSE_CALL, gc_space )
+						: VALUE( gse::value::Undefined );
+				} )
+			},
+			{
+				"set_faction_by_id",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( faction_id, 0, String );
+					if ( game->IsStarted() ) {
+						GSE_ERROR( gse::EC.GAME_ERROR, "Can't change faction after game is started" );
+					}
+					auto* faction = game->GetFaction( faction_id );
+					if ( !faction ) {
+						GSE_ERROR( gse::EC.GAME_ERROR, "Faction not found: " + faction_id );
+					}
+					m_faction = faction;
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
+			{
+				"unset_faction",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					N_EXPECT_ARGS( 0 );
+					m_faction = nullptr;
+
+					return VALUE( gse::value::Undefined );
+				} )
 			},
 			{
 				"is_master",

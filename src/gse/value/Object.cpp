@@ -89,7 +89,6 @@ Value* const Object::GetRef( const object_key_t& key ) {
 }
 
 void Object::Unlink() {
-	ASSERT( wrapobj, "wrapobj not linked" );
 	wrapobj = nullptr;
 	wrapsetter = nullptr;
 	type = T_UNDEFINED; // make sure all corresponding variables are inaccessible in scripts

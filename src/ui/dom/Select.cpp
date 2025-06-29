@@ -48,6 +48,8 @@ Select::Select( DOM_ARGS )
 		}
 	};
 	Embed( m_active_element );
+	ForwardProperty( GSE_CALL, "color", m_active_element );
+	ForwardProperty( GSE_CALL, "border", m_active_element );
 
 	m_choicelist = new ChoiceList( GSE_CALL, ui, m_ui->GetRoot(), {} );
 	m_choicelist->m_on_update = [ this, gc_space, ctx, si, ep ]( const std::string& value, const std::string& label, const bool send_event ) {
@@ -80,6 +82,7 @@ Select::Select( DOM_ARGS )
 		}
 	);
 	ForwardProperty( GSE_CALL, "itempadding", "itempadding", m_choicelist );
+	ForwardProperty( GSE_CALL, "itemcolor", m_choicelist );
 	ForwardProperty( GSE_CALL, "value", "value", m_choicelist );
 	ForwardProperty( GSE_CALL, "items", "items", m_choicelist );
 
@@ -93,6 +96,7 @@ Select::Select( DOM_ARGS )
 		}
 	);
 	SetReadOnly( GSE_CALL, false );
+
 }
 
 const bool Select::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -125,6 +129,10 @@ void Select::SetReadOnly( GSE_CALLABLE, const bool readonly ) {
 				m_choicelist->Deglobalize( GSE_CALL );
 				m_active_element->RemoveModifier( GSE_CALL, CM_HIGHLIGHT );
 			}
+			m_active_element->m_is_hoverable = false;
+		}
+		else {
+			m_active_element->m_is_hoverable = true;
 		}
 	}
 }

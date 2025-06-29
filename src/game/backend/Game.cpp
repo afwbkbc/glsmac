@@ -567,6 +567,10 @@ void Game::Iterate() {
 	}
 }
 
+const bool Game::IsStarted() const {
+	return m_game_state != GS_NONE;
+}
+
 Random* Game::GetRandom() const {
 	return m_random;
 }
@@ -662,14 +666,18 @@ WRAPIMPL_BEGIN( Game )
 		{
 			"get_player",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_GETVALUE( id, 0, Int );
+				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+				size_t slot_id = m_slot_num;
+				if ( arguments.size() > 0 ) {
+					N_GETVALUE( id, 0, Int );
+					slot_id = id;
+				}
 				auto& slots = m_state->m_slots->GetSlots();
-				if ( id < slots.size() ) {
-					auto& slot = slots.at( id );
+				if ( slot_id < slots.size() ) {
+					auto& slot = slots.at( slot_id );
 					return slot.Wrap( GSE_CALL );
 				}
-				GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( id ) + " not found" );
+				GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
 			}),
 		},
 		{
@@ -852,6 +860,13 @@ WRAPIMPL_BEGIN( Game )
 					? m_state->GetFM()->Wrap( GSE_CALL, true )
 					: VALUE( gse::value::Undefined )
 					;
+			} )
+		},
+		{
+			"is_started",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::Bool,, m_game_state != GS_NONE );
 			} )
 		},
 	};

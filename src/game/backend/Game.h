@@ -324,6 +324,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void Stop() override;
 	void Iterate() override;
 
+	const bool IsStarted() const;
 	Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
@@ -402,7 +403,7 @@ private:
 	common::mt_flag_t m_init_cancel = false;
 	std::string m_initialization_error = "";
 
-	const Player* m_player = nullptr;
+	Player* m_player = nullptr;
 	bool m_is_master = true;
 	size_t m_slot_num = 0;
 	slot::Slot* m_slot = nullptr;

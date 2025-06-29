@@ -162,6 +162,7 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 			}
 		);
 		AddChild( GSE_CALL, element, true );
+		ForwardProperty( GSE_CALL, "itemcolor", "color", element );
 		if ( kv.size() >= 3 ) {
 			const auto &c = kv.at(2);
 			if ( c->type != gse::Value::T_OBJECT || ( !((gse::value::Object*)c)->object_class.empty() ) ) {

@@ -153,7 +153,9 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	if ( IsEventRelevant( event ) ) {
 		switch ( event.type ) {
 			case input::EV_MOUSE_OVER: {
-				AddModifier( GSE_CALL, CM_HOVER );
+				if ( m_is_hoverable ) {
+					AddModifier( GSE_CALL, CM_HOVER );
+				}
 				break;
 			}
 			case input::EV_MOUSE_OUT: {

@@ -1,11 +1,12 @@
 return (game) => {
 
 	for (e of [
-		'game_settings',
 		'define_resource',
 		'define_animation',
 		'define_moraleset',
 		'define_unit',
+		'game_settings',
+		'select_faction',
 		'spawn_unit',
 		'despawn_unit',
 		'move_unit',

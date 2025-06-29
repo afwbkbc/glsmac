@@ -12,10 +12,7 @@ return (ui) => {
 	});
 
 	ui.class('lobby-player-block').extend('lobby-player-cell').set({
-		border: 'rgb(35, 59, 34),2',
-		_hover: {
-			border: 'rgb(49, 78, 44),2',
-		},
+		border: 'rgb(60, 82, 106),2',
 	});
 
 	ui.class('lobby-player-ready').extend('lobby-player-block').set({
@@ -46,7 +43,7 @@ return (ui) => {
 		textleft: 2,
 		_hover: {
 			color: 'rgb(254,254,254)', // TODO: why it doesn't work without color?
-			border: 'rgb(116, 156, 56),2',
+			border: 'rgb(120, 164, 212),2',
 		},
 	});
 
@@ -64,5 +61,13 @@ return (ui) => {
 		left: 364,
 		width: 120,
 	});
+
+	ui.class('lobby-player-triangle').set({
+		align: 'right center',
+		height: 20,
+		width: 20,
+		background: 'red',
+	});
+
 
 };
