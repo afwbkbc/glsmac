@@ -16,7 +16,7 @@ namespace slot {
 
 CLASS2( Slot, types::Serializable, gse::Wrappable )
 
-	Slot( const size_t index, const State* state );
+	Slot( const size_t index, State* state );
 
 	enum slot_state_t {
 		SS_CLOSED,
@@ -55,7 +55,7 @@ CLASS2( Slot, types::Serializable, gse::Wrappable )
 private:
 
 	size_t m_index;
-	const State* m_state;
+	State* m_state;
 
 	slot_state_t m_slot_state = SS_OPEN;
 	bool m_close_after_clear = false;
@@ -66,6 +66,8 @@ private:
 		player_flag_t flags = PF_NONE;
 	} m_player_data = {};
 	std::string m_linked_gsid = "";
+
+	void Update();
 };
 
 }

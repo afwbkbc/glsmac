@@ -34,7 +34,7 @@ return (i) => {
 					if (i.settings.local.network_role == 'server') {
 						i.steps.multiplayer_host(i);
 					} else {
-						i.steps.notimpl(i);
+						i.steps.multiplayer_join(i);
 					}
 					return true;
 				},

@@ -118,6 +118,32 @@ WRAPIMPL_BEGIN( Player )
 				VALUE( gse::value::String, , m_name )
 			},
 			{
+				"is_ready",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					return VALUE( gse::value::Bool, , m_slot->HasPlayerFlag( ::game::backend::slot::PF_READY ) );
+				} )
+			},
+			{
+				"set_ready",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( isready, 0, Bool );
+
+					if ( isready ) {
+						m_slot->SetPlayerFlag( ::game::backend::slot::PF_READY );
+					}
+					else {
+						m_slot->UnsetPlayerFlag( ::game::backend::slot::PF_READY );
+					}
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
+			{
 				"get_faction",
 				NATIVE_CALL( this ) {
 					N_EXPECT_ARGS( 0 );

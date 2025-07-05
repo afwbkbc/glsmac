@@ -1,5 +1,7 @@
 #include "Slot.h"
 
+#include "engine/Engine.h"
+#include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
@@ -11,11 +13,9 @@ namespace game {
 namespace backend {
 namespace slot {
 
-Slot::Slot( const size_t index, const State* state )
+Slot::Slot( const size_t index, State* state )
 	: m_index( index )
-	, m_state( state ) {
-
-}
+	, m_state( state ) {}
 
 const Slot::slot_state_t Slot::GetState() const {
 	return m_slot_state;
@@ -57,7 +57,10 @@ const std::string& Slot::GetRemoteAddress() const {
 
 void Slot::SetPlayerFlag( const player_flag_t flag ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flag on non-player slot" );
-	m_player_data.flags |= flag;
+	if ( !( m_player_data.flags & flag ) ) {
+		m_player_data.flags |= flag;
+		Update();
+	}
 }
 
 const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
@@ -67,7 +70,10 @@ const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
 
 void Slot::UnsetPlayerFlag( const player_flag_t flag ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to unset player flag on non-player slot" );
-	m_player_data.flags &= ~flag;
+	if ( m_player_data.flags & flag ) {
+		m_player_data.flags &= ~flag;
+		Update();
+	}
 }
 
 Player* Slot::GetPlayerAndClose() {
@@ -170,6 +176,23 @@ WRAPIMPL_BEGIN( Slot )
 }
 
 UNWRAPIMPL_PTR( Slot )
+
+void Slot::Update() {
+	auto* const game = g_engine->GetGame();
+	ASSERT( game, "game not set" );
+	m_state->WithGSE(
+		m_state, [ this, game ]( GSE_CALLABLE ) {
+			game->Trigger(
+				GSE_CALL, "player_update", ARGS_F( this ) {
+					{
+						"player", Wrap( GSE_CALL, true )
+					}
+				}; }
+			);
+		}
+	);
+
+}
 
 }
 }

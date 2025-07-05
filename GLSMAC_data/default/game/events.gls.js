@@ -7,6 +7,7 @@ return (game) => {
 		'define_unit',
 		'game_settings',
 		'select_faction',
+		'ready_or_not',
 		'spawn_unit',
 		'despawn_unit',
 		'move_unit',

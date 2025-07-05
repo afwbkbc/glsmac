@@ -4,10 +4,8 @@ namespace game {
 namespace backend {
 namespace slot {
 
-Slots::Slots( const State* state )
-	: m_state( state ) {
-
-}
+Slots::Slots( State* state )
+	: m_state( state ) {}
 
 const size_t Slots::GetCount() const {
 	return m_slots.size();

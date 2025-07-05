@@ -2,6 +2,13 @@ return (i) => {
 
 	let parts = {};
 
+	const sections = [
+		'game_settings',
+		'players',
+		'custom_game_options',
+	];
+	let cleanups = [];
+
 	i.popup.show({
 		title: 'Multiplayer Setup',
 		width: 800,
@@ -41,7 +48,7 @@ return (i) => {
 			i.connection.open(() => {
 
 				const ii = i + {
-					make_section: (title, properties, generator) => {
+					make_section: (title, properties, generator, cleanup) => {
 						let section = body.panel({
 							class: 'popup-panel',
 						} + properties);
@@ -55,15 +62,14 @@ return (i) => {
 							class: 'popup-panel-body',
 						});
 						generator(inner);
+						if (#is_defined(cleanup)) {
+							cleanups :+cleanup;
+						}
 						return section;
 					},
 				};
 
-				for (section of [
-					'game_settings',
-					'players',
-					'custom_game_options',
-				]) {
+				for (section of sections) {
 					parts[section] = #include('multiplayer_lobby/' + section)(ii);
 				}
 
@@ -73,6 +79,9 @@ return (i) => {
 			if (#is_defined(i.connection)) {
 				i.connection.close();
 				i.connection = #undefined;
+				for (cleanup of cleanups) {
+					cleanup();
+				}
 				i.popup.back();
 			}
 		},

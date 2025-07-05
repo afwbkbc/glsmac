@@ -143,6 +143,9 @@ return (i) => {
 			}
 			top += line_height;
 		}
+	}, () => {
+		const game = i.glsmac.game;
+		game.off('game_settings');
 	});
 
 };

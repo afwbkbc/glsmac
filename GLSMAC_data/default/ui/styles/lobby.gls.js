@@ -15,10 +15,17 @@ return (ui) => {
 		border: 'rgb(60, 82, 106),2',
 	});
 
-	ui.class('lobby-player-ready').extend('lobby-player-block').set({
+	ui.class('lobby-player-readyness').extend('lobby-player-block').set({
 		left: 2,
 		width: 16,
+	});
+
+	ui.class('lobby-player-notready').extend('lobby-player-readyness').set({
 		background: 'interface.pcx:crop(8, 860, 31, 883)',
+	});
+
+	ui.class('lobby-player-ready').extend('lobby-player-readyness').set({
+		background: 'interface.pcx:crop(86, 860, 109, 883)',
 	});
 
 	ui.class('lobby-player-button').extend('lobby-player-block').set({

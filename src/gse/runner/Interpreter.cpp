@@ -1243,14 +1243,16 @@ void Interpreter::Function::GetReachableObjects( std::unordered_set< gc::Object*
 
 gse::Value* Interpreter::Function::Run( GSE_CALLABLE, const function_arguments_t& arguments ) {
 	CHECKACCUM( gc_space );
-	if ( parameters.size() != arguments.size() ) {
-		GSE_ERROR( EC.INVALID_CALL, "Expected " + std::to_string( parameters.size() ) + " arguments, found " + std::to_string( arguments.size() ) );
-	}
 	gse::Value* result = nullptr;
 	context->ForkAndExecute(
-		GSE_CALL, true, [ this, &arguments, &si, &ep, &result ]( context::ChildContext* const subctx ) {
+		GSE_CALL, true, [ this, &arguments, &si, &ep, &result, &gc_space ]( context::ChildContext* const subctx ) {
 			for ( size_t i = 0 ; i < parameters.size() ; i++ ) { // inject passed arguments
-				subctx->CreateVariable( parameters[ i ], arguments[ i ], si, ep );
+				subctx->CreateVariable(
+					parameters[ i ], i < arguments.size()
+						? arguments.at( i )
+						: VALUE( value::Undefined ),
+					si, ep
+				);
 			}
 			ep.WithSI(
 				si, [ this, &result, &subctx, &ep ]() {

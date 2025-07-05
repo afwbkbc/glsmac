@@ -16,7 +16,22 @@ const GCWrappable::callback_id_t GCWrappable::On( GSE_CALLABLE, const std::strin
 }
 
 void GCWrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id ) {
-	Unpersist( m_callbacks.at( event ).at( callback_id ).callable );
+	const auto& it1 = m_callbacks.find( event );
+	if ( it1 != m_callbacks.end() ) {
+		if ( callback_id ) {
+			// delete one handler
+			const auto& it2 = it1->second.find( callback_id );
+			if ( it2 != it1->second.end() ) {
+				Unpersist( it2->second.callable );
+			}
+		}
+		else {
+			// delete all handlers
+			for ( const auto& it2 : it1->second ) {
+				Unpersist( it2.second.callable );
+			}
+		}
+	}
 	Wrappable::Off( GSE_CALL, event, callback_id );
 }
 

@@ -53,6 +53,7 @@ return (m) => {
 			'multiplayer_type',
 			'multiplayer_role',
 			'multiplayer_host',
+			'multiplayer_join',
 			'multiplayer_lobby',
 		]) {
 			i.steps[step] = #include('steps/' + step);

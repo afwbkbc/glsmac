@@ -13,7 +13,7 @@ namespace slot {
 
 CLASS( Slots, types::Serializable )
 
-	Slots( const State* state );
+	Slots( State* state );
 
 	const size_t GetCount() const;
 	void Resize( const size_t size );
@@ -25,7 +25,7 @@ CLASS( Slots, types::Serializable )
 	void Unserialize( types::Buffer buf ) override;
 
 private:
-	const State* m_state;
+	State* m_state;
 
 	std::vector< Slot > m_slots = {};
 
