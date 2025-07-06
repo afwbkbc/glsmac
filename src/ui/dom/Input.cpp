@@ -54,12 +54,11 @@ Input::Input( DOM_ARGS )
 		}
 	);
 
-	m_geometry->AddHandler(
+	GeometryHandler(
 		GH_ON_AREA_UPDATE, [ this ]() {
 			FixAlign();
 		}
 	);
-
 }
 
 void Input::OnFocus() {

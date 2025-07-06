@@ -58,11 +58,11 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	bool result = false;
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
+			AddModifier( GSE_CALL, CM_ACTIVE );
 			if ( m_on_mousedown ) {
 				m_on_mousedown();
 				break;
 			}
-			AddModifier( GSE_CALL, CM_ACTIVE );
 			m_last_button = event.data.mouse.button;
 			result = true;
 			break;
@@ -70,6 +70,10 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
 			RemoveModifier( GSE_CALL, CM_ACTIVE );
+			if ( m_on_mouseup ) {
+				m_on_mouseup();
+				break;
+			}
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
 				// actual click happened
 				if ( m_on_click ) {

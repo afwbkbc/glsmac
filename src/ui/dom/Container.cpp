@@ -16,6 +16,7 @@
 #include "Sound.h"
 #include "ChoiceList.h"
 #include "Select.h"
+#include "Scrollbar.h"
 
 namespace ui {
 namespace dom {
@@ -75,6 +76,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "sound", Sound );
 		FACTORY( "choicelist", ChoiceList );
 		FACTORY( "select", Select );
+		FACTORY( "scrollbar", Scrollbar );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {

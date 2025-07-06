@@ -17,6 +17,7 @@ namespace ui {
 
 UI::UI( GSE_CALLABLE )
 	: gse::GCWrappable( gc_space )
+	, m_ctx( ctx )
 	, m_gc_space( gc_space )
 	, m_scene(new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ) ){
 
@@ -227,6 +228,20 @@ gc::Space* const UI::GetGCSpace() const {
 	return m_gc_space;
 }
 
+void UI::WithGSE( const gse_func_t& f ) {
+	m_gc_space->Accumulate(
+		nullptr,
+		[ this, f ]() {
+			gse::ExecutionPointer ep;
+			f( m_gc_space, m_ctx, {}, ep );
+		}
+	);
+}
+
+dom::Root* const UI::GetRoot() const {
+	return m_root;
+}
+
 void UI::AddFocusable( dom::Focusable* const element ) {
 	ASSERT( element, "element is null" );
 	ASSERT( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) == m_focusable_elements.end(), "focusable already exists");
@@ -236,10 +251,6 @@ void UI::AddFocusable( dom::Focusable* const element ) {
 	if ( !m_focused_element ) {
 		Focus( element );
 	}
-}
-
-dom::Root* const UI::GetRoot() const {
-	return m_root;
 }
 
 void UI::RemoveFocusable( dom::Focusable* const element ) {

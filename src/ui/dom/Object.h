@@ -86,6 +86,8 @@ public:
 	void Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglobalize = nullptr );
 	void Deglobalize( GSE_CALLABLE );
 
+	bool m_is_hoverable = true;
+
 protected:
 
 	virtual ~Object();
@@ -122,7 +124,6 @@ protected:
 	virtual void WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& event_data ) const;
 
 	bool m_is_visible = false;
-	bool m_is_hoverable = true;
 
 private:
 

@@ -16,5 +16,6 @@ SET( SRC ${SRC}
 	${PWD}/Sound.cpp
 	${PWD}/ChoiceList.cpp
 	${PWD}/Select.cpp
+	${PWD}/Scrollbar.cpp
 
 	PARENT_SCOPE )

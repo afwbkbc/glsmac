@@ -6,14 +6,20 @@
 
 #include "gse/GCWrappable.h"
 
-#include "gc/Object.h"
-
 #include "Types.h"
 
 #include "gse/value/Object.h"
 #include "util/Clamper.h"
 #include "types/Vec2.h"
 #include "types/mesh/Types.h"
+
+namespace gse::context {
+class Context;
+}
+
+namespace gc {
+class Object;
+}
 
 namespace scene {
 class Scene;
@@ -44,6 +50,7 @@ CLASS( UI, gse::GCWrappable )
 
 	scene::Scene* const m_scene = nullptr;
 	gc::Space* const m_gc_space = nullptr;
+	gse::context::Context* const m_ctx = nullptr;
 
 	const types::mesh::coord_t ClampX( const coord_t& x ) const;
 	const types::mesh::coord_t ClampY( const coord_t& y ) const;
@@ -57,6 +64,9 @@ CLASS( UI, gse::GCWrappable )
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
+	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
+
+	void WithGSE( const gse_func_t& f );
 	dom::Root* const GetRoot() const;
 
 	void AddFocusable( dom::Focusable* const element );
@@ -73,6 +83,7 @@ private:
 	void SetGlobalSingleton( GSE_CALLABLE, dom::Object* const object, const std::function< void() >& f_on_deglobalize = nullptr );
 	void RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object );
 private:
+
 	dom::Root* m_root;
 
 	struct {
