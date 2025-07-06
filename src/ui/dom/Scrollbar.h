@@ -13,6 +13,9 @@ class Scrollbar : public Panel {
 public:
 	Scrollbar( DOM_ARGS_TD( "scrollbar" ) );
 
+protected:
+	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
+
 private:
 
 	enum scroll_type_t {
@@ -38,6 +41,11 @@ private:
 		util::Timer timer;
 		float direction = 0.0f;
 	} m_arrow_scroll;
+
+	struct {
+		bool is_dragging = false;
+		int initial_offset = 0;
+	} m_slider_drag;
 
 	void SetMin( GSE_CALLABLE, const float min );
 	void SetMax( GSE_CALLABLE, const float max );

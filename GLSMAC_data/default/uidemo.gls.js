@@ -695,10 +695,10 @@
 		top: 30,
 		color: 'white',
 		font: ':16',
-		text: '100.0',
+		text: #to_string(vscroll.value),
 	});
 	vscroll.on('change', (e) => {
-		#print('CHANGE', e.value);
+		vscrolltext.text = #to_string(e.value);
 	});
 
 });

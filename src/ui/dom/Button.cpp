@@ -59,8 +59,7 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
 			AddModifier( GSE_CALL, CM_ACTIVE );
-			if ( m_on_mousedown ) {
-				m_on_mousedown();
+			if ( m_on_mousedown && m_on_mousedown( event ) ) {
 				break;
 			}
 			m_last_button = event.data.mouse.button;
@@ -70,15 +69,12 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
 			RemoveModifier( GSE_CALL, CM_ACTIVE );
-			if ( m_on_mouseup ) {
-				m_on_mouseup();
+			if ( m_on_mouseup && m_on_mouseup( event ) ) {
 				break;
 			}
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
 				// actual click happened
-				if ( m_on_click ) {
-					// managed by parent
-					m_on_click();
+				if ( m_on_click && m_on_click( event ) ) {
 					break;
 				}
 				m_sound->Play();

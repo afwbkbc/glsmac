@@ -2,6 +2,7 @@
 
 #include "Button.h"
 
+#include "input/Event.h"
 #include "ui/UI.h"
 #include "ui/geometry/Geometry.h"
 
@@ -104,18 +105,21 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		}
 	);
 
-	m_from->m_on_mousedown = [ this ]() {
+	m_from->m_on_mousedown = [ this ]( const input::Event& event ) {
 		m_arrow_scroll.direction = -1.0f;
 		m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
 		Scroll();
+		return true;
 	};
-	m_to->m_on_mousedown = [ this ]() {
+	m_to->m_on_mousedown = [ this ]( const input::Event& event ) {
 		m_arrow_scroll.direction = 1.0f;
 		m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
 		Scroll();
+		return true;
 	};
-	m_from->m_on_mouseup = m_to->m_on_mouseup = [ this ]() {
+	m_from->m_on_mouseup = m_to->m_on_mouseup = [ this ]( const input::Event& event ) {
 		m_arrow_scroll.timer.Stop();
+		return true;
 	};
 
 	Iterable(
@@ -126,6 +130,42 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		}
 	);
 
+	m_slider->m_on_mousedown = [ this ]( const input::Event& event ) {
+		switch ( m_scroll_type ) {
+			case ST_VERTICAL: {
+				const auto& area = m_slider->GetGeometry()->m_area;
+				m_slider_drag.initial_offset = event.data.mouse.y - area.top;
+				break;
+			}
+			case ST_HORIZONTAL: {
+				THROW( "TODO: HORIZONTAL" );
+				break;
+			}
+			default:
+				ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
+		}
+		m_slider_drag.is_dragging = true;
+		return true;
+	};
+	m_slider->m_on_mouseup = [ this ]( const input::Event& event ) {
+		m_slider_drag.is_dragging = false;
+		return false;
+	};
+}
+
+const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	if ( m_slider_drag.is_dragging ) {
+		if ( event.type == input::EV_MOUSE_MOVE ) {
+			const auto offset = event.data.mouse.y - m_geometry->m_area.top - m_slider_drag.initial_offset;
+			auto mintop = m_fromto_size;
+			auto maxtop = m_geometry->m_area.height - m_fromto_size * 2;
+			SetValue( GSE_CALL, ( offset - mintop ) * ( m_max - m_min ) / ( maxtop - m_slider_size ) + m_min, true );
+		}
+		else if ( event.type == input::EV_MOUSE_UP ) {
+			m_slider_drag.is_dragging = false;
+		}
+	}
+	return Panel::ProcessEvent( GSE_CALL, event );
 }
 
 void Scrollbar::SetMin( GSE_CALLABLE, const float min ) {

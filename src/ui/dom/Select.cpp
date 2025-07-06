@@ -26,9 +26,9 @@ Select::Select( DOM_ARGS )
 
 	m_active_element = new Button( GSE_CALL, ui, this, {} );
 	ForwardProperty( GSE_CALL, "itemclass", "class", m_active_element );
-	m_active_element->m_on_mousedown = [ this, ctx, si, ep ]() {
+	m_active_element->m_on_mousedown = [ this, ctx, si, ep ]( const input::Event& event ) {
 		if ( m_readonly ) {
-			return;
+			return true;
 		}
 		auto ep2 = ep;
 		if ( !m_choicelist->m_is_visible ) {
@@ -46,6 +46,7 @@ Select::Select( DOM_ARGS )
 			m_choicelist->Deglobalize( m_gc_space, ctx, si, ep2 );
 			m_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
 		}
+		return true;
 	};
 	Embed( m_active_element );
 	ForwardProperty( GSE_CALL, "color", m_active_element );

@@ -12,10 +12,10 @@ class Button : public Panel {
 public:
 	Button( DOM_ARGS );
 
-	typedef std::function< void() > f_on_click_t;
-	f_on_click_t m_on_mousedown = nullptr;
-	f_on_click_t m_on_mouseup = nullptr;
-	f_on_click_t m_on_click = nullptr;
+	typedef std::function< bool( const input::Event& event ) > f_on_event_t;
+	f_on_event_t m_on_mousedown = nullptr;
+	f_on_event_t m_on_mouseup = nullptr;
+	f_on_event_t m_on_click = nullptr;
 
 protected:
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
