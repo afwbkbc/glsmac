@@ -25,9 +25,10 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 	: Area( DOM_ARGS_PASS_T )
 	, m_cache( new scene::actor::Cache( "UI::Cache" ) ) {
 
-	Events(
+	Events( // TODO: refactor this
 		{
 			input::EV_KEY_DOWN,
+			input::EV_MOUSE_SCROLL,
 		}
 	);
 
@@ -151,6 +152,9 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	if ( event.type == input::EV_MOUSE_SCROLL ) {
+		int a = 5;
+	}
 	switch ( event.type ) {
 		case input::EV_MOUSE_OUT: {
 			if ( m_mouse_over_object ) {
@@ -172,6 +176,9 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
 		const auto& child = it->second;
+		if ( child->m_tag == "$scrollbar" ) {
+			int a = 5;
+		}
 		if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
 			return true;
 		}

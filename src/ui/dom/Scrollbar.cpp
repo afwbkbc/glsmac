@@ -11,8 +11,16 @@
 namespace ui {
 namespace dom {
 
+#define NEXTVAL_ARROW m_value + m_arrow_scroll.direction * m_speed * (float)m_arrow_scroll.frequency_ms / 1000.0f
+
 Scrollbar::Scrollbar( DOM_ARGS_T )
 	: Panel( DOM_ARGS_PASS_T, false ) {
+
+	Events(
+		{
+			//input::EV_MOUSE_SCROLL // TODO
+		}
+	);
 
 	m_from = new Button( GSE_CALL, ui, this, {} );
 	ForwardProperty( GSE_CALL, "class_from", "class", m_from );
@@ -108,13 +116,13 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	m_from->m_on_mousedown = [ this ]( const input::Event& event ) {
 		m_arrow_scroll.direction = -1.0f;
 		m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
-		Scroll();
+		Scroll( NEXTVAL_ARROW );
 		return true;
 	};
 	m_to->m_on_mousedown = [ this ]( const input::Event& event ) {
 		m_arrow_scroll.direction = 1.0f;
 		m_arrow_scroll.timer.SetInterval( m_arrow_scroll.frequency_ms );
-		Scroll();
+		Scroll( NEXTVAL_ARROW );
 		return true;
 	};
 	m_from->m_on_mouseup = m_to->m_on_mouseup = [ this ]( const input::Event& event ) {
@@ -125,7 +133,10 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	Iterable(
 		[ this ]() {
 			while ( m_arrow_scroll.timer.HasTicked() ) {
-				Scroll();
+				Scroll( NEXTVAL_ARROW );
+			}
+			while ( m_wheel_scroll.scroller.HasTicked() ) {
+				Scroll( m_wheel_scroll.scroller.GetPosition() );
 			}
 		}
 	);
@@ -164,6 +175,19 @@ const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 		else if ( event.type == input::EV_MOUSE_UP ) {
 			m_slider_drag.is_dragging = false;
 		}
+	}
+	else if ( event.type == input::EV_MOUSE_SCROLL && !m_arrow_scroll.timer.IsRunning() ) {
+		float value = m_value - m_speed * event.data.mouse.scroll_y * m_wheel_scroll.speed;
+		if ( value < m_min ) {
+			value = m_min;
+		}
+		else if ( value > m_max ) {
+			value = m_max;
+		}
+		if ( value != m_value ) {
+			m_wheel_scroll.scroller.Scroll( m_value, value, m_wheel_scroll.duration_ms );
+		}
+		return true;
 	}
 	return Panel::ProcessEvent( GSE_CALL, event );
 }
@@ -301,10 +325,10 @@ void Scrollbar::RealignSlider() {
 	}
 }
 
-void Scrollbar::Scroll() {
+void Scrollbar::Scroll( const float value ) {
 	m_ui->WithGSE(
-		[ this ]( GSE_CALLABLE ) {
-			SetValue( GSE_CALL, m_value + m_arrow_scroll.direction * m_speed * (float)m_arrow_scroll.frequency_ms / 1000.0f, true );
+		[ this, value ]( GSE_CALLABLE ) {
+			SetValue( GSE_CALL, value, true );
 		}
 	);
 }

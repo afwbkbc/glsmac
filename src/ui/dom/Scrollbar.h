@@ -3,6 +3,7 @@
 #include "Panel.h"
 
 #include "util/Timer.h"
+#include "util/Scroller.h"
 
 namespace ui {
 namespace dom {
@@ -47,6 +48,12 @@ private:
 		int initial_offset = 0;
 	} m_slider_drag;
 
+	struct {
+		const size_t duration_ms = 200;
+		const float speed = 0.5f;
+		util::Scroller< float > scroller;
+	} m_wheel_scroll;
+
 	void SetMin( GSE_CALLABLE, const float min );
 	void SetMax( GSE_CALLABLE, const float max );
 	void SetValue( GSE_CALLABLE, float value, const bool send_event = false );
@@ -55,7 +62,7 @@ private:
 	void ResizeFromTo();
 	void ResizeSlider();
 	void RealignSlider();
-	void Scroll();
+	void Scroll( const float value );
 };
 
 }

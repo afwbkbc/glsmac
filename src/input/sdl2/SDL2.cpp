@@ -120,9 +120,15 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
+				// legacy
 				NEWV( ui_event, ui_legacy::event::MouseScroll, m_last_mouse_position.x, m_last_mouse_position.y, event.wheel.y );
 				g_engine->GetUI()->ProcessEvent( ui_event );
 				DELETE( ui_event );
+				// new ui
+				e.SetType( EV_MOUSE_SCROLL );
+				e.data.mouse.x = m_last_mouse_position.x;
+				e.data.mouse.y = m_last_mouse_position.y;
+				e.data.mouse.scroll_y = event.wheel.y;
 				break;
 			}
 			case SDL_KEYDOWN: {
