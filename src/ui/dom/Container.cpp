@@ -152,9 +152,6 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 }
 
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	if ( event.type == input::EV_MOUSE_SCROLL ) {
-		int a = 5;
-	}
 	switch ( event.type ) {
 		case input::EV_MOUSE_OUT: {
 			if ( m_mouse_over_object ) {
@@ -176,9 +173,6 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
 		const auto& child = it->second;
-		if ( child->m_tag == "$scrollbar" ) {
-			int a = 5;
-		}
 		if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
 			return true;
 		}

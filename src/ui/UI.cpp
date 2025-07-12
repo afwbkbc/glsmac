@@ -49,25 +49,34 @@ UI::UI( GSE_CALLABLE )
 	Resize();
 
 	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
-		if ( event.type == input::EV_MOUSE_MOVE ) {
-			m_last_mouse_position = {
-				event.data.mouse.x,
-				event.data.mouse.y
-			};
-		}
-		if (
-			event.type == input::EV_KEY_DOWN &&
-			event.data.key.modifiers == input::KM_NONE &&
-			event.data.key.code == input::K_TAB &&
-			!m_focusable_elements.empty()
-			) {
-			FocusNext();
-			return true;
-		}
 		bool result = false;
 		m_gc_space->Accumulate( this, [ this, &ctx, &gc_space, &si, &event, &result ] () {
 			gse::ExecutionPointer ep;
-			result = m_root->ProcessEvent( GSE_CALL, event );
+			if ( event.type == input::EV_MOUSE_MOVE ) {
+				m_last_mouse_position = {
+					event.data.mouse.x,
+					event.data.mouse.y
+				};
+			}
+			for ( const auto& it : m_global_handlers ) {
+				if ( it.second( GSE_CALL, event ) ) {
+					result = true;
+					break;
+				}
+			}
+			if (
+				!result &&
+				event.type == input::EV_KEY_DOWN &&
+				event.data.key.modifiers == input::KM_NONE &&
+				event.data.key.code == input::K_TAB &&
+				!m_focusable_elements.empty()
+				) {
+				FocusNext();
+				result = true;
+			}
+			if ( !result ) {
+				result = m_root->ProcessEvent( GSE_CALL, event );
+			}
 		});
 		return result;
 	});
@@ -290,6 +299,18 @@ void UI::FocusNext() {
 	if ( nextidx < m_focusable_elements.size() ) {
 		Focus( m_focusable_elements.at( nextidx ) );
 	}
+}
+
+const size_t UI::AddGlobalHandler( const global_handler_t& global_handler ) {
+	const auto handler_id = m_next_global_handler_id++;
+	ASSERT( m_global_handlers.find( handler_id ) == m_global_handlers.end(), "global handler already set" );
+	m_global_handlers.insert({ handler_id, global_handler } );
+	return handler_id;
+}
+
+void UI::RemoveGlobalHandler( const size_t handler_id ) {
+	ASSERT( m_global_handlers.find( handler_id ) != m_global_handlers.end(), "global handler not found" );
+	m_global_handlers.erase( handler_id );
 }
 
 void UI::Defocus( dom::Focusable* const element ) {

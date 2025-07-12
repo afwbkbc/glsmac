@@ -141,42 +141,76 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		}
 	);
 
-	m_slider->m_on_mousedown = [ this ]( const input::Event& event ) {
+	const auto f_drag_handler = [ this ]( GSE_CALLABLE, const input::Event& event ) {
+		if ( m_slider_drag.is_dragging ) {
+			switch ( event.type ) {
+				case input::EV_MOUSE_MOVE: {
+					const auto offset = m_scroll_type == ST_VERTICAL
+						? event.data.mouse.y - m_geometry->m_area.top - m_slider_drag.initial_offset
+						: event.data.mouse.x - m_geometry->m_area.left - m_slider_drag.initial_offset;
+					auto mintop = m_fromto_size;
+					auto maxtop = m_scroll_type == ST_VERTICAL
+						? m_geometry->m_area.height - m_fromto_size * 2
+						: m_geometry->m_area.width - m_fromto_size * 2;
+					SetValue( GSE_CALL, ( offset - mintop ) * ( m_max - m_min ) / ( maxtop - m_slider_size ) + m_min, true );
+					return true;
+				}
+				case input::EV_MOUSE_UP: {
+					m_slider_drag.is_dragging = false;
+					if ( !m_slider->GetGeometry()->Contains( { event.data.mouse.x, event.data.mouse.y } ) ) {
+						m_slider->RemoveModifier( GSE_CALL, CM_ACTIVE ); // hack
+						m_slider->RemoveModifier( GSE_CALL, CM_HOVER ); // hack
+					}
+					return false;
+				}
+				case input::EV_MOUSE_SCROLL: {
+					return true;
+				};
+			}
+		}
+		return false;
+	};
+
+	m_slider->m_on_mousedown = [ this, f_drag_handler ]( const input::Event& event ) {
+		const auto& area = m_slider->GetGeometry()->m_area;
 		switch ( m_scroll_type ) {
 			case ST_VERTICAL: {
-				const auto& area = m_slider->GetGeometry()->m_area;
 				m_slider_drag.initial_offset = event.data.mouse.y - area.top;
 				break;
 			}
 			case ST_HORIZONTAL: {
-				THROW( "TODO: HORIZONTAL" );
+				m_slider_drag.initial_offset = event.data.mouse.x - area.left;
 				break;
 			}
 			default:
 				ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
 		}
 		m_slider_drag.is_dragging = true;
+		m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
 		return true;
 	};
 	m_slider->m_on_mouseup = [ this ]( const input::Event& event ) {
-		m_slider_drag.is_dragging = false;
+		if ( m_slider_drag.is_dragging ) {
+			ASSERT( m_slider_drag.drag_handler_id, "drag handler id zero" );
+			m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+			m_slider_drag.drag_handler_id = 0;
+			m_slider_drag.is_dragging = false;
+		}
 		return false;
 	};
+
+}
+
+void Scrollbar::Destroy( GSE_CALLABLE ) {
+	if ( m_slider_drag.drag_handler_id ) {
+		m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+		m_slider_drag.drag_handler_id = 0;
+	}
+	Panel::Destroy( GSE_CALL );
 }
 
 const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	if ( m_slider_drag.is_dragging ) {
-		if ( event.type == input::EV_MOUSE_MOVE ) {
-			const auto offset = event.data.mouse.y - m_geometry->m_area.top - m_slider_drag.initial_offset;
-			auto mintop = m_fromto_size;
-			auto maxtop = m_geometry->m_area.height - m_fromto_size * 2;
-			SetValue( GSE_CALL, ( offset - mintop ) * ( m_max - m_min ) / ( maxtop - m_slider_size ) + m_min, true );
-		}
-		else if ( event.type == input::EV_MOUSE_UP ) {
-			m_slider_drag.is_dragging = false;
-		}
-	}
-	else if ( event.type == input::EV_MOUSE_SCROLL && !m_arrow_scroll.timer.IsRunning() ) {
+	if ( event.type == input::EV_MOUSE_SCROLL && !m_arrow_scroll.timer.IsRunning() ) {
 		float value = m_value - m_speed * event.data.mouse.scroll_y * m_wheel_scroll.speed;
 		if ( value < m_min ) {
 			value = m_min;
@@ -253,27 +287,33 @@ void Scrollbar::Resize() {
 }
 
 void Scrollbar::ResizeFromTo() {
+	auto* g_from = m_from->GetGeometry();
+	auto* g_to = m_to->GetGeometry();
 	switch ( m_scroll_type ) {
 		case ST_VERTICAL: {
-
-			auto* g_from = m_from->GetGeometry();
 			g_from->SetAlign( geometry::Geometry::ALIGN_TOP_CENTER );
 			g_from->SetLeft( 0 );
 			g_from->SetRight( 0 );
 			g_from->SetTop( 0 );
 			g_from->SetHeight( m_fromto_size );
-
-			auto* g_to = m_to->GetGeometry();
 			g_to->SetAlign( geometry::Geometry::ALIGN_BOTTOM_CENTER );
 			g_to->SetLeft( 0 );
 			g_to->SetRight( 0 );
 			g_to->SetBottom( 0 );
 			g_to->SetHeight( m_fromto_size );
-
 			break;
 		}
 		case ST_HORIZONTAL: {
-			THROW( "TODO: HORIZONTAL" );
+			g_from->SetAlign( geometry::Geometry::ALIGN_LEFT_CENTER );
+			g_from->SetTop( 0 );
+			g_from->SetBottom( 0 );
+			g_from->SetLeft( 0 );
+			g_from->SetWidth( m_fromto_size );
+			g_to->SetAlign( geometry::Geometry::ALIGN_RIGHT_CENTER );
+			g_to->SetTop( 0 );
+			g_to->SetBottom( 0 );
+			g_to->SetRight( 0 );
+			g_to->SetWidth( m_fromto_size );
 			break;
 		}
 		default:
@@ -282,9 +322,9 @@ void Scrollbar::ResizeFromTo() {
 }
 
 void Scrollbar::ResizeSlider() {
+	auto* g = m_slider->GetGeometry();
 	switch ( m_scroll_type ) {
 		case ST_VERTICAL: {
-			auto* g = m_slider->GetGeometry();
 			g->SetAlign( geometry::Geometry::ALIGN_TOP_CENTER );
 			g->SetLeft( 0 );
 			g->SetRight( 0 );
@@ -292,7 +332,10 @@ void Scrollbar::ResizeSlider() {
 			break;
 		}
 		case ST_HORIZONTAL: {
-			THROW( "TODO: HORIZONTAL" );
+			g->SetAlign( geometry::Geometry::ALIGN_LEFT_CENTER );
+			g->SetTop( 0 );
+			g->SetBottom( 0 );
+			g->SetWidth( m_slider_size );
 			break;
 		}
 		default:
@@ -305,19 +348,13 @@ void Scrollbar::RealignSlider() {
 		case ST_VERTICAL: {
 			size_t mintop = m_fromto_size;
 			size_t maxtop = m_geometry->m_area.height - m_fromto_size * 2;
-
-			m_slider->GetGeometry()->SetTop(
-				mintop +
-					(
-						maxtop -
-							m_slider_size
-					) * ( m_value - m_min ) / ( m_max - m_min )
-			);
-
+			m_slider->GetGeometry()->SetTop( mintop + ( maxtop - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}
 		case ST_HORIZONTAL: {
-			THROW( "TODO: HORIZONTAL" );
+			size_t minleft = m_fromto_size;
+			size_t maxleft = m_geometry->m_area.width - m_fromto_size * 2;
+			m_slider->GetGeometry()->SetLeft( minleft + ( maxleft - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}
 		default:

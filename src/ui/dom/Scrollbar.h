@@ -13,6 +13,8 @@ class Button;
 class Scrollbar : public Panel {
 public:
 	Scrollbar( DOM_ARGS_TD( "scrollbar" ) );
+	
+	void Destroy( GSE_CALLABLE ) override;
 
 protected:
 	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
@@ -46,6 +48,7 @@ private:
 	struct {
 		bool is_dragging = false;
 		int initial_offset = 0;
+		size_t drag_handler_id = 0;
 	} m_slider_drag;
 
 	struct {

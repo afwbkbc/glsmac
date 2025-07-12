@@ -13,6 +13,10 @@
 #include "types/Vec2.h"
 #include "types/mesh/Types.h"
 
+namespace input {
+class Event;
+}
+
 namespace gse::context {
 class Context;
 }
@@ -75,6 +79,10 @@ CLASS( UI, gse::GCWrappable )
 	void Defocus( dom::Focusable* const element );
 	void FocusNext();
 
+	typedef std::function< const bool( GSE_CALLABLE, const input::Event& event ) > global_handler_t;
+	const size_t AddGlobalHandler( const global_handler_t& global_handler );
+	void RemoveGlobalHandler( const size_t handler_id );
+
 private:
 	friend class dom::Object;
 	typedef std::function< void() > f_iterable_t;
@@ -82,6 +90,7 @@ private:
 	void RemoveIterable( const dom::Object* const obj );
 	void SetGlobalSingleton( GSE_CALLABLE, dom::Object* const object, const std::function< void() >& f_on_deglobalize = nullptr );
 	void RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object );
+
 private:
 
 	dom::Root* m_root;
@@ -105,6 +114,9 @@ private:
 
 	dom::Object* m_global_singleton = nullptr;
 	std::function< void() > m_f_global_singleton_on_deglobalize = nullptr;
+
+	size_t m_next_global_handler_id = 1;
+	std::map< size_t, global_handler_t > m_global_handlers = {};
 
 private:
 	friend class dom::Object;

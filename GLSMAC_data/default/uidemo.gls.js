@@ -635,9 +635,9 @@
 		return true;
 	});
 
-	glsmac.ui.class('vscroll_slider').set({
+	glsmac.ui.class('scroll_slider').set({
 		color: 'white',
-		text: '|',
+		text: '?',
 		background: '#660000',
 		_hover: {
 			background: '#aa0000',
@@ -647,11 +647,12 @@
 		},
 	});
 
-	glsmac.ui.class('vscroll_fromto').set({
+	glsmac.ui.class('scroll_fromto').set({
 		color: 'white',
+		font: ':20',
 	});
-	glsmac.ui.class('vscroll_from').extend('vscroll_fromto').set({
-		text: 'U',
+	glsmac.ui.class('scroll_from').extend('scroll_fromto').set({
+		text: '-1',
 		background: '#006600',
 		_hover: {
 			background: '#00aa00',
@@ -660,8 +661,8 @@
 			background: '#44ff44',
 		},
 	});
-	glsmac.ui.class('vscroll_to').extend('vscroll_fromto').set({
-		text: 'D',
+	glsmac.ui.class('scroll_to').extend('scroll_fromto').set({
+		text: '+1',
 		background: '#000066',
 		_hover: {
 			background: '#0000aa',
@@ -671,34 +672,61 @@
 		},
 	});
 
-	const vscroll = texts.scrollbar({
-		scroll_type: 'vertical',
-		align: 'top right',
-		right: 30,
-		top: 50,
-		width: 20,
-		height: 200,
+	glsmac.ui.class('scrollbar').set({
 		fromto_size: 20,
 		slider_size: 30,
 		background: '#ffffff66',
-		class_from: 'vscroll_from',
-		class_to: 'vscroll_to',
-		class_slider: 'vscroll_slider',
-		min: 0.0,
-		max: 100.0,
-		value: 50.0,
-		speed: 200.0,
+		class_from: 'scroll_from',
+		class_to: 'scroll_to',
+		class_slider: 'scroll_slider',
+		min: -1.0,
+		max: 1.0,
+		value: 0.0,
+		speed: 4.0,
 	});
-	const vscrolltext = texts.text({
-		align: 'top right',
-		right: 30,
-		top: 30,
+	glsmac.ui.class('scrollvalue').set({
 		color: 'white',
 		font: ':16',
+	});
+
+	const vscroll = texts.scrollbar({
+		class: 'scrollbar',
+		scroll_type: 'vertical',
+		align: 'top left',
+		left: 30,
+		top: 50,
+		width: 20,
+		height: 200,
+	});
+	const vscrolltext = texts.text({
+		class: 'scrollvalue',
+		align: 'top left',
+		left: 30,
+		top: 30,
 		text: #to_string(vscroll.value),
 	});
 	vscroll.on('change', (e) => {
 		vscrolltext.text = #to_string(e.value);
+	});
+
+	const hscroll = texts.scrollbar({
+		class: 'scrollbar',
+		scroll_type: 'horizontal',
+		align: 'top left',
+		left: 80,
+		top: 170,
+		width: 200,
+		height: 20,
+	});
+	const hscrolltext = texts.text({
+		class: 'scrollvalue',
+		align: 'top left',
+		left: 290,
+		top: 175,
+		text: #to_string(hscroll.value),
+	});
+	hscroll.on('change', (e) => {
+		hscrolltext.text = #to_string(e.value);
 	});
 
 });
