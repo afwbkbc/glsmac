@@ -21,7 +21,7 @@ Input::Input( DOM_ARGS )
 	m_text->GetGeometry()->SetRight( 4 ); // TODO: configurable?
 	Embed( m_text );
 
-	m_geometry->SetOverflowAllowed( false );
+	m_geometry->SetOverflowMode( geometry::Geometry::OM_HIDDEN );
 
 	m_value = "";
 	m_is_blink_cursor_visible = false;

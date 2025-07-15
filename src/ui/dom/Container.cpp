@@ -17,6 +17,7 @@
 #include "ChoiceList.h"
 #include "Select.h"
 #include "Scrollbar.h"
+#include "Scrollview.h"
 
 namespace ui {
 namespace dom {
@@ -52,10 +53,10 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& value = ((gse::value::String*)v)->value;
 			if ( value == "visible" ) {
-				m_geometry->SetOverflowAllowed( true );
+				m_geometry->SetOverflowMode( geometry::Geometry::OM_VISIBLE );
 			}
 			else if ( value == "hidden" ) {
-				m_geometry->SetOverflowAllowed( false );
+				m_geometry->SetOverflowMode( geometry::Geometry::OM_HIDDEN );
 			}
 			else {
 				GSE_ERROR( gse::EC.UI_ERROR, "Invalid overflow value. Expected: visible or hidden, got: " + value );
@@ -63,7 +64,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 			return nullptr;
 		},
 		[ this ]( GSE_CALLABLE ) {
-			m_geometry->SetOverflowAllowed( true );
+			m_geometry->SetOverflowMode( geometry::Geometry::OM_VISIBLE );
 		}
 	);
 
@@ -78,6 +79,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "choicelist", ChoiceList );
 		FACTORY( "select", Select );
 		FACTORY( "scrollbar", Scrollbar );
+		FACTORY( "scrollview", Scrollview );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
@@ -305,7 +307,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		ASSERT( obj, "object not created" );
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
-		m_children.insert({ obj->m_id, obj });
+		m_factory_owner->m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( GSE_CALL, true );
 	} ) );
 }

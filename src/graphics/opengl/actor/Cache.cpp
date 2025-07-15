@@ -66,21 +66,12 @@ void Cache::OnWindowResize() {
 	UpdateCache();
 }
 
-void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
+void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera, const bool force ) {
 
 	auto* actor = (scene::actor::Cache*)m_actor;
-	if ( m_is_update_needed ) {
-		for ( const auto& it : m_cache_children_by_zindex ) {
-			for ( const auto& child : it.second ) {
-				if ( child->m_type == AT_CACHE ) {
-					( (Cache*)child )->UpdateCacheImpl( shader_program, camera );
-				}
-			}
-		}
-	}
-	else {
+	if ( !m_is_update_needed ) {
 		const auto update_counter = actor->GetUpdateCounter();
-		if ( update_counter != m_update_counter ) {
+		if ( force || update_counter != m_update_counter ) {
 			m_update_counter = update_counter;
 			m_is_update_needed = true;
 		}
@@ -89,18 +80,20 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 
 		m_is_update_needed = false;
 
+		types::Vec2< size_t > top_left, bottom_right;
+		actor->GetEffectiveArea( top_left, bottom_right );
+
+		const bool need_update = force || top_left != m_top_left || bottom_right != m_bottom_right;
+
 		for ( const auto& it : m_cache_children_by_zindex ) {
 			for ( const auto& child : it.second ) {
 				if ( child->m_type == AT_CACHE ) {
-					( (Cache*)child )->UpdateCacheImpl( shader_program, camera );
+					( (Cache*)child )->UpdateCacheImpl( shader_program, camera, need_update );
 				}
 			}
 		}
 
-		types::Vec2< size_t > top_left, bottom_right;
-		actor->GetEffectiveArea( top_left, bottom_right );
-
-		if ( !m_texture || top_left != m_top_left || bottom_right != m_bottom_right ) {
+		if ( /*!m_texture is it still needed? || */ need_update ) {
 
 			//Log( "Resizing/realigning cache" );
 

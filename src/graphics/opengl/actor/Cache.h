@@ -60,7 +60,7 @@ private:
 
 private:
 	friend class Actor;
-	void UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr );
+	void UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr, const bool force = false );
 
 };
 

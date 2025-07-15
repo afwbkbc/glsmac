@@ -729,4 +729,31 @@
 		hscrolltext.text = #to_string(e.value);
 	});
 
+	const scrollview = texts.scrollview({
+		align: 'top right',
+		top: 60,
+		right: 40,
+		height: 150,
+		width: 150,
+		background: '#aaaaff88',
+	});
+
+	glsmac.ui.class('scrolltext').set({
+		color: 'white',
+		font: ':18',
+	});
+	const st = (left, top) => {
+		scrollview.text({
+			class: 'scrolltext',
+			left: left,
+			top: top,
+			text: #to_string(left) + 'x' + #to_string(top),
+		})
+	};
+	st(50, 90);
+	st( 20, 40);
+	st(20, 142 );
+	st(300, 30);
+	st( 110, 50 );
+
 });

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "env/Env.h"
 
 #include <cstdint>
@@ -52,6 +54,12 @@ public:
 		ALIGN_BOTTOM_CENTER = ALIGN_BOTTOM | ALIGN_HCENTER,
 	};
 
+	enum overflow_mode_t {
+		OM_VISIBLE,
+		OM_HIDDEN,
+		OM_RESIZE,
+	};
+
 	enum position_t {
 		POSITION_RELATIVE,
 		POSITION_ABSOLUTE,
@@ -72,7 +80,7 @@ public:
 	void SetAlign( const align_t align );
 	void SetPosition( const position_t position );
 	void SetZIndex( const coord_t zindex );
-	void SetOverflowAllowed( const bool is_overflow_allowed );
+	void SetOverflowMode( const overflow_mode_t mode );
 
 	void NeedUpdate();
 
@@ -132,6 +140,9 @@ public:
 
 	void Detach();
 
+	typedef std::function< void( const size_t, const size_t ) > f_on_resize_t;
+	f_on_resize_t m_on_resize = nullptr;
+
 protected:
 
 	virtual void UpdateImpl() = 0;
@@ -168,7 +179,7 @@ private:
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	position_t m_position = POSITION_RELATIVE;
 	coord_t m_zindex = 0.5f;
-	bool m_is_overflow_allowed = true;
+	overflow_mode_t m_overflow_mode = OM_VISIBLE;
 
 	void UpdateArea();
 	void UpdateEffectiveArea();

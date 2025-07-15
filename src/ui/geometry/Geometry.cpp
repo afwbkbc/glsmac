@@ -131,9 +131,9 @@ void Geometry::SetZIndex( const coord_t zindex ) {
 	}
 }
 
-void Geometry::SetOverflowAllowed( const bool is_overflow_allowed ) {
-	if ( is_overflow_allowed != m_is_overflow_allowed ) {
-		m_is_overflow_allowed = is_overflow_allowed;
+void Geometry::SetOverflowMode( const overflow_mode_t mode ) {
+	if ( mode != m_overflow_mode ) {
+		m_overflow_mode = mode;
 		NeedUpdate();
 	}
 }
@@ -148,6 +148,17 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 }
 
 void Geometry::OnChildUpdate() {
+	if ( m_overflow_mode == OM_RESIZE ) {
+		// resize area from children ( TODO: optimize? )
+		m_area = {};
+		for ( const auto& child : m_children ) {
+			if ( child->m_is_visible ) {
+				m_area.EnlargeTo( child->m_area );
+			}
+		}
+		FixArea( m_area );
+		NeedUpdate();
+	}
 	UpdateEffectiveArea();
 	RunHandlers( GH_ON_CHILD_UPDATE );
 	if ( m_parent ) {
@@ -381,7 +392,7 @@ void Geometry::UpdateEffectiveArea() {
 	area_t effective_area = {};
 	if ( m_is_visible ) {
 		effective_area = m_area;
-		if ( m_is_overflow_allowed ) {
+		if ( m_overflow_mode != OM_HIDDEN ) {
 			for ( const auto& child : m_children ) {
 				if ( child->m_is_visible ) {
 					effective_area.EnlargeTo( child->GetEffectiveArea() );
@@ -393,6 +404,9 @@ void Geometry::UpdateEffectiveArea() {
 
 	if ( effective_area != m_effective_area ) {
 		m_effective_area = effective_area;
+		if ( m_on_resize ) {
+			m_on_resize( m_effective_area.width, m_effective_area.height );
+		}
 		if ( m_parent ) {
 			m_parent->OnChildUpdate();
 		}

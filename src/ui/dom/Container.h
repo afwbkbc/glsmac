@@ -15,7 +15,7 @@ class Cache;
 namespace ui {
 namespace dom {
 
-#define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, this, p ); })
+#define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, m_factory_owner, p ); })
 
 class Container : public Area {
 public:
@@ -48,6 +48,8 @@ protected:
 
 	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) override;
 	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) override;
+
+	Container* m_factory_owner = this;
 
 private:
 	friend class Root;

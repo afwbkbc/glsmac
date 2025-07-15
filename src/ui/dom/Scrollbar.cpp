@@ -5,6 +5,7 @@
 #include "input/Event.h"
 #include "ui/UI.h"
 #include "ui/geometry/Geometry.h"
+#include "scene/actor/Cache.h"
 
 #include "gse/value/Float.h"
 
