@@ -18,5 +18,6 @@ SET( SRC ${SRC}
 	${PWD}/Select.cpp
 	${PWD}/Scrollbar.cpp
 	${PWD}/Scrollview.cpp
+	${PWD}/Listview.cpp
 
 	PARENT_SCOPE )

@@ -26,7 +26,8 @@ void Event::SetType( const event_type_t type ) {
 		}
 		case EV_CLICK:
 		case EV_CHANGE:
-		case EV_SELECT: {
+		case EV_SELECT:
+		case EV_INPUT: {
 			m_flags = (event_flag_t)( m_flags | EF_SYNTHETIC );
 			break;
 		}
@@ -91,6 +92,10 @@ const std::unordered_map< event_type_t, std::string > g_type_str = {
 	{
 		EV_SELECT,
 		"select"
+	},
+	{
+		EV_INPUT,
+		"input"
 	},
 	{
 		EV_RESIZE,

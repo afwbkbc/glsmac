@@ -18,6 +18,7 @@
 #include "Select.h"
 #include "Scrollbar.h"
 #include "Scrollview.h"
+#include "Listview.h"
 
 namespace ui {
 namespace dom {
@@ -80,6 +81,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed )
 		FACTORY( "select", Select );
 		FACTORY( "scrollbar", Scrollbar );
 		FACTORY( "scrollview", Scrollview );
+		FACTORY( "listview", Listview );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
@@ -305,6 +307,9 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		}
 		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT( obj, "object not created" );
+		if ( m_on_add_child ) {
+			m_on_add_child( obj, true );
+		}
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );
 		m_factory_owner->m_children.insert({ obj->m_id, obj });
@@ -375,7 +380,10 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 
 void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
-	if ( m_is_visible && is_visible ) {
+	if ( m_on_add_child ) {
+		m_on_add_child( obj, false );
+	}
+	if ( m_is_visible ) {
 		obj->Show();
 	}
 	obj->InitAndValidate( GSE_CALL );
@@ -388,12 +396,18 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 			SetMouseOverChild( GSE_CALL, obj, mousepos );
 		}
 	}
+	if ( m_is_visible && !is_visible ) {
+		obj->Hide();
+	}
 }
 
 void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
 	if ( m_children.find( obj->m_id ) == m_children.end() ) {
 		// this can happen if globalized child deglobalizes during root object destruction
 		return;
+	}
+	if ( m_on_remove_child ) {
+		m_on_remove_child( obj );
 	}
 	m_children.erase( obj->m_id );
 	if ( m_mouse_over_object == obj ) {

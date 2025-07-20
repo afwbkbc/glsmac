@@ -71,7 +71,9 @@ public:
 	void SetParent( Geometry* const other );
 
 	void SetLeft( const coord_t px );
+	const coord_t GetLeft() const;
 	void SetTop( const coord_t px );
+	const coord_t GetTop() const;
 	void SetRight( const coord_t px );
 	void SetBottom( const coord_t px );
 	void SetWidth( const coord_t px );

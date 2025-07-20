@@ -72,6 +72,7 @@ private:
 
 private:
 	friend class Scrollview;
+	friend class Listview;
 	std::function< const bool( const float value ) > m_on_change = nullptr;
 	void SetMinRaw( const float min );
 	void SetMaxRaw( const float max );

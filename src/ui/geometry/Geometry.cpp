@@ -60,6 +60,10 @@ void Geometry::SetLeft( const coord_t px ) {
 	NeedUpdate();
 }
 
+const coord_t Geometry::GetLeft() const {
+	return m_left;
+}
+
 void Geometry::SetTop( const coord_t px ) {
 	m_top = px;
 	m_stick_bits |= STICK_TOP;
@@ -67,6 +71,10 @@ void Geometry::SetTop( const coord_t px ) {
 		m_stick_bits &= ~( STICK_BOTTOM | STICK_HEIGHT );
 	}
 	NeedUpdate();
+}
+
+const coord_t Geometry::GetTop() const {
+	return m_top;
 }
 
 void Geometry::SetRight( const coord_t px ) {

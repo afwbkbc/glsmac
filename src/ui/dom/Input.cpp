@@ -41,7 +41,7 @@ Input::Input( DOM_ARGS )
 	Events(
 		{
 			input::EV_CHANGE,
-			input::EV_SELECT,
+			input::EV_INPUT,
 		}
 	);
 
@@ -105,7 +105,7 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 					}
 					case input::K_ENTER: {
 						input::Event e;
-						e.SetType( input::EV_SELECT );
+						e.SetType( input::EV_INPUT );
 						e.data.value.change_select.text = new std::string( m_value );
 						ProcessEvent( GSE_CALL, e );
 						delete e.data.value.change_select.text;
@@ -143,7 +143,7 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 void Input::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_CHANGE:
-		case input::EV_SELECT: {
+		case input::EV_INPUT: {
 			ASSERT( e.data.value.change_select.text, "change text not set" );
 			obj.insert(
 				{

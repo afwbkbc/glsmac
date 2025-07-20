@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <map>
 #include <vector>
+#include <functional>
 
 #include "Area.h"
 
@@ -37,6 +38,9 @@ public:
 	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
 
 protected:
+
+	std::function< void( Object* const obj, const bool is_from_factory ) > m_on_add_child = nullptr;
+	std::function< void( Object* const obj ) > m_on_remove_child = nullptr;
 
 	virtual ~Container();
 

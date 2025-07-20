@@ -490,39 +490,6 @@
 		return true;
 	});
 
-	const inputs = texts.panel({
-		align: 'center',
-		width: 300,
-		height: 120,
-	});
-	const input1 = inputs.input({
-		align: 'top',
-		width: 300,
-		height: 20,
-		background: '#111116',
-		color: 'white',
-		font: ':16',
-		border: 'silver,2',
-	});
-	const input2 = inputs.input({
-		align: 'bottom',
-		width: 300,
-		height: 20,
-		background: '#111116',
-		color: 'white',
-		font: ':16',
-		border: 'silver,2',
-	});
-
-	input1.on('select', (e) => {
-		#print('INPUT 1 SELECT', e.value);
-		return true;
-	});
-	input2.on('select', (e) => {
-		#print('INPUT 2 SELECT', e.value);
-		return true;
-	});
-
 	const crpanel = texts.panel({
 		align: 'top center',
 		top: 100,
@@ -743,6 +710,7 @@
 		background: '#aaaaff88',
 		vscroll_class: 'vscrollbar',
 		hscroll_class: 'hscrollbar',
+		padding: 10,
 	});
 
 	glsmac.ui.class('scrolltext').set({
@@ -768,5 +736,50 @@
 	#async(3000, () => {
 		toremove.remove();
 	});
+
+	glsmac.ui.class('chattext').set({
+		font: ':16',
+		color: 'white',
+	});
+	const chat = texts.panel({
+		align: 'top center',
+		top: 400,
+		width: 300,
+		height: 150,
+	});
+	const chathistory = chat.listview({
+		align: 'top center',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 20,
+		background: '#111116',
+		vscroll_class: 'vscrollbar',
+		hscroll_class: 'hscrollbar',
+		scroll_type: 'vertical',
+		itemsize: 16,
+		padding: 6,
+		autoscroll: true,
+		has_hscroll: false,
+	});
+	const chatinput = chat.input({
+		class: 'chattext',
+		align: 'bottom',
+		width: 300,
+		height: 20,
+		background: '#111116',
+		border: 'silver,2',
+	});
+	chatinput.on('input', (e) => {
+		if (e.value != '') {
+			chathistory.text({
+				class: 'chattext',
+				text: e.value,
+			});
+			chatinput.value = '';
+		}
+		return true;
+	});
+
 
 });
