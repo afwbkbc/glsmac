@@ -25,9 +25,9 @@ Scrollview::Scrollview( DOM_ARGS_T )
 		auto* g = m_inner->GetGeometry();
 		g->SetWidth( 0 );
 		g->SetHeight( 0 );
-		//g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
+		g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
 		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
-			//Log( "RESIZED " + std::to_string( width ) + "x" + std::to_string( height ) );
+			Log( "RESIZED " + std::to_string( width ) + "x" + std::to_string( height ) );
 			UpdateScrollbars( width, height );
 		};
 	}
