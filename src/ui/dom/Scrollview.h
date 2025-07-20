@@ -22,6 +22,15 @@ private:
 	Scrollbar* m_hscroll = nullptr;
 
 	void UpdateScrollbars( const size_t width, const size_t height );
+
+	struct {
+		std::function< const bool( GSE_CALLABLE, const input::Event& event ) > handler;
+		bool is_dragging = false;
+		int initial_offset_x = 0;
+		int initial_offset_y = 0;
+		size_t drag_handler_id = 0;
+	} m_drag;
+
 };
 
 }

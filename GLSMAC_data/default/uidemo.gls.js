@@ -765,8 +765,7 @@
 	st( 240, 130 );
 	const toremove = st( 30, 210 );
 
-	#async(1000, () => {
-		#print('REMOVE');
+	#async(3000, () => {
 		toremove.remove();
 	});
 

@@ -2,6 +2,8 @@
 
 #include "Panel.h"
 
+#include <functional>
+
 #include "util/Timer.h"
 #include "util/Scroller.h"
 

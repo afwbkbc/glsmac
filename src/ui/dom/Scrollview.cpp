@@ -1,12 +1,13 @@
 #include "Scrollview.h"
 
+#include <functional>
+#include <cmath>
+
 #include "Scrollbar.h"
 
 #include "input/Event.h"
 #include "ui/UI.h"
 #include "ui/geometry/Geometry.h"
-
-#include "gse/value/Float.h"
 
 namespace ui {
 namespace dom {
@@ -66,10 +67,55 @@ Scrollview::Scrollview( DOM_ARGS_T )
 	Embed( m_hscroll );
 	ForwardProperty( GSE_CALL, "hscroll_class", "class", m_hscroll );
 	UpdateScrollbars( 0, 0 );
+
+	m_drag.handler = [ this ]( GSE_CALLABLE, const input::Event& event ) {
+		if ( m_drag.is_dragging ) {
+			switch ( event.type ) {
+				case input::EV_MOUSE_MOVE: {
+					if ( m_hscroll->m_is_visible ) {
+						m_hscroll->SetValue( GSE_CALL, std::fmax( m_hscroll->m_min, std::fmin( m_hscroll->m_max, m_drag.initial_offset_x - event.data.mouse.x ) ), true );
+					}
+					if ( m_vscroll->m_is_visible ) {
+						m_vscroll->SetValue( GSE_CALL, std::fmax( m_vscroll->m_min, std::fmin( m_vscroll->m_max, m_drag.initial_offset_y - event.data.mouse.y ) ), true );
+					}
+					return true;
+				}
+				case input::EV_MOUSE_UP: {
+					m_drag.is_dragging = false;
+					return false;
+				}
+				case input::EV_MOUSE_SCROLL: {
+					return true;
+				};
+			}
+		}
+		return false;
+	};
+
 }
 
 const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	if ( event.type == input::EV_MOUSE_SCROLL ) {
+	if ( event.flags & input::EF_MOUSE && event.data.mouse.button == input::MB_MIDDLE ) {
+		switch ( event.type ) {
+			case input::EV_MOUSE_DOWN: {
+				m_drag.initial_offset_x = event.data.mouse.x + m_hscroll->m_value;
+				m_drag.initial_offset_y = event.data.mouse.y + m_vscroll->m_value;
+				m_drag.is_dragging = true;
+				m_drag.drag_handler_id = m_ui->AddGlobalHandler( m_drag.handler );
+				return true;
+			}
+			case input::EV_MOUSE_UP: {
+				if ( m_drag.is_dragging ) {
+					ASSERT( m_drag.drag_handler_id, "drag handler id zero" );
+					m_ui->RemoveGlobalHandler( m_drag.drag_handler_id );
+					m_drag.drag_handler_id = 0;
+					m_drag.is_dragging = false;
+				}
+				return false;
+			}
+		}
+	}
+	if ( event.type == input::EV_MOUSE_SCROLL && !m_drag.is_dragging ) {
 		if ( m_vscroll->m_is_visible ) {
 			return m_vscroll->ProcessEvent( GSE_CALL, event );
 		}
