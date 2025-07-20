@@ -1,6 +1,5 @@
 #include "Scrollview.h"
 
-#include <functional>
 #include <cmath>
 
 #include "Scrollbar.h"
@@ -12,8 +11,8 @@
 namespace ui {
 namespace dom {
 
-Scrollview::Scrollview( DOM_ARGS_T )
-	: Panel( DOM_ARGS_PASS_T, true ) {
+Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
+	: Panel( DOM_ARGS_PASS_T, factories_allowed ) {
 
 	Events(
 		{

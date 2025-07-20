@@ -2,6 +2,8 @@
 
 #include "Panel.h"
 
+#include <functional>
+
 namespace ui {
 namespace dom {
 
@@ -10,7 +12,7 @@ class Container;
 
 class Scrollview : public Panel {
 public:
-	Scrollview( DOM_ARGS_TD( "scrollview" ) );
+	Scrollview( DOM_ARGS_TD( "scrollview" ), const bool factories_allowed = true );
 
 protected:
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
