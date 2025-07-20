@@ -83,7 +83,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 		types::Vec2< size_t > top_left, bottom_right;
 		actor->GetEffectiveArea( top_left, bottom_right );
 
-		const bool need_update = force || top_left != m_top_left || bottom_right != m_bottom_right;
+		const bool need_update = !m_texture || force || top_left != m_top_left || bottom_right != m_bottom_right;
 
 		for ( const auto& it : m_cache_children_by_zindex ) {
 			for ( const auto& child : it.second ) {
@@ -93,7 +93,7 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 			}
 		}
 
-		if ( /*!m_texture is it still needed? || */ need_update ) {
+		if ( need_update ) {
 
 			//Log( "Resizing/realigning cache" );
 
