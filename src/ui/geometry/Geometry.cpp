@@ -403,8 +403,13 @@ void Geometry::UpdateEffectiveArea() {
 	}
 
 	if ( effective_area != m_effective_area ) {
+		// TODO: get rid of std::round, maybe change ui coords to fixed numbers?
+		const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
+		if ( should_resize && m_on_resize ) {
+			int a = 5;
+		}
 		m_effective_area = effective_area;
-		if ( m_on_resize ) {
+		if ( should_resize && m_on_resize ) {
 			m_on_resize( m_effective_area.width, m_effective_area.height );
 		}
 		if ( m_parent ) {

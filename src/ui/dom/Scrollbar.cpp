@@ -12,7 +12,7 @@
 namespace ui {
 namespace dom {
 
-#define NEXTVAL_ARROW m_value + m_arrow_scroll.direction * m_speed * (float)m_arrow_scroll.frequency_ms / 1000.0f
+#define NEXTVAL_ARROW m_value + m_arrow_scroll.direction * m_speed * ( m_max - m_min ) * m_arrow_scroll.speed * (float)m_arrow_scroll.frequency_ms / 1000.0f
 
 Scrollbar::Scrollbar( DOM_ARGS_T )
 	: Panel( DOM_ARGS_PASS_T, false ) {
@@ -49,11 +49,7 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 			else {
 				GSE_ERROR( gse::EC.TYPE_ERROR, "Unknown scroll_type: " + value + ". Available: vertical horizontal" );
 			}
-			if ( st != m_scroll_type ) {
-				m_scroll_type = st;
-				Resize();
-				RealignSlider();
-			}
+			SetScrollType( st );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			if ( m_scroll_type != ST_VERTICAL ) {
@@ -211,20 +207,29 @@ void Scrollbar::Destroy( GSE_CALLABLE ) {
 }
 
 const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	if ( event.type == input::EV_MOUSE_SCROLL && !m_arrow_scroll.timer.IsRunning() ) {
-		float value = m_value - m_speed * event.data.mouse.scroll_y * m_wheel_scroll.speed;
-		if ( value < m_min ) {
-			value = m_min;
-		}
-		else if ( value > m_max ) {
-			value = m_max;
-		}
-		if ( value != m_value ) {
-			m_wheel_scroll.scroller.Scroll( m_value, value, m_wheel_scroll.duration_ms );
+	if ( event.type == input::EV_MOUSE_SCROLL ) {
+		if ( !m_arrow_scroll.timer.IsRunning() ) {
+			float value = m_value - m_speed * ( m_max - m_min ) * event.data.mouse.scroll_y * m_wheel_scroll.speed;
+			if ( value < m_min ) {
+				value = m_min;
+			}
+			else if ( value > m_max ) {
+				value = m_max;
+			}
+			if ( value != m_value ) {
+				m_wheel_scroll.scroller.Scroll( m_value, value, m_wheel_scroll.duration_ms );
+			}
 		}
 		return true;
 	}
 	return Panel::ProcessEvent( GSE_CALL, event );
+}
+
+void Scrollbar::SetMinRaw( const float min ) {
+	if ( min != m_min ) {
+		m_min = min;
+		RealignSlider();
+	}
 }
 
 void Scrollbar::SetMin( GSE_CALLABLE, const float min ) {
@@ -232,13 +237,17 @@ void Scrollbar::SetMin( GSE_CALLABLE, const float min ) {
 		if ( min >= m_max ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Scrollbar min value ( " + std::to_string( min ) + " ) must be smaller than it's max value ( " + std::to_string( m_max ) + " )" );
 		}
-		m_min = min;
+		SetMinRaw( min );
 		if ( m_value < m_min ) {
 			SetValue( GSE_CALL, m_min, true );
 		}
-		else {
-			RealignSlider();
-		}
+	}
+}
+
+void Scrollbar::SetMaxRaw( const float max ) {
+	if ( max != m_max ) {
+		m_max = max;
+		RealignSlider();
 	}
 }
 
@@ -247,13 +256,31 @@ void Scrollbar::SetMax( GSE_CALLABLE, const float max ) {
 		if ( max <= m_min ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Scrollbar max value ( " + std::to_string( max ) + " ) must be larger than it's min value ( " + std::to_string( m_min ) + " )" );
 		}
-		m_max = max;
+		SetMaxRaw( max );
 		if ( m_value > m_max ) {
 			SetValue( GSE_CALL, m_max, true );
 		}
-		else {
-			RealignSlider();
-		}
+	}
+}
+
+void Scrollbar::SetValueRaw( float value, const bool send_event ) {
+	if ( value < m_min ) {
+		value = m_min;
+	}
+	else if ( value > m_max ) {
+		value = m_max;
+	}
+	if ( value != m_value ) {
+		m_value = value;
+		RealignSlider();
+	}
+}
+
+void Scrollbar::SetScrollType( const scroll_type_t type ) {
+	if ( type != m_scroll_type ) {
+		m_scroll_type = type;
+		Resize();
+		RealignSlider();
 	}
 }
 
@@ -265,9 +292,11 @@ void Scrollbar::SetValue( GSE_CALLABLE, float value, const bool send_event ) {
 		value = m_max;
 	}
 	if ( value != m_value ) {
-		m_value = value;
-		RealignSlider();
+		SetValueRaw( value );
 		if ( send_event ) {
+			if ( m_on_change && m_on_change( m_value ) ) {
+				return;
+			}
 			gse::value::object_properties_t event_data = {
 				{ "value", VALUE( gse::value::Float, , m_value ) },
 			};

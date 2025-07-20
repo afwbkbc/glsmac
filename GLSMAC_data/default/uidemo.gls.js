@@ -675,14 +675,22 @@
 	glsmac.ui.class('scrollbar').set({
 		fromto_size: 20,
 		slider_size: 30,
-		background: '#ffffff66',
+		background: '#666666',
 		class_from: 'scroll_from',
 		class_to: 'scroll_to',
 		class_slider: 'scroll_slider',
 		min: -1.0,
 		max: 1.0,
 		value: 0.0,
-		speed: 4.0,
+		speed: 1.0,
+	});
+	glsmac.ui.class('vscrollbar').extend('scrollbar').set({
+		scroll_type: 'vertical',
+		width: 20,
+	});
+	glsmac.ui.class('hscrollbar').extend('scrollbar').set({
+		scroll_type: 'horizontal',
+		height: 20,
 	});
 	glsmac.ui.class('scrollvalue').set({
 		color: 'white',
@@ -690,12 +698,10 @@
 	});
 
 	const vscroll = texts.scrollbar({
-		class: 'scrollbar',
-		scroll_type: 'vertical',
+		class: 'vscrollbar',
 		align: 'top left',
 		left: 30,
 		top: 50,
-		width: 20,
 		height: 200,
 	});
 	const vscrolltext = texts.text({
@@ -710,8 +716,7 @@
 	});
 
 	const hscroll = texts.scrollbar({
-		class: 'scrollbar',
-		scroll_type: 'horizontal',
+		class: 'hscrollbar',
 		align: 'top left',
 		left: 80,
 		top: 170,
@@ -736,6 +741,8 @@
 		height: 150,
 		width: 150,
 		background: '#aaaaff88',
+		vscroll_class: 'vscrollbar',
+		hscroll_class: 'hscrollbar',
 	});
 
 	glsmac.ui.class('scrolltext').set({
@@ -755,5 +762,7 @@
 	st(20, 142 );
 	st(300, 30);
 	st( 110, 50 );
+	st( 30, 210 );
+	st( 240, 140 );
 
 });

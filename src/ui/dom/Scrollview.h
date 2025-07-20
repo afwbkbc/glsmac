@@ -21,6 +21,7 @@ private:
 	Scrollbar* m_vscroll = nullptr;
 	Scrollbar* m_hscroll = nullptr;
 
+	void UpdateScrollbars( const size_t width, const size_t height );
 };
 
 }
