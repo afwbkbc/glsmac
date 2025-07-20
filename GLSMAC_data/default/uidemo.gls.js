@@ -750,7 +750,7 @@
 		font: ':18',
 	});
 	const st = (left, top) => {
-		scrollview.text({
+		return scrollview.text({
 			class: 'scrolltext',
 			left: left,
 			top: top,
@@ -762,7 +762,12 @@
 	st(20, 142 );
 	st(300, 30);
 	st( 110, 50 );
-	st( 30, 210 );
-	st( 240, 140 );
+	st( 240, 130 );
+	const toremove = st( 30, 210 );
+
+	#async(1000, () => {
+		#print('REMOVE');
+		toremove.remove();
+	});
 
 });

@@ -169,29 +169,33 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	};
 
 	m_slider->m_on_mousedown = [ this, f_drag_handler ]( const input::Event& event ) {
-		const auto& area = m_slider->GetGeometry()->m_area;
-		switch ( m_scroll_type ) {
-			case ST_VERTICAL: {
-				m_slider_drag.initial_offset = event.data.mouse.y - area.top;
-				break;
+		if ( event.data.mouse.button == input::MB_LEFT ) {
+			const auto& area = m_slider->GetGeometry()->m_area;
+			switch ( m_scroll_type ) {
+				case ST_VERTICAL: {
+					m_slider_drag.initial_offset = event.data.mouse.y - area.top;
+					break;
+				}
+				case ST_HORIZONTAL: {
+					m_slider_drag.initial_offset = event.data.mouse.x - area.left;
+					break;
+				}
+				default:
+					ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
 			}
-			case ST_HORIZONTAL: {
-				m_slider_drag.initial_offset = event.data.mouse.x - area.left;
-				break;
-			}
-			default:
-				ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
+			m_slider_drag.is_dragging = true;
+			m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
 		}
-		m_slider_drag.is_dragging = true;
-		m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
 		return true;
 	};
 	m_slider->m_on_mouseup = [ this ]( const input::Event& event ) {
-		if ( m_slider_drag.is_dragging ) {
-			ASSERT( m_slider_drag.drag_handler_id, "drag handler id zero" );
-			m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
-			m_slider_drag.drag_handler_id = 0;
-			m_slider_drag.is_dragging = false;
+		if ( event.data.mouse.button == input::MB_LEFT ) {
+			if ( m_slider_drag.is_dragging ) {
+				ASSERT( m_slider_drag.drag_handler_id, "drag handler id zero" );
+				m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+				m_slider_drag.drag_handler_id = 0;
+				m_slider_drag.is_dragging = false;
+			}
 		}
 		return false;
 	};
@@ -228,6 +232,12 @@ const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 void Scrollbar::SetMinRaw( const float min ) {
 	if ( min != m_min ) {
 		m_min = min;
+		if ( m_value < m_min ) {
+			m_value = m_min;
+			if ( m_on_change ) {
+				m_on_change( m_value );
+			}
+		}
 		RealignSlider();
 	}
 }
@@ -237,9 +247,12 @@ void Scrollbar::SetMin( GSE_CALLABLE, const float min ) {
 		if ( min >= m_max ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Scrollbar min value ( " + std::to_string( min ) + " ) must be smaller than it's max value ( " + std::to_string( m_max ) + " )" );
 		}
-		SetMinRaw( min );
+		m_min = min;
 		if ( m_value < m_min ) {
 			SetValue( GSE_CALL, m_min, true );
+		}
+		else {
+			RealignSlider();
 		}
 	}
 }
@@ -247,6 +260,12 @@ void Scrollbar::SetMin( GSE_CALLABLE, const float min ) {
 void Scrollbar::SetMaxRaw( const float max ) {
 	if ( max != m_max ) {
 		m_max = max;
+		if ( m_value > m_max ) {
+			m_value = m_max;
+			if ( m_on_change ) {
+				m_on_change( m_value );
+			}
+		}
 		RealignSlider();
 	}
 }
@@ -256,9 +275,12 @@ void Scrollbar::SetMax( GSE_CALLABLE, const float max ) {
 		if ( max <= m_min ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Scrollbar max value ( " + std::to_string( max ) + " ) must be larger than it's min value ( " + std::to_string( m_min ) + " )" );
 		}
-		SetMaxRaw( max );
+		m_max = max;
 		if ( m_value > m_max ) {
 			SetValue( GSE_CALL, m_max, true );
+		}
+		else {
+			RealignSlider();
 		}
 	}
 }
