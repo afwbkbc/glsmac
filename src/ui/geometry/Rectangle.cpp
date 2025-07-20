@@ -1,5 +1,7 @@
 #include "Rectangle.h"
 
+#include <cmath>
+
 #include "ui/UI.h"
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Mesh.h"
@@ -40,14 +42,14 @@ void Rectangle::UpdateImpl() {
 	if ( m_mesh ) {
 		const auto top_left = m_ui->ClampXY(
 			{
-				m_area.left,
-				m_area.top,
+				std::round( m_area.left ),
+				std::round( m_area.top ),
 			}
 		);
 		const auto bottom_right = m_ui->ClampXY(
 			{
-				m_area.right,
-				m_area.bottom,
+				std::round( m_area.right ),
+				std::round( m_area.bottom ),
 			}
 		);
 		if ( m_tile_dimensions.x && m_tile_dimensions.y ) {

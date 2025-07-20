@@ -22,8 +22,8 @@ void Text::UpdateImpl() {
 	if ( m_actor ) {
 		m_actor->SetPosition(
 			{
-				m_ui->ClampX( m_area.left ),
-				m_ui->ClampY( m_area.bottom ),
+				m_ui->ClampX( std::round( m_area.left ) ),
+				m_ui->ClampY( std::round( m_area.bottom ) ),
 				m_area.zindex,
 			}
 		);
