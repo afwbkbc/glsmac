@@ -38,6 +38,10 @@ public:
 	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
 
 protected:
+	friend class Scrollview;
+	friend class Listview;
+	
+	Container* m_factory_owner = this;
 
 	std::function< void( const bool is_from_factory ) > m_on_before_add_child = nullptr;
 	std::function< void( Object* const obj, const bool is_from_factory ) > m_on_add_child = nullptr;
@@ -53,8 +57,6 @@ protected:
 
 	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) override;
 	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) override;
-
-	Container* m_factory_owner = this;
 
 private:
 	friend class Root;
@@ -80,6 +82,7 @@ private:
 
 protected:
 	friend class Object;
+	friend class Listview;
 	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible );
 	void RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy = false );
 

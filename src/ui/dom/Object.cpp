@@ -17,6 +17,7 @@
 #include "gse/callable/Native.h"
 #include "gse/value/Object.h"
 #include "Root.h"
+#include "ui/geometry/Geometry.h"
 
 #include "Object.colormap.cpp"
 
@@ -121,7 +122,7 @@ gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 }
 
 void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "WrapSet: object is destroyed" );
 	auto def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -149,7 +150,7 @@ geometry::Geometry* const Object::GetGeometry() const {
 }
 
 const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "ProcessEvent: object is destroyed" );
 	if ( IsEventRelevant( event ) ) {
 		switch ( event.type ) {
 			case input::EV_MOUSE_OVER: {
@@ -176,6 +177,10 @@ void Object::Destroy( GSE_CALLABLE ) {
 	if ( m_is_globalized ) {
 		Deglobalize( GSE_CALL );
 	}
+	auto* g = GetGeometry();
+	if ( g ) {
+		g->Destroy();
+	}
 	Hide();
 	SetClasses( GSE_CALL, {} );
 	if ( m_is_iterable_set ) {
@@ -188,7 +193,7 @@ void Object::Destroy( GSE_CALLABLE ) {
 }
 
 void Object::Show() {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Show: object is destroyed" );
 	if ( !m_is_visible ) {
 		for ( const auto& actor : m_actors ) {
 			actor->Show();
@@ -198,7 +203,7 @@ void Object::Show() {
 }
 
 void Object::Hide() {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Hide: object is destroyed" );
 	if ( m_is_visible ) {
 		for ( const auto& actor : m_actors ) {
 			actor->Hide();
@@ -261,7 +266,7 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 }
 
 void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "UpdateProperty: object is destroyed" );
 	m_properties.insert_or_assign( k, v );
 	if ( m_wrapobj ) {
 		m_wrapobj->Assign( k, v );
@@ -269,7 +274,7 @@ void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 }
 
 void Object::Actor( scene::actor::Actor* actor ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Actor: object is destroyed" );
 	actor->SetPositionZ( 0.5f );
 	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
@@ -279,7 +284,7 @@ void Object::Actor( scene::actor::Actor* actor ) {
 }
 
 void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Property: object is destroyed" );
 	ASSERT( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
 	ASSERT( m_property_defs.find( name ) == m_property_defs.end(), "property def '" + name + "' already exists" );
 	m_property_defs.insert(
@@ -321,7 +326,7 @@ void Object::Method( GSE_CALLABLE, const std::string& name, gse::Value* const ca
 }
 
 void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Events: object is destroyed" );
 	for ( const auto& event : events ) {
 		ASSERT( m_supported_events.find( event ) == m_supported_events.end(), "event already handled: " + std::to_string( event ) );
 		m_supported_events.insert( event );
@@ -329,7 +334,7 @@ void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
 }
 
 void Object::Iterable( const std::function< void() >& f ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "Iterable: object is destroyed" );
 	ASSERT( !m_is_iterable_set, "iterable already set" );
 	m_is_iterable_set = true;
 	m_ui->AddIterable( this, f );
@@ -382,7 +387,7 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 }
 
 void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "OnPropertyChange: object is destroyed" );
 	const auto& def = m_property_defs.find( key );
 	ASSERT( def != m_property_defs.end(), "property def not found" );
 	const auto t1 = def->second.type;
@@ -401,7 +406,7 @@ void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value*
 }
 
 void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "OnPropertyRemove: object is destroyed" );
 	const auto& def = m_property_defs.find( key );
 	ASSERT( def != m_property_defs.end(), "property def not found" );
 	{
@@ -508,7 +513,7 @@ void Object::Detach() {
 }
 
 void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "SetProperty: object is destroyed" );
 	const auto& it = properties->find( key );
 	if ( it == properties->end() ) {
 		if ( properties == &m_properties ) {
@@ -537,7 +542,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 }
 
 void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "UnsetProperty: object is destroyed" );
 	const auto& it = properties->find( key );
 	if ( it != properties->end() && it->second->type != gse::Value::T_UNDEFINED ) {
 		if ( properties == &m_properties && !m_classes.empty() ) {
@@ -563,7 +568,7 @@ void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const 
 }
 
 void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "SetClasses: object is destroyed" );
 	if ( m_is_initialized ) {
 		for ( const auto& c : m_classes ) {
 			c->RemoveObject( GSE_CALL, this );
@@ -587,7 +592,7 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 }
 
 void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "SetPropertyFromClass: object is destroyed" );
 	const auto& def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -605,7 +610,7 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Va
 }
 
 void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
-	ASSERT( !m_is_destroyed, "object is destroyed" );
+	ASSERT( !m_is_destroyed, "UnsetPropertyFromClass: object is destroyed" );
 	const auto& def_it = m_property_defs.find( key );
 	ASSERT( def_it != m_property_defs.end(), "property def not found: " + key );
 

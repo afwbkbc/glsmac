@@ -251,6 +251,15 @@ void Geometry::Detach() {
 	m_parent = nullptr;
 }
 
+void Geometry::Destroy() {
+	ASSERT( !m_is_destroying, "already destroying" );
+	m_is_destroying = true;
+	m_on_resize = nullptr;
+	if ( m_parent ) {
+		m_parent->RemoveBoundaries( this );
+	}
+}
+
 void Geometry::Update() {
 	UpdateArea();
 	UpdateImpl();
@@ -259,7 +268,7 @@ void Geometry::Update() {
 	}
 	UpdateEffectiveArea();
 	if ( m_parent ) {
-		if ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) { // TODO: other variants
+		if ( !m_is_destroying && ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) ) { // TODO: other variants
 			m_parent->AddBoundaries( this );
 		}
 		else {
@@ -437,9 +446,6 @@ void Geometry::UpdateEffectiveArea() {
 	}
 	if ( effective_area != m_effective_area ) {
 		const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
-		if ( should_resize && m_on_resize ) {
-			int a = 5;
-		}
 		m_effective_area = effective_area;
 		if ( should_resize && m_on_resize ) {
 			m_on_resize( m_effective_area.width, m_effective_area.height );
@@ -489,32 +495,10 @@ void Geometry::AddBoundaries( Geometry* const g ) {
             m_boundaries._a._b.value = _b._a; \
             need_update = true; \
         }
-/*	X( x, <, low );
+	X( x, <, low );
 	X( x, >, high );
 	X( y, <, low );
-	X( y, >, high );*/
-
-	if ( !m_boundaries.x.low.child || low.x < m_boundaries.x.low.value ) {
-		m_boundaries.x.low.child = g;
-		m_boundaries.x.low.value = low.x;
-		need_update = true;
-	};
-	if ( !m_boundaries.x.high.child || high.x > m_boundaries.x.high.value ) {
-		m_boundaries.x.high.child = g;
-		m_boundaries.x.high.value = high.x;
-		need_update = true;
-	};
-	if ( !m_boundaries.y.low.child || low.y < m_boundaries.y.low.value ) {
-		m_boundaries.y.low.child = g;
-		m_boundaries.y.low.value = low.y;
-		need_update = true;
-	};
-	if ( !m_boundaries.y.high.child || high.y > m_boundaries.y.high.value ) {
-		m_boundaries.y.high.child = g;
-		m_boundaries.y.high.value = high.y;
-		need_update = true;
-	};
-
+	X( y, >, high );
 #undef X
 	if ( need_update ) {
 		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;

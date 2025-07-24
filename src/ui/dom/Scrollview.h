@@ -36,11 +36,11 @@ private:
 	bool m_has_vscroll = true;
 	bool m_has_hscroll = true;
 
-	void UpdateScrollbars( const size_t width, const size_t height );
+	void UpdateScrollbars( size_t width = 0, size_t height = 0 );
 
 	void SetPadding( GSE_CALLABLE, const int padding );
 	void SetAutoScroll( GSE_CALLABLE, const bool value );
-	
+
 	bool m_is_updating = false;
 
 	struct {

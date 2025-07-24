@@ -33,18 +33,23 @@ Listview::Listview( DOM_ARGS_T )
 			}
 		}
 	);
+	PROPERTY( "max_items", gse::value::Int, 0, SetMaxItems );
 
-	m_on_before_add_child = [ this ]( const bool is_from_factory ) {
+	const auto& on_before_add_child_orig = m_factory_owner->m_on_before_add_child;
+	m_factory_owner->m_on_before_add_child = [ this, on_before_add_child_orig ]( const bool is_from_factory ) {
+		if ( on_before_add_child_orig ) {
+			on_before_add_child_orig( is_from_factory );
+		}
 		if ( is_from_factory && m_autoscroll ) {
 			switch ( m_scroll_type ) {
 				case ST_VERTICAL: {
 					m_was_visible = m_vscroll->m_is_visible;
-					m_oldmax = m_vscroll->m_max/* + m_padding - m_itemsize*/;
+					m_oldmax = m_vscroll->m_max;
 					break;
 				}
 				case ST_HORIZONTAL: {
 					m_was_visible = m_hscroll->m_is_visible;
-					m_oldmax = m_hscroll->m_max/* + m_padding - m_itemsize*/;
+					m_oldmax = m_hscroll->m_max;
 					break;
 				}
 				default:
@@ -53,9 +58,21 @@ Listview::Listview( DOM_ARGS_T )
 		}
 	};
 
-	m_on_add_child = [ this ]( Object* const obj, const bool is_from_factory ) {
+	const auto& on_add_child_orig = m_factory_owner->m_on_add_child;
+	m_factory_owner->m_on_add_child = [ this, ctx, si, ep, gc_space, on_add_child_orig ]( Object* const obj, const bool is_from_factory ) {
+		if ( on_add_child_orig ) {
+			on_add_child_orig( obj, is_from_factory );
+		}
 		if ( is_from_factory ) {
 			ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already added" );
+			if ( m_max_items ) {
+				ASSERT( m_children.size() <= m_max_items, "children size unexpectedly exceeded max_items" );
+				if ( m_children.size() == m_max_items ) {
+					const auto& c = m_children.begin();
+					auto ep2 = ep;
+					m_factory_owner->RemoveChild( gc_space, ctx, si, ep2, c->second );
+				}
+			}
 			const auto offset = m_children.size() * m_itemsize;
 			m_children.insert( { obj->m_id, obj } );
 			auto* g = obj->GetGeometry();
@@ -73,33 +90,10 @@ Listview::Listview( DOM_ARGS_T )
 				default:
 					ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
 			}
-			/*if ( m_autoscroll ) {
-				m_on_scrollview_resize = [ this, offset ]() {
-					switch ( m_scroll_type ) {
-						case ST_VERTICAL: {
-							if ( m_vscroll->m_is_visible && ( !m_was_visible || m_vscroll->m_value + 2 /* TODO: fix properly * / >= m_oldmax ) ) {
-								m_vscroll->SetValueRaw( m_vscroll->m_max /* offset + m_itemsize* / );
-							}
-							else {
-								Log( "VALUE = " + std::to_string( m_vscroll->m_value ) + " ; OLDMAX = " + std::to_string( m_oldmax ) + " MAX = " + std::to_string( m_vscroll->m_max ) );
-							}
-							break;
-						}
-						case ST_HORIZONTAL: {
-							if ( m_hscroll->m_is_visible && ( !m_was_visible || m_hscroll->m_value == m_oldmax ) ) {
-								m_hscroll->SetValueRaw( offset + m_itemsize );
-							}
-							break;
-						}
-						default:
-							ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
-					}
-					m_on_scrollview_resize = nullptr;
-				};
-			}*/
 		}
 	};
-	m_on_remove_child = [ this ]( Object* const obj ) {
+	const auto& on_remove_child_orig = m_factory_owner->m_on_remove_child;
+	m_factory_owner->m_on_remove_child = [ this, on_remove_child_orig ]( Object* const obj ) {
 		auto it = m_children.find( obj->m_id );
 		if ( it != m_children.end() ) {
 			switch ( m_scroll_type ) {
@@ -121,6 +115,10 @@ Listview::Listview( DOM_ARGS_T )
 					ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
 			}
 			m_children.erase( obj->m_id );
+			Realign();
+		}
+		if ( on_remove_child_orig ) {
+			on_remove_child_orig( obj );
 		}
 	};
 }
@@ -132,6 +130,18 @@ void Listview::SetItemSize( GSE_CALLABLE, const int itemsize ) {
 	if ( itemsize != m_itemsize ) {
 		m_itemsize = itemsize;
 		Realign();
+	}
+}
+
+void Listview::SetMaxItems( GSE_CALLABLE, const int max_items ) {
+	if ( m_max_items != max_items ) {
+		m_max_items = max_items;
+		if ( m_max_items && m_children.size() > m_max_items ) {
+			while ( m_children.size() > m_max_items ) {
+				const auto& c = m_children.begin();
+				m_factory_owner->RemoveChild( GSE_CALL, c->second );
+			}
+		}
 	}
 }
 
@@ -149,7 +159,7 @@ void Listview::Realign() {
 			for ( const auto& it : m_children ) {
 				auto* g = it.second->GetGeometry();
 				g->SetHeight( m_itemsize );
-				g->SetTop( offset );
+				g->SetTop( offset - m_padding /* TODO: investigate */ );
 				offset += m_itemsize;
 			}
 			break;

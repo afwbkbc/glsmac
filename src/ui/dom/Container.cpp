@@ -305,13 +305,13 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			}
 			initial_properties = ((gse::value::Object*)v)->value;
 		}
-		if ( m_on_before_add_child ) {
-			m_on_before_add_child( true );
+		if ( m_factory_owner->m_on_before_add_child ) {
+			m_factory_owner->m_on_before_add_child( true );
 		}
 		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT( obj, "object not created" );
-		if ( m_on_add_child ) {
-			m_on_add_child( obj, true );
+		if ( m_factory_owner->m_on_add_child ) {
+			m_factory_owner->m_on_add_child( obj, true );
 		}
 		obj->Show();
 		obj->InitAndValidate( GSE_CALL );

@@ -761,6 +761,7 @@
 		padding: 6,
 		autoscroll: true,
 		has_hscroll: false,
+		max_items: 20,
 	});
 	const chatinput = chat.input({
 		class: 'chattext',
@@ -770,11 +771,18 @@
 		background: '#111116',
 		border: 'silver,2',
 	});
+	let el = #undefined;
 	chatinput.on('input', (e) => {
 		if (e.value != '') {
-			chathistory.text({
+			el = chathistory.text({
 				class: 'chattext',
 				text: e.value,
+			});
+			#async(1500, () => {
+				if ( #is_defined(el) ) {
+					el.remove();
+					el = #undefined;
+				}
 			});
 			chatinput.value = '';
 		}

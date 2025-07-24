@@ -149,6 +149,8 @@ public:
 	typedef std::function< void( const size_t, const size_t ) > f_on_resize_t;
 	f_on_resize_t m_on_resize = nullptr;
 
+	void Destroy();
+
 protected:
 
 	virtual void UpdateImpl() = 0;
@@ -157,6 +159,7 @@ protected:
 
 private:
 	bool m_is_visible = false;
+	bool m_is_destroying = false;
 	const geometry_type_t m_type;
 
 	void Update();
