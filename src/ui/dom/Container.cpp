@@ -305,6 +305,9 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			}
 			initial_properties = ((gse::value::Object*)v)->value;
 		}
+		if ( m_on_before_add_child ) {
+			m_on_before_add_child( true );
+		}
 		auto* obj = f( GSE_CALL, initial_properties );
 		ASSERT( obj, "object not created" );
 		if ( m_on_add_child ) {
@@ -380,6 +383,9 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 
 void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
+	if ( m_on_before_add_child ) {
+		m_on_before_add_child( false );
+	}
 	if ( m_on_add_child ) {
 		m_on_add_child( obj, false );
 	}

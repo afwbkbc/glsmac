@@ -25,6 +25,10 @@ protected:
 	Scrollbar* m_vscroll = nullptr;
 	Scrollbar* m_hscroll = nullptr;
 
+	size_t m_padding = 0;
+
+	bool m_autoscroll = false;
+
 private:
 
 	Container* m_inner = nullptr;
@@ -34,8 +38,10 @@ private:
 
 	void UpdateScrollbars( const size_t width, const size_t height );
 
-	size_t m_padding = 0;
 	void SetPadding( GSE_CALLABLE, const int padding );
+	void SetAutoScroll( GSE_CALLABLE, const bool value );
+	
+	bool m_is_updating = false;
 
 	struct {
 		std::function< const bool( GSE_CALLABLE, const input::Event& event ) > handler;

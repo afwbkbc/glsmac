@@ -77,7 +77,11 @@ public:
 	void SetRight( const coord_t px );
 	void SetBottom( const coord_t px );
 	void SetWidth( const coord_t px );
+	const coord_t GetWidth() const;
+	const coord_t GetInnerWidth() const;
 	void SetHeight( const coord_t px );
+	const coord_t GetHeight() const;
+	const coord_t GetInnerHeight() const;
 	void SetPadding( const coord_t px );
 	void SetAlign( const align_t align );
 	void SetPosition( const position_t position );
@@ -194,6 +198,26 @@ private:
 	std::unordered_map< geometry_handler_type_t, std::unordered_map< geometry_handler_id_t, std::function< void() > > > m_handlers = {};
 	std::unordered_map< geometry_handler_id_t, geometry_handler_type_t > m_handler_types = {};
 	void RunHandlers( const geometry_handler_type_t type ) const;
+
+	struct boundary_t {
+		Geometry* child = nullptr;
+		coord_t value = 0.0f;
+	};
+	struct {
+		struct {
+			boundary_t low = {};
+			boundary_t high = {};
+		} x;
+		struct {
+			boundary_t low = {};
+			boundary_t high = {};
+		} y;
+		coord_t width = 0.0f;
+		coord_t height = 0.0f;
+	} m_boundaries = {};
+	void AddBoundaries( Geometry* const g );
+	void RemoveBoundaries( Geometry* const g );
+
 };
 
 }

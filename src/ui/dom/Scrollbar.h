@@ -18,6 +18,8 @@ public:
 
 	void Destroy( GSE_CALLABLE ) override;
 
+	void SetSliderSizeByPercentage( const float percentage );
+
 protected:
 	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
@@ -70,13 +72,15 @@ private:
 	void RealignSlider();
 	void Scroll( const float value );
 
+	void SetSliderSize( const size_t size );
+
 private:
 	friend class Scrollview;
 	friend class Listview;
 	std::function< const bool( const float value ) > m_on_change = nullptr;
 	void SetMinRaw( const float min );
 	void SetMaxRaw( const float max );
-	void SetValueRaw( float value, const bool send_event = false );
+	void SetValueRaw( float value );
 	void SetScrollType( const scroll_type_t type );
 };
 

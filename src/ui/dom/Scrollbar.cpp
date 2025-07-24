@@ -88,18 +88,10 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		GSE_CALL, "slider_size", gse::Value::T_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::Int*)v )->value;
-			if ( value != m_slider_size ) {
-				m_slider_size = value;
-				ResizeSlider();
-				RealignSlider();
-			}
+			SetSliderSize( value );
 		},
 		[ this ]( GSE_CALLABLE ) {
-			if ( m_slider_size != 0 ) {
-				m_slider_size = 0;
-				ResizeSlider();
-				RealignSlider();
-			}
+			SetSliderSize( 0 );
 		}
 	);
 
@@ -210,6 +202,23 @@ void Scrollbar::Destroy( GSE_CALLABLE ) {
 	Panel::Destroy( GSE_CALL );
 }
 
+void Scrollbar::SetSliderSizeByPercentage( const float percentage ) {
+	coord_t size = 0.0f;
+	switch ( m_scroll_type ) {
+		case ST_VERTICAL: {
+			size = m_geometry->m_area.height;
+			break;
+		}
+		case ST_HORIZONTAL: {
+			size = m_geometry->m_area.width;
+			break;
+		}
+		default:
+			ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
+	}
+	SetSliderSize( percentage * ( size - m_fromto_size * 2 ) );
+}
+
 const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	if ( event.type == input::EV_MOUSE_SCROLL ) {
 		if ( !m_arrow_scroll.timer.IsRunning() ) {
@@ -285,7 +294,7 @@ void Scrollbar::SetMax( GSE_CALLABLE, const float max ) {
 	}
 }
 
-void Scrollbar::SetValueRaw( float value, const bool send_event ) {
+void Scrollbar::SetValueRaw( float value ) {
 	if ( value < m_min ) {
 		value = m_min;
 	}
@@ -420,6 +429,14 @@ void Scrollbar::Scroll( const float value ) {
 			SetValue( GSE_CALL, value, true );
 		}
 	);
+}
+
+void Scrollbar::SetSliderSize( const size_t size ) {
+	if ( size != m_slider_size ) {
+		m_slider_size = size;
+		ResizeSlider();
+		RealignSlider();
+	}
 }
 
 }

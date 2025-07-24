@@ -39,6 +39,7 @@ public:
 
 protected:
 
+	std::function< void( const bool is_from_factory ) > m_on_before_add_child = nullptr;
 	std::function< void( Object* const obj, const bool is_from_factory ) > m_on_add_child = nullptr;
 	std::function< void( Object* const obj ) > m_on_remove_child = nullptr;
 

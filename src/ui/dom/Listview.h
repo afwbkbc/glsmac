@@ -14,8 +14,9 @@ public:
 private:
 
 	size_t m_itemsize = 0;
-	bool m_autoscroll = false;
-	
+	bool m_was_visible = false;
+	float m_oldmax = 0.0f;
+
 	enum scroll_type_t {
 		ST_VERTICAL,
 		ST_HORIZONTAL,
@@ -25,8 +26,6 @@ private:
 	std::map< id_t, Object* > m_children = {};
 
 	void SetItemSize( GSE_CALLABLE, const int item_size );
-	void SetAutoScroll( GSE_CALLABLE, const bool value );
-
 	void SetScrollType( const scroll_type_t type );
 
 	void Realign();

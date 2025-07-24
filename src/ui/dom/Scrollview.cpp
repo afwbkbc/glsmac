@@ -28,7 +28,11 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 		g->SetHeight( 0 );
 		g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
 		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
-			UpdateScrollbars( width, height );
+			if ( !m_is_updating ) {
+				m_is_updating = true;
+				UpdateScrollbars( width, height );
+				m_is_updating = false;
+			}
 		};
 	}
 	Embed( m_inner );
@@ -69,6 +73,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	PROPERTY( "padding", gse::value::Int, 0, SetPadding );
 	PROPERTY( "has_vscroll", gse::value::Bool, true, SetHasVScroll );
 	PROPERTY( "has_hscroll", gse::value::Bool, true, SetHasHScroll );
+	PROPERTY( "autoscroll", gse::value::Bool, 0, SetAutoScroll );
 
 	m_drag.handler = [ this ]( GSE_CALLABLE, const input::Event& event ) {
 		if ( m_drag.is_dragging ) {
@@ -95,7 +100,6 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	};
 
 	UpdateScrollbars( 0, 0 );
-
 }
 
 const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
@@ -152,9 +156,10 @@ void Scrollview::UpdateScrollbars( const size_t width, const size_t height ) {
 	auto outer_w = m_geometry->m_area.width;
 	auto outer_h = m_geometry->m_area.height;
 	auto* inner_g = m_inner->GetGeometry();
+	float needscroll = false;
 
-	const bool need_v = m_has_vscroll && height > outer_h - m_padding;
-	const bool need_h = m_has_hscroll && width > outer_w - m_padding;
+	const bool need_v = m_has_vscroll && height > outer_h - m_padding * 2;
+	const bool need_h = m_has_hscroll && width > outer_w - m_padding * 2;
 
 	if ( need_v ) {
 		outer_w -= vscroll_w;
@@ -170,10 +175,18 @@ void Scrollview::UpdateScrollbars( const size_t width, const size_t height ) {
 		inner_g->SetTop( m_padding );
 	}
 	else {
+		//Log( std::to_string( m_geometry->m_area.height ) + " / ( " + std::to_string( inner_g->GetEffectiveArea().height ) + " + m_padding * 2 ) // " + std::to_string( inner_g->m_area.top ) + ", " + std::to_string( inner_g->m_area.bottom ) );
 		const auto diff = height - outer_h + m_padding * 2;
 		m_vscroll->SetScrollType( Scrollbar::ST_VERTICAL );
 		m_vscroll->SetMinRaw( 0 );
+		if ( m_autoscroll ) {
+			needscroll = !m_vscroll->m_is_visible || std::fabs( m_vscroll->m_value - m_vscroll->m_max ) < 0.001f;
+		}
 		m_vscroll->SetMaxRaw( diff );
+		if ( needscroll ) {
+			m_vscroll->SetValueRaw( diff );
+		}
+		m_vscroll->SetSliderSizeByPercentage( (float)outer_h * 0.99f /* TODO: fix properly */ / ( inner_g->GetInnerHeight() ) );
 		m_vscroll->Show();
 	}
 
@@ -185,7 +198,14 @@ void Scrollview::UpdateScrollbars( const size_t width, const size_t height ) {
 		const auto diff = width - outer_w + m_padding * 2;
 		m_hscroll->SetScrollType( Scrollbar::ST_HORIZONTAL );
 		m_hscroll->SetMinRaw( 0 );
+		if ( m_autoscroll ) {
+			needscroll = !m_hscroll->m_is_visible || m_hscroll->m_value == m_hscroll->m_max;
+		}
 		m_hscroll->SetMaxRaw( diff );
+		if ( needscroll ) {
+			m_hscroll->SetValueRaw( diff );
+		}
+		m_hscroll->SetSliderSizeByPercentage( (float)m_geometry->m_area.width / ( inner_g->GetInnerWidth() ) );
 		m_hscroll->Show();
 	}
 
@@ -199,6 +219,12 @@ void Scrollview::SetPadding( GSE_CALLABLE, const int padding ) {
 		m_padding = padding;
 		auto* g = m_inner->GetGeometry();
 		UpdateScrollbars( g->m_area.width, g->m_area.height );
+	}
+}
+
+void Scrollview::SetAutoScroll( GSE_CALLABLE, const bool value ) {
+	if ( value != m_autoscroll ) {
+		m_autoscroll = value;
 	}
 }
 

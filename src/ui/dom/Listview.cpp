@@ -33,53 +33,61 @@ Listview::Listview( DOM_ARGS_T )
 			}
 		}
 	);
-	PROPERTY( "autoscroll", gse::value::Bool, 0, SetAutoScroll );
+
+	m_on_before_add_child = [ this ]( const bool is_from_factory ) {
+		if ( is_from_factory && m_autoscroll ) {
+			switch ( m_scroll_type ) {
+				case ST_VERTICAL: {
+					m_was_visible = m_vscroll->m_is_visible;
+					m_oldmax = m_vscroll->m_max/* + m_padding - m_itemsize*/;
+					break;
+				}
+				case ST_HORIZONTAL: {
+					m_was_visible = m_hscroll->m_is_visible;
+					m_oldmax = m_hscroll->m_max/* + m_padding - m_itemsize*/;
+					break;
+				}
+				default:
+					ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
+			}
+		}
+	};
 
 	m_on_add_child = [ this ]( Object* const obj, const bool is_from_factory ) {
 		if ( is_from_factory ) {
 			ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already added" );
 			const auto offset = m_children.size() * m_itemsize;
 			m_children.insert( { obj->m_id, obj } );
+			auto* g = obj->GetGeometry();
 			switch ( m_scroll_type ) {
 				case ST_VERTICAL: {
-					obj->GetGeometry()->SetTop( offset );
+					g->SetHeight( m_itemsize );
+					g->SetTop( offset );
 					break;
 				}
 				case ST_HORIZONTAL: {
-					obj->GetGeometry()->SetLeft( offset );
+					g->SetWidth( m_itemsize );
+					g->SetLeft( offset );
 					break;
 				}
 				default:
 					ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
 			}
-			if ( m_autoscroll ) {
-				bool was_visible = false;
-				size_t oldmax = 0;
-				switch ( m_scroll_type ) {
-					case ST_VERTICAL: {
-						was_visible = m_vscroll->m_is_visible;
-						oldmax = m_vscroll->m_max;
-						break;
-					}
-					case ST_HORIZONTAL: {
-						was_visible = m_hscroll->m_is_visible;
-						oldmax = m_hscroll->m_max;
-						break;
-					}
-					default:
-						ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
-				}
-				m_on_scrollview_resize = [ this, offset, was_visible, oldmax ]() {
+			/*if ( m_autoscroll ) {
+				m_on_scrollview_resize = [ this, offset ]() {
 					switch ( m_scroll_type ) {
 						case ST_VERTICAL: {
-							if ( m_vscroll->m_is_visible && ( !was_visible || m_vscroll->m_value == oldmax ) ) {
-								m_vscroll->SetValueRaw( offset + m_itemsize, true );
+							if ( m_vscroll->m_is_visible && ( !m_was_visible || m_vscroll->m_value + 2 /* TODO: fix properly * / >= m_oldmax ) ) {
+								m_vscroll->SetValueRaw( m_vscroll->m_max /* offset + m_itemsize* / );
+							}
+							else {
+								Log( "VALUE = " + std::to_string( m_vscroll->m_value ) + " ; OLDMAX = " + std::to_string( m_oldmax ) + " MAX = " + std::to_string( m_vscroll->m_max ) );
 							}
 							break;
 						}
 						case ST_HORIZONTAL: {
-							if ( m_hscroll->m_is_visible && ( !was_visible || m_hscroll->m_value == oldmax ) ) {
-								m_hscroll->SetValueRaw( offset + m_itemsize, true );
+							if ( m_hscroll->m_is_visible && ( !m_was_visible || m_hscroll->m_value == m_oldmax ) ) {
+								m_hscroll->SetValueRaw( offset + m_itemsize );
 							}
 							break;
 						}
@@ -88,7 +96,7 @@ Listview::Listview( DOM_ARGS_T )
 					}
 					m_on_scrollview_resize = nullptr;
 				};
-			}
+			}*/
 		}
 	};
 	m_on_remove_child = [ this ]( Object* const obj ) {
@@ -127,12 +135,6 @@ void Listview::SetItemSize( GSE_CALLABLE, const int itemsize ) {
 	}
 }
 
-void Listview::SetAutoScroll( GSE_CALLABLE, const bool value ) {
-	if ( value != m_autoscroll ) {
-		m_autoscroll = value;
-	}
-}
-
 void Listview::SetScrollType( const scroll_type_t type ) {
 	if ( type != m_scroll_type ) {
 		m_scroll_type = type;
@@ -141,7 +143,29 @@ void Listview::SetScrollType( const scroll_type_t type ) {
 }
 
 void Listview::Realign() {
-
+	coord_t offset = 0;
+	switch ( m_scroll_type ) {
+		case ST_VERTICAL: {
+			for ( const auto& it : m_children ) {
+				auto* g = it.second->GetGeometry();
+				g->SetHeight( m_itemsize );
+				g->SetTop( offset );
+				offset += m_itemsize;
+			}
+			break;
+		}
+		case ST_HORIZONTAL: {
+			for ( const auto& it : m_children ) {
+				auto* g = it.second->GetGeometry();
+				g->SetWidth( m_itemsize );
+				g->SetLeft( offset );
+				offset += m_itemsize;
+			}
+			break;
+		}
+		default:
+			ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
+	}
 }
 
 }

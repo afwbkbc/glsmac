@@ -101,10 +101,26 @@ void Geometry::SetWidth( const coord_t px ) {
 	NeedUpdate();
 }
 
+const coord_t Geometry::GetWidth() const {
+	return m_width;
+}
+
+const coord_t Geometry::GetInnerWidth() const {
+	return m_boundaries.width;
+}
+
 void Geometry::SetHeight( const coord_t px ) {
 	m_height = px;
 	m_stick_bits |= STICK_HEIGHT;
 	NeedUpdate();
+}
+
+const coord_t Geometry::GetHeight() const {
+	return m_height;
+}
+
+const coord_t Geometry::GetInnerHeight() const {
+	return m_boundaries.height;
 }
 
 void Geometry::SetPadding( const coord_t px ) {
@@ -242,6 +258,14 @@ void Geometry::Update() {
 		geometry->Update();
 	}
 	UpdateEffectiveArea();
+	if ( m_parent ) {
+		if ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) { // TODO: other variants
+			m_parent->AddBoundaries( this );
+		}
+		else {
+			m_parent->RemoveBoundaries( this );
+		}
+	}
 }
 
 void Geometry::UpdateArea() {
@@ -411,9 +435,11 @@ void Geometry::UpdateEffectiveArea() {
 			FixArea( effective_area );
 		}
 	}
-
 	if ( effective_area != m_effective_area ) {
 		const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
+		if ( should_resize && m_on_resize ) {
+			int a = 5;
+		}
 		m_effective_area = effective_area;
 		if ( should_resize && m_on_resize ) {
 			m_on_resize( m_effective_area.width, m_effective_area.height );
@@ -448,6 +474,80 @@ void Geometry::RunHandlers( const geometry_handler_type_t type ) const {
 	if ( it != m_handlers.end() ) {
 		for ( const auto& it2 : it->second ) {
 			it2.second();
+		}
+	}
+}
+
+void Geometry::AddBoundaries( Geometry* const g ) {
+	bool need_update = false;
+	// TODO: non-standard aligns?
+	const types::Vec2< coord_t > low = { g->GetLeft(), g->GetTop() };
+	const types::Vec2< coord_t > high = { low.x + g->GetWidth(), low.y + g->GetHeight() };
+#define X( _a, _op, _b ) \
+        if ( !m_boundaries._a._b.child || _b._a _op m_boundaries._a._b.value ) { \
+            m_boundaries._a._b.child = g; \
+            m_boundaries._a._b.value = _b._a; \
+            need_update = true; \
+        }
+/*	X( x, <, low );
+	X( x, >, high );
+	X( y, <, low );
+	X( y, >, high );*/
+
+	if ( !m_boundaries.x.low.child || low.x < m_boundaries.x.low.value ) {
+		m_boundaries.x.low.child = g;
+		m_boundaries.x.low.value = low.x;
+		need_update = true;
+	};
+	if ( !m_boundaries.x.high.child || high.x > m_boundaries.x.high.value ) {
+		m_boundaries.x.high.child = g;
+		m_boundaries.x.high.value = high.x;
+		need_update = true;
+	};
+	if ( !m_boundaries.y.low.child || low.y < m_boundaries.y.low.value ) {
+		m_boundaries.y.low.child = g;
+		m_boundaries.y.low.value = low.y;
+		need_update = true;
+	};
+	if ( !m_boundaries.y.high.child || high.y > m_boundaries.y.high.value ) {
+		m_boundaries.y.high.child = g;
+		m_boundaries.y.high.value = high.y;
+		need_update = true;
+	};
+
+#undef X
+	if ( need_update ) {
+		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;
+		m_boundaries.height = m_boundaries.y.high.value - m_boundaries.y.low.value;
+		if ( m_on_resize ) {
+			m_on_resize( m_boundaries.width, m_boundaries.height );
+		}
+	}
+}
+
+void Geometry::RemoveBoundaries( Geometry* const g ) {
+	bool need_update = false;
+#define X( _a, _op, _b, _get ) \
+    if ( m_boundaries._a._b.child == g ) { \
+        m_boundaries._a._b = {}; \
+        for ( const auto& c : m_children ) { \
+            const auto& v = _get; \
+            if ( !m_boundaries._a._b.child || m_boundaries._a._b.value _op v ) { \
+                m_boundaries._a._b = { c, v }; \
+            } \
+        } \
+        need_update = true; \
+    }
+	X( x, <, low, c->GetLeft() );
+	X( x, >, high, c->GetLeft() + c->GetWidth() );
+	X( y, <, low, c->GetTop() );
+	X( y, >, high, c->GetTop() + c->GetHeight() );
+#undef X
+	if ( need_update ) {
+		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;
+		m_boundaries.height = m_boundaries.y.high.value - m_boundaries.y.low.value;
+		if ( m_on_resize ) {
+			m_on_resize( m_boundaries.width, m_boundaries.height );
 		}
 	}
 }

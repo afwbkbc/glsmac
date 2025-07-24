@@ -780,6 +780,42 @@
 		}
 		return true;
 	});
+	/*for (let i = 0 ; i < 50 ; i++) {
+		chathistory.text({
+			class: 'chattext',
+			text: 'LINE ' + #to_string( i ),
+		});
+	}*/
 
+	const recursive_parent = texts.panel({
+		align: 'bottom right',
+		bottom: 120,
+		right: 10,
+		width: 180,
+		height: 180,
+	});
+	const recursive_panel = (parent, depth) => {
+		const child = parent.panel({
+			background: '#44444422',
+			align: 'center',
+			top: depth,
+			bottom: depth,
+			left: depth,
+			right: depth,
+		});
+		if ( depth >= 10 ) {
+			return child;
+		}
+		else {
+			return recursive_panel( child, depth + 1 );
+		}
+	};
+	const rp = recursive_panel( recursive_parent, 0 );
+	rp.text({
+		align: 'center',
+		color: 'white',
+		font: ':16',
+		text: 'test text',
+	});
 
 });
