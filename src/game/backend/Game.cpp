@@ -80,7 +80,6 @@ common::mt_id_t Game::MT_Ping() {
 common::mt_id_t Game::MT_Init( State* state ) {
 	MT_Request request = {};
 	request.op = OP_INIT;
-	request.data.init.state = state;
 	return MT_CreateRequest( request );
 }
 
@@ -972,9 +971,8 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 	switch ( request.op ) {
 		case OP_INIT: {
 			//MTModule::Log( "Got init request" );
-			ASSERT( request.data.init.state, "state not received" );
-			ASSERT( !m_state, "state already set" );
-			m_state = request.data.init.state;
+
+			ASSERT( m_state, "state not set" );
 
 			m_state->WithGSE(
 				this,

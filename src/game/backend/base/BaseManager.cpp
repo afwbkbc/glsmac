@@ -328,7 +328,7 @@ WRAPIMPL_BEGIN( BaseManager )
 				m_game->CheckRW( GSE_CALL );
 
 				N_EXPECT_ARGS_MIN_MAX( 3, 4 );
-				N_GETVALUE_UNWRAP( owner, 0, slot::Slot );
+				N_GETVALUE_UNWRAP( owner, 0, Player );
 				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
 
 				N_GETVALUE( info, 2, Object );
@@ -341,8 +341,8 @@ WRAPIMPL_BEGIN( BaseManager )
 				auto* base = new base::Base(
 					m_game,
 					base::Base::GetNextId(),
-					owner,
-					owner->GetPlayer()->GetFaction(),
+					owner->GetSlot(),
+					owner->GetFaction(),
 					tile,
 					m_name,
 					{}

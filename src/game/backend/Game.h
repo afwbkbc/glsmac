@@ -147,9 +147,6 @@ struct MT_Request {
 	op_t op;
 	union {
 		struct {
-			State* state;
-		} init;
-		struct {
 			tile_query_purpose_t purpose;
 			size_t tile_x;
 			size_t tile_y;

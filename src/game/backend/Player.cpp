@@ -191,6 +191,8 @@ WRAPIMPL_BEGIN( Player )
 		};
 WRAPIMPL_END_PTR()
 
+UNWRAPIMPL_PTR( Player )
+
 const types::Buffer Player::Serialize() const {
 	types::Buffer buf;
 

@@ -11,6 +11,7 @@
 #include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/unit/SpriteRender.h"
+#include "game/backend/Player.h"
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
@@ -450,7 +451,7 @@ WRAPIMPL_BEGIN( UnitManager )
 
 				N_GETPROP_OPT( size_t, unit_id, obj, "id", Int, 0 );
 				N_GETPROP( def_name, obj, "def", String );
-				N_GETPROP_UNWRAP( owner, obj, "owner", slot::Slot );
+				N_GETPROP_UNWRAP( owner, obj, "owner", Player );
 				N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
 				N_GETPROP( morale, obj, "morale", Int );
 				N_GETPROP( health, obj, "health", Float );
@@ -466,7 +467,7 @@ WRAPIMPL_BEGIN( UnitManager )
 					this,
 					unit_id ? unit_id : unit::Unit::GetNextId(),
 					def,
-					owner,
+					owner->GetSlot(),
 					tile,
 					staticdef->m_movement_per_turn,
 					morale,
