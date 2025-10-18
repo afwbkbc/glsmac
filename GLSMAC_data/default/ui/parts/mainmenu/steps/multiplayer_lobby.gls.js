@@ -5,6 +5,7 @@ return (i) => {
 	const sections = [
 		'game_settings',
 		'players',
+		'chat',
 		'custom_game_options',
 	];
 	let cleanups = [];
@@ -14,6 +15,19 @@ return (i) => {
 		width: 800,
 		height: 600,
 		generator: (body) => {
+
+			let pending_messages = [];
+			const message = (text) => {
+				if (#is_defined(parts.chat)) {
+					parts.chat.add_message(text);
+				} else {
+					pending_messages :+text;
+				}
+			};
+
+			i.glsmac.game.on('chat_message', (e) => {
+				message(e.player.name + ': ' + e.text);
+			});
 
 			i.connection = i.glsmac.connect();
 
@@ -27,10 +41,10 @@ return (i) => {
 			});
 
 			i.connection.on('connect', (e) => {
-				#print('CONNECTED');
+				//#print('CONNECTED');
 			});
 			i.connection.on('disconnect', (e) => {
-				#print('DISCONNECTED');
+				//#print('DISCONNECTED');
 				if (#is_defined(i.connection)) {
 					i.connection.close();
 					i.connection = #undefined;
@@ -39,10 +53,10 @@ return (i) => {
 				}
 			});
 			i.connection.on('player_join', (e) => {
-				#print('PLAYER JOINED', e);
+				message(e.player.name + ' joined the game.');
 			});
 			i.connection.on('player_leave', (e) => {
-				#print('PLAYER LEFT', e);
+				message(e.player.name + ' left the game.');
 			});
 
 			i.connection.open(() => {
@@ -52,14 +66,20 @@ return (i) => {
 						let section = body.panel({
 							class: 'popup-panel',
 						} + properties);
-						section.panel({
-							class: 'popup-panel-header',
-						}).text({
-							class: 'popup-panel-header-text',
-							text: title,
-						});
+						if (#is_defined(title)) {
+							section.panel({
+								class: 'popup-panel-header',
+							}).text({
+								class: 'popup-panel-header-text',
+								text: title,
+							});
+						}
+						let cls = 'popup-panel-body';
+						if (!#is_defined(title)) {
+							cls += '-noheader';
+						}
 						let inner = section.panel({
-							class: 'popup-panel-body',
+							class: cls,
 						});
 						generator(inner);
 						if (#is_defined(cleanup)) {
@@ -72,10 +92,15 @@ return (i) => {
 				for (section of sections) {
 					parts[section] = #include('multiplayer_lobby/' + section)(ii);
 				}
+				for (text of pending_messages) {
+					parts.chat.add_message(text);
+				}
+				pending_messages = [];
 
 			});
 		},
 		destructor: () => {
+			i.glsmac.game.off('chat_message');
 			if (#is_defined(i.connection)) {
 				i.connection.close();
 				i.connection = #undefined;

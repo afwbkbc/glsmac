@@ -19,6 +19,7 @@ return (game) => {
 		'complete_turn',
 		'uncomplete_turn',
 		'advance_turn',
+		'chat_message',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}
