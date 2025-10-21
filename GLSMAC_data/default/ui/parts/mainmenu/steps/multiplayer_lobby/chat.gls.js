@@ -8,7 +8,7 @@ return (i) => {
 			top: 207,
 			right: 3,
 			bottom: 208,
-		}, (body) => {
+		}, (body, lobby) => {
 
 			chathistory = body.listview({
 				class: 'popup-list',

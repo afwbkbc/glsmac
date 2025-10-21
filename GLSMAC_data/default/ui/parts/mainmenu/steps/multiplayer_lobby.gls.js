@@ -10,11 +10,13 @@ return (i) => {
 	];
 	let cleanups = [];
 
+	let countdown_timer = null;
+
 	i.popup.show({
 		title: 'Multiplayer Setup',
 		width: 800,
 		height: 600,
-		generator: (body) => {
+		generator: (body, lobby) => {
 
 			let pending_messages = [];
 			const message = (text) => {
@@ -59,9 +61,29 @@ return (i) => {
 				message(e.player.name + ' left the game.');
 			});
 
+			let countdown_value = 0;
+
 			i.connection.open(() => {
 
 				const ii = i + {
+					start_countdown: () => {
+						if (countdown_timer == null) {
+							countdown_value = 3;
+							message('All players are ready. Starting game in ' + #to_string(countdown_value) + ' seconds...');
+							countdown_timer = #async(3 * 1000, () => {
+								countdown_timer = null;
+								message('TODO: game start');
+								return false;
+							});
+						}
+					},
+					stop_countdown: () => {
+						if (countdown_timer != null) {
+							countdown_timer.stop();
+							countdown_timer = null;
+						}
+					},
+					chat_message: message,
 					make_section: (title, properties, generator, cleanup) => {
 						let section = body.panel({
 							class: 'popup-panel',
@@ -81,7 +103,7 @@ return (i) => {
 						let inner = section.panel({
 							class: cls,
 						});
-						generator(inner);
+						generator(inner, this);
 						if (#is_defined(cleanup)) {
 							cleanups :+cleanup;
 						}
@@ -100,15 +122,18 @@ return (i) => {
 			});
 		},
 		destructor: () => {
+			if (countdown_timer != null) {
+				countdown_timer.stop();
+			}
 			i.glsmac.game.off('chat_message');
 			if (#is_defined(i.connection)) {
 				i.connection.close();
 				i.connection = #undefined;
-				for (cleanup of cleanups) {
-					cleanup();
-				}
-				i.popup.back();
 			}
+			for (cleanup of cleanups) {
+				cleanup();
+			}
+			i.popup.back();
 		},
 	});
 

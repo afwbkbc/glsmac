@@ -4,7 +4,7 @@ return (i) => {
 		top: 363,
 		width: 788,
 		height: 204,
-	}, (body) => {
+	}, (body, lobby) => {
 
 	});
 };

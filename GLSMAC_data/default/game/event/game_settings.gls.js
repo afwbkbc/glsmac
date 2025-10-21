@@ -1,3 +1,9 @@
+const unready_players = (players) => {
+	for (player of players) {
+		player.set_ready(false);
+	}
+};
+
 return {
 
 	validate: (e) => {
@@ -29,6 +35,9 @@ return {
 				settings[c[0]] = c[1]; // TODO: ro/rw permissions on settings in all places
 			}
 		}
+
+		unready_players(e.game.get_players());
+
 		e.game.trigger('game_settings', {
 			settings: e.data.changes,
 		});
@@ -42,6 +51,9 @@ return {
 		for (c of e.applied.old_settings) {
 			settings[c[0]] = c[1];
 		}
+
+		unready_players(e.game.get_players());
+
 		e.game.trigger('game_settings', {
 			settings: e.applied.old_settings
 		});

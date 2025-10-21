@@ -9,7 +9,7 @@ return (i) => {
 	return i.make_section(settings.game_name, {
 		width: 296,
 		height: 358,
-	}, (body) => {
+	}, (body, lobby) => {
 
 		let lines = [];
 		let line_keys = {};

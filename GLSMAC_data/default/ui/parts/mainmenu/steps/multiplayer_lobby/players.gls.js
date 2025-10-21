@@ -4,7 +4,7 @@ return (i) => {
 		left: 301,
 		width: 490,
 		height: 202,
-	}, (body) => {
+	}, (body, lobby) => {
 
 		const game = i.glsmac.game;
 		const me = game.get_player();
@@ -125,11 +125,15 @@ return (i) => {
 					row.ready.class = 'lobby-player-ready';
 					if (is_me) {
 						buttons.ready.text = 'Not ready';
+						row.faction.readonly = true;
+						row.difficulty.readonly = true;
 					}
 				} else {
 					row.ready.class = 'lobby-player-notready';
 					if (is_me) {
 						buttons.ready.text = 'Ready';
+						row.faction.readonly = false;
+						row.difficulty.readonly = false;
 					}
 				}
 			}
@@ -144,18 +148,49 @@ return (i) => {
 		};
 
 		const players = game.get_players();
+
+		let players_count = #sizeof(players);
+		const ready_players = {};
+		let ready_players_count = 0;
+
 		for (player of players) {
+			if (player.is_ready()) {
+				const id = #to_string(e.player.id);
+				ready_players[id] = true;
+			}
 			add_row(player);
 		}
 
 		i.connection.on('player_join', (e) => {
+			players_count++;
 			add_row(e.player);
 		});
 		i.connection.on('player_leave', (e) => {
+			players_count--;
+			const id = #to_string(e.player.id);
+			if (#is_defined(ready_players[id])) {
+				ready_players[id] = #undefined;
+				ready_players_count--;
+			}
 			remove_row(e.player);
 		});
 
 		game.on('player_update', (e) => {
+			const id = #to_string(e.player.id);
+			if (e.player.is_ready() && !#is_defined(ready_players[id])) {
+				ready_players[id] = true;
+				lobby.chat_message(e.player.name + ' is ready!');
+				ready_players_count++;
+				if (ready_players_count == players_count) {
+					lobby.start_countdown();
+				}
+			}
+			if (!e.player.is_ready() && #is_defined(ready_players[id])) {
+				ready_players[id] = #undefined;
+				lobby.chat_message(e.player.name + ' is not ready.');
+				ready_players_count--;
+				lobby.stop_countdown();
+			}
 			update_row(e.player);
 		});
 
