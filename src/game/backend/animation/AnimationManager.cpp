@@ -41,7 +41,10 @@ AnimationManager::~AnimationManager() {
 }
 
 void AnimationManager::Clear() {
-	ASSERT( m_animation_sequences.empty(), "some animations are still running" );
+	{
+		std::lock_guard guard( m_animation_sequences_mutex );
+		ASSERT( m_animation_sequences.empty(), "some animations are still running" );
+	}
 	m_running_animations_callbacks.clear();
 	m_next_running_animation_id = 0;
 	for ( auto& it : m_animation_defs ) {
@@ -226,9 +229,12 @@ WRAPIMPL_BEGIN( AnimationManager )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( animations_id, 0, Int );
 
-				const auto& it = m_animation_sequences.find( animations_id );
-				if ( it != m_animation_sequences.end() ) {
-					it->second->Abort();
+				{
+					std::lock_guard guard( m_animation_sequences_mutex );
+					const auto& it = m_animation_sequences.find( animations_id );
+					if ( it != m_animation_sequences.end() ) {
+						it->second->Abort();
+					}
 				}
 
 				return VALUE( gse::value::Undefined );
@@ -254,34 +260,38 @@ WRAPIMPL_BEGIN( AnimationManager )
 				}
 
 				auto* sequence = new AnimationSequence( gc_space, this, m_next_animation_sequence_id, animations.size() );
-				m_animation_sequences.insert( { m_next_animation_sequence_id, sequence } );
 
-				for ( const auto& value : animations ) {
-					if ( value->type != gse::Value::T_OBJECT ) {
-						GSE_ERROR( gse::EC.GAME_ERROR, "Invalid array element in show_animations(): expected Object, got " + value->GetTypeString() + ": " + value->ToString() );
+				{
+					std::lock_guard guard( m_animation_sequences_mutex );
+					m_animation_sequences.insert( { m_next_animation_sequence_id, sequence } );
+
+					for ( const auto& value : animations ) {
+						if ( value->type != gse::Value::T_OBJECT ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Invalid array element in show_animations(): expected Object, got " + value->GetTypeString() + ": " + value->ToString() );
+						}
+
+						const auto& props = ( (gse::value::Object*)value )->value;
+
+						PARSEANIMATION( id, String, ->value );
+
+						PARSEANIMATION( tile, Object );
+						if ( tile->object_class != map::tile::Tile::WRAP_CLASS ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property tile is not of class Tile: " + tile->ToString() );
+						}
+
+						const auto& t = (map::tile::Tile*)tile->wrapobj;
+						unique_tiles.insert( t );
+
+						gse::value::Callable* cb = nullptr;
+						if ( props.find( "oncomplete" ) != props.end() ) {
+							PARSEANIMATION( oncomplete, Callable );
+							cb = oncomplete;
+						}
+						sequence->AddAnimation( new Animation( gc_space, t, id, cb ) );
 					}
 
-					const auto& props = ((gse::value::Object*)value)->value;
-
-					PARSEANIMATION( id, String, ->value );
-
-					PARSEANIMATION( tile, Object );
-					if ( tile->object_class != map::tile::Tile::WRAP_CLASS ) {
-						GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property tile is not of class Tile: " + tile->ToString() );
-					}
-
-					const auto& t = (map::tile::Tile*)tile->wrapobj;
-					unique_tiles.insert( t );
-
-					gse::value::Callable* cb = nullptr;
-					if (props.find("oncomplete") != props.end()) {
-						PARSEANIMATION( oncomplete, Callable );
-						cb = oncomplete;
-					}
-					sequence->AddAnimation( new Animation( gc_space, t, id, cb ) );
+					sequence->Run( GSE_CALL );
 				}
-
-				sequence->Run( GSE_CALL );
 
 				return VALUE( gse::value::Int,, m_next_animation_sequence_id++ );
 			} )
@@ -349,14 +359,18 @@ void AnimationManager::GetReachableObjects( std::unordered_set< gc::Object* >& r
 	gse::GCWrappable::GetReachableObjects( reachable_objects );
 
 	GC_DEBUG_BEGIN( "animation_sequences" );
-	for ( const auto& it : m_animation_sequences ) {
-		GC_REACHABLE( it.second );
+	{
+		std::lock_guard guard( m_animation_sequences_mutex );
+		for ( const auto& it : m_animation_sequences ) {
+			GC_REACHABLE( it.second );
+		}
 	}
 	GC_DEBUG_END();
 
 }
 
 void AnimationManager::RemoveAnimationSequence( const size_t sequence_id ) {
+	std::lock_guard guard( m_animation_sequences_mutex );
 	ASSERT( m_animation_sequences.find( sequence_id ) != m_animation_sequences.end(), "animation sequence not found" );
 	m_animation_sequences.erase( sequence_id );
 }

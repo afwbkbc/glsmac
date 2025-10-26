@@ -155,7 +155,7 @@ return (i) => {
 
 		for (player of players) {
 			if (player.is_ready()) {
-				const id = #to_string(e.player.id);
+				const id = #to_string(player.id);
 				ready_players[id] = true;
 			}
 			add_row(player);

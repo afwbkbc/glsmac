@@ -433,7 +433,7 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 
 void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-		if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
+		if ( slot.GetState() == slot::Slot::SS_PLAYER && slot.GetPlayer()->IsConnected() ) {
 			const auto cid = slot.GetCid();
 			if ( cid != 0 ) { // don't send to self
 				callback( cid );

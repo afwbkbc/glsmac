@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <vector>
 #include <unordered_map>
+#include <mutex>
 
 namespace game {
 namespace backend {
@@ -46,6 +47,7 @@ private:
 
 	const size_t m_expected_size;
 	std::unordered_set< map::tile::Tile* > m_locked_tiles = {};
+	std::mutex m_animations_mutex;
 	std::vector< Animation* > m_animations = {};
 	size_t m_current_animation_idx = 0;
 

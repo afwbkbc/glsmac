@@ -83,6 +83,7 @@ private:
 
 	// steps
 	void S_Init( GSE_CALLABLE, const std::optional< std::string >& path );
+	void S_Reset( GSE_CALLABLE );
 	void S_Intro( GSE_CALLABLE );
 	void S_MainMenu( GSE_CALLABLE );
 	void S_Game( GSE_CALLABLE );

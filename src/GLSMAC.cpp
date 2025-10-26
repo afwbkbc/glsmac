@@ -193,6 +193,13 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} ),
 		},
 		{
+			"reset",
+			NATIVE_CALL( this ) {
+				S_Reset( GSE_CALL );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
 			"game",
 			game->Wrap( GSE_CALL, true ),
 		},
@@ -239,7 +246,9 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_loading ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
 				}
-				AddSinglePlayerSlot( nullptr );
+				if ( m_state->m_slots->GetSlots().empty() ) {
+					AddSinglePlayerSlot( nullptr );
+				}
 				StartGame( GSE_CALL );
 				return VALUE( gse::value::Undefined );
 			} )
@@ -376,6 +385,17 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		c->SetSMACPath( path.value() );
 	}
 
+	S_Reset( GSE_CALL );
+}
+
+void GLSMAC::S_Reset( GSE_CALLABLE ) {
+	const auto& c = g_engine->GetConfig();
+
+	m_is_game_running = false;
+	if ( m_game ) {
+		m_game->Stop();
+	}
+
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		InitGameState( GSE_CALL );
 		m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
@@ -400,8 +420,8 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	}
 	else if (
 		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
-		r->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
-	) {
+			g_engine->GetResourceManager()->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
+		) {
 		S_MainMenu( GSE_CALL );
 	}
 	else {
@@ -522,7 +542,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 		});
 	}, UH( this, real_state ) {
 		//m_menu_object->MaybeClose();
-		THROW( "TODO: cancel" );
+		//THROW( "TODO: cancel" );
 	} );
 
 	S_Game( GSE_CALL );

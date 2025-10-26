@@ -223,7 +223,7 @@ void Game::Iterate() {
 				std::string waiting_for_players = "";
 #endif
 				for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-					if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.HasPlayerFlag( slot::PF_MAP_DOWNLOADED ) ) {
+					if ( slot.GetState() == slot::Slot::SS_PLAYER && slot.GetPlayer()->IsConnected() && !slot.HasPlayerFlag( slot::PF_MAP_DOWNLOADED ) ) {
 						ready = false;
 #ifdef DEBUG
 						waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
@@ -540,8 +540,10 @@ void Game::Iterate() {
 							else {
 								MTModule::Log( "Event rejected: " + *errptr );
 								if ( m_state->m_connection && m_state->IsMaster() ) {
-									// notify caller of rejection
-									m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false );
+									if ( event->GetCaller() != 0 ) {
+										// notify caller of rejection
+										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false );
+									}
 								}
 								delete ( errptr );
 							}

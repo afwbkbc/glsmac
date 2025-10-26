@@ -100,6 +100,7 @@ void Game::Start() {
 	}
 
 	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
+	g_engine->GetGraphics()->AddScene( m_world_scene );
 
 	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );
 	NEW( m_itm, text::InstancedTextManager, m_ism );
@@ -181,17 +182,9 @@ void Game::Iterate() {
 
 	const auto f_handle_nonsuccess_init = [ this, ui ]( const backend::MT_Response& response ) -> void {
 		switch ( response.result ) {
-			case backend::R_ABORTED: {
-				CancelGame();
-				break;
-			}
+			case backend::R_ABORTED:
 			case backend::R_ERROR: {
-				const std::string error_text = *response.data.error.error_text;
-				ui->ShowError(
-					error_text, UH( this ) {
-						CancelGame();
-					}
-				);
+				CancelGame();
 				break;
 			}
 			default: {
@@ -1399,7 +1392,7 @@ void Game::Initialize(
 		m_world_scene->AddLight( m_light_b );
 	}
 
-	g_engine->GetGraphics()->AddScene( m_world_scene );
+	//g_engine->GetGraphics()->AddScene( m_world_scene );
 
 	ASSERT( !m_textures.terrain, "terrain texture already set" );
 	m_textures.terrain = terrain_texture;
@@ -2516,7 +2509,9 @@ void Game::CancelGame() {
 				m_on_cancel();
 				m_on_cancel = nullptr;
 			}
-			g_engine->GetScheduler()->RemoveTask( m_task );
+			if ( m_task ) {
+				g_engine->GetScheduler()->RemoveTask( m_task );
+			}
 		}
 	);
 }

@@ -114,12 +114,12 @@ const bool Connection::IterateAndMaybeDelete() {
 			}
 			ClearPending();
 			if ( m_is_connected ) {
-				if ( m_on_disconnect ) {
-					should_delete |= m_on_disconnect();
-				}
 				WTrigger(
 					"disconnect", ARGS_F() {}; }
 				);
+				if ( m_on_disconnect ) {
+					should_delete |= m_on_disconnect();
+				}
 			}
 			if ( m_is_canceled ) {
 				if ( m_on_cancel ) {

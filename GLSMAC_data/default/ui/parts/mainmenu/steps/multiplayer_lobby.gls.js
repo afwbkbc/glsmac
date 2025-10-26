@@ -2,6 +2,8 @@ return (i) => {
 
 	let parts = {};
 
+	let game_starting = false;
+
 	const sections = [
 		'game_settings',
 		'players',
@@ -46,9 +48,7 @@ return (i) => {
 				//#print('CONNECTED');
 			});
 			i.connection.on('disconnect', (e) => {
-				//#print('DISCONNECTED');
 				if (#is_defined(i.connection)) {
-					i.connection.close();
 					i.connection = #undefined;
 					i.popup.back();
 					i.popup.error('Connection lost');
@@ -72,7 +72,11 @@ return (i) => {
 							message('All players are ready. Starting game in ' + #to_string(countdown_value) + ' seconds...');
 							countdown_timer = #async(3 * 1000, () => {
 								countdown_timer = null;
-								message('TODO: game start');
+
+								game_starting = true; // keep connection open
+								i.popup.hide();
+								i.glsmac.start_game();
+
 								return false;
 							});
 						}
@@ -126,14 +130,20 @@ return (i) => {
 				countdown_timer.stop();
 			}
 			i.glsmac.game.off('chat_message');
-			if (#is_defined(i.connection)) {
-				i.connection.close();
-				i.connection = #undefined;
-			}
 			for (cleanup of cleanups) {
 				cleanup();
 			}
-			i.popup.back();
+			if (!game_starting) {
+				if (#is_defined(i.connection)) {
+					i.connection.close();
+					i.connection = #undefined;
+				}
+				i.popup.back();
+			} else {
+				// there will be different handlers
+				i.connection.off('player_join');
+				i.connection.off('player_leave');
+			}
 		},
 	});
 

@@ -17,7 +17,7 @@ return (m) => {
 
 		back: () => {
 			remove_active_menublock();
-			this.manager.pop(m);
+			this.manager.pop(m, true);
 		},
 
 		select: (index) => {
@@ -125,6 +125,7 @@ return (m) => {
 
 		hide: () => {
 			remove_active_menublock();
+			this.manager.close(m);
 		},
 
 	};

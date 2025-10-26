@@ -65,8 +65,10 @@ void State::Iterate() {
 	//std::lock_guard guard( m_connection_mutex );
 	if ( m_connection ) {
 		if ( m_connection->IterateAndMaybeDelete() ) {
-			m_connection->SetState( nullptr );
-			m_connection = nullptr;
+			if ( m_connection ) {
+				m_connection->SetState( nullptr );
+				m_connection = nullptr;
+			}
 			for ( auto& player : m_players ) {
 				DELETE( player );
 			}

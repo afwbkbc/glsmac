@@ -116,7 +116,7 @@ return (m) => {
 
 		back: () => {
 			remove_active_menublock();
-			this.manager.pop(m);
+			this.manager.pop(m, false);
 		},
 
 		select: (index) => {

@@ -88,6 +88,7 @@ return (glsmac) => {
 				for (let x = 0; x < w; x++) {
 					if (x % 2 == y % 2) {
 						let owner = random_player();
+
 						let tile = e.game.tm.get_tile(x, y);
 						if (e.game.random.get_int(0, 6) == 0) {
 							let units_count = e.game.random.get_int(1, 2);

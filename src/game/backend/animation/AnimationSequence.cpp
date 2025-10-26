@@ -14,6 +14,7 @@ AnimationSequence::AnimationSequence( gc::Space* const gc_space, AnimationManage
 	, m_sequence_id( sequence_id )
 	, m_expected_size( size )
 	, m_am( animation_manager ) {
+	std::lock_guard guard( m_animations_mutex );
 	m_animations.reserve( size );
 }
 
@@ -21,10 +22,14 @@ void AnimationSequence::AddAnimation( Animation* const animation ) {
 	ASSERT( !animation->m_sequence, "animation sequence already set" );
 	animation->m_sequence = this;
 	m_locked_tiles.insert( animation->m_tile );
-	m_animations.push_back( animation );
+	{
+		std::lock_guard guard( m_animations_mutex );
+		m_animations.push_back( animation );
+	}
 }
 
 void AnimationSequence::Run( GSE_CALLABLE ) {
+	std::lock_guard guard( m_animations_mutex );
 	ASSERT( !m_is_running, "animation sequence already running" );
 	ASSERT( m_animations.size() == m_expected_size, "animation sequence incomplete" );
 	m_is_running = true;
@@ -37,6 +42,7 @@ void AnimationSequence::Run( GSE_CALLABLE ) {
 }
 
 void AnimationSequence::Abort() {
+	std::lock_guard guard( m_animations_mutex );
 	ASSERT( m_is_running, "animation sequence not running" );
 	ASSERT( m_current_animation_idx < m_animations.size(), "animation idx overflow" );
 	m_animations.at( m_current_animation_idx )->Abort();
@@ -49,9 +55,18 @@ void AnimationSequence::GetReachableObjects( std::unordered_set< gc::Object* >& 
 	GC_DEBUG_BEGIN( "AnimationSequence" );
 
 	GC_DEBUG_BEGIN( "animations" );
-	for ( const auto& animation : m_animations ) {
-		if ( !animation->m_is_finished ) {
-			GC_REACHABLE( animation );
+	{
+		std::lock_guard guard( m_animations_mutex );
+		for ( size_t i = 0 ; i < m_animations.size() ; i++ ) {
+			auto* const animation = m_animations[ i ];
+			if ( animation ) {
+				if ( !animation->m_is_finished ) {
+					GC_REACHABLE( animation );
+				}
+				else {
+					m_animations[ i ] = nullptr;
+				}
+			}
 		}
 	}
 	GC_DEBUG_END();
@@ -68,11 +83,14 @@ void AnimationSequence::Finish() {
 
 void AnimationSequence::RunNextMaybe( GSE_CALLABLE ) {
 	m_current_animation_idx++;
-	if ( m_current_animation_idx < m_animations.size() ) {
-		m_animations.at( m_current_animation_idx )->Run( GSE_CALL );
-	}
-	else {
-		Finish();
+	{
+		std::lock_guard guard( m_animations_mutex );
+		if ( m_current_animation_idx < m_animations.size() ) {
+			m_animations.at( m_current_animation_idx )->Run( GSE_CALL );
+		}
+		else {
+			Finish();
+		}
 	}
 }
 

@@ -24,7 +24,7 @@ const manager = {
 		this.data_stack[#sizeof(this.data_stack) - 1].index = index;
 	},
 
-	pop: (m) => {
+	pop: (m, reset) => {
 		const last_entry = this.data_stack :~;
 		if (#is_defined(last_entry) && #is_defined(last_entry.data.destructor)) {
 			last_entry.data.destructor();
@@ -39,8 +39,24 @@ const manager = {
 		else {
 			// go async in case some other popup such as error gets displayed immediately after
 			this.exit_timer = #async(0, () => {
-				m.glsmac.exit();
+				this.exit_timer = null;
+				if ( reset ) {
+					m.glsmac.reset();
+				}
+				else {
+					m.glsmac.exit();
+				}
 			});
+		}
+	},
+
+	close: (m) => {
+		let last_entry = this.data_stack :~;
+		while ( #is_defined( last_entry ) ) {
+			if ( #is_defined(last_entry.data.destructor) ) {
+				last_entry.data.destructor();
+			}
+			last_entry = this.data_stack :~;
 		}
 	},
 

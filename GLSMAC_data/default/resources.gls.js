@@ -31,7 +31,7 @@ const result = {
 		define(game, 'Energy', 386, 59);
 
 		game.rm.on('get_yield', (e) => {
-			
+
 			if (e.resource == 'Nutrients') {
 				if (!e.tile.has_fungus) {
 					if (e.tile.is_land) {
@@ -58,7 +58,7 @@ const result = {
 					// TODO: fungus tiles
 				}
 			}
-			if (e.resource = 'Energy') {
+			if (e.resource == 'Energy') {
 				if (!e.tile.has_fungus) {
 					if (e.tile.is_land) {
 						let result = e.tile.elevation / 1000;
