@@ -2517,12 +2517,14 @@ void Game::CancelGame() {
 }
 
 void Game::ReturnToMainMenu( const std::string reason ) {
-	NEWV( task, task::mainmenu::MainMenu );
-	if ( !reason.empty() ) {
-		task->ShowErrorOnStart( reason );
+	if ( m_task ) { // legacy ui
+		NEWV( task, task::mainmenu::MainMenu );
+		if ( !reason.empty() ) {
+			task->ShowErrorOnStart( reason );
+		}
+		g_engine->GetScheduler()->RemoveTask( m_task );
+		g_engine->GetScheduler()->AddTask( task );
 	}
-	g_engine->GetScheduler()->RemoveTask( m_task );
-	g_engine->GetScheduler()->AddTask( task );
 }
 
 const float Game::GetFixedX( const float x ) const {

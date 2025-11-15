@@ -1798,15 +1798,16 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						connection->m_on_download_complete = nullptr;
 						connection->m_on_download_progress = nullptr;
 						MTModule::Log( "Unpacking world snapshot" );
-						auto buf = types::Buffer( serialized_snapshot );
 
-						// map
-						auto b = types::Buffer( buf.ReadString() );
-						NEW( m_map, map::Map, this );
-						const auto ec = m_map->LoadFromBuffer( b );
-						if ( ec == map::Map::EC_NONE ) {
+						m_state->WithGSE( this, [ this, connection, serialized_snapshot ]( GSE_CALLABLE ) {
 
-							m_state->WithGSE( this, [ this, &buf ]( GSE_CALLABLE ) {
+							auto buf = types::Buffer( serialized_snapshot );
+
+							// map
+							auto b = types::Buffer( buf.ReadString() );
+							NEW( m_map, map::Map, this );
+							const auto ec = m_map->LoadFromBuffer( b );
+							if ( ec == map::Map::EC_NONE ) {
 
 								// resources
 								{
@@ -1838,16 +1839,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 									MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
 									AdvanceTurn( turn_id );
 								}
-								
-								m_game_state = GS_INITIALIZING;
-								
-							});
 
-						}
-						else {
-							MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
-							connection->Disconnect( "Snapshot format mismatch" );
-						}
+								m_game_state = GS_INITIALIZING;
+
+							}
+							else {
+								MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
+								connection->Disconnect( "Snapshot format mismatch" );
+							}
+						});
 					};
 					connection->RequestDownload();
 				};
@@ -1858,11 +1858,18 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				else {
 					// wait for server to initialize
 					connection->m_on_game_state_change = [ this, f_download_map ]( const connection::Connection::game_state_t state ) -> void {
-						if ( state == connection::Connection::GS_RUNNING ) {
-							f_download_map();
-						}
-						else {
-							THROW( "unexpected game state: " + std::to_string( state ) );
+						switch ( state ) {
+							case connection::Connection::GS_INITIALIZING: {
+								// waiting
+								break;
+							}
+							case connection::Connection::GS_RUNNING: {
+								f_download_map();
+								break;
+							}
+							default: {
+								THROW( "unexpected game state: " + std::to_string( state ) );
+							}
 						}
 					};
 				}
