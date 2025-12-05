@@ -6,7 +6,15 @@ return (m) => {
 	const sliding = #include('sliding')(m);
 	const popup = #include('popup')(m);
 
+	// in some cases (i.e. with --host or --join command line arguments) game should exit on cancel instead of reopening same popup
+	let mainmenu_allowed = true;
+
 	m.glsmac.on('mainmenu_show', (e) => {
+
+		if ( !mainmenu_allowed ) {
+			m.glsmac.exit();
+			return;
+		}
 
 		const i = {
 			glsmac: m.glsmac,
@@ -61,6 +69,7 @@ return (m) => {
 
 		const c = m.glsmac.config;
 		if (#is_defined(c.host)) {
+			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_type = 'simple_tcpip';
 			i.settings.global.game_name = c.gamename;
 			i.settings.local.player_name = c.playername;
@@ -68,6 +77,7 @@ return (m) => {
 			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
 		} elseif (#is_defined(c.join)) {
+			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_role = 'client';
 			i.settings.local.player_name = c.playername;
 			i.settings.local.remote_address = c.join;
