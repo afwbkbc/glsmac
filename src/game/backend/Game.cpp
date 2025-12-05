@@ -271,7 +271,24 @@ void Game::Iterate() {
 						m_map->m_meshes.terrain_data = nullptr;
 					}
 
-					ResetGame();
+					ASSERT( m_state, "state not set" );
+					if ( m_state->m_connection ) {
+						m_state->m_connection->Disconnect( "Failed to initialize game" );
+					}
+					m_state->TriggerObject(
+						this, "error", ARGS_F( this, &error_text ) {
+							{
+								"game",
+								Wrap( GSE_CALL )
+							},
+							{
+								"error",
+								VALUE( gse::value::String, , error_text ),
+							},
+						}; }
+					);
+
+					//ResetGame();
 					m_initialization_error = error_text;
 
 					if ( m_old_map ) {
@@ -280,9 +297,6 @@ void Game::Iterate() {
 						m_map = m_old_map; // restore old state // TODO: test
 					}
 
-					if ( m_state->m_connection ) {
-						m_state->m_connection->Disconnect( "Failed to initialize game" );
-					}
 				};
 
 				if ( !ec ) {
@@ -317,17 +331,18 @@ void Game::Iterate() {
 					ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
 					m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
 
-					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
-					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
+					// copying to handle situation when map is destroyed on backend while still processing on frontend
+					m_response_map_data->sprites.actors = new std::unordered_map( m_map->m_sprite_actors );
+					m_response_map_data->sprites.instances = new std::unordered_map( m_map->m_sprite_instances );
 
 					m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 						for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
 							UpdateYields( GSE_CALL, tile );
 						}
 					});
-					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
 
-					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
+					m_response_map_data->tiles = new std::vector( *m_map->GetTilesPtr()->GetTilesPtr() );
+					m_response_map_data->tile_states = new std::vector( *m_map->GetMapState()->GetTileStatesPtr() );
 
 					if ( m_old_map ) {
 						MTModule::Log( "Destroying old map state" );
@@ -848,8 +863,9 @@ WRAPIMPL_BEGIN( Game )
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
 				}
 				const auto& handler = it->second;
-				N_GETVALUE( args, 1, Object );
-				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
+				N_GET( args, 1, Object );
+				args->ValidatePrimitivity( GSE_CALL, "" );
+				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args->value ) );
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -1010,6 +1026,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				response.result = R_SUCCESS;
 				response.data.get_map_data = m_response_map_data;
 				m_response_map_data = nullptr;
+				// ownership transferred to frontend
+				m_map->m_textures.terrain = nullptr;
+				m_map->m_meshes.terrain = nullptr;
+				m_map->m_meshes.terrain_data = nullptr;
 			}
 			else if ( m_init_cancel ) {
 				response.result = R_ABORTED;

@@ -34,7 +34,7 @@ namespace callable {
         GSE_ERROR( gse::EC.INVALID_CALL, "Expected " + std::to_string( _min ) + " to " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ) ); \
     } \
     N_ARGS
-#define N_GET( _var, _index ) \
+#define N_GET_ANY( _var, _index ) \
     ASSERT( _index < arguments.size(), "argument index overflow" ); \
     const auto& _var = arguments.at( _index );
 #define N_GETPTR( _var, _index ) \
@@ -67,13 +67,19 @@ namespace callable {
     arg = arguments.at( _index )->Deref(); \
     N_CHECKARG( arg, _index, _type ); \
     auto _var = ((gse::value::_type*)arg)->value;
-#define N_GETELEMENT( _var, _arr, _index, _type ) \
+#define N_CHECKELEMENT( _var, _arr, _index, _type ) \
     ASSERT( _index < _arr.size(), #_arr " index overflow" ); \
     arg = _arr.at( _index )->Deref(); \
-    N_CHECKARG( arg, _index, _type ); \
+    N_CHECKARG( arg, _index, _type );
+#define N_GETELEMENT( _var, _arr, _index, _type ) \
+    N_CHECKELEMENT( _var, _arr, _index, _type ); \
     const auto& _var = ((gse::value::_type*)arg)->value;
 #define N_GETVALUE( _var, _index, _type ) \
-    N_GETELEMENT( _var, arguments, _index, _type );
+    N_CHECKELEMENT( _var, arguments, _index, _type ); \
+    const auto& _var = ((gse::value::_type*)arg)->value;
+#define N_GET( _var, _index, _type ) \
+    N_CHECKELEMENT( _var, arguments, _index, _type ); \
+    const auto& _var = ((gse::value::_type*)arg);
 #define N_GETOBJ( _value, _class ) \
     arg = _value->Deref(); \
     N_CHECKTYPE( arg, Object ); \

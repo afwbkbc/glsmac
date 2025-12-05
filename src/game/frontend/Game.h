@@ -446,16 +446,21 @@ private:
 
 	void ResetMapState();
 
+#define GAME_MT_IDS_X \
+    GAME_MT_ID_X( ping ) \
+    GAME_MT_ID_X( init ) \
+    GAME_MT_ID_X( get_map_data ) \
+    GAME_MT_ID_X( reset ) \
+    GAME_MT_ID_X( save_map ) \
+    GAME_MT_ID_X( edit_map ) \
+    GAME_MT_ID_X( chat ) \
+    GAME_MT_ID_X( get_frontend_requests ) \
+    GAME_MT_ID_X( send_backend_requests )
+
 	struct {
-		common::mt_id_t ping = 0;
-		common::mt_id_t init = 0;
-		common::mt_id_t get_map_data = 0;
-		common::mt_id_t reset = 0;
-		common::mt_id_t save_map = 0;
-		common::mt_id_t edit_map = 0;
-		common::mt_id_t chat = 0;
-		common::mt_id_t get_frontend_requests = 0;
-		common::mt_id_t send_backend_requests = 0;
+#define GAME_MT_ID_X( _x ) common::mt_id_t _x = 0;
+		GAME_MT_IDS_X
+#undef GAME_MT_ID_X
 #ifdef DEBUG
 		common::mt_id_t save_dump = 0;
 		// init will be used for loading dump

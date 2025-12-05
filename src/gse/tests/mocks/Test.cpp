@@ -79,7 +79,7 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 			NATIVE_CALL() {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( key, 0, String );
-				N_GET( value, 1 );
+				N_GET_ANY( value, 1 );
 				s_global_map.insert_or_assign( key, value );
 				return VALUE( value::Undefined );
 			} )

@@ -36,30 +36,24 @@ return (m) => {
 
 			remove_active_menublock();
 
-			current_menublock = m.root.panel({
-				class: 'popup',
+			let window_class = 'window';
+			if (!#is_defined(data.title)) {
+				window_class += '-noheader';
+			}
+
+			current_menublock = m.root.window({
+				class: window_class,
+				title: data.title,
 				width: data.width,
 				height: data.height,
+				blocker: 'rgba(0,0,0,120)',
 			});
 
-			let body_class = 'popup-body';
-
-			if (#is_defined(data.title)) {
-				const header = current_menublock.panel({
-					class: 'popup-header',
-				});
-				header.text({
-					class: 'popup-header-text',
-					text: data.title,
-				});
-			} else {
-				body_class += ' popup-body-noheader';
-			}
+			let body_class = 'popup-body popup-body-noheader';
 
 			if (!#is_defined(data.buttons)) {
 				body_class += ' popup-body-nofooter';
 			}
-
 			const body = current_menublock.panel({
 				class: body_class,
 			});

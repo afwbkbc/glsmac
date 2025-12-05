@@ -138,7 +138,6 @@ return (i) => {
 					i.connection.close();
 					i.connection = #undefined;
 				}
-				i.popup.back();
 			} else {
 				// there will be different handlers
 				i.connection.off('player_join');

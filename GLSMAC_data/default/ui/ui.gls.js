@@ -13,6 +13,7 @@ return (glsmac) => {
 		'smacpath_prompt',
 		'intro',
 		'mainmenu/mainmenu',
+		'error',
 		'loader',
 		'game',
 	]) {

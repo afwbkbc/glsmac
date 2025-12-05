@@ -183,6 +183,12 @@ return (glsmac) => {
 
 		});
 
+		e.game.on('error', (e) => {
+			//glsmac.ui.error('Game initialization failed', () => {
+			//glsmac.reset();
+			//});
+		});
+		
 		e.game.on('turn', (e) => {
 			for (base of e.game.bm.get_bases()) {
 				add_pops(e.game, base, 1);

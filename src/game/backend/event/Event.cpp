@@ -30,7 +30,9 @@ const types::Buffer Event::Serialize() const {
 	buf.WriteInt( m_caller );
 	buf.WriteInt( m_original_data.size() );
 	for ( const auto& it : m_original_data ) {
-		ASSERT( it.second->type != gse::Value::T_OBJECT || ( (gse::value::Object*)it.second )->object_class.empty(), "custom object in event data" );
+		if ( it.second->type == gse::Value::T_OBJECT ) {
+			ASSERT( ( (gse::value::Object*)it.second )->object_class.empty(), "custom object in event data: " + ( (gse::value::Object*)it.second )->object_class );
+		}
 		buf.WriteString( it.first );
 		it.second->Serialize( &buf, it.second );
 	}

@@ -83,6 +83,17 @@ void Object::Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE 
 	);
 }
 
+void Object::ValidatePrimitivity( GSE_CALLABLE, const std::string& prefix ) const {
+	if ( !object_class.empty() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unexpected non-primitive object at " + prefix + " : " + object_class );
+	}
+	for ( const auto& v : m_value ) {
+		if ( v.second->type == T_OBJECT ) {
+			( (Object*)v.second )->ValidatePrimitivity( GSE_CALL, prefix + "." + v.first );
+		}
+	}
+}
+
 Value* const Object::GetRef( const object_key_t& key ) {
 	CHECKACCUM( m_gc_space );
 	return VALUEEXT( ObjectRef, m_gc_space, this, key );

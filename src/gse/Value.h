@@ -74,8 +74,7 @@ class Context;
         NATIVE_CALL( this ) { \
             N_EXPECT_ARGS( 2 ); \
             N_GETVALUE( event, 0, String ); \
-            N_GET( cb, 1 ); \
-            N_CHECKARG( cb, 1, Callable ); \
+            N_GET( cb, 1, Callable ); \
             return VALUE( gse::value::Int,, On( GSE_CALL, event, cb ) ); \
         } ) \
     }, \

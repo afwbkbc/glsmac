@@ -6,6 +6,14 @@ return (ui) => {
 		align: 'center',
 	});
 
+	ui.class('window').extend('popup').set({
+		header_border: 'rgb(73, 108, 61),1',
+		header_height: 23,
+		header_font: 'arialnb.ttf:19',
+		header_color: 'rgb(109, 126, 178)',
+		header_background: 'interface.pcx:crop(86,  314, 109, 337)',
+	});
+
 	ui.class('popup-footer').set({
 		align: 'bottom',
 		bottom: 3,

@@ -382,9 +382,7 @@ void Connection::ProcessPending() {
 }
 
 void Connection::ClearPending() {
-	for ( auto& it : m_pending_game_events ) {
-		delete it;
-	}
+	m_pending_game_events.clear();
 }
 
 }

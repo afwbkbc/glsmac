@@ -39,4 +39,8 @@ void Object::Unpersist( Object* const obj ) {
 	m_persisted_objects.erase( obj );
 }
 
+const bool Object::IsPersisted( Object* const obj ) const {
+	return m_persisted_objects.find( obj ) != m_persisted_objects.end();
+}
+
 }

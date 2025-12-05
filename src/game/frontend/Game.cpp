@@ -120,6 +120,17 @@ void Game::Start() {
 
 void Game::Stop() {
 
+	// cancel incoming requests
+	auto* const game = g_engine->GetGame();
+	ASSERT( game, "game not set" );
+#define GAME_MT_ID_X( _x ) \
+    if ( m_mt_ids._x ) { \
+        game->MT_Cancel( m_mt_ids._x ); \
+        m_mt_ids._x = 0; \
+    }
+	GAME_MT_IDS_X
+#undef GAME_MT_ID_X
+
 	if ( m_is_initialized ) {
 		Deinitialize();
 	}
@@ -160,7 +171,6 @@ void Game::Stop() {
 		m_world_scene = nullptr;
 	}
 
-	auto* game = g_engine->GetGame();
 	if ( game ) {
 		ASSERT( !m_state || game->GetState() == m_state, "backend has different state" );
 	}

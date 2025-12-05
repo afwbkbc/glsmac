@@ -48,6 +48,7 @@ CLASS( Object, common::Class )
 protected:
 	void Persist( Object* const obj );
 	void Unpersist( Object* const obj );
+	const bool IsPersisted( Object* const obj ) const;
 
 private:
 	std::unordered_set< Object* > m_persisted_objects = {};

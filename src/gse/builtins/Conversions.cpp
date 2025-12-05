@@ -35,13 +35,13 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
-		N_GET( v, 0 );
+		N_GET_ANY( v, 0 );
 		return VALUE( value::String,, v->ToString() );
 	} ), ep );
 
 	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
-		N_GET( v, 0 );
+		N_GET_ANY( v, 0 );
 		return VALUE( value::String,, v->Dump() );
 	} ), ep );
 

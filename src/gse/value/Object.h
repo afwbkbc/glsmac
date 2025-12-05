@@ -38,6 +38,7 @@ public:
 	Value* const Get( const object_key_t& key );
 	void Assign( const object_key_t& key, Value* const new_value, const std::function< void() >& f_on_set = nullptr );
 	void Set( const object_key_t& key, Value* const new_value, GSE_CALLABLE );
+	void ValidatePrimitivity( GSE_CALLABLE, const std::string& prefix = "" ) const;
 
 	const object_properties_t& value = m_value;
 

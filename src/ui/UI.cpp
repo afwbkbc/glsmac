@@ -12,6 +12,7 @@
 #include "gse/ExecutionPointer.h"
 #include "gc/Space.h"
 #include "dom/Focusable.h"
+#include "gse/value/Bool.h"
 
 namespace ui {
 
@@ -147,6 +148,33 @@ WRAPIMPL_BEGIN( UI )
 						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
 					}
 					return it->second->Wrap( GSE_CALL, true );
+				} )
+			},
+			{
+				"error",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 2 );
+					N_GETVALUE( errmsg, 0, String );
+					N_GET_CALLABLE( on_close, 1 );
+					Persist( on_close );
+
+					Trigger( GSE_CALL, "error", ARGS_F( this, &errmsg, on_close ) {
+						{
+							"error",
+							VALUEEXT( gse::value::String, m_gc_space, errmsg ),
+						},
+						{
+							"on_close",
+							VALUE( gse::callable::Native,, ctx, [ this, on_close ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value* {
+								if ( IsPersisted( on_close ) ) {
+									on_close->Run( GSE_CALL, {} );
+									Unpersist( on_close );
+								}
+								return VALUE( gse::value::Bool,, true );
+							} )
+						},
+					}; } );
+					return VALUE( gse::value::Undefined );
 				} )
 			},
 		};
