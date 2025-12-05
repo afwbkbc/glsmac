@@ -2,10 +2,13 @@
 
 #include "common/Common.h"
 
+#include "types/Serializable.h"
+#include "gse/Wrappable.h"
+
 namespace game {
 namespace backend {
 
-CLASS( Account, common::Class )
+CLASS2( Account, common::Class, gse::Wrappable )
 
 	Account();
 
@@ -19,17 +22,17 @@ CLASS( Account, common::Class )
 	const std::string& GetLastRemoteAddress() const;
 	void SetLastRemoteAddress( const std::string& value );
 
+	WRAPDEFS_DYNAMIC( Account );
+
 private:
 
 	// GLSMAC ID, used mainly for binding to slots in multiplayer games
 	std::string m_gsid = "";
 
 	// cache last values for menus like 'join game' / 'host game'
-	struct {
-		std::string player_name = "";
-		std::string game_name = "";
-		std::string remote_address = "";
-	} m_last_values;
+	std::string player_name = "";
+	std::string game_name = "";
+	std::string remote_address = "";
 
 	const std::string GetPath() const;
 

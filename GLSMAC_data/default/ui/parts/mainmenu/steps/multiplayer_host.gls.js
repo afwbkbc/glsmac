@@ -2,6 +2,7 @@ return (i) => {
 	let l_gamename = null;
 	let l_yourname = null;
 	let settings = i.glsmac.game.get_settings();
+	let account = settings.local.account;
 	i.popup.show({
 		title: 'Host Multiplayer Game',
 		width: 480,
@@ -19,7 +20,7 @@ return (i) => {
 				top: 12,
 				left: 150,
 				width: 310,
-				value: settings.global.game_name,
+				value: account.game_name,
 			});
 			body.text({
 				class: 'popup-text',
@@ -33,7 +34,7 @@ return (i) => {
 				top: 39,
 				left: 150,
 				width: 310,
-				value: settings.local.player_name,
+				value: account.player_name,
 			});
 		},
 		buttons: [
@@ -44,16 +45,18 @@ return (i) => {
 					is_ok: true,
 				},
 				onclick: (x) => {
-					settings.global.game_name = #trim(l_gamename.value);
-					settings.local.player_name = #trim(l_yourname.value);
-					if (settings.global.game_name == '') {
+					account.game_name = #trim(l_gamename.value);
+					account.player_name = #trim(l_yourname.value);
+					if (account.game_name == '') {
 						i.popup.error('Enter game name!');
 						return true;
 					}
-					if (settings.local.player_name == '') {
+					if (account.player_name == '') {
 						i.popup.error('Enter your name!');
 						return true;
 					}
+					settings.global.game_name = account.game_name;
+					settings.local.player_name = account.player_name;
 					i.steps.multiplayer_lobby(i);
 					return true;
 				},

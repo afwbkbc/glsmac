@@ -114,6 +114,10 @@ WRAPMAP( network_role, LocalSettings::network_role_t,
 )
 
 WRAPIMPL_DYNAMIC_GETTERS( LocalSettings )
+			{
+				"account",
+				account.Wrap( GSE_CALL, true ),
+			},
 			WRAPIMPL_GET_MAPPED( game_mode )
 			WRAPIMPL_GET_MAPPED( network_type )
 			WRAPIMPL_GET_MAPPED( network_role )
