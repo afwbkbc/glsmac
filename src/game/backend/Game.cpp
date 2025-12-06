@@ -331,9 +331,8 @@ void Game::Iterate() {
 					ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
 					m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
 
-					// copying to handle situation when map is destroyed on backend while still processing on frontend
-					m_response_map_data->sprites.actors = new std::unordered_map( m_map->m_sprite_actors );
-					m_response_map_data->sprites.instances = new std::unordered_map( m_map->m_sprite_instances );
+					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
 					m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 						for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
@@ -341,8 +340,8 @@ void Game::Iterate() {
 						}
 					});
 
-					m_response_map_data->tiles = new std::vector( *m_map->GetTilesPtr()->GetTilesPtr() );
-					m_response_map_data->tile_states = new std::vector( *m_map->GetMapState()->GetTileStatesPtr() );
+					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
 					if ( m_old_map ) {
 						MTModule::Log( "Destroying old map state" );
