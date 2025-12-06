@@ -40,7 +40,8 @@ void SDL2::Stop() {
 void SDL2::Iterate() {
 	SDL_Event event;
 
-	input::Event e = {};
+	input::Event e = {}; // new
+	ui_legacy::event::UIEvent* le = nullptr; // legacy
 
 	while ( SDL_PollEvent( &event ) ) {
 		e.SetType( EV_NONE );
@@ -61,9 +62,7 @@ void SDL2::Iterate() {
 					event.motion.y
 				};
 				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseMove, event.motion.x, event.motion.y );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
+				NEW( le, ui_legacy::event::MouseMove, event.motion.x, event.motion.y );
 				// new ui
 				e.SetType( EV_MOUSE_MOVE );
 				e.data.mouse.x = event.motion.x;
@@ -85,9 +84,7 @@ void SDL2::Iterate() {
 					event.motion.y
 				};
 				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseDown, event.motion.x, event.motion.y, button );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
+				NEW( le, ui_legacy::event::MouseDown, event.motion.x, event.motion.y, button );
 				// new ui
 				e.SetType( EV_MOUSE_DOWN );
 				e.data.mouse.x = event.motion.x;
@@ -102,16 +99,13 @@ void SDL2::Iterate() {
 					auto& mousedown_data = m_active_mousedowns.at( event.button.button );
 					if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
 						// mousedown + mouseup at same pixel = mouseclick
-						/*NEWV( ui_event_2, ui_legacy::event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
-						g_engine->GetUI()->ProcessEvent( ui_event_2 );
-						DELETE( ui_event_2 );*/ // TODO: conflicts with Button OnClick logic
+						// NEW( le, ui_legacy::event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
+						// TODO: conflicts with Button OnClick logic
 					}
 					m_active_mousedowns.erase( event.button.button );
 				}
 				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseUp, event.motion.x, event.motion.y, button );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
+				NEW( le, ui_legacy::event::MouseUp, event.motion.x, event.motion.y, button );
 				// new ui
 				e.SetType( EV_MOUSE_UP );
 				e.data.mouse.x = event.motion.x;
@@ -121,9 +115,7 @@ void SDL2::Iterate() {
 			}
 			case SDL_MOUSEWHEEL: {
 				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseScroll, m_last_mouse_position.x, m_last_mouse_position.y, event.wheel.y );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
+				NEW( le, ui_legacy::event::MouseScroll, m_last_mouse_position.x, m_last_mouse_position.y, event.wheel.y );
 				// new ui
 				e.SetType( EV_MOUSE_SCROLL );
 				e.data.mouse.x = m_last_mouse_position.x;
@@ -139,9 +131,7 @@ void SDL2::Iterate() {
 					ui_legacy::event::key_modifier_t key_modifiers = GetModifiers( modifiers );
 
 					// legacy ui
-					NEWV( ui_event, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
-					g_engine->GetUI()->ProcessEvent( ui_event );
-					DELETE( ui_event );
+					NEW( le, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
 
 					// new ui
 					e.SetType( EV_KEY_DOWN );
@@ -160,9 +150,7 @@ void SDL2::Iterate() {
 					ui_legacy::event::key_modifier_t key_modifiers = GetModifiers( modifiers );
 
 					// legacy ui
-					NEWV( ui_event, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
-					g_engine->GetUI()->ProcessEvent( ui_event );
-					DELETE( ui_event );
+					NEW( le, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, key_modifiers );
 
 					// new ui
 					e.SetType( EV_KEY_UP );
@@ -176,7 +164,14 @@ void SDL2::Iterate() {
 				// TODO: keypress?
 		}
 		if ( e.type != EV_NONE ) {
-			ProcessEvent( e );
+			// try new
+			if ( !ProcessEvent( e ) ) {
+				if ( le ) {
+					// try legacy
+					g_engine->GetUI()->ProcessEvent( le );
+					DELETE( le );
+				}
+			}
 		}
 	}
 

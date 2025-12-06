@@ -46,7 +46,7 @@ return (m) => {
 				title: data.title,
 				width: data.width,
 				height: data.height,
-				blocker: 'rgba(0,0,0,120)',
+				blocker: 'transparent',
 			});
 
 			let body_class = 'popup-body popup-body-noheader';

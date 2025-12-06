@@ -248,7 +248,7 @@ const bool Object::IsEventRelevant( const input::Event& event ) const {
 	return
 		!m_is_destroyed &&
 		m_is_visible &&
-		m_supported_events.find( event.type ) != m_supported_events.end()
+		( m_catchall || m_supported_events.find( event.type ) != m_supported_events.end() )
 	;
 }
 

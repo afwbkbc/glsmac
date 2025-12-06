@@ -1,5 +1,7 @@
 #include "Wrappable.h"
 
+#include "gse/value/Bool.h"
+
 namespace gse {
 
 Wrappable::~Wrappable() {
@@ -19,6 +21,9 @@ void Wrappable::Unlink( value::Object* wrapobj ) {
 }
 
 const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
+	if ( event == "*" ) {
+		m_catchall = true;
+	}
 	ASSERT( callback->type == Value::T_CALLABLE, "callback not callable" );
 	auto it = m_callbacks.find( event );
 	if ( it == m_callbacks.end() ) {
@@ -62,7 +67,7 @@ void Wrappable::Off( GSE_CALLABLE, const std::string& event, const callback_id_t
 }
 
 const bool Wrappable::HasHandlers( const std::string& event ) {
-	return m_callbacks.find( event ) != m_callbacks.end();
+	return m_callbacks.find( event ) != m_callbacks.end() || m_callbacks.find( "*" ) != m_callbacks.end();
 }
 
 Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< Value::type_t > expected_return_type ) {
@@ -75,9 +80,13 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 		auto* args_obj = VALUEEXT( gse::value::Object, GSE_CALL, args );
 		result = Trigger( GSE_CALL, event, args_obj, expected_return_type );
 	}
-	return result
-		? result
-		: VALUE( gse::value::Undefined );
+	if ( result ) {
+		return result;
+	}
+	if ( m_catchall && event != "*" ) {
+		return Trigger( GSE_CALL, "*", f_args, expected_return_type );
+	}
+	return VALUE( gse::value::Bool, , false );
 }
 
 Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* const args_obj, const std::optional< Value::type_t > expected_return_type ) {
@@ -104,12 +113,12 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 	}
 	return result
 		? result
-		: VALUE( gse::value::Undefined );
+		: VALUE( gse::value::Bool, , false );
 }
 
 void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "GCWrappable" );
-	
+
 	GC_DEBUG_BEGIN( "callbacks" );
 	for ( const auto& it1 : m_callbacks ) {
 		for ( const auto& it2 : it1.second ) {
@@ -117,7 +126,7 @@ void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 		}
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_END();
 }
 

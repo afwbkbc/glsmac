@@ -17,10 +17,13 @@ void Input::RemoveHandler( const void* const owner ) {
 	m_input_handlers.erase( owner );
 }
 
-void Input::ProcessEvent( const Event& event ) {
+const bool Input::ProcessEvent( const Event& event ) {
 	for ( const auto& it : m_input_handlers ) {
-		it.second( event );
+		if ( it.second( event ) ) {
+			return true;
+		}
 	}
+	return false;
 }
 
 }

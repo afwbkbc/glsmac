@@ -25,6 +25,10 @@ Window::Window( DOM_ARGS )
 		g->SetBottom( 0 );
 		g->SetLeft( 0 );
 		g->SetRight( 0 );
+		// block clickthroughs
+		m_blocker->On( GSE_CALL, "*", NATIVE_CALL( this ) {
+			return VALUE( gse::value::Bool,, true );
+		} ) );
 	}
 	{
 		m_body = new Container( GSE_CALL, ui, this, {}, "window_body", true );
