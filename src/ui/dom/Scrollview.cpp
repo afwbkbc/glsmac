@@ -21,7 +21,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 		}
 	);
 
-	m_inner = new Container( GSE_CALL, ui, this, {}, "inner", false );
+	m_inner = new Container( GSE_CALL, ui, this, {}, "inner", false, true );
 	{
 		auto* g = m_inner->GetGeometry();
 		g->SetWidth( 0 );

@@ -210,7 +210,7 @@ const bool Connection::IterateAndMaybeDelete() {
 				}
 				else if ( result.result == network::R_SUCCESS ) {
 					if ( !result.events.empty() ) {
-						Log( "got " + std::to_string( result.events.size() ) + " event(s)" );
+						//Log( "got " + std::to_string( result.events.size() ) + " event(s)" );
 						for ( auto& event : result.events ) {
 							ProcessEvent( event );
 						}

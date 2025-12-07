@@ -135,7 +135,10 @@ const player_flag_t Slot::GetPlayerFlags() const {
 
 void Slot::SetPlayerFlags( const player_flag_t flags ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flags to non-player slot" );
-	m_player_data.flags = flags;
+	if ( m_player_data.flags != flags ) {
+		m_player_data.flags = flags;
+		Update();
+	}
 }
 
 const types::Buffer Slot::Serialize() const {

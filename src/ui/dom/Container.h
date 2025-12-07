@@ -20,7 +20,7 @@ namespace dom {
 
 class Container : public Area {
 public:
-	Container( DOM_ARGS_T, const bool factories_allowed );
+	Container( DOM_ARGS_T, const bool factories_allowed, const bool has_body );
 
 	void ForwardFactories( GSE_CALLABLE, Object* child );
 	void Embed( Object* object, const bool is_visible = true );
@@ -40,7 +40,7 @@ public:
 protected:
 	friend class Scrollview;
 	friend class Listview;
-	
+
 	Container* m_factory_owner = this;
 
 	std::function< void( const bool is_from_factory ) > m_on_before_add_child = nullptr;
@@ -57,6 +57,8 @@ protected:
 
 	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) override;
 	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) override;
+
+	const bool m_has_body;
 
 private:
 	friend class Root;

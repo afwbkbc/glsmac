@@ -248,7 +248,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							break;
 						}
 						case types::Packet::PT_GAME_EVENT: {
-							Log( "Got game event packet" );
+							//Log( "Got game event packet" );
 							m_state->WithGSE(
 								this,
 								[ packet ]( GSE_CALLABLE ) {
@@ -260,7 +260,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							break;
 						}
 						case types::Packet::PT_GAME_EVENT_RESPONSE: {
-							Log( "Got game event response packet" );
+							//Log( "Got game event response packet" );
 							g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean );
 							break;
 						}

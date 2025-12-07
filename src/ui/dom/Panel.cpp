@@ -10,7 +10,7 @@ namespace ui {
 namespace dom {
 
 Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
-	: Container( DOM_ARGS_PASS_T, factories_allowed ) {
+	: Container( DOM_ARGS_PASS_T, factories_allowed, true ) {
 
 	m_surface = new Surface( GSE_CALL, ui, this, {} );
 	Embed( m_surface );

@@ -17,8 +17,7 @@ namespace unit {
 
 UnitManager::UnitManager( Game* game )
 	: m_game( game )
-	, m_ism( game->GetISM() )
-	, m_slot_index( game->GetMySlotIndex() ) {
+	, m_ism( game->GetISM() ) {
 	NEW( m_badge_defs, BadgeDefs, m_ism );
 }
 
@@ -128,7 +127,7 @@ void UnitManager::SpawnUnit(
 					render_coords.y,
 					render_coords.z
 				},
-				slot_index == m_slot_index,
+				slot_index == m_game->GetMySlotIndex(),
 				movement,
 				morale,
 				morale_string,

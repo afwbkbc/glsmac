@@ -23,9 +23,10 @@
 namespace ui {
 namespace dom {
 
-Container::Container( DOM_ARGS_T, const bool factories_allowed )
+Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_body )
 	: Area( DOM_ARGS_PASS_T )
-	, m_cache( new scene::actor::Cache( "UI::Cache" ) ) {
+	, m_cache( new scene::actor::Cache( "UI::Cache" ) )
+	, m_has_body( has_body ) {
 
 	Events( // TODO: refactor this
 		{
@@ -183,6 +184,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	}
 	auto result = Area::ProcessEvent( GSE_CALL, event );
 	if (
+		m_has_body && // bodyless containers do not capture mouse events if no child caught it
 		( event.flags & input::EF_MOUSE ) &&
 		m_is_visible &&
 		m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } )

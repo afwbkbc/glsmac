@@ -86,8 +86,6 @@ private:
 	Game* m_game;
 	sprite::InstancedSpriteManager* m_ism;
 
-	const size_t m_slot_index;
-
 	Unit* m_selected_unit = nullptr;
 
 	std::unordered_map< std::string, UnitDef* > m_unitdefs = {};

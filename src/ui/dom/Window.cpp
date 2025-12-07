@@ -31,7 +31,7 @@ Window::Window( DOM_ARGS )
 		} ) );
 	}
 	{
-		m_body = new Container( GSE_CALL, ui, this, {}, "window_body", true );
+		m_body = new Container( GSE_CALL, ui, this, {}, "window_body", true, true );
 		Embed( m_body );
 		auto* g = m_body->GetGeometry();
 		g->SetAlign( geometry::Geometry::ALIGN_TOP_CENTER );

@@ -12,7 +12,7 @@ namespace ui {
 namespace dom {
 
 ChoiceList::ChoiceList( DOM_ARGS )
-	: Container( DOM_ARGS_PASS, "choicelist", false ) {
+	: Container( DOM_ARGS_PASS, "choicelist", false, true ) {
 
 	Events(
 		{

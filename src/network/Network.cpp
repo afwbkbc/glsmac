@@ -53,12 +53,12 @@ common::mt_id_t Network::MT_SendPacket( const types::Packet* packet, const netwo
 	e.cid = cid;
 	e.type = LegacyEvent::ET_PACKET;
 	e.data.packet_data = packet->Serialize().ToString();
-	Log(
+	/*Log(
 		"Sending packet ( type = " + std::to_string( packet->type ) + " )" + ( cid
 			? " to client " + std::to_string( cid )
 			: ""
 		)
-	);
+	);*/
 	return MT_SendEvent( e );
 }
 

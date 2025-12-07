@@ -360,7 +360,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						break;
 					}
 					case types::Packet::PT_GAME_EVENT: {
-						Log( "Got game event packet" );
+						//Log( "Got game event packet" );
 						m_state->WithGSE(
 							this,
 							[ this, packet, event ]( GSE_CALLABLE ) {
@@ -402,11 +402,20 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 	}
 }
 
+static const std::unordered_set< std::string > s_clear_ready_on_events = {
+	"game_settings",
+	"select_faction",
+};
+
 void Server::SendGameEvents( const game_events_t& game_events ) {
-	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
+	//Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
+	bool need_ready_clear = false;
 	Broadcast(
-		[ this, &game_events ]( const network::cid_t cid ) -> void {
+		[ this, &game_events, &need_ready_clear ]( const network::cid_t cid ) -> void {
 			for ( const auto& event : game_events ) {
+				if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event->GetEventName() ) != s_clear_ready_on_events.end() ) {
+					need_ready_clear = true;
+				}
 				if ( m_state->m_slots->GetSlot( event->GetCaller() ).GetCid() != cid ) {
 					types::Buffer buf;
 					buf.WriteString( event->Serialize().ToString() );
@@ -415,20 +424,11 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 					m_network->MT_SendPacket( &p, cid );
 				}
 			}
-			/*std::vector< event::Event* > events = {};
-			for ( const auto& e : game_events ) {
-				const auto slot_num = m_state->GetCidSlots().at( cid );
-				if ( e->IsSendableTo( slot_num ) ) {
-					Log( "Sending event to " + std::to_string( slot_num ) + ": " + e->ToString() );
-					events.push_back( e );
-				}
-			}
-			if ( !events.empty() ) {
-				const auto serialized_events = event::LegacyEvent::SerializeMultiple( events ).ToString();
-				SendGameEventsTo( serialized_events, cid );
-			}*/
 		}
 	);
+	if ( need_ready_clear ) {
+		ClearReadyFlags();
+	}
 }
 
 void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
@@ -608,7 +608,7 @@ const std::string Server::FormatChatMessage( const Player* player, const std::st
 
 void Server::ClearReadyFlags() {
 	ASSERT( m_game_state, "unexpected game state" );
-	// clear readyness of everyone when new player joins or leaves
+	// clear readyness of everyone
 	auto& slots = m_state->m_slots->GetSlots();
 	for ( size_t num = 0 ; num < slots.size() ; num++ ) {
 		auto& slot = slots.at( num );

@@ -16,7 +16,7 @@ namespace ui {
 namespace dom {
 
 Select::Select( DOM_ARGS )
-	: Container( DOM_ARGS_PASS, "select", false ) {
+	: Container( DOM_ARGS_PASS, "select", false, true ) {
 
 	Events(
 		{

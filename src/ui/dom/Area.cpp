@@ -69,7 +69,8 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 		case input::EV_MOUSE_OVER:
 		case input::EV_MOUSE_OUT:
 		case input::EV_MOUSE_DOWN:
-		case input::EV_MOUSE_UP: {
+		case input::EV_MOUSE_UP:
+		case input::EV_MOUSE_SCROLL: {
 			const auto& area = m_geometry->GetEffectiveArea();
 			obj.insert(
 				{
@@ -118,6 +119,14 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 					{
 						"button",
 						VALUE( gse::value::String, , buttonstr )
+					}
+				);
+			}
+			if ( e.type == input::EV_MOUSE_SCROLL ) {
+				obj.insert(
+					{
+						"scroll_y",
+						VALUE( gse::value::Int, , e.data.mouse.scroll_y )
 					}
 				);
 			}
