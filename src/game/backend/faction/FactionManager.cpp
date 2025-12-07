@@ -239,14 +239,14 @@ const types::Buffer FactionManager::Serialize() const {
 	return buf;
 }
 
-void FactionManager::Unserialize( types::Buffer buf ) {
+void FactionManager::Deserialize( types::Buffer buf ) {
 	Clear();
 
 	const size_t factions_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
 		const auto faction_id = buf.ReadString();
 		ASSERT( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
-		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Unserialize( buf.ReadString() );
+		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Deserialize( buf.ReadString() );
 		m_factions_order.insert( { m_next_faction_idx, faction_id } );
 	}
 }

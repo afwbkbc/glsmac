@@ -70,7 +70,7 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 	WRAPDEFS_DYNAMIC( MapSettings );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 };
 
 // settings that are synced between players (host has authority)
@@ -90,7 +90,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	WRAPDEFS_DYNAMIC( GlobalSettings );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 };
 
 // settings that aren't synced between players
@@ -128,7 +128,7 @@ public:
 	WRAPDEFS_DYNAMIC( LocalSettings );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 };
 
 CLASS2( Settings, types::Serializable, gse::Wrappable )
@@ -139,7 +139,7 @@ CLASS2( Settings, types::Serializable, gse::Wrappable )
 	WRAPDEFS_PTR( Settings );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 };
 
 }

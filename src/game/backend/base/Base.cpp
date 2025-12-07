@@ -78,7 +78,7 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	return buf;
 }
 
-Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
+Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	ASSERT( game, "game is null" );
 	const auto id = buf.ReadInt();
 	auto* slot = &game->GetState()->m_slots->GetSlot( buf.ReadInt() );
@@ -92,9 +92,20 @@ Base* Base::Unserialize( types::Buffer& buf, Game* game ) {
 	const auto pops_count = buf.ReadInt();
 	pops.resize( pops_count );
 	for ( auto& pop : pops ) {
-		pop.Unserialize( buf, game );
+		pop.Deserialize( buf, game );
 	}
 	return new Base( game, id, slot, faction, tile, name, pops );
+}
+
+WRAPIMPL_SERIALIZE( Base )
+	buf->WriteInt( obj->m_id );
+}
+
+WRAPIMPL_DESERIALIZE( Base )
+	const auto id = buf->ReadInt();
+	const auto& base = game->GetBM()->GetBase( id );
+	ASSERT( base, "base id not found: " + std::to_string( id ) );
+	return base->Wrap( GSE_CALL );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Base )

@@ -36,7 +36,7 @@ const types::Buffer Rules::Serialize() const {
 	return buf;
 }
 
-void Rules::Unserialize( types::Buffer buf ) {
+void Rules::Deserialize( types::Buffer buf ) {
 
 	// no need for now, difficulty levels are hardcoded
 	/*
@@ -44,7 +44,7 @@ void Rules::Unserialize( types::Buffer buf ) {
 	const size_t difficulty_levels_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < difficulty_levels_count ; i++ ) {
 		const std::string difficulty_level_name = buf.ReadString();
-		m_difficulty_levels[ difficulty_level_name ].Unserialize( buf.ReadString() );
+		m_difficulty_levels[ difficulty_level_name ].Deserialize( buf.ReadString() );
 	}*/
 
 	m_is_initialized = true;

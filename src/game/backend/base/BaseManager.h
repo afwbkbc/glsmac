@@ -49,7 +49,7 @@ public:
 	WRAPDEFS_PTR( BaseManager )
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( GSE_CALLABLE, types::Buffer& buf );
+	void Deserialize( GSE_CALLABLE, types::Buffer& buf );
 
 	void RefreshBase( const base::Base* base );
 

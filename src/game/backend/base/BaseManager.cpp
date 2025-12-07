@@ -410,7 +410,7 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
 }
 
-void BaseManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
+void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_base_popdefs.empty(), "base pop defs not empty" );
 	ASSERT( m_bases.empty(), "bases not empty" );
 	ASSERT( m_unprocessed_bases.empty(), "unprocessed bases not empty" );
@@ -421,7 +421,7 @@ void BaseManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefinePop( base::PopDef::Unserialize( b ) );
+		DefinePop( base::PopDef::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -431,7 +431,7 @@ void BaseManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnBase( GSE_CALL, base::Base::Unserialize( b, m_game ) );
+		SpawnBase( GSE_CALL, base::Base::Deserialize( b, m_game ) );
 	}
 
 	base::Base::SetNextId( buf.ReadInt() );

@@ -38,7 +38,7 @@ public:
 	WRAPDEFS_PTR( AnimationManager )
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( types::Buffer& buf );
+	void Deserialize( types::Buffer& buf );
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 

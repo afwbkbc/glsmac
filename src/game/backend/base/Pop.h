@@ -20,7 +20,7 @@ public:
 	Pop( Base* base = nullptr, PopDef* def = nullptr, const uint8_t variant = 0 );
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( types::Buffer& buf, Game* game );
+	void Deserialize( types::Buffer& buf, Game* game );
 
 	WRAPDEFS_PTR( Pop );
 

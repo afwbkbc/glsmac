@@ -60,7 +60,7 @@ CLASS( MapState, common::Class )
 	void LinkTileStates( MT_CANCELABLE );
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	void Deserialize( types::Buffer buf );
 
 private:
 	std::vector< tile::TileState > m_tiles = {};

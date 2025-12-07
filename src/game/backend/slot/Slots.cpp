@@ -50,12 +50,12 @@ const types::Buffer Slots::Serialize() const {
 	return buf;
 }
 
-void Slots::Unserialize( types::Buffer buf ) {
-	ASSERT( m_slots.empty(), "unserialize on non-empty slots" );
+void Slots::Deserialize( types::Buffer buf ) {
+	ASSERT( m_slots.empty(), "deserialize on non-empty slots" );
 	Resize( buf.ReadInt() );
 
 	for ( auto& slot : m_slots ) {
-		slot.Unserialize( buf.ReadString() );
+		slot.Deserialize( buf.ReadString() );
 	}
 }
 

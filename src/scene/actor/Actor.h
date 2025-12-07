@@ -74,7 +74,7 @@ CLASS( Actor, Entity )
 	void Hide() override;
 
 	virtual const types::Buffer Serialize() const override;
-	virtual void Unserialize( types::Buffer buf ) override;
+	virtual void Deserialize( types::Buffer buf ) override;
 
 protected:
 	const type_t m_type;

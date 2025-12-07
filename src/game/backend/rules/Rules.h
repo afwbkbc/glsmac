@@ -29,7 +29,7 @@ CLASS2( Rules, types::Serializable, gse::Wrappable )
 	WRAPDEFS_DYNAMIC( Rules );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 protected:
 	virtual void InitRules() = 0;

@@ -44,7 +44,7 @@ CLASS( Entity, types::Serializable )
 	};
 
 	virtual const types::Buffer Serialize() const override;
-	virtual void Unserialize( types::Buffer buf ) override;
+	virtual void Deserialize( types::Buffer buf ) override;
 
 	virtual void Show();
 	virtual void Hide();

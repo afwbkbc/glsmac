@@ -50,7 +50,7 @@ public:
 		types::mesh::index_t top;
 		types::mesh::index_t bottom;
 		const types::Buffer Serialize() const;
-		void Unserialize( types::Buffer buf );
+		void Deserialize( types::Buffer buf );
 	};
 
 	struct tile_surfaces_t {
@@ -59,7 +59,7 @@ public:
 		types::mesh::surface_id_t right_bottom;
 		types::mesh::surface_id_t bottom_left;
 		const types::Buffer Serialize() const;
-		void Unserialize( types::Buffer buf );
+		void Deserialize( types::Buffer buf );
 	};
 
 	struct tile_layer_t {
@@ -71,7 +71,7 @@ public:
 		types::Vec2< types::mesh::coord_t > texture_stretch; // each tile has only one 'own' stretch value (for bottom vertex), others are copied from neighbours
 		bool texture_stretch_at_edges;
 		const types::Buffer Serialize() const;
-		void Unserialize( types::Buffer buf );
+		void Deserialize( types::Buffer buf );
 	};
 
 	struct tile_elevations_t {
@@ -81,7 +81,7 @@ public:
 		elevation_t right;
 		elevation_t bottom;
 		const types::Buffer Serialize() const;
-		void Unserialize( types::Buffer buf );
+		void Deserialize( types::Buffer buf );
 	};
 
 	tile_elevations_t elevations;
@@ -120,15 +120,15 @@ public:
 	const types::Vec3& GetCenterCoords( tile_layer_type_t layer ) const;
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	void Deserialize( types::Buffer buf );
 
 private:
 	static const types::Buffer SerializeTileVertices( const tile_vertices_t& vertices );
-	static const tile_vertices_t UnserializeTileVertices( types::Buffer buf );
+	static const tile_vertices_t DeserializeTileVertices( types::Buffer buf );
 	static const types::Buffer SerializeTileTexCoords( const tile_tex_coords_t& tex_coords );
-	static const tile_tex_coords_t UnserializeTileTexCoords( types::Buffer buf );
+	static const tile_tex_coords_t DeserializeTileTexCoords( types::Buffer buf );
 	static const types::Buffer SerializeTileColors( const tile_colors_t& colors );
-	static const tile_colors_t UnserializeTileColors( types::Buffer buf );
+	static const tile_colors_t DeserializeTileColors( types::Buffer buf );
 };
 
 }

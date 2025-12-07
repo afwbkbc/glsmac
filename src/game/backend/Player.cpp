@@ -2,6 +2,8 @@
 
 #include "game/backend/faction/Faction.h"
 #include "game/backend/slot/Slot.h"
+#include "game/backend/State.h"
+#include "game/backend/slot/Slots.h"
 
 #include "gse/value/String.h"
 #include "gse/value/Bool.h"
@@ -13,7 +15,7 @@ namespace game {
 namespace backend {
 
 Player::Player( types::Buffer buf ) {
-	Player::Unserialize( buf );
+	Player::Deserialize( buf );
 }
 
 Player::Player(
@@ -207,17 +209,27 @@ const types::Buffer Player::Serialize() const {
 	return buf;
 }
 
-void Player::Unserialize( types::Buffer buf ) {
+void Player::Deserialize( types::Buffer buf ) {
 
 	m_name = buf.ReadString();
 	m_role = (role_t)buf.ReadInt();
 	m_faction = {};
 	if ( buf.ReadBool() ) {
 		m_faction = new faction::Faction();
-		m_faction->Unserialize( buf.ReadString() );
+		m_faction->Deserialize( buf.ReadString() );
 	}
 	m_difficulty_level = buf.ReadString();
 
+}
+
+WRAPIMPL_SERIALIZE( Player )
+	buf->WriteInt( obj->m_slotnum );
+}
+
+WRAPIMPL_DESERIALIZE( Player )
+	const auto slot_num = buf->ReadInt();
+	const auto& player = game->GetState()->m_slots->GetSlot( slot_num ).GetPlayer();
+	return player->Wrap( GSE_CALL );
 }
 
 }

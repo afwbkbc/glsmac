@@ -30,9 +30,6 @@ const types::Buffer Event::Serialize() const {
 	buf.WriteInt( m_caller );
 	buf.WriteInt( m_original_data.size() );
 	for ( const auto& it : m_original_data ) {
-		if ( it.second->type == gse::Value::T_OBJECT ) {
-			ASSERT( ( (gse::value::Object*)it.second )->object_class.empty(), "custom object in event data: " + ( (gse::value::Object*)it.second )->object_class );
-		}
 		buf.WriteString( it.first );
 		it.second->Serialize( &buf, it.second );
 	}
@@ -40,7 +37,7 @@ const types::Buffer Event::Serialize() const {
 	return buf;
 }
 
-Event* const Event::Unserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer ) {
+Event* const Event::Deserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer ) {
 	const auto id = buffer.ReadString();
 	const auto name = buffer.ReadString();
 	const auto caller = buffer.ReadInt();
@@ -48,7 +45,7 @@ Event* const Event::Unserialize( Game* const game, const source_t source, GSE_CA
 	const auto sz = buffer.ReadInt();
 	for ( auto i = 0 ; i < sz ; i++ ) {
 		const auto k = buffer.ReadString();
-		data.insert( { k, gse::Value::Unserialize( GSE_CALL, &buffer ) } );
+		data.insert( { k, gse::Value::Deserialize( GSE_CALL, &buffer, game ) } );
 	}
 	return new Event( game, source, caller, GSE_CALL, name, data, id );
 }

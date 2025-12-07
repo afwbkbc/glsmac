@@ -41,7 +41,7 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 	faction::bases_render_info_t m_bases_render = {};
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 	WRAPDEFS_PTR( Faction )
 

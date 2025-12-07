@@ -48,7 +48,7 @@ CLASS2( Slot, types::Serializable, gse::Wrappable )
 	void SetPlayerFlags( const player_flag_t flags );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 	WRAPDEFS_PTR( Slot );
 

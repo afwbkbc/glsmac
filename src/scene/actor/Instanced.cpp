@@ -219,8 +219,8 @@ const types::Buffer Instanced::Serialize() const {
 	return buf;
 }
 
-void Instanced::Unserialize( types::Buffer buf ) {
-	Actor::Unserialize( buf );
+void Instanced::Deserialize( types::Buffer buf ) {
+	Actor::Deserialize( buf );
 
 	// HACK! TODO: refactor
 	buf.ReadVec3();
@@ -243,7 +243,7 @@ void Instanced::Unserialize( types::Buffer buf ) {
 
 	m_next_instance_id = buf.ReadInt();
 
-	m_actor->Unserialize( buf.ReadString() );
+	m_actor->Deserialize( buf.ReadString() );
 
 	m_need_world_matrix_update = true;
 }

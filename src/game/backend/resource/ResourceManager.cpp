@@ -181,7 +181,7 @@ void ResourceManager::Serialize( types::Buffer& buf ) const {
 	}
 }
 
-void ResourceManager::Unserialize( types::Buffer& buf ) {
+void ResourceManager::Deserialize( types::Buffer& buf ) {
 	Clear();
 	ASSERT( m_resources.empty(), "resources not empty" );
 	size_t sz = buf.ReadInt();
@@ -190,7 +190,7 @@ void ResourceManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineResource( resource::Resource::Unserialize( b ) );
+		DefineResource( resource::Resource::Deserialize( b ) );
 	}
 }
 

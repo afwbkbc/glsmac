@@ -81,7 +81,7 @@ const types::Buffer Entity::Serialize() const {
 	return buf;
 }
 
-void Entity::Unserialize( types::Buffer buf ) {
+void Entity::Deserialize( types::Buffer buf ) {
 
 	m_position = buf.ReadVec3();
 	m_angle = buf.ReadVec3();

@@ -96,11 +96,11 @@ const types::Buffer Unit::Serialize( const Unit* unit ) {
 	return buf;
 }
 
-Unit* Unit::Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
+Unit* Unit::Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
 	ASSERT( um, "um is null" );
 	const auto id = buf.ReadInt();
 	auto defbuf = types::Buffer( buf.ReadString() );
-	auto* def = Def::Unserialize( defbuf );
+	auto* def = Def::Deserialize( defbuf );
 	auto* slot = um->GetSlot( buf.ReadInt() );
 	const auto pos_x = buf.ReadInt();
 	const auto pos_y = buf.ReadInt();
@@ -110,6 +110,17 @@ Unit* Unit::Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um ) {
 	const auto health = (health_t)buf.ReadFloat();
 	const auto moved_this_turn = buf.ReadBool();
 	return new Unit( GSE_CALL, um, id, def, slot, tile, movement, morale, health, moved_this_turn );
+}
+
+WRAPIMPL_SERIALIZE( Unit )
+	buf->WriteInt( obj->m_id );
+}
+
+WRAPIMPL_DESERIALIZE( Unit )
+	const auto id = buf->ReadInt();
+	const auto& unit = game->GetUM()->GetUnit( id );
+	ASSERT( unit, "base id not found: " + std::to_string( id ) );
+	return unit->Wrap( GSE_CALL );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )

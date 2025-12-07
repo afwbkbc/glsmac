@@ -306,7 +306,7 @@ const types::Buffer Tiles::Serialize() const {
 	return buf;
 }
 
-void Tiles::Unserialize( types::Buffer buf ) {
+void Tiles::Deserialize( types::Buffer buf ) {
 
 	size_t width = buf.ReadInt();
 	size_t height = buf.ReadInt();
@@ -316,7 +316,7 @@ void Tiles::Unserialize( types::Buffer buf ) {
 
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
-			At( x, y ).Unserialize( types::Buffer( buf.ReadString() ) );
+			At( x, y ).Deserialize( types::Buffer( buf.ReadString() ) );
 		}
 	}
 

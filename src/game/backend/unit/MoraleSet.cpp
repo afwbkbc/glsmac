@@ -36,7 +36,7 @@ const types::Buffer MoraleSet::Serialize( const MoraleSet* moraleset ) {
 	return buf;
 }
 
-MoraleSet* MoraleSet::Unserialize( types::Buffer& buf ) {
+MoraleSet* MoraleSet::Deserialize( types::Buffer& buf ) {
 	ASSERT( MORALE_MIN == 0, "non-zero MORALE_MIN may cause unexpected bugs here" );
 	const auto id = buf.ReadString();
 	morale_values_t values = {};

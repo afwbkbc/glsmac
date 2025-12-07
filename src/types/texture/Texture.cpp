@@ -955,7 +955,7 @@ const types::Buffer Texture::Serialize() const {
 	return buf;
 }
 
-void Texture::Unserialize( types::Buffer buf ) {
+void Texture::Deserialize( types::Buffer buf ) {
 
 	m_filename = buf.ReadString();
 	size_t width = buf.ReadInt();

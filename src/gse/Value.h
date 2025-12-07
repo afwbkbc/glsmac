@@ -8,6 +8,12 @@
 
 #include "gse/Types.h"
 
+namespace game {
+namespace backend {
+class Game;
+}
+}
+
 namespace gc {
 class Space;
 }
@@ -40,6 +46,10 @@ class Context;
 #define VALUE_SET( _type, _var, _value ) { VALUE_DATA( _type, _var )->value = _value; }
 #define VALUE_CLONE( _type, _var ) VALUE( _type,, VALUE_GET( _type, _var ) )
 
+#define WRAPDEF_SERIALIZABLE \
+    static void SerializeRef( types::Buffer* const buf, const Wrappable* const wrapobj ); \
+    static gse::Value* const DeserializeRef( GSE_CALLABLE, const Game* const game, types::Buffer* const buf );
+
 #define WRAPDEFS_CLASS() \
     static const gse::value::Object::object_class_t WRAP_CLASS;
 #define WRAPDEFS_PTR( _type ) \
@@ -58,6 +68,9 @@ class Context;
     static _type Unwrap( gse::Value* const value );
 #define WRAPIMPL_CLASS( _type ) \
     const gse::value::Object::object_class_t _type::WRAP_CLASS = #_type;
+#define WRAPIMPL_SERIALIZE( _type ) void _type::SerializeRef( types::Buffer* const buf, const Wrappable* const wrapobj ) { \
+    const auto* obj = (_type*)wrapobj;
+#define WRAPIMPL_DESERIALIZE( _type ) gse::Value* const _type::DeserializeRef( GSE_CALLABLE, const Game* const game, types::Buffer* const buf ) {
 #define WRAPIMPL_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
     gse::Value* const _type::Wrap( GSE_CALLABLE, const bool dynamic ) {
@@ -255,7 +268,7 @@ public:
 	Value* const New( const Value* value );
 
 	static void Serialize( types::Buffer* buf, Value* const type );
-	static Value* Unserialize( GSE_CALLABLE, types::Buffer* buf );
+	static Value* Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game = nullptr );
 
 protected:
 	Value( gc::Space* const gc_space, const type_t type );

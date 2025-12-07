@@ -39,7 +39,7 @@ private:
 	friend class Def;
 
 	static void Serialize( types::Buffer& buf, const FramesRow* def );
-	static FramesRow* Unserialize(
+	static FramesRow* Deserialize(
 		types::Buffer& buf,
 		const std::string& id,
 		const float scale_x,

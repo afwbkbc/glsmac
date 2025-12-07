@@ -63,7 +63,7 @@ CLASS( Instanced, Actor )
 	void SetZIndex( const float z_index );
 
 	virtual const types::Buffer Serialize() const override;
-	virtual void Unserialize( types::Buffer buf ) override;
+	virtual void Deserialize( types::Buffer buf ) override;
 
 private:
 	Actor* m_actor = nullptr;

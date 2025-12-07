@@ -210,25 +210,25 @@ const types::Buffer Map::Serialize() const {
 	return buf;
 }
 
-void Map::Unserialize( types::Buffer buf ) {
+void Map::Deserialize( types::Buffer buf ) {
 
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles );
-	m_tiles->Unserialize( buf.ReadString() );
+	m_tiles->Deserialize( buf.ReadString() );
 
 	ASSERT( !m_map_state, "map state already set" );
 	NEW( m_map_state, MapState );
-	m_map_state->Unserialize( buf.ReadString() );
+	m_map_state->Deserialize( buf.ReadString() );
 
 	InitTextureAndMesh();
-	m_meshes.terrain->Unserialize( buf.ReadString() );
-	m_meshes.terrain_data->Unserialize( buf.ReadString() );
-	m_textures.terrain->Unserialize( buf.ReadString() );
+	m_meshes.terrain->Deserialize( buf.ReadString() );
+	m_meshes.terrain_data->Deserialize( buf.ReadString() );
+	m_textures.terrain->Deserialize( buf.ReadString() );
 
 	size_t sz = buf.ReadInt();
 	m_sprite_actors.clear();
 	for ( auto i = 0 ; i < sz ; i++ ) {
-		m_sprite_actors[ buf.ReadString() ] = UnserializeSpriteActor( buf.ReadString() );
+		m_sprite_actors[ buf.ReadString() ] = DeserializeSpriteActor( buf.ReadString() );
 	}
 
 	sz = buf.ReadInt();
@@ -542,7 +542,7 @@ const types::Buffer Map::SerializeSpriteActor( const sprite_actor_t& sprite_acto
 	return buf;
 }
 
-const sprite_actor_t Map::UnserializeSpriteActor( types::Buffer buf ) const {
+const sprite_actor_t Map::DeserializeSpriteActor( types::Buffer buf ) const {
 	const auto name = buf.ReadString();
 	const auto tex_coords = buf.ReadVec2u();
 	const auto z_index = buf.ReadFloat();
@@ -663,7 +663,7 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	}
 	NEW( m_tiles, tile::Tiles );
 	try {
-		m_tiles->Unserialize( buffer );
+		m_tiles->Deserialize( buffer );
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {

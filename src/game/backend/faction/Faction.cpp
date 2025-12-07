@@ -46,7 +46,7 @@ const types::Buffer Faction::Serialize() const {
 	return buf;
 }
 
-void Faction::Unserialize( types::Buffer buf ) {
+void Faction::Deserialize( types::Buffer buf ) {
 
 	m_id = buf.ReadString();
 	m_name = buf.ReadString();

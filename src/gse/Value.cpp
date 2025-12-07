@@ -15,13 +15,18 @@
 #include "value/ObjectRef.h"
 #include "value/ValueRef.h"
 #include "value/Range.h"
-#include "value/Exception.h"
 #include "value/LoopControl.h"
 
 #include "types/Buffer.h"
 
 #include "gc/Space.h"
 #include "util/String.h"
+
+#include "game/backend/Game.h"
+#include "game/backend/Player.h"
+#include "game/backend/map/tile/Tile.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/unit/Unit.h"
 
 namespace gse {
 
@@ -41,6 +46,26 @@ static const std::string s_t_valueref = "Valueref";
 static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
 static const std::string s_t_unknown = "Unknown";
+
+#define X_CUSTOM_CLASSES \
+    X_CUSTOM_CLASS( Player, game::backend::Player ), \
+    X_CUSTOM_CLASS( Tile, game::backend::map::tile::Tile ), \
+    X_CUSTOM_CLASS( Base, game::backend::base::Base ), \
+    X_CUSTOM_CLASS( Unit, game::backend::unit::Unit )
+
+typedef std::function< void( types::Buffer* const buf, const Wrappable* const wrapobj ) > custom_serialize_func_t;
+static const std::unordered_map< value::Object::object_class_t, custom_serialize_func_t > s_custom_object_serializers = {
+#define X_CUSTOM_CLASS( _name, _class ) { #_name, _class::SerializeRef }
+	X_CUSTOM_CLASSES
+#undef X_CUSTOM_CLASS
+};
+
+typedef std::function< gse::Value* const( GSE_CALLABLE, const game::backend::Game* const, types::Buffer* const buf ) > custom_deserialize_func_t;
+static const std::unordered_map< value::Object::object_class_t, custom_deserialize_func_t > s_custom_object_deserializers = {
+#define X_CUSTOM_CLASS( _name, _class ) { #_name, _class::DeserializeRef }
+	X_CUSTOM_CLASSES
+#undef X_CUSTOM_CLASS
+};
 
 Value::~Value() {}
 
@@ -498,14 +523,22 @@ void Value::Serialize( types::Buffer* buf, Value* const value ) {
 			}
 			case T_OBJECT: {
 				const auto* obj = (value::Object*)value;
-				ASSERT( obj->object_class.empty(), "serialization of custom object classes is not supported" );
-				ASSERT( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
-				ASSERT( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
-				const auto& properties = obj->value;
-				buf->WriteInt( properties.size() );
-				for ( const auto& p : properties ) {
-					buf->WriteString( p.first );
-					Value::Serialize( buf, p.second );
+				buf->WriteString( obj->object_class );
+				if ( obj->object_class.empty() ) {
+					ASSERT( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
+					ASSERT( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+					const auto& properties = obj->value;
+					buf->WriteInt( properties.size() );
+					for ( const auto& p : properties ) {
+						buf->WriteString( p.first );
+						Value::Serialize( buf, p.second );
+					}
+				}
+				else {
+					const auto& it = s_custom_object_serializers.find( obj->object_class );
+					ASSERT( it != s_custom_object_serializers.end(), "custom object serializer not found: " + obj->object_class );
+					ASSERT( obj->wrapobj, "custom object wrapobj is null" );
+					it->second( buf, obj->wrapobj );
 				}
 				break;
 			}
@@ -515,7 +548,7 @@ void Value::Serialize( types::Buffer* buf, Value* const value ) {
 	}
 }
 
-Value* Value::Unserialize( GSE_CALLABLE, types::Buffer* buf ) {
+Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game ) {
 	type_t type = (type_t)buf->ReadInt();
 	switch ( type ) {
 		case T_NULLPTR:
@@ -537,23 +570,32 @@ Value* Value::Unserialize( GSE_CALLABLE, types::Buffer* buf ) {
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
 			for ( size_t i = 0 ; i < size ; i++ ) {
-				elements.push_back( Value::Unserialize( GSE_CALL, buf ) );
+				elements.push_back( Value::Deserialize( GSE_CALL, buf ) );
 			}
 			return VALUE( value::Array, , elements );
 		}
 		case T_OBJECT: {
-			value::object_properties_t properties = {};
-			const auto size = buf->ReadInt();
-			for ( size_t i = 0 ; i < size ; i++ ) {
-				const auto k = buf->ReadString();
-				properties.insert(
-					{
-						k,
-						Value::Unserialize( GSE_CALL, buf )
-					}
-				);
+			const auto object_class = buf->ReadString();
+			if ( object_class.empty() ) {
+				value::object_properties_t properties = {};
+				const auto size = buf->ReadInt();
+				for ( size_t i = 0 ; i < size ; i++ ) {
+					const auto k = buf->ReadString();
+					properties.insert(
+						{
+							k,
+							Value::Deserialize( GSE_CALL, buf )
+						}
+					);
+				}
+				return VALUEEXT( value::Object, GSE_CALL, properties );
 			}
-			return VALUEEXT( value::Object, GSE_CALL, properties );
+			else {
+				ASSERT( game, "game not available for custom object deserialization" );
+				const auto& it = s_custom_object_deserializers.find( object_class );
+				ASSERT( it != s_custom_object_deserializers.end(), "custom object deserializer not found: " + object_class );
+				return it->second( GSE_CALL, game, buf );
+			}
 		}
 		default:
 			THROW( "invalid/unsupported type for unserialization: " + GetTypeStringStatic( type ) );

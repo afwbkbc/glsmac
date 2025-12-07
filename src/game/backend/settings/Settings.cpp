@@ -50,7 +50,7 @@ const types::Buffer MapSettings::Serialize() const {
 	return buf;
 }
 
-void MapSettings::Unserialize( types::Buffer buf ) {
+void MapSettings::Deserialize( types::Buffer buf ) {
 	type = (type_t)buf.ReadInt();
 	filename = buf.ReadString();
 	size_x = buf.ReadInt();
@@ -88,9 +88,9 @@ const types::Buffer GlobalSettings::Serialize() const {
 	return buf;
 }
 
-void GlobalSettings::Unserialize( types::Buffer buf ) {
-	map.Unserialize( buf.ReadString() );
-	rules.Unserialize( buf.ReadString() );
+void GlobalSettings::Deserialize( types::Buffer buf ) {
+	map.Deserialize( buf.ReadString() );
+	rules.Deserialize( buf.ReadString() );
 	difficulty_level = buf.ReadInt();
 	game_name = buf.ReadString();
 }
@@ -144,7 +144,7 @@ const types::Buffer LocalSettings::Serialize() const {
 	return buf;
 }
 
-void LocalSettings::Unserialize( types::Buffer buf ) {
+void LocalSettings::Deserialize( types::Buffer buf ) {
 	game_mode = (game_mode_t)buf.ReadInt();
 	network_type = (network_type_t)buf.ReadInt();
 	network_role = (network_role_t)buf.ReadInt();
@@ -174,9 +174,9 @@ const types::Buffer Settings::Serialize() const {
 	return buf;
 }
 
-void Settings::Unserialize( types::Buffer buf ) {
-	global.Unserialize( types::Buffer( buf.ReadString() ) );
-	local.Unserialize( types::Buffer( buf.ReadString() ) );
+void Settings::Deserialize( types::Buffer buf ) {
+	global.Deserialize( types::Buffer( buf.ReadString() ) );
+	local.Deserialize( types::Buffer( buf.ReadString() ) );
 }
 
 }

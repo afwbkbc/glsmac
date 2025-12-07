@@ -54,7 +54,7 @@ const types::Buffer PopDef::Serialize( const PopDef* def ) {
 	return buf;
 }
 
-PopDef* PopDef::Unserialize( types::Buffer& buf ) {
+PopDef* PopDef::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
 #define X( _r ) \

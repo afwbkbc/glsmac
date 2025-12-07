@@ -33,7 +33,7 @@ public:
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );
-	static Def* Unserialize( types::Buffer& buf );
+	static Def* Deserialize( types::Buffer& buf );
 
 };
 

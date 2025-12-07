@@ -64,9 +64,11 @@ public:
 	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um );
+	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um );
 
 	WRAPDEFS_DYNAMIC( Unit );
+
+	WRAPDEF_SERIALIZABLE;
 
 private:
 	UnitManager* const m_um;

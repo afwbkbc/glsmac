@@ -23,7 +23,7 @@ public:
 	WRAPDEFS_PTR( FactionManager )
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	void Deserialize( types::Buffer buf );
 
 private:
 	struct faction_t {

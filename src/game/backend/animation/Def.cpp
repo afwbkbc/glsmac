@@ -42,7 +42,7 @@ const types::Buffer Def::Serialize( const Def* def ) {
 	return buf;
 }
 
-Def* Def::Unserialize( types::Buffer& buf ) {
+Def* Def::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto type = (animation_type_t)buf.ReadInt();
 	const auto scale_x = buf.ReadFloat();
@@ -51,7 +51,7 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 	const auto sound_file = buf.ReadString();
 	switch ( type ) {
 		case AT_FRAMES_ROW:
-			return FramesRow::Unserialize( buf, id, scale_x, scale_y, duration_ms, sound_file );
+			return FramesRow::Deserialize( buf, id, scale_x, scale_y, duration_ms, sound_file );
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}

@@ -40,7 +40,7 @@ CLASS( ResourceManager, gse::GCWrappable )
 	WRAPDEFS_PTR( ResourceManager )
 
 	void Serialize( types::Buffer& buf ) const;
-	void Unserialize( types::Buffer& buf );
+	void Deserialize( types::Buffer& buf );
 
 private:
 	Game* m_game;

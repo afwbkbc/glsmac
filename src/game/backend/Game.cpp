@@ -863,7 +863,9 @@ WRAPIMPL_BEGIN( Game )
 				}
 				const auto& handler = it->second;
 				N_GET( args, 1, Object );
-				args->ValidatePrimitivity( GSE_CALL, "" );
+				if ( !args->object_class.empty() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
+				}
 				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args->value ) );
 				return VALUE( gse::value::Undefined );
 			} )
@@ -1174,7 +1176,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			THROW( "TODO: OP_ADD_EVENT" );
 			/*m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
-				event = event::LegacyEvent::Unserialize( GSE_CALL, buf );
+				event = event::LegacyEvent::Deserialize( GSE_CALL, buf );
 				errmsg = event->Validate( GSE_CALL, this );
 				if ( errmsg ) {
 					// log and do nothing
@@ -1378,12 +1380,14 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 			m_bm->RefreshBase( base );
 		}
 
-		m_state->TriggerObject( this, "turn", ARGS_F( this ) {
-			{
-				"game",
-				Wrap( GSE_CALL )
-			}
-		}; } );
+		if ( m_state->IsMaster() ) {
+			m_state->TriggerObject( this, "turn", ARGS_F( this ) {
+				{
+					"game",
+					Wrap( GSE_CALL )
+				}
+			}; } );
+		}
 	});
 
 	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
@@ -1753,7 +1757,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
 			MTModule::Log( (std::string)"Loading map dump from " + filename );
 			SetLoaderText( "Loading dump" );
-			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
+			m_map->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else
@@ -1831,25 +1835,25 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 								// resources
 								{
 									auto ub = types::Buffer( buf.ReadString() );
-									m_rm->Unserialize( ub );
+									m_rm->Deserialize( ub );
 								}
 
 								// units
 								{
 									auto ub = types::Buffer( buf.ReadString() );
-									m_um->Unserialize( GSE_CALL, ub );
+									m_um->Deserialize( GSE_CALL, ub );
 								}
 
 								// bases
 								{
 									auto bb = types::Buffer( buf.ReadString() );
-									m_bm->Unserialize( GSE_CALL, bb );
+									m_bm->Deserialize( GSE_CALL, bb );
 								}
 
 								// animations
 								{
 									auto ab = types::Buffer( buf.ReadString() );
-									m_am->Unserialize( ab );
+									m_am->Deserialize( ab );
 								}
 
 								// get turn info

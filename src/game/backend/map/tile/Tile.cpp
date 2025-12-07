@@ -9,6 +9,8 @@
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 
+#include "game/backend/Game.h"
+#include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
 
@@ -114,7 +116,7 @@ const types::Buffer Tile::Serialize() const {
 	return buf;
 }
 
-void Tile::Unserialize( types::Buffer buf ) {
+void Tile::Deserialize( types::Buffer buf ) {
 
 	coord.x = buf.ReadInt();
 	coord.y = buf.ReadInt();
@@ -143,6 +145,18 @@ void Tile::Unserialize( types::Buffer buf ) {
 	}
 
 	Update();
+}
+
+WRAPIMPL_SERIALIZE( Tile )
+	buf->WriteInt( obj->coord.x );
+	buf->WriteInt( obj->coord.y );
+}
+
+WRAPIMPL_DESERIALIZE( Tile )
+	const auto tile_x = buf->ReadInt();
+	const auto tile_y = buf->ReadInt();
+	const auto& tile = game->GetMap()->GetTile( tile_x, tile_y );
+	return tile->Wrap( GSE_CALL );
 }
 
 const std::string Tile::ToString() const {

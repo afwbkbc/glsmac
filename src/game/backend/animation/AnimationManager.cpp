@@ -330,7 +330,7 @@ void AnimationManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next animation id: " + std::to_string( m_next_running_animation_id ) );
 }
 
-void AnimationManager::Unserialize( types::Buffer& buf ) {
+void AnimationManager::Deserialize( types::Buffer& buf ) {
 	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
@@ -338,7 +338,7 @@ void AnimationManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineAnimation( animation::Def::Unserialize( b ) );
+		DefineAnimation( animation::Def::Deserialize( b ) );
 	}
 	m_next_running_animation_id = buf.ReadInt();
 	Log( "Restored next animation id: " + std::to_string( m_next_running_animation_id ) );

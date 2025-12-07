@@ -153,7 +153,7 @@ const types::Buffer Slot::Serialize() const {
 	return buf;
 }
 
-void Slot::Unserialize( types::Buffer buf ) {
+void Slot::Deserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
@@ -161,7 +161,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 			m_player_data.player->SetSlot( this );
 		}
 		else {
-			m_player_data.player->Unserialize( buf.ReadString() );
+			m_player_data.player->Deserialize( buf.ReadString() );
 		}
 		m_player_data.flags = buf.ReadInt();
 	}

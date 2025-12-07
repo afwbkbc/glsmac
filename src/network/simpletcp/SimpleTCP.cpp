@@ -541,7 +541,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			try {
 				types::Packet p( types::Packet::PT_NONE );
-				p.Unserialize( types::Buffer( m_tmp.event.data.packet_data ) );
+				p.Deserialize( types::Buffer( m_tmp.event.data.packet_data ) );
 				// quick hack to respond to pings without escalating events outside
 				// TODO: refactor
 				if ( p.type == types::Packet::PT_PING ) {

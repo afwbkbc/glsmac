@@ -29,7 +29,7 @@ void Pop::Serialize( types::Buffer& buf ) const {
 	buf.WriteInt( m_variant );
 }
 
-void Pop::Unserialize( types::Buffer& buf, Game* game ) {
+void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 	ASSERT( !m_base, "pop base is not null" );
 	ASSERT( !m_def, "pop def is not null" );
 

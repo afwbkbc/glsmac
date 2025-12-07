@@ -107,7 +107,7 @@ CLASS( Texture, Serializable )
 	virtual unsigned char* CopyBitmap( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) const;
 
 	virtual const types::Buffer Serialize() const override;
-	virtual void Unserialize( types::Buffer buf ) override;
+	virtual void Deserialize( types::Buffer buf ) override;
 
 private:
 	size_t m_update_counter = 0;

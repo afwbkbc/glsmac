@@ -22,7 +22,7 @@ CLASS( Slots, types::Serializable )
 	void Clear();
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 private:
 	State* m_state;

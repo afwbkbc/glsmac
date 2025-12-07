@@ -158,7 +158,7 @@ const types::Buffer Mesh::Serialize() const {
 	return buf;
 }
 
-void Mesh::Unserialize( types::Buffer buf ) {
+void Mesh::Deserialize( types::Buffer buf ) {
 
 	auto mesh_type = (mesh_type_t)buf.ReadInt();
 	if ( mesh_type != m_mesh_type ) {

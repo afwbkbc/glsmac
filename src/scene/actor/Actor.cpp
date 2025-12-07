@@ -122,8 +122,8 @@ const types::Buffer Actor::Serialize() const {
 	return buf;
 }
 
-void Actor::Unserialize( types::Buffer buf ) {
-	Entity::Unserialize( buf );
+void Actor::Deserialize( types::Buffer buf ) {
+	Entity::Deserialize( buf );
 	// HACK! TODO: refactor
 	buf.ReadVec3();
 	buf.ReadVec3();

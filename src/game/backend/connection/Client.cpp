@@ -31,7 +31,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					types::Packet packet( types::Packet::PT_NONE );
-					packet.Unserialize( types::Buffer( event.data.packet_data ) );
+					packet.Deserialize( types::Buffer( event.data.packet_data ) );
 					switch ( packet.type ) {
 						case types::Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
@@ -54,7 +54,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								// players list update (i.e. after resolving random players )
 								m_state->m_slots->Clear();
 							}
-							m_state->m_slots->Unserialize( packet.data.str );
+							m_state->m_slots->Deserialize( packet.data.str );
 							const auto c = m_state->m_slots->GetCount();
 							for ( auto i = 0 ; i < c ; i++ ) {
 								const auto& slot = m_state->m_slots->GetSlot( i );
@@ -111,8 +111,8 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 							if ( !ok ) {
 								break; // something went wrong
 							}
-							//m_state->m_settings.global.Unserialize( types::Buffer( packet.data.str ) );
-							m_state->Unserialize( types::Buffer( packet.data.str ) );
+							//m_state->m_settings.global.Deserialize( types::Buffer( packet.data.str ) );
+							m_state->Deserialize( types::Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
 							}
@@ -144,7 +144,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 									? slot.HasPlayerFlag( slot::PF_READY ) // check readyness of player
 									: m_state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY ) // check readyness of host
 								;
-								slot.Unserialize( packet.data.str );
+								slot.Deserialize( packet.data.str );
 								if ( m_game_state == GS_LOBBY ) {
 									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 										if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
@@ -254,7 +254,7 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 								[ packet ]( GSE_CALLABLE ) {
 									auto buf = types::Buffer( packet.data.str );
 									auto* const game = g_engine->GetGame();
-									game->AddEvent( event::Event::Unserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
+									game->AddEvent( event::Event::Deserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 								}
 							);
 							break;

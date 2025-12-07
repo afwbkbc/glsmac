@@ -1098,7 +1098,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_ANIMATION_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* animationdef = backend::animation::Def::Unserialize( buf );
+			const auto* animationdef = backend::animation::Def::Deserialize( buf );
 			DefineAnimation( animationdef );
 			delete animationdef;
 			break;
@@ -1131,7 +1131,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
-			const auto* unitdef = backend::unit::Def::Unserialize( buf );
+			const auto* unitdef = backend::unit::Def::Deserialize( buf );
 			m_um->DefineUnit( unitdef );
 			delete unitdef;
 			break;
@@ -1209,7 +1209,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_BASE_POP_DEFINE: {
 			types::Buffer buf( *request->data.base_pop_define.serialized_popdef );
-			const auto* popdef = backend::base::PopDef::Unserialize( buf );
+			const auto* popdef = backend::base::PopDef::Deserialize( buf );
 			m_bm->DefinePop( popdef );
 			delete popdef;
 			break;

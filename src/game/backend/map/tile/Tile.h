@@ -94,11 +94,13 @@ public:
 	const bool IsAdjactentTo( const Tile* other ) const;
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer data );
+	void Deserialize( types::Buffer data );
 
 	const std::string ToString() const;
 
 	WRAPDEFS_PTR( Tile );
+
+	WRAPDEF_SERIALIZABLE;
 
 	void Lock( const size_t initiator_slot );
 	void Unlock();

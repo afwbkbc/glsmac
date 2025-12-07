@@ -246,9 +246,9 @@ const types::Buffer State::Serialize() const {
 	return buf;
 }
 
-void State::Unserialize( types::Buffer buf ) {
-	m_settings.global.Unserialize( buf.ReadString() );
-	m_fm->Unserialize( buf.ReadString() );
+void State::Deserialize( types::Buffer buf ) {
+	m_settings.global.Deserialize( buf.ReadString() );
+	m_fm->Deserialize( buf.ReadString() );
 }
 
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

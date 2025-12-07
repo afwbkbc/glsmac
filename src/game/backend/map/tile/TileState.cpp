@@ -141,7 +141,7 @@ const types::Buffer TileState::tile_surfaces_t::Serialize() const {
 	return buf;
 }
 
-void TileState::Unserialize( types::Buffer buf ) {
+void TileState::Deserialize( types::Buffer buf ) {
 	coord = buf.ReadVec2f();
 	tex_coord.x = buf.ReadFloat();
 	tex_coord.y = buf.ReadFloat();
@@ -149,18 +149,18 @@ void TileState::Unserialize( types::Buffer buf ) {
 	tex_coord.y1 = buf.ReadFloat();
 	tex_coord.x2 = buf.ReadFloat();
 	tex_coord.y2 = buf.ReadFloat();
-	elevations.Unserialize( buf.ReadString() );
+	elevations.Deserialize( buf.ReadString() );
 	if ( (tile_layer_type_t)buf.ReadInt() != LAYER_MAX ) {
 		THROW( "LAYER_MAX mismatch" );
 	}
 	for ( auto i = 0 ; i < LAYER_MAX ; i++ ) {
-		layers[ i ].Unserialize( buf.ReadString() );
+		layers[ i ].Deserialize( buf.ReadString() );
 	}
-	overdraw_column.coords = UnserializeTileVertices( buf.ReadString() );
-	overdraw_column.indices.Unserialize( buf.ReadString() );
-	overdraw_column.surfaces.Unserialize( buf.ReadString() );
-	data_mesh.coords = UnserializeTileVertices( buf.ReadString() );
-	data_mesh.indices.Unserialize( buf.ReadString() );
+	overdraw_column.coords = DeserializeTileVertices( buf.ReadString() );
+	overdraw_column.indices.Deserialize( buf.ReadString() );
+	overdraw_column.surfaces.Deserialize( buf.ReadString() );
+	data_mesh.coords = DeserializeTileVertices( buf.ReadString() );
+	data_mesh.indices.Deserialize( buf.ReadString() );
 	has_water = buf.ReadBool();
 	is_coastline_corner = buf.ReadBool();
 
@@ -168,11 +168,11 @@ void TileState::Unserialize( types::Buffer buf ) {
 	const auto h = s_consts.tc.texture_pcx.dimensions.y;
 
 	NEW( moisture_original, types::texture::Texture, "MoistureOriginal", w, h );
-	moisture_original->Unserialize( buf.ReadString() );
+	moisture_original->Deserialize( buf.ReadString() );
 	const bool has_river_original = buf.ReadBool();
 	if ( has_river_original ) {
 		NEW( river_original, types::texture::Texture, "RiverOriginal", w, h );
-		river_original->Unserialize( buf.ReadString() );
+		river_original->Deserialize( buf.ReadString() );
 	}
 
 	const size_t sprites_count = buf.ReadInt();
@@ -200,7 +200,7 @@ const types::Buffer TileState::SerializeTileVertices( const tile_vertices_t& ver
 	return buf;
 }
 
-const tile_vertices_t TileState::UnserializeTileVertices( types::Buffer buf ) {
+const tile_vertices_t TileState::DeserializeTileVertices( types::Buffer buf ) {
 	const auto center = buf.ReadVec3();
 	const auto left = buf.ReadVec3();
 	const auto top = buf.ReadVec3();
@@ -227,7 +227,7 @@ const types::Buffer TileState::SerializeTileTexCoords( const tile_tex_coords_t& 
 	return buf;
 }
 
-const tile_tex_coords_t TileState::UnserializeTileTexCoords( types::Buffer buf ) {
+const tile_tex_coords_t TileState::DeserializeTileTexCoords( types::Buffer buf ) {
 	const auto center = buf.ReadVec2f();
 	const auto left = buf.ReadVec2f();
 	const auto top = buf.ReadVec2f();
@@ -254,7 +254,7 @@ const types::Buffer TileState::SerializeTileColors( const tile_colors_t& colors 
 	return buf;
 }
 
-const tile_colors_t TileState::UnserializeTileColors( types::Buffer buf ) {
+const tile_colors_t TileState::DeserializeTileColors( types::Buffer buf ) {
 	const auto center = buf.ReadColor();
 	const auto left = buf.ReadColor();
 	const auto top = buf.ReadColor();
@@ -269,7 +269,7 @@ const tile_colors_t TileState::UnserializeTileColors( types::Buffer buf ) {
 	};
 }
 
-void TileState::tile_elevations_t::Unserialize( types::Buffer buf ) {
+void TileState::tile_elevations_t::Deserialize( types::Buffer buf ) {
 	center = buf.ReadInt();
 	left = buf.ReadInt();
 	top = buf.ReadInt();
@@ -277,17 +277,17 @@ void TileState::tile_elevations_t::Unserialize( types::Buffer buf ) {
 	bottom = buf.ReadInt();
 }
 
-void TileState::tile_layer_t::Unserialize( types::Buffer buf ) {
-	coords = UnserializeTileVertices( buf.ReadString() );
-	indices.Unserialize( buf.ReadString() );
-	surfaces.Unserialize( buf.ReadString() );
-	tex_coords = UnserializeTileTexCoords( buf.ReadString() );
-	colors = UnserializeTileColors( buf.ReadString() );
+void TileState::tile_layer_t::Deserialize( types::Buffer buf ) {
+	coords = DeserializeTileVertices( buf.ReadString() );
+	indices.Deserialize( buf.ReadString() );
+	surfaces.Deserialize( buf.ReadString() );
+	tex_coords = DeserializeTileTexCoords( buf.ReadString() );
+	colors = DeserializeTileColors( buf.ReadString() );
 	texture_stretch = buf.ReadVec2f();
 	texture_stretch_at_edges = buf.ReadBool();
 }
 
-void TileState::tile_indices_t::Unserialize( types::Buffer buf ) {
+void TileState::tile_indices_t::Deserialize( types::Buffer buf ) {
 	center = buf.ReadInt();
 	left = buf.ReadInt();
 	top = buf.ReadInt();
@@ -295,7 +295,7 @@ void TileState::tile_indices_t::Unserialize( types::Buffer buf ) {
 	bottom = buf.ReadInt();
 }
 
-void TileState::tile_surfaces_t::Unserialize( types::Buffer buf ) {
+void TileState::tile_surfaces_t::Deserialize( types::Buffer buf ) {
 	left_top = buf.ReadInt();
 	top_right = buf.ReadInt();
 	right_bottom = buf.ReadInt();

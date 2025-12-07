@@ -74,7 +74,7 @@ CLASS( Map, types::Serializable )
 	const error_code_t Initialize( MT_CANCELABLE );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 	static const std::string& GetErrorString( const error_code_t& code );
 
@@ -120,7 +120,7 @@ CLASS( Map, types::Serializable )
 	tile::Tiles* GetTilesPtr() const;
 
 	const types::Buffer SerializeSpriteActor( const sprite_actor_t& sprite_actor ) const;
-	const sprite_actor_t UnserializeSpriteActor( types::Buffer buf ) const;
+	const sprite_actor_t DeserializeSpriteActor( types::Buffer buf ) const;
 
 	const std::string GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index );
 	const size_t AddTerrainSpriteActorInstance( const std::string& key, const types::Vec3& coords );

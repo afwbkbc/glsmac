@@ -59,7 +59,7 @@ CLASS( Mesh, Serializable )
 	const mesh_type_t GetType() const;
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 protected:
 

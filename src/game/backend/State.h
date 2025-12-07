@@ -81,7 +81,7 @@ CLASS( State, gse::GCWrappable )
 	WRAPDEFS_PTR( State )
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	void Deserialize( types::Buffer buf );
 
 	// not const yet because in legacy ui these will be set by bindings
 	gc::Space* m_gc_space = nullptr;

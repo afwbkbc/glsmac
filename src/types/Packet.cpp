@@ -92,7 +92,7 @@ const types::Buffer Packet::Serialize() const {
 	return buf;
 }
 
-void Packet::Unserialize( types::Buffer buf ) {
+void Packet::Deserialize( types::Buffer buf ) {
 
 	ASSERT( type == PT_NONE, "unserializing into existing packet" );
 

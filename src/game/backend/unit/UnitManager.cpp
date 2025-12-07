@@ -527,7 +527,7 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next unit id: " + std::to_string( Unit::GetNextId() ) );
 }
 
-void UnitManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
+void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
 	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
 	ASSERT( m_units.empty(), "units not empty" );
@@ -539,7 +539,7 @@ void UnitManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineMoraleSet( MoraleSet::Unserialize( b ) );
+		DefineMoraleSet( MoraleSet::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -548,7 +548,7 @@ void UnitManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineUnit( Def::Unserialize( b ) );
+		DefineUnit( Def::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -558,7 +558,7 @@ void UnitManager::Unserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnUnit( GSE_CALL, Unit::Unserialize( GSE_CALL, b, this ) );
+		SpawnUnit( GSE_CALL, Unit::Deserialize( GSE_CALL, b, this ) );
 	}
 
 	Unit::SetNextId( buf.ReadInt() );

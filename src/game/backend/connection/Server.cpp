@@ -139,7 +139,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 		case network::LegacyEvent::ET_PACKET: {
 			try {
 				types::Packet packet( types::Packet::PT_NONE );
-				packet.Unserialize( types::Buffer( event.data.packet_data ) );
+				packet.Deserialize( types::Buffer( event.data.packet_data ) );
 				switch ( packet.type ) {
 					case types::Packet::PT_AUTH: {
 						ASSERT( packet.data.vec.size() == 2, "unexpected vec size of PT_AUTH" );
@@ -277,7 +277,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 						else {
 							Log( "Got slot update from " + std::to_string( event.cid ) );
 							const bool wasReady = slot.HasPlayerFlag( slot::PF_READY );
-							slot.Unserialize( packet.data.str );
+							slot.Deserialize( packet.data.str );
 							if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
 								Error( event.cid, "slot update while ready" );
 								break;
@@ -366,7 +366,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 							[ this, packet, event ]( GSE_CALLABLE ) {
 								auto* const game = g_engine->GetGame();
 								auto buf = types::Buffer( packet.data.str );
-								auto* const ev = event::Event::Unserialize( game, event::Event::ES_CLIENT, GSE_CALL, buf.ReadString() );
+								auto* const ev = event::Event::Deserialize( game, event::Event::ES_CLIENT, GSE_CALL, buf.ReadString() );
 								const auto caller_slot = ev->GetCaller();
 								if ( caller_slot >= m_state->m_slots->GetCount() ) {
 									Error( event.cid, "event caller slot overflow" );

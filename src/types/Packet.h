@@ -63,7 +63,7 @@ CLASS( Packet, Serializable )
 	} data;
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buffer ) override;
+	void Deserialize( types::Buffer buffer ) override;
 };
 
 }

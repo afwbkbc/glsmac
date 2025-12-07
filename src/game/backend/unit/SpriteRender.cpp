@@ -58,7 +58,7 @@ void SpriteRender::Serialize( types::Buffer& buf, const SpriteRender* render ) {
 	buf.WriteInt( render->m_render.morale_based_xshift );
 }
 
-SpriteRender* SpriteRender::Unserialize( types::Buffer& buf ) {
+SpriteRender* SpriteRender::Deserialize( types::Buffer& buf ) {
 	const auto file = buf.ReadString();
 	const auto x = buf.ReadInt();
 	const auto y = buf.ReadInt();
