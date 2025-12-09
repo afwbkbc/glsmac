@@ -188,6 +188,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 								if ( m_on_game_state_change ) {
 									m_on_game_state_change( m_game_state );
 								}
+								WTrigger(
+									"game_state", ARGS_F( this ) {
+										{
+											"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
+										}
+									}; }
+								);
 							}
 							break;
 						}

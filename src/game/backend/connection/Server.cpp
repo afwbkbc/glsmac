@@ -164,10 +164,12 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						size_t slot_num = 0;
 
-						// check if not already in game
+						// check if player is allowed to join
+						bool is_part_of_game = false;
 						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots->GetSlots() ) {
 							if ( slot.GetLinkedGSID() == gsid ) {
+								is_part_of_game = true;
 								ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot state is not player" );
 								const auto* player = slot.GetPlayer();
 								ASSERT( player, "slot player not set" );
@@ -179,6 +181,11 @@ void Server::ProcessEvent( const network::Event& event ) {
 									slot_num = slot.GetIndex();
 								}
 							}
+						}
+						if ( m_game_state != GS_LOBBY && !is_part_of_game ) {
+							Log( gsid + "is not part of the game, disconnecting" );
+							Kick( event.cid, "You are not part of this game" );
+							break;
 						}
 						if ( is_already_in_game ) {
 							Log( "Duplicate connection from " + gsid + ", disconnecting" );
@@ -197,14 +204,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 							if ( slot_num >= m_state->m_slots->GetCount() ) { // no available slots left
 								Log( "No free slots for player " + gsid + " (" + player_name + "), rejecting" );
 								Kick( event.cid, "Server is full!" );
-								break;
-							}
-						}
-						else {
-							// once game is started - only players that are linked to slots by gsids can join to their slots
-							if ( slot_num >= m_state->m_slots->GetCount() ) { // no available slots left
-								Log( "No linked slot found for player " + gsid + " (" + player_name + "), rejecting" );
-								Kick( event.cid, "You do not belong to this game." );
 								break;
 							}
 						}
@@ -536,6 +535,7 @@ void Server::Kick( const network::cid_t cid, const std::string& reason = "" ) {
 			: ""
 		)
 	);
+	IgnoreCID( cid );
 	types::Packet p( types::Packet::PT_KICK );
 	p.data.str = reason;
 	m_network->MT_SendPacket( &p, cid );

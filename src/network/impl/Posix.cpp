@@ -66,6 +66,7 @@ int Network::Impl::Send( const fd_t fd, const void* buf, const int len ) const {
 }
 
 void Network::Impl::CloseSocket( const fd_t socket ) const {
+	shutdown( socket, SHUT_WR );
 	close( socket );
 }
 

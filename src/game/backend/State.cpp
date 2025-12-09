@@ -117,6 +117,10 @@ void State::AddCIDSlot( const network::cid_t cid, const size_t slot ) {
 	m_cid_slots[ cid ] = slot;
 }
 
+const bool State::HasCIDSlot( const network::cid_t cid ) {
+	return m_cid_slots.find( cid ) != m_cid_slots.end();
+}
+
 void State::RemoveCIDSlot( const network::cid_t cid ) {
 	Log( "removing CID " + std::to_string( cid ) );
 	ASSERT( m_cid_slots.find( cid ) != m_cid_slots.end(), "cid not found" );

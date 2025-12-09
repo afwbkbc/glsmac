@@ -63,6 +63,7 @@ CLASS( State, gse::GCWrappable )
 
 	// used only on host
 	void AddCIDSlot( const network::cid_t cid, const size_t slot );
+	const bool HasCIDSlot( const network::cid_t cid );
 	void RemoveCIDSlot( const network::cid_t cid );
 
 	const std::unordered_map< network::cid_t, size_t >& GetCidSlots() const;

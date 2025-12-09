@@ -321,7 +321,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 			const auto* s = (Switch*)conditional;
 			ASSERT( s->condition, "condition not set" );
 			ASSERT( s->condition->expression, "condition expression not set" );
-			const auto* a = EvaluateExpression( ctx, ep, s->condition->expression, returnflag );
+			const auto* a = EvaluateExpression( ctx, ep, s->condition->expression, returnflag )->Deref();
 			gse::Value* result = nullptr;
 			if ( returnflag ) {
 				ASSERT( !*returnflag, "can't return from switch condition" );

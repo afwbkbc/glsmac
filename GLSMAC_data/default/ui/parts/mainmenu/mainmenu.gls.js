@@ -69,6 +69,12 @@ return (m) => {
 
 		const c = m.glsmac.config;
 		if (#is_defined(c.host)) {
+			if (!#is_defined(c.gamename)) {
+				throw Error( '--host requires --gamename argument' );
+			}
+			if (!#is_defined(c.playername)) {
+				throw Error( '--host requires --playername argument' );
+			}
 			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_type = 'simple_tcpip';
 			i.settings.global.game_name = c.gamename;
@@ -77,6 +83,9 @@ return (m) => {
 			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
 		} elseif (#is_defined(c.join)) {
+			if (!#is_defined(c.playername)) {
+				throw Error( '--join requires --playername argument' );
+			}
 			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_role = 'client';
 			i.settings.local.player_name = c.playername;

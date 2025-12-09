@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
 
 #include "gse/GCWrappable.h"
 
@@ -112,16 +113,17 @@ protected:
 	settings::LocalSettings* m_settings = nullptr;
 	State* m_state = nullptr;
 
-protected:
 	typedef std::vector< backend::event::Event* > game_events_t;
 	game_state_t m_game_state = GS_NONE;
+
+	const std::string& GetGameStateStr( const game_state_t game_state ) const;
 
 	size_t m_slot = 0;
 	backend::Player* m_player = nullptr;
 
 	void WTrigger( const std::string& event, const f_args_t& fargs, const std::function< void() >& f_after = nullptr );
-
 	void OnOpen();
+	void IgnoreCID( const network::cid_t cid );
 
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 
@@ -143,6 +145,8 @@ private:
 	void ClearPending();
 
 	gc::Space* const m_gc_space;
+
+	std::unordered_set< network::cid_t > m_ignored_cids = {};
 
 };
 

@@ -47,6 +47,7 @@ const std::string Network::Impl::GetErrorMessage( const ec_t ec ) const {
 }
 
 void Network::Impl::CloseSocket( const fd_t socket ) const {
+	shutdown( socket, SD_SEND );
 	closesocket( socket );
 }
 

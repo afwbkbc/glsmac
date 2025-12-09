@@ -10,6 +10,13 @@ namespace game {
 namespace backend {
 namespace connection {
 
+static const std::unordered_map< Connection::game_state_t, std::string > s_game_state_str = {
+	{ Connection::GS_NONE, "none" },
+	{ Connection::GS_LOBBY, "lobby" },
+	{ Connection::GS_INITIALIZING, "initializing" },
+	{ Connection::GS_RUNNING, "running" },
+};
+
 void Connection::SetState( State* state ) {
 	/*if ( m_state ) {
 		m_state->DetachConnection();
@@ -101,45 +108,6 @@ void Connection::Connect() {
 
 const bool Connection::IterateAndMaybeDelete() {
 
-	if ( m_mt_ids.disconnect ) {
-		bool should_delete = false;
-		auto result = m_network->MT_GetResult( m_mt_ids.disconnect );
-		if ( result.result != network::R_NONE ) {
-			m_mt_ids.disconnect = 0;
-			m_game_state = GS_NONE;
-			Log( "Connection closed" );
-			if ( m_mt_ids.events ) {
-				m_network->MT_Cancel( m_mt_ids.events );
-				m_mt_ids.events = 0;
-			}
-			ClearPending();
-			if ( m_is_connected ) {
-				if ( m_state ) {
-					WTrigger(
-						"disconnect", ARGS_F() {}; }
-					);
-				}
-				if ( m_on_disconnect ) {
-					should_delete |= m_on_disconnect();
-				}
-			}
-			if ( m_is_canceled ) {
-				if ( m_on_cancel ) {
-					should_delete |= m_on_cancel();
-				}
-			}
-			m_is_connected = false;
-			m_is_canceled = false;
-			if ( !m_disconnect_reason.empty() && m_on_error ) {
-				should_delete |= m_on_error( m_disconnect_reason );
-				m_disconnect_reason.clear();
-			}
-//			if ( should_delete ) {
-			return true;
-//			}
-		}
-	}
-
 	if ( m_mt_ids.connect ) {
 		auto result = m_network->MT_GetResult( m_mt_ids.connect );
 		if ( result.result != network::R_NONE ) {
@@ -212,14 +180,59 @@ const bool Connection::IterateAndMaybeDelete() {
 					if ( !result.events.empty() ) {
 						//Log( "got " + std::to_string( result.events.size() ) + " event(s)" );
 						for ( auto& event : result.events ) {
-							ProcessEvent( event );
+							if ( m_ignored_cids.find( event.cid ) == m_ignored_cids.end() ) {
+								ProcessEvent( event );
+							}
 						}
+						m_ignored_cids.clear();
 					}
 				}
 			}
 		}
 		ProcessPending();
 	}
+
+	if ( m_mt_ids.disconnect ) {
+		bool should_delete = false;
+		auto result = m_network->MT_GetResult( m_mt_ids.disconnect );
+		if ( result.result != network::R_NONE ) {
+			m_mt_ids.disconnect = 0;
+			m_game_state = GS_NONE;
+			Log( "Connection closed" );
+			if ( m_mt_ids.events ) {
+				m_network->MT_Cancel( m_mt_ids.events );
+				m_mt_ids.events = 0;
+			}
+			ClearPending();
+			if ( m_is_connected ) {
+				if ( m_state ) {
+					WTrigger(
+						"disconnect", ARGS_F( this ) {
+							{ "reason", VALUE( gse::value::String,, m_disconnect_reason ) },
+						}; }
+					);
+				}
+				if ( m_on_disconnect ) {
+					should_delete |= m_on_disconnect();
+				}
+			}
+			if ( m_is_canceled ) {
+				if ( m_on_cancel ) {
+					should_delete |= m_on_cancel();
+				}
+			}
+			m_is_connected = false;
+			m_is_canceled = false;
+			if ( !m_disconnect_reason.empty() && m_on_error ) {
+				should_delete |= m_on_error( m_disconnect_reason );
+				m_disconnect_reason.clear();
+			}
+//			if ( should_delete ) {
+			return true;
+//			}
+		}
+	}
+
 	return false;
 }
 
@@ -341,6 +354,11 @@ gc::Space* Connection::GetGCSpace() const {
 	return m_state->m_gc_space;
 }
 
+const std::string& Connection::GetGameStateStr( const game::backend::connection::Connection::game_state_t game_state ) const {
+	ASSERT( s_game_state_str.find( game_state ) != s_game_state_str.end(), "game state str not found: " + std::to_string( game_state ) );
+	return s_game_state_str.at( game_state );
+}
+
 void Connection::WTrigger( const std::string& event, const f_args_t& fargs, const std::function<void()>& f_after ) {
 	ASSERT( m_state, "state not set" );
 	m_state->WithGSE( this, [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
@@ -358,8 +376,12 @@ void Connection::OnOpen() {
 	}
 }
 
+void Connection::IgnoreCID( const network::cid_t cid ) {
+	m_ignored_cids.insert( cid );
+}
+
 void Connection::Disconnect( const std::string& reason ) {
-	if ( !reason.empty() ) {
+	if ( !reason.empty() && m_disconnect_reason.empty() ) {
 		m_disconnect_reason = reason;
 	}
 	if ( m_mt_ids.disconnect ) {

@@ -35,23 +35,59 @@ return (i) => {
 
 			i.connection = i.glsmac.connect();
 
-			i.connection.on('error', (e) => {
+			const f_error = (e) => {
 				if (#is_defined(i.connection)) {
 					i.connection.close();
 					i.connection = #undefined;
 					i.popup.back();
 					i.popup.error(e.message);
 				}
-			});
+			};
+
+			const f_start_game = () => {
+				game_starting = true; // keep connection open
+				i.popup.hide();
+				i.glsmac.start_game();
+			};
+
+			i.connection.on('error', f_error);
 
 			i.connection.on('connect', (e) => {
 				//#print('CONNECTED');
+				//#print(e);
 			});
 			i.connection.on('disconnect', (e) => {
 				if (#is_defined(i.connection)) {
 					i.connection = #undefined;
 					i.popup.back();
-					i.popup.error('Connection lost');
+					if (e.reason == '') {
+						e.reason = 'Connection lost';
+					}
+					i.popup.error(e.reason);
+				}
+			});
+			i.connection.on('game_state', (e) => {
+				i.connection.off('game_state'); // only initial state was needed
+				switch (e.state) {
+					case 'lobby': {
+						// nothing
+						break;
+					}
+					case 'initializing': {
+						f_error({
+							message: 'Server is initializing, try again later',
+						});
+						break;
+					}
+					case 'running': {
+						f_start_game();
+						break;
+					}
+					default: {
+						f_error({
+							message: 'Unexpected game state: ' + e.state,
+						});
+					}
 				}
 			});
 			i.connection.on('player_join', (e) => {
@@ -73,9 +109,7 @@ return (i) => {
 							countdown_timer = #async(3 * 1000, () => {
 								countdown_timer = null;
 
-								game_starting = true; // keep connection open
-								i.popup.hide();
-								i.glsmac.start_game();
+								f_start_game();
 
 								return false;
 							});
