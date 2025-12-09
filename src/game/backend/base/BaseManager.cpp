@@ -92,10 +92,6 @@ void BaseManager::UndefinePop( const std::string& id ) {
 }
 
 void BaseManager::SpawnBase( GSE_CALLABLE, base::Base* base ) {
-	if ( !m_game->IsRunning() ) {
-		m_unprocessed_bases.push_back( base );
-		return;
-	}
 
 	auto* tile = base->GetTile();
 
@@ -188,7 +184,7 @@ const std::map< size_t, Base* >& BaseManager::GetBases() const {
 
 void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	for ( auto& it : m_unprocessed_bases ) {
-		SpawnBase( GSE_CALL, it );
+		SpawnBase( GSE_CALL, base::Base::Deserialize( it, m_game ) );
 	}
 	m_unprocessed_bases.clear();
 }
@@ -431,7 +427,12 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnBase( GSE_CALL, base::Base::Deserialize( b, m_game ) );
+		if ( m_game->IsRunning() ) {
+			SpawnBase( GSE_CALL, base::Base::Deserialize( b, m_game ) );
+		}
+		else {
+			m_unprocessed_bases.push_back( b );
+		}
 	}
 
 	base::Base::SetNextId( buf.ReadInt() );

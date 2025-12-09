@@ -67,7 +67,6 @@ CLASS( UnitManager, common::Class )
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
 	void MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id );
-	void MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	Unit* GetSelectedUnit() const;
 	void SelectUnit( Unit* unit, const bool actually_select_unit );

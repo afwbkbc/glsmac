@@ -213,33 +213,6 @@ void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t anima
 	unit->MoveToTile( dst_tile );
 }
 
-void UnitManager::MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords ) {
-
-	auto* src_tile = unit->GetTile();
-
-	unit->SetTile( dst_tile );
-
-	// TODO: animation
-
-	if ( m_selected_unit == unit ) {
-		m_game->SetSelectedTile( m_selected_unit->GetTile() );
-	}
-
-	// update old tile
-	m_game->RenderTile( src_tile, m_selected_unit );
-
-	// update unit
-	RefreshUnit( unit );
-
-	// update new tile
-	m_game->RenderTile( dst_tile, m_selected_unit );
-
-	if ( m_selected_unit == unit ) {
-		m_game->ScrollToSelectedTile( false );
-	}
-
-}
-
 Unit* UnitManager::GetSelectedUnit() const {
 	return m_selected_unit;
 }

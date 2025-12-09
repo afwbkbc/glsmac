@@ -22,6 +22,8 @@ public:
 	void Serialize( types::Buffer& buf ) const;
 	void Deserialize( types::Buffer& buf, Game* game );
 
+	void SetBase( Base* const base );
+
 	WRAPDEFS_PTR( Pop );
 
 	Base* m_base;

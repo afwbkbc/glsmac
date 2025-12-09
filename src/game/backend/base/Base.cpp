@@ -51,6 +51,9 @@ Base::Base(
 	ASSERT( !tile->base, "tile already has base" );
 	tile->base = this;
 	m_tile = tile;
+	for ( auto& pop : m_pops ) {
+		pop.SetBase( this );
+	}
 }
 
 void Base::AddPop( const Pop& pop ) {

@@ -79,7 +79,6 @@ void Unit::SetTile( GSE_CALLABLE, map::tile::Tile* tile ) {
 		}
 	);
 	m_tile = tile;
-	m_um->RefreshUnit( GSE_CALL, this );
 }
 
 const types::Buffer Unit::Serialize( const Unit* unit ) {

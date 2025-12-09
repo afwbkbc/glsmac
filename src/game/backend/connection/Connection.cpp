@@ -180,8 +180,14 @@ const bool Connection::IterateAndMaybeDelete() {
 					if ( !result.events.empty() ) {
 						//Log( "got " + std::to_string( result.events.size() ) + " event(s)" );
 						for ( auto& event : result.events ) {
-							if ( m_ignored_cids.find( event.cid ) == m_ignored_cids.end() ) {
+							if (
+								event.type == network::Event::ET_CLIENT_DISCONNECT ||
+								m_ignored_cids.find( event.cid ) == m_ignored_cids.end()
+							) {
 								ProcessEvent( event );
+							}
+							else {
+								Log( "Ignored event from cid " + std::to_string( event.cid ) );
 							}
 						}
 						m_ignored_cids.clear();
@@ -267,6 +273,7 @@ void Connection::IfServer( std::function< void( Server* ) > cb ) {
 }
 
 void Connection::SendGameEvent( backend::event::Event* event ) {
+	std::lock_guard guard( m_pending_game_events_mutex );
 	if ( m_pending_game_events.size() >= PENDING_GAME_EVENTS_LIMIT ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();
@@ -344,6 +351,18 @@ WRAPIMPL_BEGIN( Connection )
 	};
 WRAPIMPL_END_PTR()
 
+void Connection::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	{
+		std::lock_guard guard( m_pending_game_events_mutex );
+		GC_DEBUG_BEGIN( "pending_game_events" );
+		for ( const auto& event : m_pending_game_events ) {
+			GC_REACHABLE( event );
+		}
+		GC_DEBUG_END();
+	}
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+}
+
 void Connection::ProcessEvent( const network::Event& event ) {
 	ASSERT( m_state, "connection state not set" );
 }
@@ -397,6 +416,7 @@ void Connection::Disconnect( const std::string& reason ) {
 }
 
 void Connection::ProcessPending() {
+	std::lock_guard guard( m_pending_game_events_mutex );
 	if ( !m_pending_game_events.empty() ) {
 		SendGameEvents( m_pending_game_events );
 		m_pending_game_events.clear();
@@ -404,6 +424,7 @@ void Connection::ProcessPending() {
 }
 
 void Connection::ClearPending() {
+	std::lock_guard guard( m_pending_game_events_mutex );
 	m_pending_game_events.clear();
 }
 

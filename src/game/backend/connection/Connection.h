@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <mutex>
 
 #include "gse/GCWrappable.h"
 
@@ -94,6 +95,8 @@ public:
 
 	WRAPDEFS_PTR( Connection );
 
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
+
 	virtual void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) = 0;
 	virtual void SendMessage( const std::string& message ) = 0;
 
@@ -137,6 +140,8 @@ private:
 
 	// buffer events for optimization
 	const size_t PENDING_GAME_EVENTS_LIMIT = 256;
+
+	std::mutex m_pending_game_events_mutex;
 	game_events_t m_pending_game_events = {};
 
 	gse::value::Callable* m_f_on_open = nullptr;

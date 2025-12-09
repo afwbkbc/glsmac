@@ -24,7 +24,6 @@ void Pop::Serialize( types::Buffer& buf ) const {
 	ASSERT( m_base, "pop base is null" );
 	ASSERT( m_def, "pop def is null" );
 
-	buf.WriteInt( m_base->m_id );
 	buf.WriteString( m_def->m_name );
 	buf.WriteInt( m_variant );
 }
@@ -36,11 +35,14 @@ void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 	auto* bm = game->GetBM();
 	ASSERT( bm, "bm is null" );
 
-	m_base = bm->GetBase( buf.ReadInt() );
-	ASSERT( m_base, "base not found" );
 	m_def = bm->GetPopDef( buf.ReadString() );
 	ASSERT( m_def, "pop def not found" );
 	m_variant = buf.ReadInt();
+}
+
+void Pop::SetBase( Base* const base ) {
+	ASSERT( !m_base, "pop base already set" );
+	m_base = base;
 }
 
 WRAPIMPL_BEGIN( Pop )

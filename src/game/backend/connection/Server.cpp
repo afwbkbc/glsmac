@@ -165,11 +165,11 @@ void Server::ProcessEvent( const network::Event& event ) {
 						size_t slot_num = 0;
 
 						// check if player is allowed to join
-						bool is_part_of_game = false;
+						bool is_player_of_game = false;
 						bool is_already_in_game = false;
 						for ( auto& slot : m_state->m_slots->GetSlots() ) {
 							if ( slot.GetLinkedGSID() == gsid ) {
-								is_part_of_game = true;
+								is_player_of_game = true;
 								ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot state is not player" );
 								const auto* player = slot.GetPlayer();
 								ASSERT( player, "slot player not set" );
@@ -182,14 +182,14 @@ void Server::ProcessEvent( const network::Event& event ) {
 								}
 							}
 						}
-						if ( m_game_state != GS_LOBBY && !is_part_of_game ) {
+						if ( m_game_state != GS_LOBBY && !is_player_of_game ) {
 							Log( gsid + "is not part of the game, disconnecting" );
-							Kick( event.cid, "You are not part of this game" );
+							Kick( event.cid, "You are not player of this game" );
 							break;
 						}
 						if ( is_already_in_game ) {
 							Log( "Duplicate connection from " + gsid + ", disconnecting" );
-							Kick( event.cid, "You are already in this game" );
+							Kick( event.cid, "You are already connected" );
 							break;
 						}
 
@@ -231,8 +231,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 						slot.SetPlayer( player, event.cid, event.data.remote_address );
 						player->Connect();
 
-						SendGameState( event.cid );
 						SendPlayersList( event.cid, slot_num );
+						SendGameState( event.cid );
 						SendGlobalSettings( event.cid );
 
 						SendSlotUpdate( slot_num, &slot, event.cid ); // notify others

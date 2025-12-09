@@ -58,7 +58,7 @@ private:
 
 	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
-	std::vector< base::Base* > m_unprocessed_bases = {};
+	std::vector< types::Buffer > m_unprocessed_bases = {};
 
 	std::unordered_set< std::string > m_registered_base_names = {};
 
