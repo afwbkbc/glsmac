@@ -25,7 +25,7 @@ public:
 	void ResetHandlers() override;
 
 protected:
-	void ProcessEvent( const network::LegacyEvent& event ) override;
+	void ProcessEvent( const network::Event& event ) override;
 	void SendGameEvents( const game_events_t& game_events ) override;
 
 private:

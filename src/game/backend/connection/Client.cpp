@@ -21,13 +21,13 @@ Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settin
 	//
 }
 
-void Client::ProcessEvent( const network::LegacyEvent& event ) {
+void Client::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
 	ASSERT( !event.cid, "client connection received event with non-zero cid" );
 
 	switch ( event.type ) {
-		case network::LegacyEvent::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					types::Packet packet( types::Packet::PT_NONE );
@@ -275,11 +275,11 @@ void Client::ProcessEvent( const network::LegacyEvent& event ) {
 			}
 			break;
 		}
-		case network::LegacyEvent::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.data.packet_data );
 			break;
 		}
-		case network::LegacyEvent::ET_DISCONNECT: {
+		case network::Event::ET_DISCONNECT: {
 			Disconnect( "Connection to server lost." );
 			break;
 		}

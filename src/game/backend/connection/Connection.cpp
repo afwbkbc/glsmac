@@ -331,7 +331,7 @@ WRAPIMPL_BEGIN( Connection )
 	};
 WRAPIMPL_END_PTR()
 
-void Connection::ProcessEvent( const network::LegacyEvent& event ) {
+void Connection::ProcessEvent( const network::Event& event ) {
 	ASSERT( m_state, "connection state not set" );
 }
 

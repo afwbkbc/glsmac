@@ -22,7 +22,7 @@ void Turn::AdvanceTurn( const size_t turn_id ) {
 
 const util::crc32::crc_t Turn::FinalizeAndChecksum() {
 	THROW( "TODO: FINALIZE_AND_CHECKSUM" );
-	//return util::crc32::CRC32::CalculateFromBuffer( event::LegacyEvent::SerializeMultiple( m_events ) );
+	//return util::crc32::CRC32::CalculateFromBuffer( event::Event::SerializeMultiple( m_events ) );
 }
 
 void Turn::Reset() {

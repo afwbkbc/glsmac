@@ -1176,7 +1176,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			auto buf = types::Buffer( *request.data.add_event.serialized_event );
 			THROW( "TODO: OP_ADD_EVENT" );
 			/*m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
-				event = event::LegacyEvent::Deserialize( GSE_CALL, buf );
+				event = event::Event::Deserialize( GSE_CALL, buf );
 				errmsg = event->Validate( GSE_CALL, this );
 				if ( errmsg ) {
 					// log and do nothing

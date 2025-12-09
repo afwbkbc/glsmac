@@ -17,13 +17,13 @@ namespace connection {
 Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settings )
 	: Connection( gc_space, network::CM_SERVER, settings ) {}
 
-void Server::ProcessEvent( const network::LegacyEvent& event ) {
+void Server::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( event.cid || event.type == network::LegacyEvent::ET_LISTEN, "server connection received event without cid" );
+	ASSERT( event.cid || event.type == network::Event::ET_LISTEN, "server connection received event without cid" );
 
 	switch ( event.type ) {
-		case network::LegacyEvent::ET_LISTEN: {
+		case network::Event::ET_LISTEN: {
 			m_game_state = GS_LOBBY; // tmp: start with lobby for now
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
@@ -66,7 +66,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 
 			break;
 		}
-		case network::LegacyEvent::ET_CLIENT_CONNECT: {
+		case network::Event::ET_CLIENT_CONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " connected" );
 			ASSERT( m_state->GetCidSlots().find( event.cid ) == m_state->GetCidSlots().end(), "player cid already in slots" );
 
@@ -82,7 +82,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			}
 			break;
 		}
-		case network::LegacyEvent::ET_CLIENT_DISCONNECT: {
+		case network::Event::ET_CLIENT_DISCONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
@@ -136,7 +136,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			}
 			break;
 		}
-		case network::LegacyEvent::ET_PACKET: {
+		case network::Event::ET_PACKET: {
 			try {
 				types::Packet packet( types::Packet::PT_NONE );
 				packet.Deserialize( types::Buffer( event.data.packet_data ) );
@@ -392,7 +392,7 @@ void Server::ProcessEvent( const network::LegacyEvent& event ) {
 			}
 			break;
 		}
-		case network::LegacyEvent::ET_ERROR: {
+		case network::Event::ET_ERROR: {
 			Error( event.cid, event.data.packet_data );
 			break;
 		}

@@ -101,7 +101,7 @@ protected:
 
 	network::Network* const m_network;
 
-	virtual void ProcessEvent( const network::LegacyEvent& event );
+	virtual void ProcessEvent( const network::Event& event );
 
 	gc::Space* GetGCSpace() const;
 

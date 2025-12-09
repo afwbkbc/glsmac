@@ -32,7 +32,7 @@ common::mt_id_t Network::MT_GetEvents() {
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Network::MT_SendEvent( const LegacyEvent& event ) {
+common::mt_id_t Network::MT_SendEvent( const Event& event ) {
 	MT_Request request;
 	request.op = OP_SENDEVENT;
 	request.event = event;
@@ -49,9 +49,9 @@ common::mt_id_t Network::MT_SendPacket( const types::Packet* packet, const netwo
 			( m_current_connection_mode == CM_CLIENT && !cid ),
 		"unexpected cid value for connection mode"
 	);
-	LegacyEvent e;
+	Event e;
 	e.cid = cid;
-	e.type = LegacyEvent::ET_PACKET;
+	e.type = Event::ET_PACKET;
 	e.data.packet_data = packet->Serialize().ToString();
 	/*Log(
 		"Sending packet ( type = " + std::to_string( packet->type ) + " )" + ( cid
@@ -103,8 +103,8 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 		}
 		case OP_DISCONNECT: {
 			if ( GetCurrentConnectionMode() != CM_NONE ) {
-				LegacyEvent event;
-				event.type = LegacyEvent::ET_DISCONNECT;
+				Event event;
+				event.type = Event::ET_DISCONNECT;
 				m_events_in.push_back( event );
 				ProcessEvents();
 				m_current_connection_mode = CM_NONE;
@@ -113,8 +113,8 @@ const MT_Response Network::ProcessRequest( const MT_Request& request, MT_CANCELA
 		}
 		case OP_DISCONNECT_CLIENT: {
 			if ( m_current_connection_mode == CM_SERVER ) {
-				LegacyEvent event;
-				event.type = LegacyEvent::ET_CLIENT_DISCONNECT;
+				Event event;
+				event.type = Event::ET_CLIENT_DISCONNECT;
 				event.cid = request.cid;
 				m_events_in.push_back( event );
 				ProcessEvents();
@@ -149,7 +149,7 @@ void Network::DestroyResponse( const MT_Response& response ) {
 
 }
 
-void Network::AddEvent( const LegacyEvent& event ) {
+void Network::AddEvent( const Event& event ) {
 	m_events_out.push_back( event );
 }
 
@@ -164,7 +164,7 @@ void Network::InvalidateEventsForDisconnectedClient( const network::cid_t cid ) 
 	events_t events_new = {};
 	bool disconnect_event_kept = false;
 	for ( auto& event : m_events_out ) {
-		if ( !disconnect_event_kept && event.type == LegacyEvent::ET_CLIENT_DISCONNECT ) {
+		if ( !disconnect_event_kept && event.type == Event::ET_CLIENT_DISCONNECT ) {
 			disconnect_event_kept = true;
 		}
 		else if ( event.cid == cid ) {
