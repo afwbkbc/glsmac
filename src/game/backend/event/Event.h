@@ -23,7 +23,7 @@ public:
 
 	Event( Game* game, const source_t source, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data, const std::string& id = "" );
 
-	const types::Buffer Serialize() const;
+	const types::Buffer Serialize();
 	static Event* const Deserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer );
 
 	const std::string ToString() const;
@@ -36,6 +36,9 @@ public:
 	const std::string& GetEventName() const;
 	const gse::value::object_properties_t& GetData() const;
 
+	void SetResolved( gse::Value* const resolved );
+	gse::Value* GetResolved();
+
 private:
 	Game* const m_game = nullptr;
 	const source_t m_source = ES_LOCAL;
@@ -45,6 +48,9 @@ private:
 	gse::value::object_properties_t m_original_data = {};
 	gse::value::object_properties_t m_data = {};
 	gse::value::function_arguments_t m_args = {};
+
+	std::mutex m_resolved_mutex;
+	gse::Value* m_resolved = nullptr;
 
 	void UpdateData( GSE_CALLABLE );
 

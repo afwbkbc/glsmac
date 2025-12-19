@@ -102,13 +102,13 @@ void Slot::SetPlayer( Player* player, const network::cid_t cid, const std::strin
 	else {
 		ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 		ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
-		m_player_data.cid = cid;
-		m_player_data.remote_address = remote_address;
-		m_player_data.flags = PF_NONE;
 		m_player_data.player = player;
 		m_slot_state = SS_PLAYER;
 		player->SetSlot( this );
 	}
+	m_player_data.cid = cid;
+	m_player_data.remote_address = remote_address;
+	m_player_data.flags = PF_NONE;
 }
 
 const std::string& Slot::GetLinkedGSID() const {

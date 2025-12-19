@@ -119,7 +119,7 @@ WRAPIMPL_DESERIALIZE( Unit )
 	const auto id = buf->ReadInt();
 	const auto& unit = game->GetUM()->GetUnit( id );
 	ASSERT( unit, "base id not found: " + std::to_string( id ) );
-	return unit->Wrap( GSE_CALL );
+	return unit->Wrap( GSE_CALL, true );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )

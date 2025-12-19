@@ -95,8 +95,6 @@ public:
 
 	WRAPDEFS_PTR( Connection );
 
-	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
-
 	virtual void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) = 0;
 	virtual void SendMessage( const std::string& message ) = 0;
 
@@ -116,7 +114,12 @@ protected:
 	settings::LocalSettings* m_settings = nullptr;
 	State* m_state = nullptr;
 
-	typedef std::vector< backend::event::Event* > game_events_t;
+	struct game_event_t {
+		size_t caller;
+		std::string name;
+		std::string serialized_data;
+	};
+	typedef std::vector< game_event_t > game_events_t;
 	game_state_t m_game_state = GS_NONE;
 
 	const std::string& GetGameStateStr( const game_state_t game_state ) const;
@@ -141,7 +144,6 @@ private:
 	// buffer events for optimization
 	const size_t PENDING_GAME_EVENTS_LIMIT = 256;
 
-	std::mutex m_pending_game_events_mutex;
 	game_events_t m_pending_game_events = {};
 
 	gse::value::Callable* m_f_on_open = nullptr;

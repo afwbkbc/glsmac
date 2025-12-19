@@ -300,7 +300,7 @@ void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	for ( const auto& event : game_events ) {
 		types::Buffer buf;
-		buf.WriteString( event->Serialize().ToString() );
+		buf.WriteString( event.serialized_data );
 		types::Packet p( types::Packet::PT_GAME_EVENT );
 		p.data.str = buf.ToString();
 		m_network->MT_SendPacket( &p );

@@ -470,8 +470,9 @@ void Game::Iterate() {
 									ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
 									// process event
 									if ( handler->HasResolve() ) {
-										auto* resolved = handler->Resolve( GSE_CALL, fargs );
+										auto* const resolved = handler->Resolve( GSE_CALL, fargs );
 										if ( resolved ) {
+											event->SetResolved( resolved );
 											obj->Set( "resolved", resolved, GSE_CALL );
 										}
 									}
@@ -495,30 +496,28 @@ void Game::Iterate() {
 											THROW( "TODO: resolve event on server" );
 										}
 										else {
-											// get resolutions from event
-											THROW( "TODO: parse resolutions" );
+											auto* const resolved = event->GetResolved();
+											ASSERT( resolved, "server sent unresolved event" );
+											obj->Set( "resolved", resolved, GSE_CALL );
 										}
 									}
-									else {
-										// process event
-										gse::Value* rollback_data = nullptr;
-										WithRW( [ &f_process, &rollback_data ](){
-											rollback_data = f_process();
-										} );
-										if ( event->GetSource() == event::Event::ES_LOCAL ) {
-											// send to server and wait for response asynchonously
-											ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
-											m_events_waiting_for_responses.insert(
+									gse::Value* rollback_data = nullptr;
+									WithRW( [ &f_process, &rollback_data ](){
+										rollback_data = f_process();
+									} );
+									if ( event->GetSource() == event::Event::ES_LOCAL ) {
+										// send to server and wait for response asynchonously
+										ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
+										m_events_waiting_for_responses.insert(
+											{
+												event->GetId(),
 												{
-													event->GetId(),
-													{
-														event,
-														rollback_data
-													}
+													event,
+													rollback_data
 												}
-											);
-											m_state->m_connection->SendGameEvent( event );
-										}
+											}
+										);
+										m_state->m_connection->SendGameEvent( event );
 									}
 								}
 							}

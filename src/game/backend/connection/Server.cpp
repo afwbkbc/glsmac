@@ -175,11 +175,11 @@ void Server::ProcessEvent( const network::Event& event ) {
 								ASSERT( player, "slot player not set" );
 								if ( player->IsConnected() ) {
 									is_already_in_game = true;
-									break;
 								}
 								else {
 									slot_num = slot.GetIndex();
 								}
+								break;
 							}
 						}
 						if ( m_game_state != GS_LOBBY && !is_player_of_game ) {
@@ -412,10 +412,10 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 	Broadcast(
 		[ this, &game_events, &need_ready_clear ]( const network::cid_t cid ) -> void {
 			for ( const auto& event : game_events ) {
-				if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event->GetEventName() ) != s_clear_ready_on_events.end() ) {
+				if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event.name ) != s_clear_ready_on_events.end() ) {
 					need_ready_clear = true;
 				}
-				const auto& sender_slot = m_state->m_slots->GetSlot( event->GetCaller() );
+				const auto& sender_slot = m_state->m_slots->GetSlot( event.caller );
 				const auto& target_slot = m_state->m_slots->GetSlot( m_state->GetCidSlots().at( cid ) );
 				if ( sender_slot.GetCid() != cid && (
 					m_game_state == GS_LOBBY ||
@@ -424,7 +424,7 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 						)
 				) ) {
 					types::Buffer buf;
-					buf.WriteString( event->Serialize().ToString() );
+					buf.WriteString( event.serialized_data );
 					types::Packet p( types::Packet::PT_GAME_EVENT );
 					p.data.str = buf.ToString();
 					m_network->MT_SendPacket( &p, cid );

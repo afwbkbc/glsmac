@@ -22,7 +22,7 @@ Event::Event( Game* game, const source_t source, const size_t caller, GSE_CALLAB
 	UpdateData( GSE_CALL );
 }
 
-const types::Buffer Event::Serialize() const {
+const types::Buffer Event::Serialize() {
 	types::Buffer buf;
 
 	buf.WriteString( m_id );
@@ -33,7 +33,16 @@ const types::Buffer Event::Serialize() const {
 		buf.WriteString( it.first );
 		it.second->Serialize( &buf, it.second );
 	}
-
+	{
+		std::lock_guard guard( m_resolved_mutex );
+		if ( m_resolved ) {
+			buf.WriteBool( true );
+			m_resolved->Serialize( &buf, m_resolved );
+		}
+		else {
+			buf.WriteBool( false );
+		}
+	}
 	return buf;
 }
 
@@ -47,7 +56,11 @@ Event* const Event::Deserialize( Game* const game, const source_t source, GSE_CA
 		const auto k = buffer.ReadString();
 		data.insert( { k, gse::Value::Deserialize( GSE_CALL, &buffer, game ) } );
 	}
-	return new Event( game, source, caller, GSE_CALL, name, data, id );
+	auto* event = new Event( game, source, caller, GSE_CALL, name, data, id );
+	if ( buffer.ReadBool() ) {
+		event->SetResolved( gse::Value::Deserialize( GSE_CALL, &buffer, game ) );
+	}
+	return event;
 }
 
 const std::string Event::ToString() const {
@@ -64,6 +77,15 @@ void Event::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
+
+	{
+		std::lock_guard guard( m_resolved_mutex );
+		if ( m_resolved ) {
+			GC_DEBUG_BEGIN( "resolved" );
+			GC_REACHABLE( m_resolved );
+			GC_DEBUG_END();
+		}
+	}
 
 	GC_DEBUG_END();
 }
@@ -86,6 +108,17 @@ const std::string& Event::GetEventName() const {
 
 const gse::value::object_properties_t& Event::GetData() const {
 	return m_data;
+}
+
+void Event::SetResolved( gse::Value* const resolved ) {
+	std::lock_guard guard( m_resolved_mutex );
+	ASSERT( !m_resolved, "event already resolved" );
+	m_resolved = resolved;
+}
+
+gse::Value* Event::GetResolved() {
+	std::lock_guard guard( m_resolved_mutex );
+	return m_resolved;
 }
 
 void Event::UpdateData( GSE_CALLABLE ) {
