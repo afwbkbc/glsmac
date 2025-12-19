@@ -68,7 +68,9 @@ return (glsmac) => {
 
 		e.game.on('start', (e) => {
 
+
 			// init game data
+			resources.define(e.game);
 			units.define(e.game);
 			bases.define(e.game);
 

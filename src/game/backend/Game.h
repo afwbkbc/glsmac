@@ -394,6 +394,7 @@ private:
 		GS_NONE,
 		GS_PREPARING_MAP,
 		GS_INITIALIZING,
+		GS_STARTING,
 		GS_RUNNING,
 	};
 	std::atomic< game_state_t > m_game_state = GS_NONE;
@@ -428,12 +429,6 @@ private:
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
 
-	class Interface : public gse::GCWrappable {
-	public:
-		Interface( gc::Space* const gc_space );
-	};
-	Interface* m_interface = nullptr;
-
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
 
 	std::vector< event::Event* > m_pending_events = {};
@@ -452,6 +447,8 @@ private:
 
 	std::atomic< size_t > m_rw_counter = 0;
 	void WithRW( const std::function< void() >& f );
+
+	void InitComplete( GSE_CALLABLE );
 
 private:
 	friend class map::tile::TileManager;

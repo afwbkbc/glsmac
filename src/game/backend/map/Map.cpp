@@ -297,6 +297,7 @@ void Map::ClearTexture() {
 void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
+	ASSERT( m_textures.terrain, "terrain texture not set" );
 	m_textures.terrain->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -406,6 +407,7 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState* ts, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
+	ASSERT( m_textures.terrain, "terrain texture not set" );
 	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
 	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
 	m_textures.terrain->AddFrom(

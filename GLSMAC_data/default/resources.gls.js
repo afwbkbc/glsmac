@@ -26,10 +26,6 @@ const result = {
 
 	configure: (game) => {
 
-		define(game, 'Nutrients', 304, 13);
-		define(game, 'Minerals', 345, 36);
-		define(game, 'Energy', 386, 59);
-
 		game.rm.on('get_yield', (e) => {
 
 			if (e.resource == 'Nutrients') {
@@ -79,6 +75,13 @@ const result = {
 
 		});
 	},
+
+	define: (game) => {
+		define(game, 'Nutrients', 304, 13);
+		define(game, 'Minerals', 345, 36);
+		define(game, 'Energy', 386, 59);
+	},
+
 };
 
 return result;

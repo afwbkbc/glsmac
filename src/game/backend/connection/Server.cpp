@@ -415,7 +415,14 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 				if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event->GetEventName() ) != s_clear_ready_on_events.end() ) {
 					need_ready_clear = true;
 				}
-				if ( m_state->m_slots->GetSlot( event->GetCaller() ).GetCid() != cid ) {
+				const auto& sender_slot = m_state->m_slots->GetSlot( event->GetCaller() );
+				const auto& target_slot = m_state->m_slots->GetSlot( m_state->GetCidSlots().at( cid ) );
+				if ( sender_slot.GetCid() != cid && (
+					m_game_state == GS_LOBBY ||
+						target_slot.HasPlayerFlag(
+							slot::PF_GAME_INITIALIZED
+						)
+				) ) {
 					types::Buffer buf;
 					buf.WriteString( event->Serialize().ToString() );
 					types::Packet p( types::Packet::PT_GAME_EVENT );
