@@ -1,7 +1,3 @@
-#include <thread>
-#include <fstream>
-#include <sstream>
-#include <chrono>
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 
@@ -101,16 +97,6 @@
 #endif
 
 int main( const int argc, const char* argv[] ) {
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"A\",\"location\":\"main.cpp:100\",\"message\":\"main() entry\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":true},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 
 	config::Config config( argv[ 0 ] );
 

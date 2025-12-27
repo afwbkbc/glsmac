@@ -1,5 +1,6 @@
 #include "Overlay.h"
 
+
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/actor/Text.h"
@@ -29,17 +30,40 @@ void Overlay::Stop() {
 void Overlay::Iterate() {
 
 	for ( auto it = m_gl_scenes.begin() ; it < m_gl_scenes.end() ; ++it ) {
-		( *it )->Update();
+		if ( *it ) {
+			( *it )->Update();
+		}
 	}
-
-	if ( m_is_redraw_needed ) {
+	// Safety check: ensure this pointer is valid before accessing members
+	bool is_redraw_needed = false;
+	try {
+		is_redraw_needed = m_is_redraw_needed;
+	} catch (...) {
+		return; // Exit early if object is corrupted
+	}
+	if ( is_redraw_needed ) {
+		if ( !m_fbo ) {
+			THROW( "FBO not initialized in Overlay::Iterate()" );
+		}
+		if ( !m_shader_program ) {
+			THROW( "Shader program not initialized in Overlay::Iterate()" );
+		}
 
 		glDisable( GL_DEPTH_TEST );
 
 		//Log( "Redrawing overlay" );
 		m_fbo->Write(
 			[ this ]() {
+				if ( !m_shader_program ) {
+					THROW( "Shader program null in Overlay Write lambda" );
+				}
 				for ( auto& scene : m_gl_scenes ) {
+					if ( !scene ) {
+						THROW( "Scene null in Overlay Write lambda" );
+					}
+					if ( !scene->GetScene() ) {
+						THROW( "Scene->GetScene() null in Overlay Write lambda" );
+					}
 					switch ( scene->GetScene()->GetType() ) {
 						case scene::SCENE_TYPE_SIMPLE2D: {
 							scene->Draw( m_shader_program );
@@ -59,6 +83,12 @@ void Overlay::Iterate() {
 		m_is_redraw_needed = false;
 	}
 
+	if ( !m_fbo ) {
+		THROW( "FBO not initialized for Draw() in Overlay::Iterate()" );
+	}
+	if ( !m_shader_program ) {
+		THROW( "Shader program not initialized for Draw() in Overlay::Iterate()" );
+	}
 	m_fbo->Draw( m_shader_program );
 }
 

@@ -183,6 +183,10 @@ int Engine::Run() {
 		for ( auto& thread : m_threads ) {
 			thread->T_Stop();
 		}
+		
+		// Drain any remaining operations in the dispatch queue after threads stop
+		// This prevents lambdas from executing after modules are destroyed
+		common::MainThreadDispatch::GetInstance()->ProcessQueue();
 #ifdef DEBUG
 		util::Timer thread_running_timer;
 		thread_running_timer.SetInterval( 1000 );

@@ -122,6 +122,9 @@ private:
 
 	size_t m_gl_thread_id = {};
 	void CheckGLThread( const std::string& source );
+public:
+	void UpdateGLThread(); // Update GL thread ID to current thread (for context switching)
+private:
 };
 
 extern MemoryWatcher* g_memory_watcher;

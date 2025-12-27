@@ -656,6 +656,10 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 			internalbpp = 4;
 			break;
 		}
+		case GL_RGBA: {
+			internalbpp = 4;
+			break;
+		}
 		case GL_R32UI: {
 			internalbpp = 1;
 			break;
@@ -1156,6 +1160,10 @@ void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 
 void MemoryWatcher::CheckGLThread( const std::string& source ) {
 	ASSERT( m_gl_thread_id == std::hash< std::thread::id >()( std::this_thread::get_id() ), "gl thread mismatch @" + source );
+}
+
+void MemoryWatcher::UpdateGLThread() {
+	m_gl_thread_id = std::hash< std::thread::id >()( std::this_thread::get_id() );
 }
 
 }

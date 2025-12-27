@@ -1,8 +1,4 @@
 #include <algorithm>
-#include <fstream>
-#include <sstream>
-#include <chrono>
-#include <thread>
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
@@ -34,29 +30,9 @@ SDL2::~SDL2() {
 #ifdef __APPLE__
 void SDL2::InitSDLOnMainThread() {
 	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:InitSDLOnMainThread\",\"message\":\"SDL_Init(SDL_INIT_AUDIO) on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
 		THROW( (std::string)"Failed to initialize SDL audio: " + SDL_GetError() );
 	}
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:InitSDLOnMainThread\",\"message\":\"SDL_Init(SDL_INIT_AUDIO) completed\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 }
 #endif
 
@@ -77,51 +53,11 @@ void SDL2::Start() {
 	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
 	// SDL should already be initialized via InitSDLOnMainThread() called from main()
 	ASSERT( SDL_WasInit( SDL_INIT_AUDIO ) != 0, "SDL audio not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:Start\",\"message\":\"SDL audio already initialized on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 #else
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:40\",\"message\":\"SDL_Init(SDL_INIT_AUDIO) before call\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
-		// #region agent log
-		{
-			std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-			auto tid = std::this_thread::get_id();
-			std::stringstream ss;
-			ss << tid;
-			auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:41\",\"message\":\"SDL_Init(SDL_INIT_AUDIO) failed\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"error\":\"" << SDL_GetError() << "\"},\"timestamp\":" << now << "}\n";
-		}
-		// #endregion
 		Log( "Failed to enable audio, game will start without sound." );
 		return;
 	}
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"A\",\"location\":\"SDL2.cpp:44\",\"message\":\"SDL_Init(SDL_INIT_AUDIO) succeeded\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 #endif
 
 	m_buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;

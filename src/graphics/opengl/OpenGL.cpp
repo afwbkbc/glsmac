@@ -1,5 +1,6 @@
 #include "OpenGL.h"
 
+#include "common/MainThreadDispatch.h"
 #include "engine/Engine.h"
 
 #include "shader_program/Simple2D.h"
@@ -18,10 +19,6 @@
 #include <pthread.h>
 #endif
 #include "common/MainThreadDispatch.h"
-#include <fstream>
-#include <sstream>
-#include <chrono>
-#include <thread>
 
 namespace graphics {
 namespace opengl {
@@ -60,40 +57,14 @@ OpenGL::~OpenGL() {}
 #ifdef __APPLE__
 void OpenGL::InitSDLOnMainThread() {
 	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"E\",\"location\":\"OpenGL.cpp:InitSDLOnMainThread\",\"message\":\"SDL_VideoInit before call\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	SDL_VideoInit( NULL );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"E\",\"location\":\"OpenGL.cpp:InitSDLOnMainThread\",\"message\":\"SDL_VideoInit after call\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 	
 	// Set OpenGL attributes BEFORE creating window (required on macOS)
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"E\",\"location\":\"OpenGL.cpp:InitSDLOnMainThread\",\"message\":\"Setting GL attributes before window creation\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
+	// Request OpenGL 3.3 Core Profile for GLSL 3.30 support on macOS
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
 	SDL_GL_SetSwapInterval( (char)m_options.vsync );
@@ -111,75 +82,21 @@ void OpenGL::InitSDLOnMainThread() {
 	}
 	
 	// Create OpenGL context on main thread (required on macOS)
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"F\",\"location\":\"OpenGL.cpp:InitSDLOnMainThread\",\"message\":\"Creating OpenGL context on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"F\",\"location\":\"OpenGL.cpp:InitSDLOnMainThread\",\"message\":\"OpenGL context created\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"contextCreated\":" << (m_gl_context != NULL ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 }
 #endif
 
 void OpenGL::Start() {
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#ifdef __APPLE__
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"G\",\"location\":\"OpenGL.cpp:98\",\"message\":\"OpenGL::Start() entry\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"windowExists\":" << (m_window != NULL ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-#else
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"G\",\"location\":\"OpenGL.cpp:98\",\"message\":\"OpenGL::Start() entry\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"windowExists\":" << (m_window != NULL ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-#endif
-	}
-	// #endregion
 
 	Log( "Initializing SDL2" );
 
 #ifdef __APPLE__
 	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
 	// SDL should already be initialized via InitSDLOnMainThread() called from main()
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"G\",\"location\":\"OpenGL.cpp:105\",\"message\":\"Before ASSERT check\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"windowExists\":" << (m_window != NULL ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	ASSERT( m_window != NULL, "SDL window not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"G\",\"location\":\"OpenGL.cpp:106\",\"message\":\"After ASSERT check\",\"data\":{\"threadId\":\"" << ss.str() << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 #else
 	SDL_VideoInit( NULL );
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
@@ -216,32 +133,16 @@ void OpenGL::Start() {
 #endif
 
 	Log( "Initializing OpenGL" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"I\",\"location\":\"OpenGL.cpp:After Log\",\"message\":\"After Log Initializing OpenGL\",\"data\":{\"threadId\":\"" << ss.str() << "\"},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 
 #ifdef __APPLE__
 	// On macOS, OpenGL context must be created on the main thread
 	// Context should already be created via InitSDLOnMainThread() called from main()
 	ASSERT( m_gl_context != NULL, "OpenGL context not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"F\",\"location\":\"OpenGL.cpp:Start\",\"message\":\"OpenGL context already created on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"contextExists\":" << (m_gl_context != NULL ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 #else
+	// Request OpenGL 3.3 Core Profile for GLSL 3.30 support
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
 	SDL_GL_SetSwapInterval( (char)m_options.vsync );
@@ -254,47 +155,20 @@ void OpenGL::Start() {
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-#ifdef __APPLE__
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H\",\"location\":\"OpenGL.cpp:240\",\"message\":\"Before glewInit\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
-#else
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H\",\"location\":\"OpenGL.cpp:240\",\"message\":\"Before glewInit\",\"data\":{\"threadId\":\"" << ss.str() << "\"},\"timestamp\":" << now << "}\n";
-#endif
-	}
-	// #endregion
 #ifdef __APPLE__
 	// On macOS, make the context current on this thread before calling glewInit
 	if ( SDL_GL_MakeCurrent( m_window, m_gl_context ) != 0 ) {
 		THROW( (std::string)"Could not make OpenGL context current: " + SDL_GetError() );
 	}
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H\",\"location\":\"OpenGL.cpp:MakeCurrent\",\"message\":\"Context made current\",\"data\":{\"threadId\":\"" << ss.str() << "\"},\"timestamp\":" << now << "}\n";
+#ifdef DEBUG
+	// Update MemoryWatcher's GL thread ID to reflect that the context is now current on this thread
+	using debug::g_memory_watcher;
+	if ( g_memory_watcher ) {
+		g_memory_watcher->UpdateGLThread();
 	}
-	// #endregion
+#endif
 #endif
 	GLenum res = glewInit();
-	// #region agent log
-	{
-		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
-		auto tid = std::this_thread::get_id();
-		std::stringstream ss;
-		ss << tid;
-		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"H\",\"location\":\"OpenGL.cpp:glewInit\",\"message\":\"After glewInit\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"result\":" << res << "},\"timestamp\":" << now << "}\n";
-	}
-	// #endregion
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
 	}
@@ -361,16 +235,32 @@ void OpenGL::Start() {
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
 	// generate 'empty' texture (transparent 1x1)
+	// In OpenGL 3.3 Core Profile, a VAO must be bound before texture operations
+	GLuint temp_vao = 0;
+	glGenVertexArrays( 1, &temp_vao );
+	glBindVertexArray( temp_vao );
+	
 	glActiveTexture( GL_TEXTURE0 );
 	glGenTextures( 1, &m_no_texture );
+	ASSERT( m_no_texture != 0, "Failed to generate texture for m_no_texture" );
+	
+	// Clear any previous OpenGL errors
+	while ( glGetError() != GL_NO_ERROR ) {}
 
 	WithBindTexture(
 		m_no_texture, [ this ]() {
 			uint32_t nothing = 0;
+			// In OpenGL 3.3 Core Profile, use GL_RGBA8 (sized format)
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nothing );
-			ASSERT( !glGetError(), "Error loading texture" );
+			GLenum err = glGetError();
+			if ( err != GL_NO_ERROR ) {
+				THROW( "Error loading texture: OpenGL error " + std::to_string( err ) + " (texture ID: " + std::to_string( m_no_texture ) + ")" );
+			}
 		}
 	);
+	
+	glBindVertexArray( 0 );
+	glDeleteVertexArrays( 1, &temp_vao );
 
 	m_capture_to_texture_fbo = CreateFBO();
 
@@ -421,6 +311,21 @@ void OpenGL::Iterate() {
 	std::lock_guard guard( m_render_mutex );
 
 	Lock();
+	
+	// On macOS, OpenGL contexts are thread-local, so we must make the context current on this thread
+	// before calling any OpenGL functions
+#ifdef __APPLE__
+	if ( SDL_GL_MakeCurrent( m_window, m_gl_context ) != 0 ) {
+		THROW( (std::string)"Could not make OpenGL context current in Iterate(): " + SDL_GetError() );
+	}
+#ifdef DEBUG
+	// Update MemoryWatcher's GL thread ID to reflect that the context is now current on this thread
+	using debug::g_memory_watcher;
+	if ( g_memory_watcher ) {
+		g_memory_watcher->UpdateGLThread();
+	}
+#endif
+#endif
 
 	Graphics::Iterate();
 
@@ -430,14 +335,25 @@ void OpenGL::Iterate() {
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
-		( *it )->Iterate();
+	size_t routine_index = 0;
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it, ++routine_index ) {
+		if ( *it ) {
+			( *it )->Iterate();
+		}
 	}
 
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 
-	SDL_GL_SwapWindow( m_window );
+	// SDL_GL_SwapWindow() must be called on main thread on macOS
+	// Make context current on main thread before swapping
+	common::MainThreadDispatch::GetInstance()->DispatchVoid(
+		[this]() {
+			// Make the OpenGL context current on main thread before swapping
+			SDL_GL_MakeCurrent( m_window, m_gl_context );
+			SDL_GL_SwapWindow( m_window );
+		}
+	);
 
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
@@ -843,6 +759,12 @@ void OpenGL::WithBindFramebufferEnd( GLenum target ) const {
 }
 
 void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f ) const {
+	ASSERT( sp != nullptr, "shader program is null in WithShaderProgram()" );
+	// Safety check: ensure shader program is initialized before calling virtual functions
+	// Access m_gl_shader_program directly (we're a friend class) to avoid virtual function call if object is corrupted
+	if ( sp->m_gl_shader_program == 0 ) {
+		THROW( "shader program not initialized in WithShaderProgram()" );
+	}
 	sp->Enable();
 	f();
 	sp->Disable();
