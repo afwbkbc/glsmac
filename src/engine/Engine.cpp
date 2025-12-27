@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "config/Config.h"
 #include "common/Thread.h"
+#include "common/MainThreadDispatch.h"
 #include "error_handler/ErrorHandler.h"
 #include "logger/Logger.h"
 #include "resource/ResourceManager.h"
@@ -170,6 +171,8 @@ int Engine::Run() {
 
 	try {
 		while ( !m_is_shutting_down ) {
+			// Process SDL operations queued from worker threads
+			common::MainThreadDispatch::GetInstance()->ProcessQueue();
 			for ( auto& thread : m_threads ) {
 				// ?
 			}

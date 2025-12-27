@@ -17,6 +17,7 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
+#include "common/MainThreadDispatch.h"
 #include <fstream>
 #include <sstream>
 #include <chrono>
@@ -901,19 +902,24 @@ void OpenGL::SetFullscreen() {
 	Log( "Switching to fullscreen" );
 	m_is_fullscreen = true;
 
-	SDL_DisplayMode dm;
-	SDL_GetDesktopDisplayMode( 0, &dm );
+	// Window operations dispatched to main thread for consistency
+	auto future = common::MainThreadDispatch::GetInstance()->Dispatch<SDL_DisplayMode>([this]() {
+		SDL_DisplayMode dm;
+		SDL_GetDesktopDisplayMode( 0, &dm );
 
-	//SDL_SetWindowResizable( m_window, SDL_FALSE );
-	//SDL_SetWindowBordered( m_window, SDL_FALSE );
-	SDL_SetWindowPosition( m_window, 0, 0 );
-	SDL_SetWindowSize( m_window, dm.w, dm.h );
-	//SDL_RaiseWindow( m_window );
-	SDL_SetWindowFullscreen( m_window, true );
-	SDL_SetWindowGrab( m_window, SDL_TRUE );
+		//SDL_SetWindowResizable( m_window, SDL_FALSE );
+		//SDL_SetWindowBordered( m_window, SDL_FALSE );
+		SDL_SetWindowPosition( m_window, 0, 0 );
+		SDL_SetWindowSize( m_window, dm.w, dm.h );
+		//SDL_RaiseWindow( m_window );
+		SDL_SetWindowFullscreen( m_window, true );
+		SDL_SetWindowGrab( m_window, SDL_TRUE );
 
+		return dm;
+	});
+	
+	SDL_DisplayMode dm = future.get();
 	m_last_window_size = m_window_size;
-
 	ResizeViewport( dm.w, dm.h );
 }
 
@@ -923,19 +929,24 @@ void OpenGL::SetWindowed() {
 	Log( "Switching to window" );
 	m_is_fullscreen = false;
 
-	SDL_DisplayMode dm;
-	SDL_GetDesktopDisplayMode( 0, &dm );
+	// Window operations dispatched to main thread for consistency
+	types::Vec2< unsigned short > saved_window_size = m_last_window_size;
+	auto future = common::MainThreadDispatch::GetInstance()->Dispatch<types::Vec2< unsigned short >>([this, saved_window_size]() {
+		SDL_DisplayMode dm;
+		SDL_GetDesktopDisplayMode( 0, &dm );
 
-	m_window_size = m_last_window_size;
+		SDL_SetWindowFullscreen( m_window, false );
+		//SDL_SetWindowBordered( m_window, SDL_TRUE );
+		//SDL_SetWindowResizable( m_window, SDL_TRUE );
+		SDL_SetWindowSize( m_window, saved_window_size.x, saved_window_size.y );
+		SDL_SetWindowPosition( m_window, ( dm.w - saved_window_size.x ) / 2, ( dm.h - saved_window_size.y ) / 2 );
 
-	SDL_SetWindowFullscreen( m_window, false );
-	//SDL_SetWindowBordered( m_window, SDL_TRUE );
-	//SDL_SetWindowResizable( m_window, SDL_TRUE );
-	SDL_SetWindowSize( m_window, m_window_size.x, m_window_size.y );
-	SDL_SetWindowPosition( m_window, ( dm.w - m_window_size.x ) / 2, ( dm.h - m_window_size.y ) / 2 );
+		SDL_SetWindowGrab( m_window, SDL_FALSE );
 
-	SDL_SetWindowGrab( m_window, SDL_FALSE );
-
+		return saved_window_size;
+	});
+	
+	m_window_size = future.get();
 	ResizeViewport( m_window_size.x, m_window_size.y );
 }
 

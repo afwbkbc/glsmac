@@ -110,13 +110,64 @@ void SDL2::Stop() {
 	SDL_Quit();
 }
 
-void SDL2::Iterate() {
+void SDL2::PollEventsOnMainThread() const {
+#ifdef __APPLE__
+	ASSERT( pthread_main_np() != 0, "PollEventsOnMainThread must be called from main thread" );
+#endif
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+#ifdef __APPLE__
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"dispatch-test\",\"hypothesisId\":\"J\",\"location\":\"SDL2.cpp:PollEventsOnMainThread\",\"message\":\"SDL_PollEvent on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << "},\"timestamp\":" << now << "}\n";
+#else
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"dispatch-test\",\"hypothesisId\":\"J\",\"location\":\"SDL2.cpp:PollEventsOnMainThread\",\"message\":\"SDL_PollEvent on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\"},\"timestamp\":" << now << "}\n";
+#endif
+	}
+	// #endregion
+	
 	SDL_Event event;
+	int event_count = 0;
+	while ( SDL_PollEvent( &event ) ) {
+		std::lock_guard<std::mutex> lock( m_event_buffer_mutex );
+		m_event_buffer.push( event );
+		event_count++;
+	}
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"dispatch-test\",\"hypothesisId\":\"J\",\"location\":\"SDL2.cpp:PollEventsOnMainThread\",\"message\":\"SDL_PollEvent completed\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"eventCount\":" << event_count << "},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+}
 
+void SDL2::Iterate() {
 	input::Event e = {}; // new
 	ui_legacy::event::UIEvent* le = nullptr; // legacy
 
-	while ( SDL_PollEvent( &event ) ) {
+	// Poll events on main thread and store in buffer
+	common::MainThreadDispatch::GetInstance()->DispatchVoid(
+		[this]() { this->PollEventsOnMainThread(); }
+	);
+	
+	// Process events from buffer (on worker thread)
+	SDL_Event event;
+	while ( true ) {
+		{
+			std::lock_guard<std::mutex> lock( m_event_buffer_mutex );
+			if ( m_event_buffer.empty() ) {
+				break;
+			}
+			event = m_event_buffer.front();
+			m_event_buffer.pop();
+		}
 		e.SetType( EV_NONE );
 		switch ( event.type ) {
 			case SDL_QUIT: {
@@ -251,13 +302,18 @@ void SDL2::Iterate() {
 }
 
 const std::string SDL2::GetClipboardText() const {
-	std::string result = "";
-	auto* t = SDL_GetClipboardText();
-	if ( t ) {
-		result = t;
-		SDL_free( t );
-	}
-	return result;
+	// SDL_GetClipboardText() dispatched to main thread for consistency
+	auto future = common::MainThreadDispatch::GetInstance()->Dispatch<std::string>([]() {
+		std::string result = "";
+		auto* t = SDL_GetClipboardText();
+		if ( t ) {
+			result = t;
+			SDL_free( t );
+		}
+		return result;
+	});
+	// Wait for the operation to complete (this will block until main thread processes it)
+	return future.get();
 }
 
 mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {
