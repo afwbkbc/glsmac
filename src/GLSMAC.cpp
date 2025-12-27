@@ -59,7 +59,6 @@ GLSMAC::GLSMAC()
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;
-
 	{
 		m_gc_space->Accumulate( this, [ this, &entry_script ]() {
 			gse::ExecutionPointer ep;

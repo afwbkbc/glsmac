@@ -1,5 +1,6 @@
 #include "GSE.h"
 
+#include <filesystem>
 #include "parser/JS.h"
 #include "runner/Interpreter.h"
 #include "gse/context/GlobalContext.h"
@@ -173,12 +174,53 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 			full_path = it->second;
 		}
 		else {
-			for ( const auto& it2 : m_supported_extensions ) {
-				if ( util::FS::FileExists( path + it2, PATH_SEPARATOR ) ) {
-					if ( !full_path.empty() ) {
-						GSE_ERROR( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ..." );
+			// Try multiple path resolution strategies
+			std::vector< std::string > paths_to_try = { path };
+			
+			// Strategy 1: Normalize path to resolve .. components
+			std::string normalized_path = path;
+			if ( !util::FS::IsAbsolutePath( path, PATH_SEPARATOR ) ) {
+				// Convert to absolute path first, then normalize
+				normalized_path = util::FS::GetAbsolutePath( path, PATH_SEPARATOR );
+			}
+			// Use std::filesystem to resolve .. components (weakly_canonical doesn't require path to exist)
+			try {
+				std::filesystem::path fs_path( normalized_path );
+				normalized_path = std::filesystem::weakly_canonical( fs_path ).string();
+				paths_to_try.push_back( normalized_path );
+			}
+			catch ( const std::exception& ) {
+				// If canonicalization fails, try lexically_normal as fallback
+				try {
+					std::filesystem::path fs_path( normalized_path );
+					normalized_path = fs_path.lexically_normal().string();
+					paths_to_try.push_back( normalized_path );
+				}
+				catch ( const std::exception& ) {
+					// If normalization fails, use original path
+				}
+			}
+			
+			// Strategy 2: If path starts with ../, also try without the ../
+			if ( path.size() >= 3 && path.substr( 0, 3 ) == "../" ) {
+				paths_to_try.push_back( path.substr( 3 ) );
+			}
+			
+			// Try each path strategy
+			for ( const auto& try_path : paths_to_try ) {
+				for ( const auto& it2 : m_supported_extensions ) {
+					const auto test_path = try_path + it2;
+					const auto exists = util::FS::FileExists( test_path, PATH_SEPARATOR );
+					if ( exists ) {
+						if ( !full_path.empty() ) {
+							GSE_ERROR( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ..." );
+						}
+						full_path = test_path;
+						break; // Found a match, stop trying other paths
 					}
-					full_path = path + it2;
+				}
+				if ( !full_path.empty() ) {
+					break; // Found a match, stop trying other path strategies
 				}
 			}
 			m_include_paths.insert(
