@@ -14,6 +14,10 @@
 #include "types/texture/Texture.h"
 #include "gc/GC.h"
 
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 namespace graphics {
 namespace opengl {
 
@@ -48,15 +52,11 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 
 OpenGL::~OpenGL() {}
 
-void OpenGL::Start() {
-
-	Log( "Initializing SDL2" );
+#ifdef __APPLE__
+void OpenGL::InitSDLOnMainThread() {
+	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
 	SDL_VideoInit( NULL );
-
-	Log( "Creating window" );
-
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
-
 	m_window = SDL_CreateWindow(
 		m_options.title.c_str(),
 		SDL_WINDOWPOS_CENTERED,
@@ -65,6 +65,37 @@ void OpenGL::Start() {
 		m_options.viewport_height,
 		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 	);
+	if ( !m_window ) {
+		THROW( (std::string)"Could not create SDL2 window: " + SDL_GetError() );
+	}
+}
+#endif
+
+void OpenGL::Start() {
+
+	Log( "Initializing SDL2" );
+
+#ifdef __APPLE__
+	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
+	// SDL should already be initialized via InitSDLOnMainThread() called from main()
+	ASSERT( m_window != NULL, "SDL window not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
+#else
+	SDL_VideoInit( NULL );
+	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
+	m_window = SDL_CreateWindow(
+		m_options.title.c_str(),
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
+		m_options.viewport_width,
+		m_options.viewport_height,
+		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
+	);
+	if ( !m_window ) {
+		THROW( (std::string)"Could not create SDL2 window: " + SDL_GetError() );
+	}
+#endif
+
+	Log( "Creating window" );
 
 	// not using ASSERTs below because those errors should be thrown in release mode too, i.e. if there's no opengl support or there is no X at all
 

@@ -252,6 +252,10 @@ int main( const int argc, const char* argv[] ) {
 		}
 
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
+#ifdef __APPLE__
+		// On macOS, SDL initialization must happen on the main thread before starting worker threads
+		graphics.InitSDLOnMainThread();
+#endif
 		audio::sdl2::SDL2 audio;
 
 		if ( legacy_ui ) {
