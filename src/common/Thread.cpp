@@ -2,6 +2,8 @@
 #include <thread>
 #include <cstring>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 
 #include "Thread.h"
 #include "common/Module.h"
@@ -62,6 +64,17 @@ void Thread::Run() {
 
 	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
 
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"Thread.cpp:61\",\"message\":\"Thread::Run() entry\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"threadName\":\"" << m_thread_name << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+
 	Log( "Starting thread" );
 
 #ifdef DEBUG
@@ -69,7 +82,27 @@ void Thread::Run() {
 #endif
 
 	for ( modules_t::iterator it = m_modules.begin() ; it < m_modules.end() ; ++it ) {
+		// #region agent log
+		{
+			std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+			auto tid = std::this_thread::get_id();
+			std::stringstream ss;
+			ss << tid;
+			auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"Thread.cpp:72\",\"message\":\"Calling module Start()\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"threadName\":\"" << m_thread_name << "\",\"moduleClassName\":\"" << (*it)->GetClassName() << "\"},\"timestamp\":" << now << "}\n";
+		}
+		// #endregion
 		( *it )->Start();
+		// #region agent log
+		{
+			std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+			auto tid = std::this_thread::get_id();
+			std::stringstream ss;
+			ss << tid;
+			auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			log << "{\"sessionId\":\"debug-session\",\"runId\":\"run1\",\"hypothesisId\":\"D\",\"location\":\"Thread.cpp:73\",\"message\":\"Module Start() completed\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"threadName\":\"" << m_thread_name << "\",\"moduleClassName\":\"" << (*it)->GetClassName() << "\"},\"timestamp\":" << now << "}\n";
+		}
+		// #endregion
 	}
 
 	float step_diff = 0.0f;

@@ -1,5 +1,13 @@
 #include "SDL2.h"
 
+#include <fstream>
+#include <sstream>
+#include <chrono>
+#include <thread>
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
 #include "ui_legacy/UI.h"
@@ -26,9 +34,74 @@ SDL2::~SDL2() {
 
 }
 
+#ifdef __APPLE__
+void SDL2::InitSDLOnMainThread() {
+	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"SDL2.cpp:InitSDLOnMainThread\",\"message\":\"SDL_Init(SDL_INIT_EVENTS) on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+	if ( SDL_Init( SDL_INIT_EVENTS ) ) {
+		THROW( (std::string)"Failed to initialize SDL events: " + SDL_GetError() );
+	}
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"SDL2.cpp:InitSDLOnMainThread\",\"message\":\"SDL_Init(SDL_INIT_EVENTS) completed\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+}
+#endif
+
 void SDL2::Start() {
 	Log( "Initializing SDL2" );
-	SDL_Init( SDL_INIT_EVENTS );
+#ifdef __APPLE__
+	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
+	// SDL should already be initialized via InitSDLOnMainThread() called from main()
+	ASSERT( SDL_WasInit( SDL_INIT_EVENTS ) != 0, "SDL events not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"SDL2.cpp:Start\",\"message\":\"SDL events already initialized on main thread\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"isMainThread\":" << (pthread_main_np() != 0 ? "true" : "false") << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+#else
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"SDL2.cpp:31\",\"message\":\"SDL_Init(SDL_INIT_EVENTS) before call\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+	auto ret = SDL_Init( SDL_INIT_EVENTS );
+	// #region agent log
+	{
+		std::ofstream log("/Users/jhurliman/Documents/Code/jhurliman/glsmac/.cursor/debug.log", std::ios::app);
+		auto tid = std::this_thread::get_id();
+		std::stringstream ss;
+		ss << tid;
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		log << "{\"sessionId\":\"debug-session\",\"runId\":\"post-fix\",\"hypothesisId\":\"B\",\"location\":\"SDL2.cpp:32\",\"message\":\"SDL_Init(SDL_INIT_EVENTS) after call\",\"data\":{\"threadId\":\"" << ss.str() << "\",\"returnValue\":" << ret << ",\"sdlWasInit\":\"" << SDL_WasInit(0) << "\"},\"timestamp\":" << now << "}\n";
+	}
+	// #endregion
+#endif
 
 }
 

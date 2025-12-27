@@ -31,6 +31,9 @@ CLASS( SDL2, Audio )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+#ifdef __APPLE__
+	void InitSDLOnMainThread();
+#endif
 
 	void AddActor( scene::actor::Sound* actor ) override;
 	void RemoveActor( scene::actor::Sound* actor ) override;

@@ -22,6 +22,9 @@ CLASS( SDL2, Input )
 	void Start() override;
 	void Stop() override;
 	void Iterate() override;
+#ifdef __APPLE__
+	void InitSDLOnMainThread();
+#endif
 
 	const std::string GetClipboardText() const override;
 
