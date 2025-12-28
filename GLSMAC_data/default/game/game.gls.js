@@ -66,7 +66,7 @@ return (glsmac) => {
 			resources.configure(e.game);
 		});
 
-		e.game.on('start', (e) => {
+		e.game.on('create_world', (e) => {
 
 
 			// init game data

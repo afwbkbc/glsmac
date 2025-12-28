@@ -227,49 +227,6 @@ void Game::Iterate() {
 				ec = map::Map::EC_ABORTED;
 			}
 
-			const auto& f_init_failed = [ this ]( const std::string& error_text ) {
-				// need to delete these here because they weren't passed to main thread
-				if ( m_map->m_textures.terrain ) {
-					DELETE( m_map->m_textures.terrain );
-					m_map->m_textures.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain ) {
-					DELETE( m_map->m_meshes.terrain );
-					m_map->m_meshes.terrain = nullptr;
-				}
-				if ( m_map->m_meshes.terrain_data ) {
-					DELETE( m_map->m_meshes.terrain_data );
-					m_map->m_meshes.terrain_data = nullptr;
-				}
-
-				ASSERT( m_state, "state not set" );
-				if ( m_state->m_connection ) {
-					m_state->m_connection->Disconnect( "Failed to initialize game" );
-				}
-				m_state->TriggerObject(
-					this, "error", ARGS_F( this, &error_text ) {
-						{
-							"game",
-							Wrap( GSE_CALL )
-						},
-						{
-							"error",
-							VALUE( gse::value::String, , error_text ),
-						},
-					}; }
-				);
-
-				//ResetGame();
-				m_initialization_error = error_text;
-
-				if ( m_old_map ) {
-					MTModule::Log( "Restoring old map state" );
-					DELETE( m_map );
-					m_map = m_old_map; // restore old state // TODO: test
-				}
-
-			};
-
 			if ( !ec ) {
 
 #ifdef DEBUG
@@ -365,12 +322,12 @@ void Game::Iterate() {
 
 				m_game_state = GS_STARTING;
 
-				m_state->WithGSE( this, [ this, f_init_failed ]( GSE_CALLABLE ) {
+				m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 
 					if ( m_state->IsMaster() ) {
 						try {
 							m_state->TriggerObject(
-								this, "start", ARGS_F( this ) {
+								this, "create_world", ARGS_F( this ) {
 									{
 										"game",
 										Wrap( GSE_CALL )
@@ -381,7 +338,7 @@ void Game::Iterate() {
 						}
 						catch ( const gse::Exception& e ) {
 							MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
-							f_init_failed( e.what() );
+							InitFailed( e.what() );
 							return;
 						}
 						GlobalAdvanceTurn( GSE_CALL );
@@ -398,7 +355,7 @@ void Game::Iterate() {
 
 			}
 			else {
-				f_init_failed( map::Map::GetErrorString( ec ) );
+				InitFailed( map::Map::GetErrorString( ec ) );
 			}
 		}
 		if ( m_state ) {
@@ -1520,6 +1477,23 @@ void Game::WithRW( const std::function< void() >& f ) {
 
 void Game::InitComplete( GSE_CALLABLE ) {
 	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
+
+	try {
+		m_state->TriggerObject(
+			this, "start", ARGS_F( this ) {
+				{
+					"game",
+					Wrap( GSE_CALL )
+				},
+			}; }
+		);
+	}
+	catch ( const gse::Exception& e ) {
+		MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
+		InitFailed( e.what() );
+		return;
+	}
+
 	m_game_state = GS_RUNNING;
 	m_um->ProcessUnprocessed( GSE_CALL );
 	m_bm->ProcessUnprocessed( GSE_CALL );
@@ -1529,6 +1503,48 @@ void Game::InitComplete( GSE_CALLABLE ) {
 				connection->SetGameState( connection::Connection::GS_RUNNING ); // allow clients to download map
 			}
 		);
+	}
+}
+
+void Game::InitFailed( const std::string& error_text ) {
+	// need to delete these here because they weren't passed to main thread
+	if ( m_map->m_textures.terrain ) {
+		DELETE( m_map->m_textures.terrain );
+		m_map->m_textures.terrain = nullptr;
+	}
+	if ( m_map->m_meshes.terrain ) {
+		DELETE( m_map->m_meshes.terrain );
+		m_map->m_meshes.terrain = nullptr;
+	}
+	if ( m_map->m_meshes.terrain_data ) {
+		DELETE( m_map->m_meshes.terrain_data );
+		m_map->m_meshes.terrain_data = nullptr;
+	}
+
+	ASSERT( m_state, "state not set" );
+	if ( m_state->m_connection ) {
+		m_state->m_connection->Disconnect( "Failed to initialize game" );
+	}
+	m_state->TriggerObject(
+		this, "error", ARGS_F( this, &error_text ) {
+			{
+				"game",
+				Wrap( GSE_CALL )
+			},
+			{
+				"error",
+				VALUE( gse::value::String, , error_text ),
+			},
+		}; }
+	);
+
+	//ResetGame();
+	m_initialization_error = error_text;
+
+	if ( m_old_map ) {
+		MTModule::Log( "Restoring old map state" );
+		DELETE( m_map );
+		m_map = m_old_map; // restore old state // TODO: test
 	}
 }
 

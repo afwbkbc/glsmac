@@ -1000,7 +1000,12 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 			auto* o = ( (value::Object*)result );
 			auto& properties = o->value;
 			for ( const auto& it : obj->ordered_properties ) {
-				o->Assign( it.first, EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second )->Clone() );
+				auto* const r = EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second );
+				o->Assign(
+					it.first, r
+						? r->Clone()
+						: VALUE( Undefined )
+				);
 			}
 			return result;
 		}

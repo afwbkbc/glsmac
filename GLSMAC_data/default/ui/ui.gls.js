@@ -15,7 +15,7 @@ return (glsmac) => {
 		'mainmenu/mainmenu',
 		'error',
 		'loader',
-		'game',
+		'game/game',
 	]) {
 		#include('parts/' + step)(m);
 	}

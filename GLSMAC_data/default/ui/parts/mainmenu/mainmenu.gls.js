@@ -11,6 +11,8 @@ return (m) => {
 
 	m.glsmac.on('mainmenu_show', (e) => {
 
+		m.root.clear();
+
 		if ( !mainmenu_allowed ) {
 			m.glsmac.exit();
 			return;
@@ -108,6 +110,7 @@ return (m) => {
 		}
 		sliding.hide();
 		popup.hide();
+		m.root.clear();
 	});
 
 };

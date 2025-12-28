@@ -455,6 +455,7 @@ private:
 	void WithRW( const std::function< void() >& f );
 
 	void InitComplete( GSE_CALLABLE );
+	void InitFailed( const std::string& error_text );
 
 private:
 	friend class map::tile::TileManager;

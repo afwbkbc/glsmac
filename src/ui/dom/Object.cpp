@@ -122,7 +122,9 @@ gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 }
 
 void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
-	ASSERT( !m_is_destroyed, "WrapSet: object is destroyed" );
+	if ( m_is_destroyed ) {
+		return; // TODO: investigate
+	}
 	auto def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
