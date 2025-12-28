@@ -481,11 +481,19 @@ void Server::SendPlayersList() {
 	);
 }
 
-void Server::SendGameEventResponse( const size_t slot_num, const std::string& event_id, const bool result ) {
+void Server::SendGameEventResponse( const size_t slot_num, const std::string& event_id, const bool result, const gse::Value* const resolved ) {
 	const auto cid = m_state->m_slots->GetSlot( slot_num ).GetCid();
 	types::Packet p( types::Packet::PT_GAME_EVENT_RESPONSE );
 	p.data.str = event_id;
 	p.data.boolean = result;
+	if ( resolved ) {
+		types::Buffer buf;
+		resolved->Serialize( &buf, resolved );
+		p.data.str2 = buf.ToString();
+	}
+	else {
+		p.data.str2 = "";
+	}
 	m_network->MT_SendPacket( &p, cid );
 }
 

@@ -268,7 +268,17 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_EVENT_RESPONSE: {
 							//Log( "Got game event response packet" );
-							g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean );
+							m_state->WithGSE(
+								this,
+								[ packet ]( GSE_CALLABLE ) {
+									gse::Value* resolved = nullptr;
+									if ( !packet.data.str2.empty() ) {
+										auto buf = types::Buffer( packet.data.str2 );
+										resolved = gse::Value::Deserialize( GSE_CALL, &buf, g_engine->GetGame() );
+									}
+									g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
+								}
+							);
 							break;
 						}
 						default: {

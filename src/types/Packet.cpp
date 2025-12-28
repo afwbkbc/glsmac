@@ -82,6 +82,7 @@ const types::Buffer Packet::Serialize() const {
 		case PT_GAME_EVENT_RESPONSE: {
 			buf.WriteString( data.str ); // event id
 			buf.WriteBool( data.boolean ); // is accepted or not
+			buf.WriteString( data.str2 );
 			break;
 		}
 		default: {
@@ -171,6 +172,7 @@ void Packet::Deserialize( types::Buffer buf ) {
 		case PT_GAME_EVENT_RESPONSE: {
 			data.str = buf.ReadString(); // event id
 			data.boolean = buf.ReadBool(); // is accepted or not
+			data.str2 = buf.ReadString(); // resolutions, if any
 			break;
 		}
 		default: {

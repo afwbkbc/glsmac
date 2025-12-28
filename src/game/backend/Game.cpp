@@ -408,27 +408,56 @@ void Game::Iterate() {
 				{
 					std::lock_guard guard( m_pending_event_responses_mutex );
 					for ( const auto& it : m_pending_event_responses ) {
-						ASSERT( m_events_waiting_for_responses.find( it.first ) != m_events_waiting_for_responses.end(), "event for response not found" );
-						if ( !it.second ) {
-							// event was rejected, rollback
-							const auto& event_data = m_events_waiting_for_responses.at( it.first );
-							m_state->WithGSE( this, [ this, event_data ]( GSE_CALLABLE ) {
-								const auto* const event = event_data.event;
-								auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
-								if ( event_data.rollback_data ) {
-									obj->Set( "applied", event_data.rollback_data, GSE_CALL );
-								}
-								const auto fargs = gse::value::function_arguments_t{ obj };
-								const auto& it = m_event_handlers.find( event->GetEventName() );
-								if ( it != m_event_handlers.end() ) {
-									it->second->Rollback( GSE_CALL, fargs );
-								}
-								else {
-									MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
-								}
-							});
+						std::lock_guard guard2( m_events_waiting_for_responses_mutex );
+						ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
+						const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
+						const auto* const event = event_data.event;
+						const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
+						if ( !it.is_accepted ) {
+							if ( was_event_applied ) {
+								// event was rejected, rollback
+								m_state->WithGSE(
+									this, [ this, event_data, event ]( GSE_CALLABLE ) {
+										auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+										if ( event_data.rollback_data ) {
+											obj->Set( "applied", event_data.rollback_data, GSE_CALL );
+										}
+										const auto fargs = gse::value::function_arguments_t{ obj };
+										const auto& it = m_event_handlers.find( event->GetEventName() );
+										if ( it != m_event_handlers.end() ) {
+											it->second->Rollback( GSE_CALL, fargs );
+										}
+										else {
+											MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+										}
+									}
+								);
+							}
 						}
-						m_events_waiting_for_responses.erase( it.first );
+						else {
+							// event was accepted (and maybe resolved)
+							if ( !was_event_applied ) {
+								m_state->WithGSE(
+									this, [ this, it, event ]( GSE_CALLABLE ) {
+										auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+										if ( it.resolved ) {
+											obj->Set( "resolved", it.resolved, GSE_CALL );
+										}
+										const auto fargs = gse::value::function_arguments_t{ obj };
+										const auto& it2 = m_event_handlers.find( event->GetEventName() );
+										if ( it2 != m_event_handlers.end() ) {
+											WithRW( [ &it2, &ctx, &gc_space, &si, &ep, &fargs ]() {
+												it2->second->Apply( GSE_CALL, fargs );
+											});
+										}
+										else {
+											MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
+										}
+									}
+								);
+							}
+						}
+						m_events_waiting_for_responses.erase( it.event_id );
 					}
 					m_pending_event_responses.clear();
 				}
@@ -469,8 +498,9 @@ void Game::Iterate() {
 								if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
 									ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
 									// process event
+									gse::Value* resolved = nullptr;
 									if ( handler->HasResolve() ) {
-										auto* const resolved = handler->Resolve( GSE_CALL, fargs );
+										resolved = handler->Resolve( GSE_CALL, fargs );
 										if ( resolved ) {
 											event->SetResolved( resolved );
 											obj->Set( "resolved", resolved, GSE_CALL );
@@ -479,7 +509,7 @@ void Game::Iterate() {
 									if ( m_state->m_connection ) {
 										if ( event->GetCaller() != 0 ) {
 											// notify caller of acceptance
-											m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true );
+											m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true, resolved );
 										}
 										// broadcast to clients
 										ASSERT( m_state->m_connection->IsServer(), "master but not server" );
@@ -490,22 +520,32 @@ void Game::Iterate() {
 								else { // multiplayer non-host
 									ASSERT( event->GetSource() != event::Event::ES_CLIENT, "got event from client to client" );
 									ASSERT( m_state->m_connection, "not master but no connection" );
+									bool process_now = false;
 									if ( handler->HasResolve() ) {
 										if ( event->GetSource() == event::Event::ES_LOCAL ) {
-											// resolve on server first
-											THROW( "TODO: resolve event on server" );
+											// just send to server and wait for resolution
+											ASSERT( !event->GetResolved(), "client event already resolved" );
+											process_now = false;
 										}
 										else {
+											// resolution came from server
 											auto* const resolved = event->GetResolved();
 											ASSERT( resolved, "server sent unresolved event" );
 											obj->Set( "resolved", resolved, GSE_CALL );
+											process_now = true;
 										}
 									}
+									else {
+										process_now = true;
+									}
 									gse::Value* rollback_data = nullptr;
-									WithRW( [ &f_process, &rollback_data ](){
-										rollback_data = f_process();
-									} );
+									if ( process_now ) {
+										WithRW( [ &f_process, &rollback_data ](){
+											rollback_data = f_process();
+										} );
+									}
 									if ( event->GetSource() == event::Event::ES_LOCAL ) {
+										std::lock_guard guard( m_events_waiting_for_responses_mutex );
 										// send to server and wait for response asynchonously
 										ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
 										m_events_waiting_for_responses.insert(
@@ -526,7 +566,7 @@ void Game::Iterate() {
 								if ( m_state->m_connection && m_state->IsMaster() ) {
 									if ( event->GetCaller() != 0 ) {
 										// notify caller of rejection
-										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false );
+										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false, nullptr );
 									}
 								}
 								delete ( errptr );
@@ -606,9 +646,13 @@ void Game::AddEvent( event::Event* const event ) {
 	m_pending_events.push_back( event );
 }
 
-void Game::AddEventResponse( const std::string& event_id, const bool result ) {
+void Game::AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved ) {
 	std::lock_guard guard( m_pending_event_responses_mutex );
-	m_pending_event_responses.push_back({ event_id, result });
+	m_pending_event_responses.push_back({
+		event_id,
+		result,
+		resolved
+	});
 }
 
 void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
@@ -940,11 +984,23 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	GC_DEBUG_END();
 
 	if ( !m_events_waiting_for_responses.empty() ) {
+		std::lock_guard guard( m_events_waiting_for_responses_mutex );
 		GC_DEBUG_BEGIN( "events_waiting_for_responses" );
 		for ( const auto& it : m_events_waiting_for_responses ) {
 			GC_REACHABLE( it.second.event );
 			if ( it.second.rollback_data ) {
 				GC_REACHABLE( it.second.rollback_data );
+			}
+		}
+		GC_DEBUG_END();
+	}
+
+	if ( !m_pending_event_responses.empty() ) {
+		std::lock_guard guard( m_pending_event_responses_mutex );
+		GC_DEBUG_BEGIN( "pending_event_responses" );
+		for ( const auto& it : m_pending_event_responses ) {
+			if ( it.resolved ) {
+				GC_REACHABLE( it.resolved );
 			}
 		}
 		GC_DEBUG_END();
@@ -1887,7 +1943,10 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
-	m_events_waiting_for_responses.clear();
+	{
+		std::lock_guard guard( m_events_waiting_for_responses_mutex );
+		m_events_waiting_for_responses.clear();
+	}
 	{
 		std::lock_guard guard( m_pending_events_mutex );
 		m_pending_events.clear();

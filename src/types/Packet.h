@@ -59,6 +59,7 @@ CLASS( Packet, Serializable )
 		bool boolean;
 		size_t num;
 		std::string str;
+		std::string str2;
 		std::vector< std::string > vec;
 	} data;
 

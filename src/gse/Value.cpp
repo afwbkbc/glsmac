@@ -485,7 +485,7 @@ Value* const Value::New( const Value* value ) {
 	}
 }
 
-void Value::Serialize( types::Buffer* buf, Value* const value ) {
+void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 	buf->WriteInt(
 		value
 			? value->type

@@ -22,7 +22,7 @@ public:
 	std::function< void() > m_on_listen = nullptr;
 	std::function< const std::string() > m_on_download_request = nullptr; // return serialized snapshot of world
 
-	void SendGameEventResponse( const size_t cid, const std::string& event_id, const bool result );
+	void SendGameEventResponse( const size_t cid, const std::string& event_id, const bool result, const gse::Value* const resolved );
 
 	void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) override;
 	void SendMessage( const std::string& message ) override;

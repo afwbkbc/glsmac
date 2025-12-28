@@ -267,7 +267,7 @@ public:
 
 	Value* const New( const Value* value );
 
-	static void Serialize( types::Buffer* buf, Value* const type );
+	static void Serialize( types::Buffer* buf, const Value* const type );
 	static Value* Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game = nullptr );
 
 protected:
