@@ -1,4 +1,5 @@
 #include <atomic>
+#include <mutex>
 
 #ifdef DEBUG
 #include <chrono>
@@ -41,16 +42,21 @@ const std::string& Class::GetLocalName() const {
 
 #ifdef DEBUG
 static uint64_t last_time = 0;
+static std::mutex last_time_mutex;
 #endif
 
 void Class::Log( const std::string& text ) const {
 	if ( g_engine != NULL ) {
 #ifdef DEBUG
 		const auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		const auto duration = last_time
-			? time - last_time
-			: 0;
-		last_time = time;
+		uint64_t duration = 0;
+		{
+			std::lock_guard<std::mutex> guard( last_time_mutex );
+			duration = last_time
+				? time - last_time
+				: 0;
+			last_time = time;
+		}
 #endif
 		g_engine->Log(
 #ifdef DEBUG

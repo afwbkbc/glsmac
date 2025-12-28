@@ -424,13 +424,28 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::strin
 		m_opengl.current_vertex_buffer = buffer;
 	}
 	else {
-		ASSERT( m_opengl.current_index_buffer != buffer,
-			"glBindBuffer called with same index buffer ( " + std::to_string( buffer ) + " ) as already bound@" + source
-		);
-		if ( buffer != 0 ) {
-			ASSERT( m_opengl.current_index_buffer == 0,
-				"glBindBuffer called on already bound index buffer ( " + std::to_string( m_opengl.current_vertex_buffer ) + ", " + std::to_string( buffer ) + " )@" + source
+		// In OpenGL 3.3 Core Profile, the element array buffer binding is stored in the VAO
+		// When a VAO is bound, it restores the IBO binding stored in that VAO
+		// If the VAO is newly created (empty), binding it clears the IBO binding
+		// So we need to allow rebinding the same IBO after binding a VAO
+		// Check if we're rebinding the same buffer (which is allowed in Core Profile after VAO binding)
+		if ( m_opengl.current_index_buffer == buffer && buffer != 0 ) {
+			// Allow rebinding the same IBO - this is necessary in Core Profile when rebinding after VAO binding
+			// MemoryWatcher doesn't track VAO bindings, so it doesn't know the IBO was cleared
+		}
+		else {
+			ASSERT( m_opengl.current_index_buffer != buffer,
+				"glBindBuffer called with same index buffer ( " + std::to_string( buffer ) + " ) as already bound@" + source
 			);
+		}
+		if ( buffer != 0 ) {
+			// Allow binding a new IBO even if one is already bound (necessary after VAO binding in Core Profile)
+			// The check above handles the case where we're rebinding the same buffer
+			if ( m_opengl.current_index_buffer != buffer ) {
+				ASSERT( m_opengl.current_index_buffer == 0,
+					"glBindBuffer called on already bound index buffer ( " + std::to_string( m_opengl.current_index_buffer ) + ", " + std::to_string( buffer ) + " )@" + source
+				);
+			}
 			ASSERT( m_opengl.vertex_buffers.find( buffer ) == m_opengl.vertex_buffers.end(),
 				"glBindBuffer buffer " + std::to_string( buffer ) + " was previously used as vertex buffer, but now index @" + source
 			);

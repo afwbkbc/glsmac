@@ -13,7 +13,6 @@ namespace task {
 namespace intro {
 
 void Intro::Start() {
-
 	if ( g_engine->GetResourceManager()->GetDetectedSMACType() == config::ST_LEGACY ) {
 		// legacy doesn't have firaxis logo
 		Finish();

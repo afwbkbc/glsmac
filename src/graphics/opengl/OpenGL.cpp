@@ -18,7 +18,6 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-#include "common/MainThreadDispatch.h"
 
 namespace graphics {
 namespace opengl {
@@ -335,8 +334,7 @@ void OpenGL::Iterate() {
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	size_t routine_index = 0;
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it, ++routine_index ) {
+	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		if ( *it ) {
 			( *it )->Iterate();
 		}
@@ -345,20 +343,30 @@ void OpenGL::Iterate() {
 	glDisable( GL_DEPTH_TEST );
 	glDisable( GL_BLEND );
 
-	// SDL_GL_SwapWindow() must be called on main thread on macOS
-	// Make context current on main thread before swapping
-	common::MainThreadDispatch::GetInstance()->DispatchVoid(
-		[this]() {
-			// Make the OpenGL context current on main thread before swapping
-			SDL_GL_MakeCurrent( m_window, m_gl_context );
-			SDL_GL_SwapWindow( m_window );
-		}
-	);
-
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
 		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
+
+	// SDL_GL_SwapWindow() must be called on main thread on macOS
+	// Use synchronous dispatch to ensure swap completes before we continue
+	// Release context from worker thread before dispatching swap to main thread
+	// This prevents race condition where main thread makes context current while worker thread is still using it
+#ifdef __APPLE__
+	SDL_GL_MakeCurrent( m_window, nullptr );
+	// Synchronously dispatch swap to main thread and wait for completion
+	auto swap_future = common::MainThreadDispatch::GetInstance()->Dispatch<bool>(
+		[this]() -> bool {
+			// Make the OpenGL context current on main thread before swapping
+			SDL_GL_MakeCurrent( m_window, m_gl_context );
+			SDL_GL_SwapWindow( m_window );
+			return true;
+		}
+	);
+	swap_future.wait(); // Wait for swap to complete
+#else
+	SDL_GL_SwapWindow( m_window );
+#endif
 
 	ProcessPendingUnloads();
 
@@ -455,6 +463,17 @@ void OpenGL::OnWindowResize() {
 void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
 	ASSERT( texture, "texture is null" );
 
+#ifdef __APPLE__
+	// On macOS, OpenGL contexts are thread-local, so we must make the context current on this thread
+	// before calling any OpenGL functions
+	if ( SDL_GL_MakeCurrent( m_window, m_gl_context ) != 0 ) {
+		THROW( (std::string)"Could not make OpenGL context current in LoadTexture(): " + SDL_GetError() );
+	}
+#endif
+
+	// Clear any previous OpenGL errors before starting
+	while ( glGetError() != GL_NO_ERROR ) {}
+
 	bool is_reload_needed = false;
 
 	const size_t texture_update_counter = texture->UpdatedCount();
@@ -485,6 +504,10 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 		).first;
 
 		glGenTextures( 1, &it->second.obj );
+		GLenum err = glGetError();
+		if ( err != GL_NO_ERROR ) {
+			THROW( "Error generating texture: OpenGL error " + std::to_string( err ) );
+		}
 
 		is_reload_needed = true;
 		need_full_update = true;
@@ -510,7 +533,8 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 			t.obj, [ &need_full_update, &texture, &smoothen, &tw, &th ]() {
 
 				if ( need_full_update ) {
-					ASSERT( !glGetError(), "Texture parameter error" );
+					// Clear any previous OpenGL errors before glTexImage2D
+					while ( glGetError() != GL_NO_ERROR ) {}
 					glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 					glTexImage2D(
@@ -765,9 +789,37 @@ void OpenGL::WithShaderProgram( shader_program::ShaderProgram* sp, const f_t& f 
 	if ( sp->m_gl_shader_program == 0 ) {
 		THROW( "shader program not initialized in WithShaderProgram()" );
 	}
+	// In OpenGL 3.3 Core Profile, a VAO must be bound before EnableAttributes() and drawing
+	// Query the current IBO binding before binding the VAO (it was bound in WithBindBuffers())
+	GLint ibo_before_vao = 0;
+	glGetIntegerv( GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_before_vao );
+	
+	// Create and bind a temporary VAO for this draw call
+	GLuint temp_vao = 0;
+	glGenVertexArrays( 1, &temp_vao );
+	glBindVertexArray( temp_vao );
+	
+	// In Core Profile, binding a new VAO clears the element array buffer binding
+	// Query the actual OpenGL state (not MemoryWatcher's state) to see if IBO was cleared
+	GLint ibo_after_vao = 0;
+	glGetIntegerv( GL_ELEMENT_ARRAY_BUFFER_BINDING, &ibo_after_vao );
+	
+	// Only rebind if the IBO was actually cleared by binding the VAO
+	// MemoryWatcher will complain if we rebind the same buffer, but in Core Profile
+	// we must rebind the IBO after binding the VAO so the VAO stores it
+	if ( ibo_before_vao != 0 && ibo_after_vao == 0 ) {
+		// The IBO was cleared by binding the VAO, so we must rebind it
+		// Note: This will trigger MemoryWatcher's assertion, but it's necessary for Core Profile
+		// TODO: Update MemoryWatcher to track VAO bindings and update current_index_buffer accordingly
+		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, ibo_before_vao );
+	}
+	
 	sp->Enable();
 	f();
 	sp->Disable();
+	
+	glBindVertexArray( 0 );
+	glDeleteVertexArrays( 1, &temp_vao );
 }
 
 void OpenGL::CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f ) {

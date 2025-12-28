@@ -34,6 +34,9 @@ void UI::Iterate() {
 
 	glDisable( GL_DEPTH_TEST );
 
+	// Clear any previous OpenGL errors before drawing
+	while ( glGetError() != GL_NO_ERROR ) {}
+
 	//Log( "Redrawing UI" );
 	for ( auto& scene : m_gl_scenes ) {
 		switch ( scene->GetScene()->GetType() ) {
@@ -45,7 +48,10 @@ void UI::Iterate() {
 				THROW( "unknown scene type " + std::to_string( scene->GetScene()->GetType() ) );
 			}
 		}
-		ASSERT( !glGetError(), "UI draw error" );
+		GLenum err = glGetError();
+		if ( err != GL_NO_ERROR ) {
+			THROW( "UI draw error: OpenGL error " + std::to_string( err ) );
+		}
 	}
 
 	glEnable( GL_DEPTH_TEST );

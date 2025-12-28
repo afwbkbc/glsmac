@@ -19,8 +19,16 @@ Simple::~Simple() {
 void Simple::Start() {
 	m_active = true;
 	for ( auto it = m_tasks.begin() ; it < m_tasks.end() ; it++ ) {
-		Log( "Starting task [" + ( *it )->GetName() + "]" );
-		( *it )->Start();
+		try {
+			Log( "Starting task [" + ( *it )->GetName() + "]" );
+			( *it )->Start();
+		}
+		catch ( const std::exception& e ) {
+			throw;
+		}
+		catch ( ... ) {
+			throw;
+		}
 	}
 #ifdef DEBUG
 	m_timer.SetInterval( 1000 );

@@ -4,6 +4,7 @@
 #include <atomic>
 #include <unordered_set>
 #include <unordered_map>
+#include <set>
 #include <chrono>
 #include <functional>
 #include <thread>
@@ -47,12 +48,14 @@ private:
 	Object* const m_root_object = {};
 	
 	// to track accumulating threads
+	// Using std::set instead of unordered_set to avoid hashing thread IDs that may point to destroyed pthread structures
 	std::recursive_mutex m_accumulations_mutex; // TODO: make non-recursive
-	std::unordered_set< std::thread::id > m_accumulations = {};
+	std::set< std::thread::id > m_accumulations = {};
 	
 	// objects that have been accumulated but won't be collected until accumulator function finishes (that allows for temp values to move and assign where needed)
+	// Using std::set instead of unordered_set to avoid hash function crashes from memory corruption
 	std::mutex m_accumulation_mutex;
-	std::unordered_set< Object* > m_accumulated_objects = {};
+	std::set< Object* > m_accumulated_objects = {};
 	
 	// objects that are already collectable
 	std::mutex m_objects_mutex;
