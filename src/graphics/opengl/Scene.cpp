@@ -1,8 +1,6 @@
 #include "Scene.h"
 
 #include <algorithm>
-#include <fstream>
-#include <chrono>
 
 #include "actor/Sprite.h"
 #include "actor/Mesh.h"
