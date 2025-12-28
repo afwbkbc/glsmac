@@ -55,7 +55,10 @@ void UnitManager::Clear() {
 	}
 	m_unit_defs.clear();
 
-	m_unit_updates.clear();
+	{
+		std::lock_guard<std::mutex> lock( m_unit_updates_mutex );
+		m_unit_updates.clear();
+	}
 }
 
 void UnitManager::DefineMoraleSet( MoraleSet* moraleset ) {
@@ -207,6 +210,7 @@ void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 }
 
 void UnitManager::PushUpdates() {
+	std::lock_guard<std::mutex> lock( m_unit_updates_mutex );
 	if ( m_game->IsRunning() && !m_unit_updates.empty() ) {
 		for ( const auto& it : m_unit_updates ) {
 			const auto unit_id = it.first;
@@ -566,6 +570,7 @@ void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 }
 
 void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op ) {
+	std::lock_guard<std::mutex> lock( m_unit_updates_mutex );
 	auto it = m_unit_updates.find( unit->m_id );
 	if ( it == m_unit_updates.end() ) {
 		it = m_unit_updates.insert(
