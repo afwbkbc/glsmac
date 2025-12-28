@@ -789,7 +789,6 @@ void Texture::ColorizeFrom( const types::texture::Texture* original, const types
 	ASSERT( original->m_bitmap, "original bitmap not set" );
 
 	uint32_t rgba;
-	repaint_rules_t::const_iterator rule_it;
 	for ( size_t y = 0 ; y < m_height ; y++ ) {
 		for ( size_t x = 0 ; x < m_width ; x++ ) {
 			const auto idx = ( y * m_width + x ) * m_bpp;

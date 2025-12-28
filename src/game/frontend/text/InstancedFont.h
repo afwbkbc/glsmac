@@ -63,7 +63,7 @@ private:
 	const std::string m_name = "";
 
 	types::texture::Texture* m_base_texture = nullptr;
-	std::unordered_map< types::Color::rgba_t, types::texture::Texture* > m_color_textures = {};
+	std::unordered_map< uint64_t, types::texture::Texture* > m_color_textures = {};
 
 	types::texture::Texture* GetColorizedTexture( const types::Color& color, const types::Color& shadow_color );
 

@@ -3,7 +3,6 @@
 #include "game/frontend/Game.h"
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/tile/Tile.h"
-#include "util/String.h"
 #include "game/frontend/Slot.h"
 #include "game/frontend/sprite/Sprite.h"
 #include "game/frontend/sprite/InstancedSprite.h"

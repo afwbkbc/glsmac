@@ -188,9 +188,10 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 	for ( const auto symbol : text ) {
 		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
+		const auto& key = "InstancedFont_" + m_name + "_sym_" + std::to_string( symbol ) + "_" + std::to_string( color.GetRGBA() ) + "_" + std::to_string( shadow_color.GetRGBA() );
 		sprites.push_back(
 			m_ism->GetInstancedSprite(
-				"InstancedFont_" + m_name + "_sym_" + std::to_string( symbol ),
+				key,
 				texture,
 				pos.src.top_left,
 				pos.src.width_height,
@@ -278,7 +279,7 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 }
 
 types::texture::Texture* InstancedFont::GetColorizedTexture( const types::Color& color, const types::Color& shadow_color ) {
-	const auto texture_key = color.GetRGBA();
+	const uint64_t texture_key = (uint64_t)color.GetRGBA() << 32 | shadow_color.GetRGBA();
 	auto texture_it = m_color_textures.find( texture_key );
 	if ( texture_it == m_color_textures.end() ) {
 		NEWV(
