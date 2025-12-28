@@ -184,15 +184,17 @@ int Engine::Run() {
 			thread->T_Stop();
 		}
 		
-		// Drain any remaining operations in the dispatch queue after threads stop
-		// This prevents lambdas from executing after modules are destroyed
-		common::MainThreadDispatch::GetInstance()->ProcessQueue();
+		// Continue processing dispatch queue while waiting for threads to stop
+		// This prevents deadlock where MAIN thread waits for swap while main thread waits for MAIN thread
 #ifdef DEBUG
 		util::Timer thread_running_timer;
 		thread_running_timer.SetInterval( 1000 );
 #endif
 		bool any_thread_running = true;
 		while ( any_thread_running ) {
+			// Process dispatch queue to allow threads to complete pending operations
+			common::MainThreadDispatch::GetInstance()->ProcessQueue();
+			
 			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 			any_thread_running = false;
 #ifdef DEBUG
@@ -215,6 +217,10 @@ int Engine::Run() {
 				}
 			}
 		}
+		
+		// Final drain of dispatch queue after all threads have stopped
+		// This prevents lambdas from executing after modules are destroyed
+		common::MainThreadDispatch::GetInstance()->ProcessQueue();
 
 	}
 	catch ( std::runtime_error& e ) {
