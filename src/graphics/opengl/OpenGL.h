@@ -43,6 +43,9 @@ CLASS( OpenGL, Graphics )
 	OpenGL( const std::string title, const unsigned short window_width, const unsigned short window_height, const bool vsync, const bool fullscreen );
 	~OpenGL();
 	void Start() override;
+#ifdef __APPLE__
+	void InitSDLOnMainThread();
+#endif
 	void Stop() override;
 	void Iterate() override;
 

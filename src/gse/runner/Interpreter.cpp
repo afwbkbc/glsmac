@@ -1,5 +1,7 @@
 #include "Interpreter.h"
 
+#include <cstring>
+#include <cstddef>
 #include "gse/context/Context.h"
 #include "gse/context/ChildContext.h"
 #include "gse/program/Program.h"
@@ -372,23 +374,48 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 }
 
 gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const Expression* expression, bool* returnflag ) {
+	ASSERT( this != nullptr, "this is null in EvaluateExpression()" );
+	ASSERT( m_gc_space != nullptr, "m_gc_space is null in EvaluateExpression()" );
 	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
-	if ( !expression->op ) {
-		ASSERT( !expression->b, "expression has second operand but no operator" );
-		ASSERT( expression->a, "expression is empty" );
-		return EvaluateOperand( ctx, ep, expression->a );
+	ASSERT( expression != nullptr, "expression is null in EvaluateExpression()" );
+	
+	// Safely access expression->op by copying the pointer value first
+	// This helps detect if the expression object itself is corrupted
+	const Operator* op_ptr = nullptr;
+	// Use memcpy to safely read the pointer value to detect corruption
+	uintptr_t op_value = 0;
+	try {
+		std::memcpy(&op_value, reinterpret_cast<const char*>(expression) + offsetof(Expression, op), sizeof(op_ptr));
+		op_ptr = reinterpret_cast<const Operator*>(op_value);
+	} catch (const std::exception& e) {
+		THROW( "Failed to read expression->op: " + std::string(e.what()) );
 	}
-	const auto& operation_not_supported = [ expression, &ctx, &ep ]( const std::string& a, const std::string& b ) -> gse::Exception {
-		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported between " + a + " and " + b, ctx, expression->op->m_si, ep );
+	if ( !op_ptr ) {
+		// Safely read expression->b and expression->a using memcpy
+		uintptr_t b_value = 0, a_value = 0;
+		try {
+			std::memcpy(&b_value, reinterpret_cast<const char*>(expression) + offsetof(Expression, b), sizeof(const Operand*));
+			std::memcpy(&a_value, reinterpret_cast<const char*>(expression) + offsetof(Expression, a), sizeof(const Operand*));
+		} catch (const std::exception& e) {
+			THROW( "Failed to read expression members: " + std::string(e.what()) );
+		}
+		const Operand* b_ptr = reinterpret_cast<const Operand*>(b_value);
+		const Operand* a_ptr = reinterpret_cast<const Operand*>(a_value);
+		ASSERT( !b_ptr, "expression has second operand but no operator" );
+		ASSERT( a_ptr, "expression is empty" );
+		return EvaluateOperand( ctx, ep, a_ptr );
+	}
+	const auto& operation_not_supported = [ op_ptr, &ctx, &ep ]( const std::string& a, const std::string& b ) -> gse::Exception {
+		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + op_ptr->ToString() + " is not supported between " + a + " and " + b, ctx, op_ptr->m_si, ep );
 	};
-	const auto& operation_not_supported_not_array = [ expression, &ctx, &ep ]( const std::string& a ) -> gse::Exception {
-		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + expression->op->ToString() + " is not supported: " + a + " is not array", ctx, expression->op->m_si, ep );
+	const auto& operation_not_supported_not_array = [ op_ptr, &ctx, &ep ]( const std::string& a ) -> gse::Exception {
+		return gse::Exception( EC.OPERATION_NOT_SUPPORTED, "Operation " + op_ptr->ToString() + " is not supported: " + a + " is not array", ctx, op_ptr->m_si, ep );
 	};
-	const auto& math_error = [ expression, &ctx, &ep ]( const std::string& reason ) -> gse::Exception {
-		return gse::Exception( EC.MATH_ERROR, reason, ctx, expression->op->m_si, ep );
+	const auto& math_error = [ op_ptr, &ctx, &ep ]( const std::string& reason ) -> gse::Exception {
+		return gse::Exception( EC.MATH_ERROR, reason, ctx, op_ptr->m_si, ep );
 	};
-	switch ( expression->op->op ) {
+	switch ( op_ptr->op ) {
 		case OT_RETURN: {
 			ASSERT( returnflag, "return keyword not allowed here" );
 			ASSERT( !*returnflag, "already returning" );
@@ -440,7 +467,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				( (Variable*)e->callable->a )->name,
 				( (String*)reason )->value,
 				ctx,
-				expression->op->m_si,
+				op_ptr->m_si,
 				ep
 			);
 		}
@@ -548,7 +575,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					object_properties_t properties = ( (value::Object*)a )->value;
 					for ( const auto& it : ( (value::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							throw gse::Exception( EC.OPERATION_FAILED, "Can't concatenate objects - duplicate key found: " + it.first, ctx, expression->op->m_si, ep );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't concatenate objects - duplicate key found: " + it.first, ctx, op_ptr->m_si, ep );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -651,7 +678,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					object_properties_t properties = ( (value::Object*)a )->value;
 					for ( const auto& it : ( (value::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
-							throw gse::Exception( EC.OPERATION_FAILED, "Can't append object - duplicate key found: " + it.first, ctx, expression->op->m_si, ep );
+							throw gse::Exception( EC.OPERATION_FAILED, "Can't append object - duplicate key found: " + it.first, ctx, op_ptr->m_si, ep );
 						}
 						properties.insert_or_assign( it.first, it.second );
 					}
@@ -680,8 +707,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		case OT_CHILD: {
 			ASSERT( expression->a, "parent object expected" );
 			const auto childname = EvaluateVarName( ctx, ep, expression->b );
-			const auto& not_an_object = [ &ctx, expression, &ep, &childname ]( const std::string& what, const si_t& si ) -> gse::Exception {
-				return gse::Exception( EC.INVALID_DEREFERENCE, "Could not get ." + childname + " of non-object: " + what, ctx, expression->op->m_si, ep );
+			const auto& not_an_object = [ &ctx, op_ptr, &ep, &childname ]( const std::string& what, const si_t& si ) -> gse::Exception {
+				return gse::Exception( EC.INVALID_DEREFERENCE, "Could not get ." + childname + " of non-object: " + what, ctx, op_ptr->m_si, ep );
 			};
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
@@ -965,7 +992,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			return VALUE( Range, , from, to );
 		}
 		default: {
-			THROW( "operator " + expression->op->Dump() + " not implemented" );
+			THROW( "operator " + op_ptr->Dump() + " not implemented" );
 		}
 	}
 }

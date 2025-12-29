@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "config/Config.h"
 #include "common/Thread.h"
+#include "common/MainThreadDispatch.h"
 #include "error_handler/ErrorHandler.h"
 #include "logger/Logger.h"
 #include "resource/ResourceManager.h"
@@ -170,6 +171,8 @@ int Engine::Run() {
 
 	try {
 		while ( !m_is_shutting_down ) {
+			// Process SDL operations queued from worker threads
+			common::MainThreadDispatch::GetInstance()->ProcessQueue();
 			for ( auto& thread : m_threads ) {
 				// ?
 			}
@@ -180,12 +183,18 @@ int Engine::Run() {
 		for ( auto& thread : m_threads ) {
 			thread->T_Stop();
 		}
+		
+		// Continue processing dispatch queue while waiting for threads to stop
+		// This prevents deadlock where MAIN thread waits for swap while main thread waits for MAIN thread
 #ifdef DEBUG
 		util::Timer thread_running_timer;
 		thread_running_timer.SetInterval( 1000 );
 #endif
 		bool any_thread_running = true;
 		while ( any_thread_running ) {
+			// Process dispatch queue to allow threads to complete pending operations
+			common::MainThreadDispatch::GetInstance()->ProcessQueue();
+			
 			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 			any_thread_running = false;
 #ifdef DEBUG
@@ -208,6 +217,10 @@ int Engine::Run() {
 				}
 			}
 		}
+		
+		// Final drain of dispatch queue after all threads have stopped
+		// This prevents lambdas from executing after modules are destroyed
+		common::MainThreadDispatch::GetInstance()->ProcessQueue();
 
 	}
 	catch ( std::runtime_error& e ) {

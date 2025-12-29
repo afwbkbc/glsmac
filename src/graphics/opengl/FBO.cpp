@@ -213,16 +213,19 @@ void FBO::Draw( shader_program::Simple2D* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
+	ASSERT( sp != nullptr, "shader program is null in FBO::Draw()" );
+	ASSERT( m_opengl != nullptr, "opengl is null in FBO::Draw()" );
 
 	// blending fix
 	glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
 	m_opengl->WithBindBuffers(
-		m_vbo, m_ibo, [ this, &sp ]() {
+		m_vbo, m_ibo, [ this, sp ]() {  // Capture sp by value, not by reference
 
 			m_opengl->WithShaderProgram(
-				sp, [ this, &sp ]() {
+				sp, [ this, sp ]() {  // Capture sp by value, not by reference
 
+					ASSERT( sp != nullptr, "shader program became null in FBO::Draw lambda" );
 					glUniform1ui( sp->uniforms.flags, 0 );
 
 					m_opengl->WithBindTexture(

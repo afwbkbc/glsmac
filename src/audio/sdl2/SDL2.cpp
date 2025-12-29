@@ -2,6 +2,9 @@
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
 
 #include "SDL2.h"
 
@@ -24,6 +27,15 @@ SDL2::~SDL2() {
 	}
 }
 
+#ifdef __APPLE__
+void SDL2::InitSDLOnMainThread() {
+	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
+	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
+		THROW( (std::string)"Failed to initialize SDL audio: " + SDL_GetError() );
+	}
+}
+#endif
+
 void SDL2_callback( void* userdata, Uint8* stream, int len ) {
 	auto audio = (SDL2*)userdata;
 	audio->Mix( stream, len );
@@ -37,10 +49,16 @@ void SDL2::Start() {
 
 	Log( "Initializing SDL2 Audio" );
 
+#ifdef __APPLE__
+	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
+	// SDL should already be initialized via InitSDLOnMainThread() called from main()
+	ASSERT( SDL_WasInit( SDL_INIT_AUDIO ) != 0, "SDL audio not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
+#else
 	if ( SDL_Init( SDL_INIT_AUDIO ) ) {
 		Log( "Failed to enable audio, game will start without sound." );
 		return;
 	}
+#endif
 
 	m_buffer_length = AUDIO_SAMPLES * AUDIO_CHANNELS;
 	m_buffer_size = sizeof( AUDIO_SAMPLE_TYPE ) * m_buffer_length;

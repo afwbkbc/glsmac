@@ -6,7 +6,6 @@ namespace task {
 namespace main {
 
 void Main::Start() {
-
 	NEW( m_glsmac, GLSMAC );
 
 	m_glsmac->RunMain();

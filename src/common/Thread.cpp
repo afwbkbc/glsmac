@@ -2,6 +2,7 @@
 #include <thread>
 #include <cstring>
 #include <cmath>
+#include <fstream>
 
 #include "Thread.h"
 #include "common/Module.h"
@@ -59,7 +60,6 @@ void Thread::T_Stop() {
 }
 
 void Thread::Run() {
-
 	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
 
 	Log( "Starting thread" );
@@ -88,7 +88,6 @@ void Thread::Run() {
 //	try {
 
 	while ( m_state == STATE_ACTIVE ) {
-
 		auto start = std::chrono::high_resolution_clock::now();
 
 #ifdef DEBUG

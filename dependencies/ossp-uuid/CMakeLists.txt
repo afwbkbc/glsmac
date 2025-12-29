@@ -1,11 +1,12 @@
 MESSAGE( STATUS "Fetching ossp-uuid..." )
 
 # TODO: determine those automatically?
-SET( OSSP_UUID_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/../../_deps/ossp-uuid-src" )
-SET( OSSP_UUID_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/../../_deps/ossp-uuid-build" )
+SET( OSSP_UUID_SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/OSSP_UUID-prefix/src/OSSP_UUID" )
+SET( OSSP_UUID_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/OSSP_UUID-prefix/src/OSSP_UUID-build" )
 
 EXTERNALPROJECT_ADD( OSSP_UUID
 	GIT_REPOSITORY https://github.com/sean-/ossp-uuid
+	GIT_TAG master
 	UPDATE_COMMAND ""
 	SOURCE_DIR "${OSSP_UUID_SOURCE_DIR}"
 	BINARY_DIR "${OSSP_UUID_BINARY_DIR}"

@@ -3,6 +3,9 @@ CMAKE_MINIMUM_REQUIRED( VERSION 3.13 )
 SET( PROJECT_NAME GLSMAC )
 PROJECT( ${PROJECT_NAME} LANGUAGES CXX )
 
+# Export compile commands for LSP support (clangd, etc.)
+SET( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+
 SET( CMAKE_MODULE_PATH "." )
 
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
@@ -60,7 +63,9 @@ ENDIF ()
 # not using -Og for debug builds because it optimizes some variables out
 SET( DEBUG_FLAGS "-ggdb -O0" )
 IF ( SANITIZER )
-	SET( DEBUG_FLAGS "${DEBUG_FLAGS} -fsanitize=address -fsanitize=undefined" )
+	# Use TSAN instead of ASAN to detect race conditions
+	# Note: TSAN and ASAN cannot be used together
+	SET( DEBUG_FLAGS "${DEBUG_FLAGS} -fsanitize=thread" )
 ENDIF ()
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	TARGET_COMPILE_DEFINITIONS( ${PROJECT_NAME} PRIVATE DEBUG=1 )
@@ -143,7 +148,9 @@ ELSE ()
 	IF ( NOT APPLE )
 		PKG_SEARCH_MODULE( OSSPUUID REQUIRED ossp-uuid )
 	ELSE ()
-		PKG_SEARCH_MODULE( OSSPUUID REQUIRED uuid )
+		# On macOS, use system uuid library (part of libc)
+		SET( OSSPUUID_INCLUDE_DIRS "" )
+		SET( OSSPUUID_LIBRARIES "" )
 	ENDIF ()
 	PKG_SEARCH_MODULE( YAMLCPP REQUIRED yaml-cpp )
 

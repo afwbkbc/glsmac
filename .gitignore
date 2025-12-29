@@ -30,3 +30,5 @@ _deps
 /GLSMAC.cbp
 /GLSMAC_data/mods
 *.core
+.cache/
+.cursor/

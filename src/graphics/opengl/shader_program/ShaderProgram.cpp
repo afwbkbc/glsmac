@@ -20,11 +20,38 @@ void ShaderProgram::Start() {
 	GLint success = 0;
 
 	glGetProgramiv( m_gl_shader_program, GL_LINK_STATUS, &success );
-	ASSERT( success, "Shader program linking failed!" );
+	if ( !success ) {
+		GLint info_log_length;
+		glGetProgramiv( m_gl_shader_program, GL_INFO_LOG_LENGTH, &info_log_length );
+		GLchar* str_info_log = (GLchar*)malloc( info_log_length + 1 );
+		glGetProgramInfoLog( m_gl_shader_program, info_log_length, NULL, str_info_log );
+		std::string error_msg = "Shader program linking failed! " + std::string( str_info_log );
+		free( str_info_log );
+		THROW( error_msg );
+	}
+
+	// In OpenGL 3.3 Core Profile, a VAO must be bound before validating/linking
+	// Create a temporary VAO for validation
+	GLuint temp_vao = 0;
+	glGenVertexArrays( 1, &temp_vao );
+	glBindVertexArray( temp_vao );
 
 	glValidateProgram( m_gl_shader_program );
 	glGetProgramiv( m_gl_shader_program, GL_VALIDATE_STATUS, &success );
-	ASSERT( success, "Invalid shader program!" );
+	if ( !success ) {
+		glBindVertexArray( 0 );
+		glDeleteVertexArrays( 1, &temp_vao );
+		GLint info_log_length;
+		glGetProgramiv( m_gl_shader_program, GL_INFO_LOG_LENGTH, &info_log_length );
+		GLchar* str_info_log = (GLchar*)malloc( info_log_length + 1 );
+		glGetProgramInfoLog( m_gl_shader_program, info_log_length, NULL, str_info_log );
+		std::string error_msg = "Invalid shader program! " + std::string( str_info_log );
+		free( str_info_log );
+		THROW( error_msg );
+	}
+
+	glBindVertexArray( 0 );
+	glDeleteVertexArrays( 1, &temp_vao );
 
 	glUseProgram( m_gl_shader_program );
 	Initialize();
@@ -87,6 +114,7 @@ GLint ShaderProgram::GetAttributeLocation( const std::string name ) {
 }
 
 void ShaderProgram::Enable() {
+	ASSERT( m_gl_shader_program != 0, "shader program not initialized in Enable()" );
 	if ( !m_enabled ) {
 
 		EnableAttributes();

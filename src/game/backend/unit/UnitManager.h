@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "gse/GCWrappable.h"
 
 #include "gse/value/Object.h"
@@ -82,6 +84,7 @@ private:
 		const Unit* unit = nullptr;
 	};
 	std::unordered_map< size_t, unit_update_t > m_unit_updates = {};
+	mutable std::mutex m_unit_updates_mutex;
 	void QueueUnitUpdate( const Unit* unit, const unit_update_op_t op );
 
 	const morale_t GetMorale( GSE_CALLABLE, const int64_t& morale );

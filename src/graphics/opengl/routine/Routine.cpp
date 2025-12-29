@@ -19,9 +19,7 @@ bool Routine::AddScene( scene::Scene* scene ) {
 		ASSERT( std::find( m_scenes.begin(), m_scenes.end(), scene ) == m_scenes.end(), "duplicate scene add" );
 
 		m_scenes.push_back( scene );
-
 		NEWV( gl_scene, opengl::Scene, m_opengl, scene, this );
-
 		m_gl_scenes.push_back( gl_scene );
 
 		Log( "Scene [" + scene->GetName() + "] added" );

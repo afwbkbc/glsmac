@@ -1,5 +1,6 @@
 #include "GSE.h"
 
+#include <filesystem>
 #include "parser/JS.h"
 #include "runner/Interpreter.h"
 #include "gse/context/GlobalContext.h"
@@ -173,12 +174,37 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 			full_path = it->second;
 		}
 		else {
+			// Normalize path to resolve .. components
+			std::string normalized_path = path;
+			if ( !util::FS::IsAbsolutePath( path, PATH_SEPARATOR ) ) {
+				// Convert to absolute path first, then normalize
+				normalized_path = util::FS::GetAbsolutePath( path, PATH_SEPARATOR );
+			}
+			// Use std::filesystem to resolve .. components (weakly_canonical doesn't require path to exist)
+			try {
+				std::filesystem::path fs_path( normalized_path );
+				normalized_path = std::filesystem::weakly_canonical( fs_path ).string();
+			}
+			catch ( const std::exception& ) {
+				// If canonicalization fails, try lexically_normal as fallback
+				try {
+					std::filesystem::path fs_path( normalized_path );
+					normalized_path = fs_path.lexically_normal().string();
+				}
+				catch ( const std::exception& ) {
+					// If normalization fails, use original path
+					normalized_path = path;
+				}
+			}
+			
 			for ( const auto& it2 : m_supported_extensions ) {
-				if ( util::FS::FileExists( path + it2, PATH_SEPARATOR ) ) {
+				const auto test_path = normalized_path + it2;
+				const auto exists = util::FS::FileExists( test_path, PATH_SEPARATOR );
+				if ( exists ) {
 					if ( !full_path.empty() ) {
 						GSE_ERROR( EC.LOADER_ERROR, "Multiple candidates found for include '" + path + "': '" + std::string( full_path ) + "', '" + path + it2 + "', ..." );
 					}
-					full_path = path + it2;
+					full_path = test_path;
 				}
 			}
 			m_include_paths.insert(
@@ -340,3 +366,4 @@ void GSE::include_cache_t::Cleanup( GSE* const gse ) {
 }
 
 }
+

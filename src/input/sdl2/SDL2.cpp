@@ -1,5 +1,9 @@
 #include "SDL2.h"
 
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
+
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
 #include "ui_legacy/UI.h"
@@ -23,12 +27,29 @@ SDL2::SDL2() {
 }
 
 SDL2::~SDL2() {
-
+	// Ensure any pending dispatch operations complete before destruction
+	// This prevents ProcessQueue from executing lambdas after the object is destroyed
+	common::MainThreadDispatch::GetInstance()->ProcessQueue();
 }
+
+#ifdef __APPLE__
+void SDL2::InitSDLOnMainThread() {
+	ASSERT( pthread_main_np() != 0, "InitSDLOnMainThread must be called from main thread" );
+	if ( SDL_Init( SDL_INIT_EVENTS ) ) {
+		THROW( (std::string)"Failed to initialize SDL events: " + SDL_GetError() );
+	}
+}
+#endif
 
 void SDL2::Start() {
 	Log( "Initializing SDL2" );
-	SDL_Init( SDL_INIT_EVENTS );
+#ifdef __APPLE__
+	// On macOS, SDL initialization must happen on the main thread due to AppKit requirements
+	// SDL should already be initialized via InitSDLOnMainThread() called from main()
+	ASSERT( SDL_WasInit( SDL_INIT_EVENTS ) != 0, "SDL events not initialized - InitSDLOnMainThread() must be called from main thread before starting threads" );
+#else
+	auto ret = SDL_Init( SDL_INIT_EVENTS );
+#endif
 
 }
 
@@ -37,22 +58,80 @@ void SDL2::Stop() {
 	SDL_Quit();
 }
 
-void SDL2::Iterate() {
+void SDL2::PollEventsOnMainThread() const {
+#ifdef __APPLE__
+	ASSERT( pthread_main_np() != 0, "PollEventsOnMainThread must be called from main thread" );
+#endif
+	
+	// Check if SDL is initialized before calling SDL_PollEvent
+	if ( !SDL_WasInit( SDL_INIT_EVENTS ) ) {
+		// SDL not initialized yet, skip polling
+		return;
+	}
+	
+	// Note: SDL_VideoInit() doesn't set SDL_INIT_VIDEO flag, so we can't check it here
+	// SDL_PollEvent() works fine after SDL_VideoInit() even without SDL_INIT_VIDEO flag
+	
 	SDL_Event event;
+	int event_count = 0;
+	
+	try {
+		while ( SDL_PollEvent( &event ) ) {
+			std::lock_guard<std::mutex> lock( m_event_buffer_mutex );
+			m_event_buffer.push( event );
+			event_count++;
+		}
+	} catch ( const std::exception& e ) {
+	} catch ( ... ) {
+	}
+}
 
+void SDL2::Iterate() {
+	
+	// Only dispatch if SDL events subsystem is initialized
+	// Note: SDL_VideoInit() doesn't set SDL_INIT_VIDEO flag, so we only check SDL_INIT_EVENTS
+	if ( !SDL_WasInit( SDL_INIT_EVENTS ) ) {
+		return;
+	}
+	
 	input::Event e = {}; // new
 	ui_legacy::event::UIEvent* le = nullptr; // legacy
 
-	while ( SDL_PollEvent( &event ) ) {
+	// Poll events on main thread and store in buffer
+	common::MainThreadDispatch::GetInstance()->DispatchVoid(
+		[this]() { this->PollEventsOnMainThread(); }
+	);
+	
+	// Process events from buffer (on worker thread)
+	SDL_Event event;
+	while ( true ) {
+		{
+			std::lock_guard<std::mutex> lock( m_event_buffer_mutex );
+			if ( m_event_buffer.empty() ) {
+				break;
+			}
+			event = m_event_buffer.front();
+			m_event_buffer.pop();
+		}
 		e.SetType( EV_NONE );
+		
+		// Safety check: ensure g_engine is valid before accessing it
+		if ( !g_engine ) {
+			continue; // Skip event processing if engine is not available
+		}
+		
 		switch ( event.type ) {
 			case SDL_QUIT: {
-				g_engine->ShutDown();
+				if ( g_engine ) {
+					g_engine->ShutDown();
+				}
 				break;
 			}
 			case SDL_WINDOWEVENT: {
 				if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ) {
-					g_engine->GetGraphics()->ResizeWindow( event.window.data1, event.window.data2 );
+					if ( g_engine && g_engine->GetGraphics() ) {
+						g_engine->GetGraphics()->ResizeWindow( event.window.data1, event.window.data2 );
+					}
 				}
 				break;
 			}
@@ -166,25 +245,32 @@ void SDL2::Iterate() {
 		if ( e.type != EV_NONE ) {
 			// try new
 			if ( !ProcessEvent( e ) ) {
-				if ( le ) {
+				if ( le && g_engine && g_engine->GetUI() ) {
 					// try legacy
 					g_engine->GetUI()->ProcessEvent( le );
 					DELETE( le );
-				}
+				} else if ( le ) {
+					DELETE( le );
 			}
 		}
 	}
+}
 
 }
 
 const std::string SDL2::GetClipboardText() const {
-	std::string result = "";
-	auto* t = SDL_GetClipboardText();
-	if ( t ) {
-		result = t;
-		SDL_free( t );
-	}
-	return result;
+	// SDL_GetClipboardText() dispatched to main thread for consistency
+	auto future = common::MainThreadDispatch::GetInstance()->Dispatch<std::string>([]() {
+		std::string result = "";
+		auto* t = SDL_GetClipboardText();
+		if ( t ) {
+			result = t;
+			SDL_free( t );
+		}
+		return result;
+	});
+	// Wait for the operation to complete (this will block until main thread processes it)
+	return future.get();
 }
 
 mouse_button_t SDL2::GetMouseButton( uint8_t sdl_mouse_button ) const {

@@ -1,4 +1,3 @@
-#include <thread>
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 
@@ -231,7 +230,6 @@ int main( const int argc, const char* argv[] ) {
 		loader::sound::SDL2 sound_loader;
 		loader::txt::TXTLoaders txt_loaders;
 
-		input::sdl2::SDL2 input;
 		bool vsync = VSYNC;
 		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 			vsync = false;
@@ -253,6 +251,13 @@ int main( const int argc, const char* argv[] ) {
 
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
+		input::sdl2::SDL2 input;
+#ifdef __APPLE__
+		// On macOS, SDL initialization must happen on the main thread before starting worker threads
+		graphics.InitSDLOnMainThread();
+		audio.InitSDLOnMainThread();
+		input.InitSDLOnMainThread();
+#endif
 
 		if ( legacy_ui ) {
 #ifdef DEBUG

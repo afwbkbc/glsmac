@@ -56,7 +56,7 @@ void main(void) { \
 			return; \
 		} \
 	} \
-	vec4 color = vec4(texture2D(uTexture, vec2(texpos.xy))); \
+	vec4 color = vec4(texture(uTexture, vec2(texpos.xy))); \
 	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_TINT ) + " ) { \
 		color *= uTintColor; \
 	} \
