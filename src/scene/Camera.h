@@ -51,8 +51,8 @@ protected:
 
 	float m_fov = 90.0f;
 	float m_raw_fov = 90.0f * M_PI / 180;
-	float m_z_near = 0.01f;
-	float m_z_far = 10.0f;
+	float m_z_near = 0.1f;
+	float m_z_far = 1.0f;
 
 	const camera_type_t m_camera_type;
 

@@ -401,6 +401,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						GL_UNSIGNED_BYTE,
 						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
+					glGenerateMipmap( GL_TEXTURE_2D );
 
 					if ( smoothen ) {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
@@ -544,7 +545,6 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 				const auto err = glGetError();
 				ASSERT( !err, "Error loading texture: " + std::to_string( err ) );
 
-				glGenerateMipmap( GL_TEXTURE_2D );
 			}
 		);
 

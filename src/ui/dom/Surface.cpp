@@ -9,9 +9,13 @@
 #include "types/texture/Texture.h"
 #include "util/String.h"
 #include "types/texture/Filter.h"
+#include "ui/UI.h"
 
 namespace ui {
 namespace dom {
+
+// TODO: refactor
+const std::string Surface::UI_CLASS = "$surface";
 
 Surface::Surface( DOM_ARGS )
 	: Area( DOM_ARGS_PASS, "surface" ) {
@@ -182,6 +186,13 @@ Surface::~Surface() {
 	}
 }
 
+void Surface::Destroy( GSE_CALLABLE ) {
+	if ( m_is_render_surface ) {
+		m_ui->UnsetRenderSurfaceBySurface( this );
+	}
+	Area::Destroy( GSE_CALL );
+}
+
 void Surface::CreateTexture() {
 	if ( !m_background.texture || !m_background.is_texture_owned ) {
 		m_background.texture = new types::texture::Texture();
@@ -206,6 +217,23 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 	else {
 		ASSERT( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
 	}
+	return m_background.texture;
+}
+
+void Surface::EnableRenderSurface() {
+	ASSERT( !m_is_render_surface, "already render surface" );
+	CreateTexture();
+	m_background.texture->Resize( m_geometry->GetWidth(), m_geometry->GetHeight() );
+	m_is_render_surface = true;
+}
+
+void Surface::DisableRenderSurface() {
+	ASSERT( m_is_render_surface, "not render surface" );
+	m_is_render_surface = false;
+}
+
+types::texture::Texture* const Surface::GetTextureForRender() const {
+	ASSERT( m_background.is_texture_owned, "can't render into texture that is not owned" );
 	return m_background.texture;
 }
 

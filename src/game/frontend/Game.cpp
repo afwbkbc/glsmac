@@ -55,6 +55,7 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
+#include "ui/UI.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -63,14 +64,15 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
+Game::Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ui::UI* const ui, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
 	: m_task( task )
 	, m_glsmac( glsmac )
 	, m_state( state )
+	, m_ui( ui )
 	, m_on_start( on_start )
 	, m_on_cancel( on_cancel )
 	, m_is_map_editing_allowed( state->GetConnection() == nullptr ) { // singleplayer only
-
+	ASSERT( m_ui, "UI not set" );
 }
 
 Game::~Game() {
@@ -315,7 +317,7 @@ void Game::Iterate() {
 					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
 					if ( !m_glsmac ) {
 						// legacy ui
-						m_ui.bottom_bar->UpdateMapFileName();
+						m_ui_legacy.bottom_bar->UpdateMapFileName();
 					}
 				}
 				else {
@@ -463,9 +465,17 @@ void Game::Iterate() {
 
 		auto minimap_texture = GetMinimapTextureResult();
 		if ( minimap_texture ) {
-			if ( !m_glsmac ) {
+			if ( m_glsmac ) {
+				// new ui
+				m_ui->WithRenderSurfaceTexture(
+					ui::UI::RST_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture ) {
+						texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
+					}
+				);
+			}
+			else {
 				// legacy ui
-				m_ui.bottom_bar->SetMinimapTexture( minimap_texture );
+				m_ui_legacy.bottom_bar->SetMinimapTexture( minimap_texture );
 			}
 		}
 
@@ -631,7 +641,7 @@ void Game::UpdateViewport() {
 	size_t bh;
 	if ( !m_glsmac ) {
 		// legacy ui
-		bh = m_ui.bottom_bar->GetHeight();
+		bh = m_ui_legacy.bottom_bar->GetHeight();
 	}
 	else {
 		bh = 256; // TODO
@@ -684,9 +694,9 @@ void Game::UpdateCameraPosition() {
 
 	if ( !m_glsmac ) {
 		// legacy ui
-		if ( m_ui.bottom_bar ) {
+		if ( m_ui_legacy.bottom_bar ) {
 
-			m_ui.bottom_bar->SetMinimapSelection(
+			m_ui_legacy.bottom_bar->SetMinimapSelection(
 				{
 					1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
 					1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
@@ -800,8 +810,8 @@ void Game::UpdateUICamera() {
 const size_t Game::GetBottomBarMiddleHeight() const {
 	if ( !m_glsmac ) {
 		// legacy ui
-		ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-		return m_ui.bottom_bar->GetMiddleHeight();
+		ASSERT( m_ui_legacy.bottom_bar, "bottom bar not initialized" );
+		return m_ui_legacy.bottom_bar->GetMiddleHeight();
 	}
 	else {
 		return 256 - 32 - 24; // TODO
@@ -905,14 +915,14 @@ Slot* Game::GetSlot( const size_t index ) const {
 void Game::HideBottomBar() {
 	if ( !m_glsmac ) {
 		// legacy ui
-		m_ui.bottom_bar->Hide();
+		m_ui_legacy.bottom_bar->Hide();
 	}
 }
 
 void Game::ShowBottomBar() {
 	if ( !m_glsmac ) {
 		// legacy ui
-		m_ui.bottom_bar->Show();
+		m_ui_legacy.bottom_bar->Show();
 	}
 }
 
@@ -1054,8 +1064,8 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_turn_status = request->data.turn_status.status;
 			if ( !m_glsmac ) {
 				// legacy ui
-				ASSERT( m_ui.bottom_bar, "bottom bar not initialized" );
-				m_ui.bottom_bar->SetTurnStatus( m_turn_status );
+				ASSERT( m_ui_legacy.bottom_bar, "bottom bar not initialized" );
+				m_ui_legacy.bottom_bar->SetTurnStatus( m_turn_status );
 			}
 			bool is_turn_active = m_turn_status == backend::turn::TS_TURN_ACTIVE || m_turn_status == backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
@@ -1447,10 +1457,10 @@ void Game::Initialize(
 
 	if ( !m_glsmac ) {
 		// legacy UI
-		NEW( m_ui.theme, ui_legacy::style::Theme );
-		ui->AddTheme( m_ui.theme );
-		NEW( m_ui.bottom_bar, ui_legacy::BottomBar, this );
-		ui->AddObject( m_ui.bottom_bar );
+		NEW( m_ui_legacy.theme, ui_legacy::style::Theme );
+		ui->AddTheme( m_ui_legacy.theme );
+		NEW( m_ui_legacy.bottom_bar, ui_legacy::BottomBar, this );
+		ui->AddObject( m_ui_legacy.bottom_bar );
 	}
 
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
@@ -1482,7 +1492,7 @@ void Game::Initialize(
 
 			if ( !m_glsmac ) {
 				// legacy ui
-				m_ui.bottom_bar->CloseMenus();
+				m_ui_legacy.bottom_bar->CloseMenus();
 			}
 
 			if ( !data->key.modifiers ) {
@@ -1676,7 +1686,7 @@ void Game::Initialize(
 
 			if ( !m_glsmac ) {
 				// legacy ui
-				m_ui.bottom_bar->CloseMenus();
+				m_ui_legacy.bottom_bar->CloseMenus();
 			}
 
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
@@ -1746,7 +1756,7 @@ void Game::Initialize(
 
 				m_map_control.last_drag_position = current_drag_position;
 			}
-			else if ( !m_glsmac && !m_ui.bottom_bar->IsMouseDraggingMiniMap() ) {
+			else if ( !m_glsmac && !m_ui_legacy.bottom_bar->IsMouseDraggingMiniMap() ) {
 				if ( g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable in fullscreen
 					const ssize_t edge_distance = m_viewport.is_fullscreen
 						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
@@ -1881,12 +1891,12 @@ void Game::Deinitialize() {
 
 	auto* ui = g_engine->GetUI();
 
-	if ( !m_glsmac && m_ui.bottom_bar ) {
-		ui->RemoveObject( m_ui.bottom_bar );
-		ui->RemoveTheme( m_ui.theme );
-		m_ui.bottom_bar = nullptr;
-		DELETE( m_ui.theme );
-		m_ui.theme = nullptr;
+	if ( !m_glsmac && m_ui_legacy.bottom_bar ) {
+		ui->RemoveObject( m_ui_legacy.bottom_bar );
+		ui->RemoveTheme( m_ui_legacy.theme );
+		m_ui_legacy.bottom_bar = nullptr;
+		DELETE( m_ui_legacy.theme );
+		m_ui_legacy.theme = nullptr;
 	}
 
 	if ( m_is_resize_handler_set ) {
@@ -2005,8 +2015,8 @@ void Game::Deinitialize() {
 void Game::AddMessage( const std::string& text ) {
 	if ( !m_glsmac ) {
 		// legacy ui
-		if ( m_ui.bottom_bar ) {
-			m_ui.bottom_bar->AddMessage( text );
+		if ( m_ui_legacy.bottom_bar ) {
+			m_ui_legacy.bottom_bar->AddMessage( text );
 		}
 	}
 }
@@ -2101,7 +2111,7 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			ShowTileSelector();
 			if ( !m_glsmac ) {
 				// legacy ui
-				m_ui.bottom_bar->PreviewTile( tile, selected_unit_id );
+				m_ui_legacy.bottom_bar->PreviewTile( tile, selected_unit_id );
 			}
 			break;
 		}
@@ -2128,7 +2138,7 @@ void Game::DeselectTileOrUnit() {
 
 	if ( !m_glsmac ) {
 		// legacy ui
-		m_ui.bottom_bar->HideTilePreview();
+		m_ui_legacy.bottom_bar->HideTilePreview();
 	}
 }
 
@@ -2347,51 +2357,55 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 
 void Game::UpdateMinimap() {
 
-	if ( m_glsmac ) {
-		// new ui
-		return;
-	}
+	m_ui->WithRenderSurfaceTexture(
+		ui::UI::RST_MINIMAP, [ this ]( types::texture::Texture* const texture ) {
 
-	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
+			NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 
-	auto mm = m_ui.bottom_bar->GetMinimapDimensions();
-	// 'black grid' artifact workaround
-	// TODO: find reason and fix properly, maybe just keep larger internal viewport
-	types::Vec2< float > scale = {
-		(float)m_viewport.window_width / mm.x,
-		(float)m_viewport.window_height / mm.y
-	};
+			auto mm = types::Vec2< size_t >{
+				texture->GetWidth(),
+				texture->GetHeight(),
+			};
 
-	mm.x *= scale.x;
-	mm.y *= scale.y;
+			// 'black grid' artifact workaround
+			// TODO: find reason and fix properly, maybe just keep larger internal viewport
+			types::Vec2< float > scale = {
+				1, //(float)m_viewport.window_width / mm.x,
+				1, //(float)m_viewport.window_height / mm.y
+			};
 
-	const float sx = (float)mm.x / (float)m_map_data.width / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
-	const float sy = (float)mm.y / (float)m_map_data.height / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
+			mm.x *= scale.x;
+			mm.y *= scale.y;
 
-	const float ss = ( (float)mm.y / (float)m_viewport.window_height );
-	const float sxy = (float)scale.x / scale.y;
+			const float sx = (float)mm.x / (float)m_map_data.width / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
+			const float sy = (float)mm.y / (float)m_map_data.height / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
 
-	camera->SetAngle( m_camera->GetAngle() );
-	camera->SetScale(
-		{
-			sx * ss * sxy / scale.x,
-			sy * ss * 1.38f / scale.y,
-			0.01f
-		}
-	);
+			const float ss = ( (float)mm.y / (float)m_viewport.window_height );
+			const float sxy = (float)scale.x / scale.y;
 
-	camera->SetPosition(
-		{
-			ss * sxy,
-			1.0f - ss * 0.48f,
-			0.5f
-		}
-	);
+			camera->SetAngle( m_camera->GetAngle() );
+			camera->SetScale(
+				{
+					sx * ss * sxy / scale.x,
+					sy * ss * 1.38f / scale.y,
+					0.01f
+				}
+			);
 
-	GetMinimapTexture(
-		camera, {
-			mm.x,
-			mm.y
+			camera->SetPosition(
+				{
+					ss * sxy,
+					1.0f - ss * 0.48f,
+					0.5f
+				}
+			);
+
+			GetMinimapTexture(
+				camera, {
+					mm.x,
+					mm.y
+				}
+			);
 		}
 	);
 }
@@ -2460,8 +2474,8 @@ util::random::Random* Game::GetRandom() const {
 void Game::CloseMenus() {
 	if ( !m_glsmac ) {
 		// legacy ui
-		if ( m_ui.bottom_bar ) {
-			m_ui.bottom_bar->CloseMenus();
+		if ( m_ui_legacy.bottom_bar ) {
+			m_ui_legacy.bottom_bar->CloseMenus();
 		}
 	}
 }
@@ -2616,7 +2630,7 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 		// legacy ui
 		auto* selected_tile = m_tm->GetSelectedTile();
 		if ( selected_tile ) {
-			m_ui.bottom_bar->PreviewTile(
+			m_ui_legacy.bottom_bar->PreviewTile(
 				selected_tile, selected_unit
 					? selected_unit->GetId()
 					: 0
@@ -2630,7 +2644,7 @@ void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selecte
 		// legacy ui
 		auto* selected_tile = m_tm->GetSelectedTile();
 		if ( selected_tile && selected_tile == if_tile ) {
-			m_ui.bottom_bar->PreviewTile(
+			m_ui_legacy.bottom_bar->PreviewTile(
 				selected_tile, selected_unit
 					? selected_unit->GetId()
 					: 0

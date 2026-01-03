@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include "dom/Root.h"
+#include "dom/Surface.h"
 
 #include "scene/Scene.h"
 #include "engine/Engine.h"
@@ -15,6 +16,21 @@
 #include "gse/value/Bool.h"
 
 namespace ui {
+
+static const std::unordered_map< std::string, UI::render_surface_type_t > s_render_surface_type_str = {
+	{ "minimap", UI::RST_MINIMAP },
+};
+static const UI::render_surface_type_t s_get_render_surface_type( GSE_CALLABLE, const std::string& typestr ) {
+	const auto& it = s_render_surface_type_str.find( typestr );
+	if ( it == s_render_surface_type_str.end() ) {
+		std::string errstr = "Unknown render surface type: " + typestr + " . Available surface types:";
+		for ( const auto& s : s_render_surface_type_str ) {
+			errstr += " " +s.first;
+		}
+		GSE_ERROR( gse::EC.GAME_ERROR, errstr );
+	}
+	return it->second;
+}
 
 UI::UI( GSE_CALLABLE )
 	: gse::GCWrappable( gc_space )
@@ -177,6 +193,34 @@ WRAPIMPL_BEGIN( UI )
 					return VALUE( gse::value::Undefined );
 				} )
 			},
+			{
+				"set_render_surface",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 2 );
+
+					N_GETVALUE( typestr, 0, String );
+					const auto type = s_get_render_surface_type( GSE_CALL, typestr );
+
+					N_GETVALUE_UNWRAP_UI( surface, 1, dom::Surface );
+
+					SetRenderSurface( type, surface );
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
+			{
+				"unset_render_surface",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 1 );
+					
+					N_GETVALUE( typestr, 0, String );
+					const auto type = s_get_render_surface_type( GSE_CALL, typestr );
+
+					UnsetRenderSurface( type );
+
+					return VALUE( gse::value::Undefined );
+				} )
+			}
 		};
 WRAPIMPL_END_PTR()
 
@@ -247,6 +291,15 @@ void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objec
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
+
+	{
+		GC_DEBUG_BEGIN( "render_surfaces" );
+		std::lock_guard guard( m_render_surfaces_mutex );
+		for ( const auto& it : m_render_surfaces ) {
+			GC_REACHABLE( it.second );
+		}
+		GC_DEBUG_END();
+	}
 
 	GC_DEBUG_END();
 }
@@ -341,6 +394,38 @@ void UI::RemoveGlobalHandler( const size_t handler_id ) {
 	m_global_handlers.erase( handler_id );
 }
 
+void UI::SetRenderSurface( const render_surface_type_t type, dom::Surface* const surface ) {
+	std::lock_guard guard( m_render_surfaces_mutex );
+	const auto& it = m_render_surfaces.find( type );
+	if ( it != m_render_surfaces.end() ) {
+		if ( it->second == surface ) {
+			return; // same surface
+		}
+		it->second->DisableRenderSurface();
+	}
+	surface->EnableRenderSurface();
+	m_render_surfaces.insert_or_assign( type, surface );
+}
+
+void UI::UnsetRenderSurface( const render_surface_type_t type ) {
+	std::lock_guard guard( m_render_surfaces_mutex );
+	const auto& it = m_render_surfaces.find( type );
+	if ( it != m_render_surfaces.end() ) {
+		m_render_surfaces.erase( it );
+		it->second->DisableRenderSurface();
+	}
+}
+
+void UI::WithRenderSurfaceTexture( const render_surface_type_t type, const f_with_render_surface_t& f ) {
+	std::lock_guard guard( m_render_surfaces_mutex );
+	const auto& it = m_render_surfaces.find( type );
+	if ( it != m_render_surfaces.end() ) {
+		f( it->second->GetTextureForRender() );
+		it->second->Hide();
+		it->second->Show();
+	}
+}
+
 void UI::Defocus( dom::Focusable* const element ) {
 	ASSERT( element, "element is null" );
 	if ( element == m_focused_element ) {
@@ -373,6 +458,17 @@ void UI::RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object ) {
 		m_global_singleton = nullptr;
 		m_f_global_singleton_on_deglobalize = nullptr;
 	}
+}
+
+void UI::UnsetRenderSurfaceBySurface( const dom::Surface* surface ) {
+	std::lock_guard guard( m_render_surfaces_mutex );
+	for ( const auto& it : m_render_surfaces ) {
+		if ( it.second == surface ) {
+			m_render_surfaces.erase( it.first );
+			return;
+		}
+	}
+	ASSERT( false, "render surface not found" );
 }
 
 }

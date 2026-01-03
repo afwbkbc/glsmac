@@ -18,13 +18,19 @@ class Mesh;
 namespace ui {
 
 class Geometry;
+class UI;
 
 namespace dom {
 
 class Surface : public Area {
 public:
+
+	static const std::string UI_CLASS;
+
 	Surface( DOM_ARGS );
-	
+
+	void Destroy( GSE_CALLABLE ) override;
+
 protected:
 	virtual ~Surface();
 
@@ -40,9 +46,17 @@ private:
 	void CreateTexture();
 	void ClearTexture();
 
+	bool m_is_render_surface = false;
+
 private:
 	friend class Panel;
 	types::texture::Texture* GetOwnedTexturePtr();
+
+private:
+	friend class ui::UI;
+	void EnableRenderSurface();
+	void DisableRenderSurface();
+	types::texture::Texture* const GetTextureForRender() const;
 
 };
 

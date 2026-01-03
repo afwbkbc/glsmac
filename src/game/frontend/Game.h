@@ -30,6 +30,10 @@
 // for new ui
 class GLSMAC;
 
+namespace ui {
+class UI;
+}
+
 namespace types {
 namespace texture {
 class Texture;
@@ -140,7 +144,7 @@ CLASS( Game, common::Module )
 
 	static constexpr size_t SCROLL_DURATION_MS = 100;
 
-	Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
+	Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ui::UI* const ui, ::ui_legacy::ui_handler_t on_start = 0, ::ui_legacy::ui_handler_t on_cancel = 0 );
 	~Game();
 
 	void Start() override;
@@ -306,6 +310,7 @@ private:
 
 	GLSMAC* m_glsmac = nullptr;
 	backend::State* m_state = nullptr;
+	ui::UI* m_ui = nullptr;
 
 	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
 	util::random::Random* m_random = nullptr;
@@ -387,7 +392,7 @@ private:
 	struct {
 		ui_legacy::style::Theme* theme = nullptr;
 		ui_legacy::BottomBar* bottom_bar = nullptr;
-	} m_ui;
+	} m_ui_legacy;
 
 	bool m_is_resize_handler_set = false;
 

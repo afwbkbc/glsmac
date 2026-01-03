@@ -88,6 +88,9 @@ public:
 
 	bool m_is_hoverable = true;
 
+	static Object* Unwrap( gse::Value* const value );
+	static const gse::value::Object::object_class_t WRAP_CLASS;
+
 protected:
 
 	virtual ~Object();

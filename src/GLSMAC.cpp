@@ -558,7 +558,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	auto* game = g_engine->GetGame();
 	ASSERT( game, "game not set" );
 
-	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
+	m_game = new ::game::frontend::Game( nullptr, this, real_state, m_ui, UH( this, ctx, si, ep ) {
 		//g_engine->GetScheduler()->RemoveTask( this );
 		m_gc_space->Accumulate( this, [ this ](){
 			TriggerObject( this, "start_game" );

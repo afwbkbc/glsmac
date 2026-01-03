@@ -44,15 +44,17 @@ return {
 			}),
 		};
 
-		const p = {
+		const pp = {
+			game: p.game,
+			ui: p.ui,
 			el: el,
 			sections: {},
 		};
 		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map']) {
-			p.sections[s] = #include(s);
+			pp.sections[s] = #include(s);
 		}
-		for (s of p.sections) {
-			s.init(p);
+		for (s of pp.sections) {
+			s.init(pp);
 		}
 
 	},

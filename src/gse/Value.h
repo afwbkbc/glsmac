@@ -205,7 +205,7 @@ _type* _type::Unwrap( gse::Value* const value ) { \
     const auto* valueobj = value->Deref(); \
     ASSERT( valueobj->type == gse::Value::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
     const auto* obj = (gse::value::Object*)valueobj; \
-    ASSERT( obj->object_class == WRAP_CLASS, "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
+    ASSERT( !obj->object_class.empty() && ( obj->object_class == WRAP_CLASS || ( WRAP_CLASS == "Object" && obj->object_class[ 0 ] == '$' ) ), "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
     ASSERT( obj->wrapobj, "can't unwrap object without internal link" ); \
     return (_type*)obj->wrapobj; \
 }

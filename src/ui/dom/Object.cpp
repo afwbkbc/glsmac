@@ -26,6 +26,8 @@ namespace dom {
 
 static std::atomic< id_t > s_next_id = 0;
 
+const gse::value::Object::object_class_t Object::WRAP_CLASS = "Object";
+
 Object::Object( DOM_ARGS_T )
 	: gse::GCWrappable( ui->GetGCSpace() )
 	, m_ui( ui )
@@ -120,6 +122,8 @@ gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	}
 	return m_wrapobj;
 }
+
+UNWRAPIMPL_PTR( Object )
 
 void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	if ( m_is_destroyed ) {
