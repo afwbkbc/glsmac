@@ -37,7 +37,7 @@ void main(void) { \
 		position += vec4( uPosition, 0.0, 0.0 ); \
 	}\
 	gl_Position = position; \
-	texpos = vec2( aTexCoord.xy ); \
+	texpos = aTexCoord.xy; \
 	tintcolor = aTintColor; \
 	fragpos = position.xyz; \
 	normal = aNormal; \
@@ -86,7 +86,7 @@ void main(void) { \
 		) + " \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
-	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
+	vec4 tex = texture( uTexture, texpos.xy ); \
 	float gamma = 1.4; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \

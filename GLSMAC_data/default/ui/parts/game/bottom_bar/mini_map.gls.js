@@ -13,10 +13,10 @@ return {
 
 		this.map_area = this.frame.surface({
 			align: 'top left',
-			top: 30,
-			height: 116,
-			left: 2,
-			width: 232,
+			top: 36,
+			height: 112,
+			left: 6,
+			width: 224,
 		});
 
 		p.ui.set_render_surface('minimap', this.map_area);

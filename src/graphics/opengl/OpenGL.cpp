@@ -329,7 +329,7 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen, const bool mipmaps ) {
 	ASSERT( texture, "texture is null" );
 
 	bool is_reload_needed = false;
@@ -384,7 +384,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
-			t.obj, [ &need_full_update, &texture, &smoothen, &tw, &th ]() {
+			t.obj, [ &need_full_update, &texture, &smoothen, &mipmaps, &tw, &th ]() {
 
 				if ( need_full_update ) {
 					ASSERT( !glGetError(), "Texture parameter error" );
@@ -401,15 +401,25 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						GL_UNSIGNED_BYTE,
 						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
-					glGenerateMipmap( GL_TEXTURE_2D );
+					if ( mipmaps ) {
+						glGenerateMipmap( GL_TEXTURE_2D );
+					}
 
 					if ( smoothen ) {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+						glTexParameteri(
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps
+								? GL_LINEAR_MIPMAP_LINEAR
+								: GL_LINEAR
+						);
 					}
 					else {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST );
+						glTexParameteri(
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps
+								? GL_NEAREST_MIPMAP_NEAREST
+								: GL_NEAREST
+						);
 					}
 
 					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
