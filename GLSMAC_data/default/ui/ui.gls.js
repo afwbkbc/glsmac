@@ -7,6 +7,7 @@ return (glsmac) => {
 	const m = {
 		utils: #include('utils/utils'),
 		glsmac: glsmac,
+		ui: glsmac.ui,
 		root: glsmac.ui.root,
 	};
 	for (step of [

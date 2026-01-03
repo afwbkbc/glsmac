@@ -8,6 +8,7 @@ return (m) => {
 			m.root.clear();
 
 			const parts = {
+				ui: m.ui,
 				root: m.root,
 				modules: {
 					bottom_bar: #include('bottom_bar/bottom_bar'),
