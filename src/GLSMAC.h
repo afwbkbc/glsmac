@@ -90,6 +90,8 @@ private:
 
 	void UpdateLoaderText();
 
+	void Reset( GSE_CALLABLE );
+
 	game::backend::State* m_state = nullptr;
 	bool m_is_game_running = false;
 

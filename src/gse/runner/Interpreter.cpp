@@ -1001,11 +1001,8 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 			auto& properties = o->value;
 			for ( const auto& it : obj->ordered_properties ) {
 				auto* const r = EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second );
-				o->Assign(
-					it.first, r
-						? r->Clone()
-						: VALUE( Undefined )
-				);
+				ASSERT( r, "EvaluateExpression returned nullptr" );
+				o->Assign( it.first, r->Clone() );
 			}
 			return result;
 		}

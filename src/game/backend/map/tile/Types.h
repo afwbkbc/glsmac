@@ -69,6 +69,20 @@ struct tile_colors_t {
 	types::Color top;
 	types::Color right;
 	types::Color bottom;
+	void Set( const types::Color& color ) {
+		center.Set( color );
+		left.Set( color );
+		top.Set( color );
+		right.Set( color );
+		bottom.Set( color );
+	}
+	void Set( const tile_colors_t& colors ) {
+		center.Set( colors.center );
+		left.Set( colors.left );
+		top.Set( colors.top );
+		right.Set( colors.right );
+		bottom.Set( colors.bottom );
+	}
 };
 
 // scalar

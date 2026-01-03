@@ -55,6 +55,7 @@ public:
 	Color( const color_t& color );
 	virtual ~Color() = default;
 
+	void Set( const Color& other );
 	void Set( channel_t red, channel_t green, channel_t blue, channel_t alpha );
 
 	void operator=( const color_t& color );

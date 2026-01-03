@@ -32,7 +32,7 @@ return (m) => {
 			return e.on_close();
 		};
 		btn.on('click', f_on_close);
-		popup.on('keydown', (e) => {
+		btn.on('keydown', (e) => {
 			if (#is_empty(e.modifiers) && (e.code == 'ESCAPE') || (e.code == 'ENTER')) {
 				return f_on_close();
 			} else {

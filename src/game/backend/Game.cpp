@@ -341,7 +341,9 @@ void Game::Iterate() {
 							InitFailed( e.what() );
 							return;
 						}
-						GlobalAdvanceTurn( GSE_CALL );
+						if ( m_game_state == GS_RUNNING ) {
+							GlobalAdvanceTurn( GSE_CALL );
+						}
 					}
 					else {
 						InitComplete( GSE_CALL );
@@ -380,12 +382,21 @@ void Game::Iterate() {
 											obj->Set( "applied", event_data.rollback_data, GSE_CALL );
 										}
 										const auto fargs = gse::value::function_arguments_t{ obj };
-										const auto& it = m_event_handlers.find( event->GetEventName() );
-										if ( it != m_event_handlers.end() ) {
-											it->second->Rollback( GSE_CALL, fargs );
+										event::EventHandler* h = nullptr;
+										{
+											std::lock_guard guard( m_event_handlers_mutex );
+											const auto& it = m_event_handlers.find( event->GetEventName() );
+											if ( it != m_event_handlers.end() ) {
+												h = it->second;
+											}
+											else {
+												MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+											}
 										}
-										else {
-											MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+										if ( h ) {
+											WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+												h->Rollback( GSE_CALL, fargs );
+											});
 										}
 									}
 								);
@@ -401,14 +412,21 @@ void Game::Iterate() {
 											obj->Set( "resolved", it.resolved, GSE_CALL );
 										}
 										const auto fargs = gse::value::function_arguments_t{ obj };
-										const auto& it2 = m_event_handlers.find( event->GetEventName() );
-										if ( it2 != m_event_handlers.end() ) {
-											WithRW( [ &it2, &ctx, &gc_space, &si, &ep, &fargs ]() {
-												it2->second->Apply( GSE_CALL, fargs );
-											});
+										event::EventHandler* h = nullptr;
+										{
+											std::lock_guard guard( m_event_handlers_mutex );
+											const auto& it2 = m_event_handlers.find( event->GetEventName() );
+											if ( it2 != m_event_handlers.end() ) {
+												h = it2->second;
+											}
+											else {
+												MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
+											}
 										}
-										else {
-											MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
+										if ( h ) {
+											WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+												h->Apply( GSE_CALL, fargs );
+											});
 										}
 									}
 								);
@@ -434,8 +452,14 @@ void Game::Iterate() {
 #endif
 							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 							const auto fargs = gse::value::function_arguments_t{ obj };
-							const auto& it = m_event_handlers.find( event->GetEventName() );
-							const auto* handler = it != m_event_handlers.end() ? it->second : nullptr;
+							event::EventHandler* handler = nullptr;
+							{
+								std::lock_guard guard( m_event_handlers_mutex );
+								const auto& it = m_event_handlers.find( event->GetEventName() );
+								handler = it != m_event_handlers.end()
+									? it->second
+									: nullptr;
+							}
 							if ( handler ) {
 								errptr = handler->Validate( GSE_CALL, fargs );
 							}
@@ -612,12 +636,24 @@ void Game::AddEventResponse( const std::string& event_id, const bool result, gse
 	});
 }
 
-void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
-	const auto& it = m_event_handlers.find( name );
-	if ( it == m_event_handlers.end() ) {
-		GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+void Game::ClearEvents() {
+	std::lock_guard guard( m_event_handlers_mutex );
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	for ( const auto& it : m_event_handlers ) {
+		g_engine->Log( "Removing event: \"" + it.first + "\"" );
 	}
-	const auto& handler = it->second;
+#endif
+	m_event_handlers.clear();
+}
+
+void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		const auto& it = m_event_handlers.find( name );
+		if ( it == m_event_handlers.end() ) {
+			GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+		}
+	}
 	AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
 }
 
@@ -789,8 +825,11 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
-				if ( m_event_handlers.find( name ) != m_event_handlers.end() ) {
-					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event already registered: " + name );
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					if ( m_event_handlers.find( name ) != m_event_handlers.end() ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Event already registered: " + name );
+					}
 				}
 				N_GETVALUE( def, 1, Object );
 				auto validate_it = def.find( "validate" );
@@ -813,13 +852,18 @@ WRAPIMPL_BEGIN( Game )
 				if ( rollback_it == def.end() || rollback_it->second->type != gse::Value::T_CALLABLE ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide rollback method" );
 				}
-				m_event_handlers.insert( { name, new event::EventHandler( gc_space, name,
-					(gse::value::Callable*)validate_it->second,
-					resolve,
-					(gse::value::Callable*)apply_it->second,
-					(gse::value::Callable*)rollback_it->second
-				) } );
-
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					m_event_handlers.insert(
+						{ name, new event::EventHandler(
+							gc_space, name,
+							(gse::value::Callable*)validate_it->second,
+							resolve,
+							(gse::value::Callable*)apply_it->second,
+							(gse::value::Callable*)rollback_it->second
+						) }
+					);
+				}
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -828,11 +872,13 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( name, 0, String );
-				const auto& it = m_event_handlers.find( name );
-				if ( it == m_event_handlers.end() ) {
-					GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					const auto& it = m_event_handlers.find( name );
+					if ( it == m_event_handlers.end() ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+					}
 				}
-				const auto& handler = it->second;
 				N_GET( args, 1, Object );
 				if ( !args->object_class.empty() ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
@@ -935,8 +981,11 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	GC_DEBUG_END();
 
 	GC_DEBUG_BEGIN( "event_handlers" );
-	for ( const auto& it : m_event_handlers ) {
-		GC_REACHABLE( it.second );
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		for ( const auto& it : m_event_handlers ) {
+			GC_REACHABLE( it.second );
+		}
 	}
 	GC_DEBUG_END();
 
@@ -1507,6 +1556,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 }
 
 void Game::InitFailed( const std::string& error_text ) {
+	HideLoader();
 	// need to delete these here because they weren't passed to main thread
 	if ( m_map->m_textures.terrain ) {
 		DELETE( m_map->m_textures.terrain );
@@ -1538,7 +1588,7 @@ void Game::InitFailed( const std::string& error_text ) {
 		}; }
 	);
 
-	//ResetGame();
+	ResetGame();
 	m_initialization_error = error_text;
 
 	if ( m_old_map ) {
@@ -1565,8 +1615,12 @@ void Game::AddFrontendRequest( const FrontendRequest& request ) {
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
+	if ( m_game_state != GS_NONE ) {
+		ResetGame();
+	}
+
 	ASSERT( !m_state || !m_state->m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
-	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
+	ASSERT( m_game_state == GS_NONE, "game still initializing" );
 
 	MTModule::Log( "Initializing game" );
 
@@ -1950,6 +2004,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 void Game::ResetGame() {
 
+	ClearHandlers();
+
 	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
 		m_game_state = GS_NONE;
@@ -1967,7 +2023,10 @@ void Game::ResetGame() {
 		std::lock_guard guard( m_pending_events_mutex );
 		m_pending_events.clear();
 	}
-	m_event_handlers.clear();
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		m_event_handlers.clear();
+	}
 	m_next_event_id = 0;
 
 	m_tm = nullptr;

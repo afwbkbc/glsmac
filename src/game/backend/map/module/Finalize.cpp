@@ -94,7 +94,7 @@ void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapSta
 		do_x();
 #undef x
 
-		tint = ts->layers[ lt ].colors;
+		tint.Set( ts->layers[ lt ].colors );
 
 		// fix some rare elevation glitches (slightly positive elevations on water tiles, slightly negative on land tiles)
 		// TODO: investigate why it happens

@@ -227,11 +227,9 @@ void Buffer::WriteColor( const Color& val ) {
 	WriteImpl( T_COLOR, (const char*)&val.value, sizeof( val.value ) );
 }
 
-const Color Buffer::ReadColor() {
-	Color val = {};
+void Buffer::ReadColor( Color& val ) {
 	uint32_t sz = 0;
 	ReadImpl( T_COLOR, (char*)&val.value, &sz, sizeof( val.value ) );
-	return val;
 }
 
 void Buffer::WriteData( const void* data, const uint32_t len ) {

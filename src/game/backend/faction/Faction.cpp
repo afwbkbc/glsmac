@@ -51,9 +51,9 @@ void Faction::Deserialize( types::Buffer buf ) {
 	m_id = buf.ReadString();
 	m_name = buf.ReadString();
 
-	m_colors.text = buf.ReadColor();
-	m_colors.text_shadow = buf.ReadColor();
-	m_colors.border = buf.ReadColor();
+	buf.ReadColor( m_colors.text );
+	buf.ReadColor( m_colors.text_shadow );
+	buf.ReadColor( m_colors.border );
 
 	m_bases_render.file = buf.ReadString();
 	m_bases_render.grid_x = buf.ReadInt();

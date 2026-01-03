@@ -11,9 +11,9 @@ return (glsmac) => {
 
 	let tiles_with_bases = {};
 
-	#include('events')(glsmac.game);
-
 	glsmac.on('configure_game', (e) => {
+
+		#include('events')(glsmac.game);
 
 		let players = [];
 		let players_sz = 0;
@@ -67,7 +67,6 @@ return (glsmac) => {
 		});
 
 		e.game.on('create_world', (e) => {
-
 
 			// init game data
 			resources.define(e.game);
@@ -186,9 +185,13 @@ return (glsmac) => {
 		});
 
 		e.game.on('error', (e) => {
-			//glsmac.ui.error('Game initialization failed', () => {
-			//glsmac.reset();
-			//});
+			glsmac.ui.error('Game initialization failed', () => {
+				if (#is_defined(glsmac.config.quickstart)) {
+					glsmac.exit();
+				} else {
+					glsmac.reset();
+				}
+			});
 		});
 
 		e.game.on('turn', (e) => {

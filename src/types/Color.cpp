@@ -46,6 +46,10 @@ Color::Color( const color_t& color )
 	value = color;
 }
 
+void Color::Set( const Color& other ) {
+	Set( other.value.red, other.value.green, other.value.blue, other.value.alpha );
+}
+
 void Color::Set( channel_t red, channel_t green, channel_t blue, channel_t alpha ) {
 	value.red = red;
 	value.green = green;
@@ -136,11 +140,10 @@ Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t 
 
 void Color::Convert( const color_t& in, rgba_t& out ) {
 	out =
-		( (uint8_t)( std::min( in.red, 1.0f ) * 255) ) |
-		( (uint8_t)( std::min( in.green, 1.0f ) * 255 ) << 8 ) |
-		( (uint8_t)( std::min( in.blue, 1.0f ) * 255 ) << 16 ) |
-		( (uint8_t)( std::min( in.alpha, 1.0f ) * 255 ) << 24 )
-	;
+		( (uint8_t)( std::min( in.red, 1.0f ) * 255 ) ) |
+			( (uint8_t)( std::min( in.green, 1.0f ) * 255 ) << 8 ) |
+			( (uint8_t)( std::min( in.blue, 1.0f ) * 255 ) << 16 ) |
+			( (uint8_t)( std::min( in.alpha, 1.0f ) * 255 ) << 24 );
 }
 
 void Color::Convert( const rgba_t& in, color_t& out ) {
@@ -158,23 +161,23 @@ const std::string Color::ToString() const {
 
 WRAPIMPL_BEGIN( Color )
 	WRAPIMPL_PROPS
-		{
-			"r",
-			VALUE( gse::value::Float,, value.red )
-		},
-		{
-			"g",
-			VALUE( gse::value::Float,, value.green )
-		},
-		{
-			"b",
-			VALUE( gse::value::Float,, value.blue )
-		},
-		{
-			"a",
-			VALUE( gse::value::Float,, value.alpha )
-		},
-	};
+			{
+				"r",
+				VALUE( gse::value::Float, , value.red )
+			},
+			{
+				"g",
+				VALUE( gse::value::Float, , value.green )
+			},
+			{
+				"b",
+				VALUE( gse::value::Float, , value.blue )
+			},
+			{
+				"a",
+				VALUE( gse::value::Float, , value.alpha )
+			},
+		};
 WRAPIMPL_END_NOPTR( Color )
 
 UNWRAPIMPL_NOPTR_BEGIN( Color )

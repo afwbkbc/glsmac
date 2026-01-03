@@ -43,7 +43,7 @@ CLASS( Buffer, common::Class )
 	void WriteVec3( const types::Vec3 val );
 	const types::Vec3 ReadVec3();
 	void WriteColor( const Color& val );
-	const Color ReadColor();
+	void ReadColor( Color& val );
 	void WriteData( const void* data, const uint32_t len );
 	const void* ReadData( const uint32_t len );
 

@@ -137,7 +137,9 @@ const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager
 	m_settings.insert_or_assign(
 		k, std::make_pair(
 			is_saveable,
-			v.value_or( "" )
+			it->second.has_value
+				? v.value_or( "" )
+				: ""
 		)
 	);
 	return it;

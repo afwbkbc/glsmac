@@ -254,19 +254,12 @@ const types::Buffer TileState::SerializeTileColors( const tile_colors_t& colors 
 	return buf;
 }
 
-const tile_colors_t TileState::DeserializeTileColors( types::Buffer buf ) {
-	const auto center = buf.ReadColor();
-	const auto left = buf.ReadColor();
-	const auto top = buf.ReadColor();
-	const auto right = buf.ReadColor();
-	const auto bottom = buf.ReadColor();
-	return {
-		center,
-		left,
-		top,
-		right,
-		bottom
-	};
+void TileState::DeserializeTileColors( types::Buffer buf, tile_colors_t& colors ) {
+	buf.ReadColor( colors.center );
+	buf.ReadColor( colors.left );
+	buf.ReadColor( colors.top );
+	buf.ReadColor( colors.right );
+	buf.ReadColor( colors.bottom );
 }
 
 void TileState::tile_elevations_t::Deserialize( types::Buffer buf ) {
@@ -282,7 +275,7 @@ void TileState::tile_layer_t::Deserialize( types::Buffer buf ) {
 	indices.Deserialize( buf.ReadString() );
 	surfaces.Deserialize( buf.ReadString() );
 	tex_coords = DeserializeTileTexCoords( buf.ReadString() );
-	colors = DeserializeTileColors( buf.ReadString() );
+	DeserializeTileColors( buf.ReadString(), colors );
 	texture_stretch = buf.ReadVec2f();
 	texture_stretch_at_edges = buf.ReadBool();
 }

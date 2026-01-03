@@ -336,6 +336,8 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	void AddEvent( event::Event* const event );
 	void AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved );
 
+	void ClearEvents();
+
 	WRAPDEFS_PTR( Game )
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
@@ -430,6 +432,7 @@ private:
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
+	std::mutex m_event_handlers_mutex;
 
 	std::vector< event::Event* > m_pending_events = {};
 	std::mutex m_pending_events_mutex;

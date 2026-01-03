@@ -128,7 +128,7 @@ private:
 	static const types::Buffer SerializeTileTexCoords( const tile_tex_coords_t& tex_coords );
 	static const tile_tex_coords_t DeserializeTileTexCoords( types::Buffer buf );
 	static const types::Buffer SerializeTileColors( const tile_colors_t& colors );
-	static const tile_colors_t DeserializeTileColors( types::Buffer buf );
+	static void DeserializeTileColors( types::Buffer buf, tile_colors_t& colors );
 };
 
 }

@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <functional>
+#include <mutex>
 
 #include "value/Types.h"
 #include "value/Int.h"
@@ -79,6 +80,9 @@ public:
 		const t_string_to_type m_string_to_type;
 	};
 
+	Wrappable() = default;
+	Wrappable( const Wrappable& other );
+	Wrappable& operator=( const Wrappable& other );
 	virtual ~Wrappable();
 
 	virtual Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) = 0;
@@ -94,6 +98,7 @@ public:
 	virtual const bool HasHandlers( const std::string& event );
 	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} );
 	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< Value::type_t > expected_return_type = {} );
+	virtual void ClearHandlers();
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
 
@@ -110,6 +115,7 @@ protected:
 	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;
+	std::mutex m_callbacks_mutex = {};
 
 	bool m_catchall = false;
 };
