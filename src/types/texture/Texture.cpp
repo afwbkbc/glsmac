@@ -15,18 +15,21 @@
 namespace types {
 namespace texture {
 
-Texture::Texture() {
+Texture::Texture( const texture_flag_t flags )
+	: m_flags( flags ) {
 	// nothing
 }
 
-Texture::Texture( const size_t width, const size_t height ) {
+Texture::Texture( const size_t width, const size_t height, const texture_flag_t flags )
+	: m_flags( flags ) {
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
 }
 
-Texture::Texture( const std::string& filename, const size_t width, const size_t height )
-	: m_filename( filename ) {
+Texture::Texture( const std::string& filename, const size_t width, const size_t height, const texture_flag_t flags )
+	: m_filename( filename )
+	, m_flags( flags ) {
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
@@ -985,6 +988,14 @@ void Texture::Deserialize( types::Buffer buf ) {
 
 void Texture::SetBitmap( void* const pixels ) {
 
+}
+
+const bool Texture::HasFlag( const texture_flag_t flag ) const {
+	return m_flags & flag;
+}
+
+const texture_flag_t Texture::GetFlags() const {
+	return m_flags;
 }
 
 }

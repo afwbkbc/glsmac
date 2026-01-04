@@ -568,7 +568,7 @@ types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res 
 	if ( it != m_textures.source.end() ) {
 		return it->second;
 	}
-	auto* texture = g_engine->GetTextureLoader()->LoadTexture( res );
+	auto* texture = g_engine->GetTextureLoader()->LoadTexture( res, types::texture::TF_MIPMAPS );
 	ASSERT( texture, "texture not loaded" );
 	m_textures.source.insert(
 		{
@@ -1384,10 +1384,10 @@ void Game::Initialize(
 		);
 		m_light_a->SetColor(
 			{
-				0.8f,
-				0.9f,
-				1.0f,
-				0.8f
+				1.6f,
+				1.8f,
+				2.0f,
+				1.0f
 			}
 		);
 		m_world_scene->AddLight( m_light_a );
@@ -1403,10 +1403,10 @@ void Game::Initialize(
 		);
 		m_light_b->SetColor(
 			{
-				1.0f,
-				0.9f,
-				0.8f,
-				0.8f
+				2.0f,
+				1.8f,
+				1.6f,
+				1.0f
 			}
 		);
 		m_world_scene->AddLight( m_light_b );

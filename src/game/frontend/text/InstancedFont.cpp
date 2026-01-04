@@ -262,7 +262,7 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 	w += margin * 2 + 1; // some symbols like '1' or '4' look shifted to the left without + 1 // TODO: investigate
 	h += margin * 2;
 
-	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h );
+	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h, types::texture::TF_MIPMAPS );
 
 	texture->Fill( 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1, background );
 
@@ -287,7 +287,8 @@ types::texture::Texture* InstancedFont::GetColorizedTexture( const types::Color&
 			types::texture::Texture,
 			"InstancedFont_" + m_name + "_" + std::to_string( texture_key ),
 			m_base_texture->GetWidth(),
-			m_base_texture->GetHeight()
+			m_base_texture->GetHeight(),
+			types::texture::TF_MIPMAPS
 		);
 		texture->ColorizeFrom( m_base_texture, color, shadow_color );
 		texture_it = m_color_textures.insert(

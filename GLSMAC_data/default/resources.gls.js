@@ -78,7 +78,7 @@ const result = {
 
 	define: (game) => {
 		define(game, 'Nutrients', 304, 13);
-		define(game, 'Minerals', 345, 36);
+		define(game, 'Minerals', 345, 35);
 		define(game, 'Energy', 386, 59);
 	},
 

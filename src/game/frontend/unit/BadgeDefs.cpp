@@ -150,7 +150,7 @@ sprite::Sprite* BadgeDefs::GetBadgeHealthbarSprite( const float health ) {
 		auto* texture = m_healthbar_textures.insert(
 			{
 				step,
-				new types::texture::Texture( "HealthBar_" + std::to_string( step ), 1, res )
+				new types::texture::Texture( "HealthBar_" + std::to_string( step ), 1, res, types::texture::TF_MIPMAPS )
 			}
 		).first->second;
 
@@ -220,7 +220,7 @@ const types::Vec3 BadgeDefs::GetFakeBadgeCoords( const types::Vec3& coords, cons
 
 types::texture::Texture* BadgeDefs::GetBadgesTexture() {
 	if ( !m_badges_texture ) {
-		m_badges_texture = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_FLAGS );
+		m_badges_texture = g_engine->GetTextureLoader()->LoadTexture( resource::PCX_FLAGS, types::texture::TF_MIPMAPS );
 	}
 	return m_badges_texture;
 }

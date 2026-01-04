@@ -18,13 +18,14 @@ FontTexture::FontTexture( OpenGL* opengl, types::Font* font ) {
 
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 
 			ASSERT( !glGetError(), "Texture parameter error" );
 			glPixelStorei( GL_UNPACK_ALIGNMENT, 1 );
 
 			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, (GLsizei)font->m_dimensions.width, (GLsizei)font->m_dimensions.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
+			glGenerateMipmap( GL_TEXTURE_2D );
 			ASSERT( !glGetError(), "Error loading image of font texture" );
 
 			GLfloat ox = 0, oy = 0;

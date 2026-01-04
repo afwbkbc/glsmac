@@ -267,26 +267,26 @@ const TextureLoader::transparent_colors_t& TextureLoader::GetTCs( const resource
 	}
 }
 
-types::texture::LazyTexture* TextureLoader::GetLazyTexture( const std::string& filename ) {
+types::texture::LazyTexture* TextureLoader::GetLazyTexture( const std::string& filename, const types::texture::texture_flag_t flags ) {
 	const auto& it = m_lazy_textures.find( filename );
 	if ( it != m_lazy_textures.end() ) {
 		return it->second;
 	}
-	return m_lazy_textures.insert( { filename, new types::texture::LazyTexture( this, filename ) } ).first->second;
+	return m_lazy_textures.insert( { filename, new types::texture::LazyTexture( this, filename, flags ) } ).first->second;
 }
 
-types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res ) {
+types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const types::texture::texture_flag_t flags ) {
 	const transparent_colors_t colors_old = m_transparent_colors;
 	const bool fix_yellow_shadows_old = m_fix_yellow_shadows;
 	m_transparent_colors = GetTCs( res );
 	m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
-	auto* result = LoadTextureImpl( GetPath( res ) );
+	auto* result = LoadTextureImpl( GetPath( res ), flags );
 	m_transparent_colors = colors_old;
 	m_fix_yellow_shadows = fix_yellow_shadows_old;
 	return result;
 }
 
-types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string& filename ) {
+types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string& filename, const types::texture::texture_flag_t flags ) {
 	std::string key;
 	key.resize( filename.size() );
 	std::transform( filename.begin(), filename.end(), key.begin(), ::tolower );
@@ -302,7 +302,7 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 	const auto path = TryGetCustomFilename( filename );
 	auto* result = path.empty()
 		? nullptr
-		: LoadTextureImpl( path );
+		: LoadTextureImpl( path, flags );
 	if ( res != resource::NONE ) {
 		m_transparent_colors = colors_old;
 		m_fix_yellow_shadows = fix_yellow_shadows_old;
@@ -310,18 +310,18 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 	return result;
 }
 
-types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename ) {
-	auto* result = TryLoadCustomTexture( filename );
+types::texture::Texture* TextureLoader::LoadCustomTexture( const std::string& filename, const types::texture::texture_flag_t flags ) {
+	auto* result = TryLoadCustomTexture( filename, flags );
 	if ( !result ) {
 		THROW( "could not load texture: " + filename );
 	}
 	return result;
 }
 
-types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+types::texture::Texture* TextureLoader::LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value, const types::texture::texture_flag_t texture_flags ) {
 	const transparent_colors_t colors_old = m_transparent_colors;
 	m_transparent_colors = GetTCs( res );
-	types::texture::Texture* result = LoadTextureImpl( GetPath( res ), x1, y1, x2, y2, flags, value );
+	types::texture::Texture* result = LoadTextureImpl( GetPath( res ), x1, y1, x2, y2, flags, value, texture_flags );
 	m_transparent_colors = colors_old;
 	return result;
 }

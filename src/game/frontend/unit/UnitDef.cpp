@@ -148,7 +148,7 @@ const std::string UnitDef::GetStatsString() const {
 
 types::texture::Texture* UnitDef::GetSpriteTexture() {
 	if ( !static_.render.texture ) {
-		static_.render.texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file );
+		static_.render.texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file, types::texture::TF_MIPMAPS );
 	}
 	return static_.render.texture;
 }

@@ -28,9 +28,10 @@ namespace types {
 namespace texture {
 
 CLASS( Texture, Serializable )
-	Texture();
-	Texture( const size_t width, const size_t height );
-	Texture( const std::string& name, const size_t width, const size_t height );
+
+	Texture( const texture_flag_t flags = TF_NONE );
+	Texture( const size_t width, const size_t height, const texture_flag_t flags = TF_NONE );
+	Texture( const std::string& name, const size_t width, const size_t height, const texture_flag_t flags = TF_NONE );
 	virtual ~Texture();
 
 	virtual const bool IsEmpty() const;
@@ -109,8 +110,13 @@ CLASS( Texture, Serializable )
 	virtual const types::Buffer Serialize() const override;
 	virtual void Deserialize( types::Buffer buf ) override;
 
+	const bool HasFlag( const texture_flag_t flag ) const;
+	const texture_flag_t GetFlags() const;
+
 private:
 	size_t m_update_counter = 0;
+
+	const texture_flag_t m_flags = TF_NONE;
 
 	std::string m_filename = "";
 	size_t m_width = 0;

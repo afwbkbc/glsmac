@@ -329,7 +329,7 @@ void OpenGL::OnWindowResize() {
 	}
 }
 
-void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen, const bool mipmaps ) {
+void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen ) {
 	ASSERT( texture, "texture is null" );
 
 	bool is_reload_needed = false;
@@ -384,7 +384,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen,
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
-			t.obj, [ &need_full_update, &texture, &smoothen, &mipmaps, &tw, &th ]() {
+			t.obj, [ &need_full_update, &texture, &smoothen, &tw, &th ]() {
 
 				if ( need_full_update ) {
 					ASSERT( !glGetError(), "Texture parameter error" );
@@ -401,14 +401,25 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen,
 						GL_UNSIGNED_BYTE,
 						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
-					if ( mipmaps ) {
+
+					const bool use_mipmaps = texture->HasFlag( types::texture::TF_MIPMAPS );
+
+					/*
+					float maxAniso;
+					glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso );
+					glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso );
+
+					glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.7f );
+*/
+					if ( use_mipmaps ) {
 						glGenerateMipmap( GL_TEXTURE_2D );
+						glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.5f );
 					}
 
 					if ( smoothen ) {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 						glTexParameteri(
-							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_mipmaps
 								? GL_LINEAR_MIPMAP_LINEAR
 								: GL_LINEAR
 						);
@@ -416,7 +427,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen,
 					else {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 						glTexParameteri(
-							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmaps
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_mipmaps
 								? GL_NEAREST_MIPMAP_NEAREST
 								: GL_NEAREST
 						);

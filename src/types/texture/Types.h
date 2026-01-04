@@ -59,5 +59,10 @@ static constexpr rotate_t ROTATE_270 = 3;
 
 typedef std::unordered_map< types::Color::rgba_t, types::Color::rgba_t > repaint_rules_t;
 
+enum texture_flag_t {
+	TF_NONE = 0,
+	TF_MIPMAPS = 1 << 0,
+};
+
 }
 }

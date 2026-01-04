@@ -102,7 +102,7 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 
 types::texture::Texture* Faction::GetBaseGridTexture() {
 	if ( !m_base_grid_texture ) {
-		m_base_grid_texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.bases_render.file );
+		m_base_grid_texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.bases_render.file, types::texture::TF_MIPMAPS );
 	}
 	return m_base_grid_texture;
 }

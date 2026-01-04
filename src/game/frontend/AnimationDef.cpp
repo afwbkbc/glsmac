@@ -5,6 +5,7 @@
 #include "loader/sound/SoundLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "types/texture/Texture.h"
 
 namespace game {
 namespace frontend {
@@ -29,7 +30,7 @@ AnimationDef::~AnimationDef() {
 
 const instanced_sprites_t& AnimationDef::GetSprites() {
 	if ( m_sprites.empty() ) {
-		auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file );
+		auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file, types::texture::TF_MIPMAPS );
 		const uint32_t w = m_render.frame_width;
 		const uint32_t h = m_render.frame_height;
 		const uint32_t p = m_render.frame_padding;
