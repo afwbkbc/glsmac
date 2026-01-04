@@ -87,7 +87,8 @@ void main(void) { \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	vec4 tex = texture( uTexture, texpos.xy ); \
-	float gamma = 0.85 ; /* TODO: pass via uniform */ \
+	float gamma = 1.1 ; /* TODO: pass via uniform */ \
+	float contrast = 0.1; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \
 	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_TINT ) + " ) { \
@@ -97,7 +98,7 @@ void main(void) { \
 	if ( ! " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
 		color *= ambient + diffuse; \
 	} \
-	FragColor = vec4( color * gamma, alpha ); \
+	FragColor = vec4( clamp( color * gamma - vec3( contrast, contrast, contrast ), 0.0, 1.0 ), alpha ); \
 } \
 \
 "
