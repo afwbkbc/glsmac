@@ -101,9 +101,6 @@ namespace callable {
 #define N_GETVALUE_UNWRAP( _var, _index, _type ) \
     N_GETVALUE_OBJ( _index, _type::WRAP_CLASS ); \
     auto* _var = _type::Unwrap( obj_val );
-#define N_GETVALUE_UNWRAP_UI( _var, _index, _type ) \
-    N_GETVALUE_OBJ( _index, _type::UI_CLASS ); \
-    auto* _var = (_type*)_type::Unwrap( obj_val );
 #define N_CHECK_OBJECT_CLASS( _var, _class ) \
     if ( ((gse::value::Object*)_var)->object_class != _class ) { \
         GSE_ERROR( gse::EC.INVALID_CALL, "Value is expected to be object of class " + _class + ", found class: " + ((gse::value::Object*)_var)->object_class ); \

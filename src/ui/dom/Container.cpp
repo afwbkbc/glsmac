@@ -19,6 +19,7 @@
 #include "Scrollbar.h"
 #include "Scrollview.h"
 #include "Listview.h"
+#include "Widget.h"
 
 namespace ui {
 namespace dom {
@@ -83,6 +84,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_b
 		FACTORY( "scrollbar", Scrollbar );
 		FACTORY( "scrollview", Scrollview );
 		FACTORY( "listview", Listview );
+		FACTORY( "widget", Widget );
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {

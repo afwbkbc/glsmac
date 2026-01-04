@@ -32,4 +32,9 @@ enum geometry_handler_type_t {
 };
 typedef uint8_t geometry_handler_id_t;
 
+enum widget_type_t {
+	WT_NONE,
+	WT_MINIMAP,
+};
+
 }

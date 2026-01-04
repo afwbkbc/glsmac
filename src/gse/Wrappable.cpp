@@ -152,11 +152,11 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 
 void Wrappable::ClearHandlers() {
 	std::lock_guard guard( m_callbacks_mutex );
-#if defined( DEBUG ) || defined( FASTDEBUG )
+/*#if defined( DEBUG ) || defined( FASTDEBUG )
 	for ( const auto& it : m_callbacks ) {
 		g_engine->Log( "Removing " + std::to_string( it.second.size() ) + " handler(s) for \"" + it.first + "\"" );
 	}
-#endif
+#endif*/
 	m_callbacks.clear();
 }
 

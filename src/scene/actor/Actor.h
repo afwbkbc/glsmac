@@ -4,6 +4,10 @@
 
 #include "types/Matrix44.h"
 
+namespace ui::dom {
+class Object;
+}
+
 namespace common {
 class ObjectLink;
 }
@@ -90,6 +94,8 @@ protected:
 	render_flag_t m_render_flags = RF_NONE;
 	area_limits_t m_area_limits = {};
 
+protected:
+	friend class ui::dom::Object; // TODO: remove this hack
 	void UpdateCache();
 
 private:

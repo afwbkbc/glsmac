@@ -638,11 +638,11 @@ void Game::AddEventResponse( const std::string& event_id, const bool result, gse
 
 void Game::ClearEvents() {
 	std::lock_guard guard( m_event_handlers_mutex );
-#if defined( DEBUG ) || defined( FASTDEBUG )
+/*#if defined( DEBUG ) || defined( FASTDEBUG )
 	for ( const auto& it : m_event_handlers ) {
 		g_engine->Log( "Removing event: \"" + it.first + "\"" );
 	}
-#endif
+#endif*/
 	m_event_handlers.clear();
 }
 

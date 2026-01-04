@@ -44,16 +44,12 @@ namespace dom {
 class Root;
 class Object;
 class Focusable;
-class Surface;
+class Widget;
 }
 
 class Class;
 
 CLASS( UI, gse::GCWrappable )
-
-	enum render_surface_type_t {
-		RST_MINIMAP,
-	};
 
 	UI( GSE_CALLABLE );
 	~UI();
@@ -93,11 +89,12 @@ CLASS( UI, gse::GCWrappable )
 	const size_t AddGlobalHandler( const global_handler_t& global_handler );
 	void RemoveGlobalHandler( const size_t handler_id );
 
-	void SetRenderSurface( const render_surface_type_t type, dom::Surface* const surface );
-	void UnsetRenderSurface( const render_surface_type_t type );
+	const widget_type_t GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const;
+	void AttachWidget( dom::Widget* const widget, const widget_type_t type );
+	void DetachWidget( dom::Widget* const widget );
 
-	typedef std::function< void( types::texture::Texture* const texture ) > f_with_render_surface_t;
-	void WithRenderSurfaceTexture( const render_surface_type_t type, const f_with_render_surface_t& f );
+	typedef std::function< void( types::texture::Texture* const texture ) > f_with_widget_t;
+	void WithWidget( const widget_type_t type, const f_with_widget_t& f );
 
 private:
 	friend class dom::Object;
@@ -134,16 +131,14 @@ private:
 	size_t m_next_global_handler_id = 1;
 	std::map< size_t, global_handler_t > m_global_handlers = {};
 
-	std::unordered_map< render_surface_type_t, dom::Surface* > m_render_surfaces = {};
-	std::mutex m_render_surfaces_mutex;
+	typedef std::unordered_set< dom::Widget* > widgets_t;
+	std::unordered_map< widget_type_t, widgets_t > m_widgets = {};
+	std::unordered_map< dom::Widget*, widget_type_t > m_widget_types = {};
+	std::mutex m_widgets_mutex;
 
 private:
 	friend class dom::Object;
 	gc::Space* const GetGCSpace() const;
-
-private:
-	friend class dom::Surface;
-	void UnsetRenderSurfaceBySurface( const dom::Surface* surface );
 
 };
 

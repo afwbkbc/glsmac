@@ -19,5 +19,6 @@ SET( SRC ${SRC}
 	${PWD}/Scrollbar.cpp
 	${PWD}/Scrollview.cpp
 	${PWD}/Listview.cpp
+	${PWD}/Widget.cpp
 
 	PARENT_SCOPE )

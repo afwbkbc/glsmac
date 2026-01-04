@@ -467,8 +467,8 @@ void Game::Iterate() {
 		if ( minimap_texture ) {
 			if ( m_glsmac ) {
 				// new ui
-				m_ui->WithRenderSurfaceTexture(
-					ui::UI::RST_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture ) {
+				m_ui->WithWidget(
+					ui::WT_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture ) {
 						texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
 					}
 				);
@@ -2357,8 +2357,8 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 
 void Game::UpdateMinimap() {
 
-	m_ui->WithRenderSurfaceTexture(
-		ui::UI::RST_MINIMAP, [ this ]( types::texture::Texture* const texture ) {
+	m_ui->WithWidget(
+		ui::WT_MINIMAP, [ this ]( types::texture::Texture* const texture ) {
 
 			NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 

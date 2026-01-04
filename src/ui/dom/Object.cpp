@@ -201,10 +201,10 @@ void Object::Destroy( GSE_CALLABLE ) {
 void Object::Show() {
 	ASSERT( !m_is_destroyed, "Show: object is destroyed" );
 	if ( !m_is_visible ) {
+		m_is_visible = true;
 		for ( const auto& actor : m_actors ) {
 			actor->Show();
 		}
-		m_is_visible = true;
 	}
 }
 
@@ -215,6 +215,14 @@ void Object::Hide() {
 			actor->Hide();
 		}
 		m_is_visible = false;
+	}
+}
+
+void Object::Refresh() {
+	if ( m_is_visible ) {
+		for ( const auto& actor : m_actors ) {
+			actor->UpdateCache();
+		}
 	}
 }
 

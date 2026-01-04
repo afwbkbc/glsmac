@@ -77,6 +77,7 @@ public:
 
 	virtual void Show();
 	virtual void Hide();
+	void Refresh();
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
