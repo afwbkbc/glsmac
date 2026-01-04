@@ -11,9 +11,9 @@ return (glsmac) => {
 
 	let tiles_with_bases = {};
 
-	glsmac.on('configure_game', (e) => {
+	#include('events')(glsmac.game);
 
-		#include('events')(glsmac.game);
+	glsmac.on('configure_game', (e) => {
 
 		let players = [];
 		let players_sz = 0;
@@ -186,7 +186,11 @@ return (glsmac) => {
 
 		e.game.on('error', (e) => {
 			glsmac.ui.error('Game initialization failed', () => {
-				if (#is_defined(glsmac.config.quickstart)) {
+				if (
+					#is_defined(glsmac.config.quickstart) ||
+					#is_defined(glsmac.config.host) ||
+					#is_defined(glsmac.config.join)
+				) {
 					glsmac.exit();
 				} else {
 					glsmac.reset();

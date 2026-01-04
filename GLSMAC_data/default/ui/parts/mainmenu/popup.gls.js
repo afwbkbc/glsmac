@@ -109,7 +109,15 @@ return (m) => {
 							is_cancel: true,
 						},
 						onclick: (e) => {
-							that.back();
+							if (
+								#is_defined(m.glsmac.config.quickstart) ||
+								#is_defined(m.glsmac.config.host) ||
+								#is_defined(m.glsmac.config.join)
+							) {
+								m.glsmac.exit();
+							} else {
+								that.back();
+							}
 							return true;
 						},
 					},

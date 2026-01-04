@@ -37,13 +37,11 @@ const manager = {
 			}
 		}
 		else {
-			// go async in case some other popup such as error gets displayed immediately after
 			this.exit_timer = #async(0, () => {
 				this.exit_timer = null;
-				if ( reset ) {
+				if (reset) {
 					m.glsmac.reset();
-				}
-				else {
+				} else {
 					m.glsmac.exit();
 				}
 			});
