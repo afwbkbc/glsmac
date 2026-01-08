@@ -2360,52 +2360,34 @@ void Game::UpdateMinimap() {
 	m_ui->WithWidget(
 		ui::WT_MINIMAP, [ this ]( types::texture::Texture* const texture ) {
 
-			NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
-
-			auto mm = types::Vec2< size_t >{
+			auto target_size = types::Vec2< size_t >{
 				texture->GetWidth(),
 				texture->GetHeight(),
 			};
 
-			// 'black grid' artifact workaround
-			// TODO: find reason and fix properly, maybe just keep larger internal viewport
-			types::Vec2< float > scale = {
-				1, //(float)m_viewport.window_width / mm.x,
-				1, //(float)m_viewport.window_height / mm.y
-			};
+			const float sx = (float)target_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
+			const float sy = (float)target_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
+			const float ss = ( (float)target_size.y / (float)m_viewport.window_height );
+			const float sa = (float)target_size.y / (float)target_size.x;
 
-			mm.x *= scale.x;
-			mm.y *= scale.y;
-
-			const float sx = (float)mm.x / (float)m_map_data.width / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
-			const float sy = (float)mm.y / (float)m_map_data.height / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
-
-			const float ss = ( (float)mm.y / (float)m_viewport.window_height );
-			const float sxy = (float)scale.x / scale.y;
-
+			NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 			camera->SetAngle( m_camera->GetAngle() );
 			camera->SetScale(
 				{
-					sx * ss * sxy / scale.x,
-					sy * ss * 1.38f / scale.y,
-					0.01f
+					sx * ss / sa * 0.5f, // TODO: why 0.5 ?
+					sy * ss / sa,
+					0.01f,
 				}
 			);
-
 			camera->SetPosition(
 				{
-					ss * sxy,
-					1.0f - ss * 0.48f,
+					ss,
+					1.0f - ss * 0.5f, // TODO: why 0.5 ?
 					0.5f
 				}
 			);
 
-			GetMinimapTexture(
-				camera, {
-					mm.x,
-					mm.y
-				}
-			);
+			GetMinimapTexture( camera, target_size );
 		}
 	);
 }

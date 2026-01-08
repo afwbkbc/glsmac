@@ -14,6 +14,7 @@
 #include "gc/Space.h"
 #include "dom/Focusable.h"
 #include "gse/value/Bool.h"
+#include "geometry/Geometry.h"
 
 namespace ui {
 
@@ -400,8 +401,11 @@ void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
 	const auto& it = m_widgets.find( type );
 	if ( it != m_widgets.end() ) {
 		for ( const auto& widget : it->second ) {
-			f( widget->GetTexture() );
-			widget->Refresh();
+			const auto* const g = widget->GetGeometry();
+			if ( g->GetWidth() > 0 && g->GetHeight() > 0 ) {
+				f( widget->GetTexture() );
+				widget->Refresh();
+			}
 		}
 	}
 }
