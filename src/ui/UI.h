@@ -92,8 +92,10 @@ CLASS( UI, gse::GCWrappable )
 	const widget_type_t GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const;
 	void AttachWidget( dom::Widget* const widget, const widget_type_t type );
 	void DetachWidget( dom::Widget* const widget );
+	void ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data );
+	void SetWidgetData( dom::Widget* const widget, gse::value::Object* const data );
 
-	typedef std::function< void( types::texture::Texture* const texture ) > f_with_widget_t;
+	typedef std::function< void( types::texture::Texture* const texture, const gse::value::Object* const data ) > f_with_widget_t;
 	void WithWidget( const widget_type_t type, const f_with_widget_t& f );
 
 private:
@@ -134,6 +136,7 @@ private:
 	typedef std::unordered_set< dom::Widget* > widgets_t;
 	std::unordered_map< widget_type_t, widgets_t > m_widgets = {};
 	std::unordered_map< dom::Widget*, widget_type_t > m_widget_types = {};
+	std::unordered_map< dom::Widget*, gse::value::Object* > m_widget_data = {};
 	std::mutex m_widgets_mutex;
 
 private:

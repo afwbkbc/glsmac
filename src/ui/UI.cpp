@@ -18,8 +18,18 @@
 
 namespace ui {
 
-static const std::unordered_map< std::string, widget_type_t > s_widget_type_str = {
+static const std::unordered_map< std::string, widget_type_t > s_string_to_widget_type = {
 	{ "minimap", WT_MINIMAP },
+	{ "tile", WT_TILE },
+};
+
+static const std::unordered_map< widget_type_t, std::string > s_widget_type_to_string {
+	{ WT_MINIMAP, "minimap" },
+	{ WT_TILE, "tile" },
+};
+
+static const std::unordered_map< widget_type_t, std::unordered_map< std::string, gse::Value::type_t > > s_widget_data = {
+	// TODO
 };
 
 UI::UI( GSE_CALLABLE )
@@ -359,10 +369,10 @@ void UI::RemoveGlobalHandler( const size_t handler_id ) {
 }
 
 const widget_type_t UI::GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const {
-	const auto& it = s_widget_type_str.find( str );
-	if ( it == s_widget_type_str.end() ) {
+	const auto& it = s_string_to_widget_type.find( str );
+	if ( it == s_string_to_widget_type.end() ) {
 		std::string errstr = "Unknown widget type: " + str + " . Available types:";
-		for ( const auto& s : s_widget_type_str ) {
+		for ( const auto& s : s_string_to_widget_type ) {
 			errstr += " " +s.first;
 		}
 		GSE_ERROR( gse::EC.GAME_ERROR, errstr );
@@ -380,6 +390,8 @@ void UI::AttachWidget( dom::Widget* const widget, const widget_type_t type ) {
 	ASSERT( it->second.find( widget ) == it->second.end(), "widget already attached" );
 	it->second.insert( widget );
 	m_widget_types.insert({ widget, type } );
+	ASSERT( m_widget_data.find( widget ) == m_widget_data.end(), "widget data already attached" );
+	m_widget_data.insert({ widget, nullptr });
 }
 
 void UI::DetachWidget( dom::Widget* const widget ) {
@@ -394,6 +406,43 @@ void UI::DetachWidget( dom::Widget* const widget ) {
 		m_widgets.erase( it->second );
 	}
 	m_widget_types.erase( widget );
+	ASSERT( m_widget_data.find( widget ) != m_widget_data.end(), "widget data not attached" );
+	m_widget_data.erase( widget );
+}
+
+void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data ) {
+	const auto& data_it = s_widget_data.find( type );
+	if ( data_it != s_widget_data.end() ) {
+		if ( data == nullptr ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing" );
+		}
+		for ( const auto& d : data->value ) {
+			const auto& data_it2 = data_it->second.find( d.first );
+			if ( data_it2 == data_it->second.end() ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data: " + d.first );
+			}
+			if ( data_it2->second != d.second->type ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be " + gse::Value::GetTypeStringStatic( data_it2->second ) + ", got " + d.second->GetTypeString() );
+			}
+		}
+		for ( const auto& d : data_it->second ) {
+			if ( data->value.find( d.first ) == data->value.end() ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing: " + d.first );
+			}
+		}
+	}
+	else {
+		if ( data != nullptr && !data->value.empty() ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data" );
+		}
+	}
+}
+
+void UI::SetWidgetData( dom::Widget* const widget, gse::value::Object* const data ) {
+	std::lock_guard guard( m_widgets_mutex );
+	const auto& it = m_widget_data.find( widget );
+	ASSERT( it != m_widget_data.end(), "widget data not found" );
+	m_widget_data.insert_or_assign( widget, data );
 }
 
 void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
@@ -403,7 +452,8 @@ void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
 		for ( const auto& widget : it->second ) {
 			const auto* const g = widget->GetGeometry();
 			if ( g->GetWidth() > 0 && g->GetHeight() > 0 ) {
-				f( widget->GetTexture() );
+				ASSERT( m_widget_data.find( widget ) != m_widget_data.end(), "widget data not found" );
+				f( widget->GetTexture(), m_widget_data.at( widget ) );
 				widget->Refresh();
 			}
 		}

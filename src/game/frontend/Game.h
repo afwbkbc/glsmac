@@ -503,6 +503,7 @@ private:
 	const size_t GetMySlotIndex() const;
 
 	void SetSelectedTile( tile::Tile* tile );
+	void UpdateTilePreview( tile::Tile* const tile );
 	void RefreshSelectedTile( unit::Unit* selected_unit = nullptr );
 	void RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );

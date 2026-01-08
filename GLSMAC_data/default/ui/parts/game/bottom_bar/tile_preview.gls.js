@@ -11,6 +11,14 @@ return {
 			width: 106,
 		});
 
+		this.preview = this.frame.widget({
+			type: 'tile',
+			align: 'top center',
+			top: 2,
+			width: 84,
+			height: 52,
+		});
+
 	},
 
 };

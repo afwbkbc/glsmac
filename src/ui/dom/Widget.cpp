@@ -15,10 +15,31 @@ Widget::Widget( DOM_ARGS )
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& str = ( (gse::value::String*)v )->value;
 			const auto type = m_ui->GetWidgetTypeByString( GSE_CALL, str );
+			if ( m_data ) {
+				m_ui->ValidateWidgetData( GSE_CALL, type, m_data );
+			}
 			Enable( type );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			Disable();
+		}
+	);
+
+	Property(
+		GSE_CALL, "data", gse::Value::T_OBJECT, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			if ( m_type ) {
+				m_ui->ValidateWidgetData( GSE_CALL, m_type, (gse::value::Object*)v );
+			}
+			SetData( (gse::value::Object*)v );
+			// TODO: redraw
+		},
+		[ this ]( GSE_CALLABLE ) {
+			if ( m_type ) {
+				m_ui->ValidateWidgetData( GSE_CALL, m_type, nullptr );
+			}
+			SetData( nullptr );
+			// TODO: redraw
 		}
 	);
 
@@ -64,10 +85,25 @@ void Widget::Disable() {
 	}
 }
 
+void Widget::SetData( gse::value::Object* const data ) {
+	if ( data != m_data ) {
+		m_data = data;
+		m_data_update_needed = true;
+		if ( m_type != WT_NONE && m_is_visible ) {
+			m_ui->SetWidgetData( this, m_data );
+			m_data_update_needed = false;
+		}
+	}
+}
+
 void Widget::Attach() {
 	if ( !m_is_attached ) {
 		if ( m_is_visible ) {
 			m_ui->AttachWidget( this, m_type );
+			if ( m_data_update_needed ) {
+				m_ui->SetWidgetData( this, m_data );
+				m_data_update_needed = false;
+			}
 		}
 		m_is_attached = true;
 	}

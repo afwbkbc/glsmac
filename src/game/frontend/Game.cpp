@@ -468,7 +468,7 @@ void Game::Iterate() {
 			if ( m_glsmac ) {
 				// new ui
 				m_ui->WithWidget(
-					ui::WT_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture ) {
+					ui::WT_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture, const gse::value::Object* const data ) {
 						texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
 					}
 				);
@@ -2358,7 +2358,7 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 void Game::UpdateMinimap() {
 
 	m_ui->WithWidget(
-		ui::WT_MINIMAP, [ this ]( types::texture::Texture* const texture ) {
+		ui::WT_MINIMAP, [ this ]( types::texture::Texture* const texture, const gse::value::Object* const data ) {
 
 			auto target_size = types::Vec2< size_t >{
 				texture->GetWidth(),
@@ -2607,30 +2607,47 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 	m_tm->SelectTile( tile );
 }
 
+void Game::UpdateTilePreview( tile::Tile* const tile ) {
+	m_ui->WithWidget(
+		ui::WT_TILE, [ this ]( types::texture::Texture* const texture, const gse::value::Object* const data ) {
+			// TODO
+			texture->Fill( 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1, { 0.0f, 0.0f, 0.0f, 1.0f } );
+		}
+	);
+}
+
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
-	if ( !m_glsmac ) {
-		// legacy ui
-		auto* selected_tile = m_tm->GetSelectedTile();
-		if ( selected_tile ) {
+	auto* selected_tile = m_tm->GetSelectedTile();
+	if ( selected_tile ) {
+		if ( !m_glsmac ) {
+			// legacy ui
 			m_ui_legacy.bottom_bar->PreviewTile(
 				selected_tile, selected_unit
 					? selected_unit->GetId()
 					: 0
 			);
 		}
+		else {
+			// new ui
+			UpdateTilePreview( selected_tile );
+		}
 	}
 }
 
 void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
-	if ( !m_glsmac ) {
-		// legacy ui
-		auto* selected_tile = m_tm->GetSelectedTile();
-		if ( selected_tile && selected_tile == if_tile ) {
+	auto* selected_tile = m_tm->GetSelectedTile();
+	if ( selected_tile && selected_tile == if_tile ) {
+		if ( !m_glsmac ) {
+			// legacy ui
 			m_ui_legacy.bottom_bar->PreviewTile(
 				selected_tile, selected_unit
 					? selected_unit->GetId()
 					: 0
 			);
+		}
+		else {
+			// new ui
+			UpdateTilePreview( selected_tile );
 		}
 	}
 }

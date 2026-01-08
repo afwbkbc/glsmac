@@ -28,10 +28,14 @@ private:
 	widget_type_t m_type = WT_NONE;
 	void Enable( const widget_type_t type );
 	void Disable();
+	void SetData( gse::value::Object* const data );
 
 	bool m_is_attached = false;
 	void Attach();
 	void Detach();
+
+	gse::value::Object* m_data = nullptr;
+	bool m_data_update_needed = false;
 
 private:
 	friend class ui::UI;
