@@ -318,7 +318,13 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			m_factory_owner->m_on_add_child( obj, true );
 		}
 		obj->Show();
-		obj->InitAndValidate( GSE_CALL );
+		try {
+			obj->InitAndValidate( GSE_CALL );
+		} catch ( const gse::Exception& e ) {
+			// destroy invalid object
+			obj->Destroy( GSE_CALL );
+			throw e;
+		}
 		m_factory_owner->m_children.insert({ obj->m_id, obj });
 		return obj->Wrap( GSE_CALL, true );
 	} ) );
@@ -396,7 +402,13 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	if ( m_is_visible ) {
 		obj->Show();
 	}
-	obj->InitAndValidate( GSE_CALL );
+	try {
+		obj->InitAndValidate( GSE_CALL );
+	} catch ( const gse::Exception& e ) {
+		// destroy invalid object
+		obj->Destroy( GSE_CALL );
+		throw e;
+	}
 	m_children.insert({ obj->m_id, obj } );
 	ASSERT( m_mouse_over_object != obj, "unexpected child mouseover" );
 	const auto* geometry = obj->GetGeometry();
