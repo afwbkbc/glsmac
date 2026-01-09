@@ -35,7 +35,9 @@ typedef uint8_t geometry_handler_id_t;
 enum widget_type_t {
 	WT_NONE,
 	WT_MINIMAP,
-	WT_TILE,
+	WT_TILE_PREVIEW,
 };
+
+typedef uint64_t object_id_t;
 
 }

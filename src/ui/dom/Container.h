@@ -63,7 +63,7 @@ protected:
 private:
 	friend class Root;
 
-	std::map< id_t, Object* > m_children = {};
+	std::map< object_id_t, Object* > m_children = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::vector< Object* > m_lazy_embedded_objects = {};
 	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};

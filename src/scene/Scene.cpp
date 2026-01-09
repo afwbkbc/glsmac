@@ -24,7 +24,7 @@ void Scene::AddActor( actor::Actor* actor ) {
 void Scene::RemoveActor( actor::Actor* actor ) {
 	std::lock_guard guard( m_actors_mutex );
 	auto it = std::find( m_actors.begin(), m_actors.end(), actor );
-	if ( it < m_actors.end() ) {
+	if ( it != m_actors.end() ) {
 		//Log( "Removing actor [" + actor->GetName() + "]" );
 		actor->SetScene( NULL );
 		m_actors.erase( it, it + 1 );

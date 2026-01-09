@@ -2,6 +2,7 @@
 
 #include <map>
 #include <unordered_set>
+#include <mutex>
 
 #include "env/Env.h"
 
@@ -52,8 +53,6 @@ class Class;
 
 namespace dom {
 
-typedef uint64_t id_t;
-
 class Container;
 
 class Object : public gse::GCWrappable {
@@ -67,7 +66,7 @@ public:
 
 	const std::string m_tag;
 	Container* m_parent;
-	const id_t m_id;
+	const object_id_t m_id;
 
 	virtual geometry::Geometry* const GetGeometry() const;
 
@@ -113,6 +112,7 @@ protected:
 	typedef std::function< void( GSE_CALLABLE ) > f_on_unset_t;
 
 	void Actor( scene::actor::Actor* actor );
+	void ClearActors();
 
 	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable );
@@ -151,6 +151,7 @@ private:
 	std::vector< ui::Class* > m_classes = {};
 
 	std::vector< scene::actor::Actor* > m_actors = {};
+	std::mutex m_actors_mutex;
 
 	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value );
 	void UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key );

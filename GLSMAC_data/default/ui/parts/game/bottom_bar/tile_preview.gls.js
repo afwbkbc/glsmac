@@ -12,7 +12,7 @@ return {
 		});
 
 		this.preview = this.frame.widget({
-			type: 'tile',
+			type: 'tile-preview',
 			align: 'top center',
 			top: 2,
 			width: 84,

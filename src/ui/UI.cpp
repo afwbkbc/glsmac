@@ -18,20 +18,6 @@
 
 namespace ui {
 
-static const std::unordered_map< std::string, widget_type_t > s_string_to_widget_type = {
-	{ "minimap", WT_MINIMAP },
-	{ "tile", WT_TILE },
-};
-
-static const std::unordered_map< widget_type_t, std::string > s_widget_type_to_string {
-	{ WT_MINIMAP, "minimap" },
-	{ WT_TILE, "tile" },
-};
-
-static const std::unordered_map< widget_type_t, std::unordered_map< std::string, gse::Value::type_t > > s_widget_data = {
-	// TODO
-};
-
 UI::UI( GSE_CALLABLE )
 	: gse::GCWrappable( gc_space )
 	, m_ctx( ctx )
@@ -268,8 +254,11 @@ void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objec
 		GC_DEBUG_BEGIN( "widgets" );
 		std::lock_guard guard( m_widgets_mutex );
 		for ( const auto& it : m_widgets ) {
-			for ( const auto& widget : it.second ) {
-				GC_REACHABLE( widget );
+			for ( const auto& it2 : it.second ) {
+				GC_REACHABLE( it2.first );
+				if ( it2.second.data ) {
+					GC_REACHABLE( it2.second.data );
+				}
 			}
 		}
 		GC_DEBUG_END();
@@ -368,11 +357,26 @@ void UI::RemoveGlobalHandler( const size_t handler_id ) {
 	m_global_handlers.erase( handler_id );
 }
 
+void UI::RegisterWidget( const widget_type_t type, const widget_config_t& config ) {
+	ASSERT( m_widget_configs.find( type ) == m_widget_configs.end(), "widget type already registered" );
+	ASSERT( m_widget_strs.find( config.str ) == m_widget_strs.end(), "widget str already registered" );
+	m_widget_configs.insert({ type, config });
+	m_widget_strs.insert({ config.str, type } );
+}
+
+void UI::UnregisterWidget( const ui::widget_type_t type ) {
+	const auto& it = m_widget_configs.find( type );
+	ASSERT( it != m_widget_configs.end(), "widget config not registered" );
+	ASSERT( m_widget_strs.find( it->second.str ) != m_widget_strs.end(), "widget str not registered" );
+	m_widget_strs.erase( it->second.str );
+	m_widget_configs.erase( type );
+}
+
 const widget_type_t UI::GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const {
-	const auto& it = s_string_to_widget_type.find( str );
-	if ( it == s_string_to_widget_type.end() ) {
+	const auto& it = m_widget_strs.find( str );
+	if ( it == m_widget_strs.end() ) {
 		std::string errstr = "Unknown widget type: " + str + " . Available types:";
-		for ( const auto& s : s_string_to_widget_type ) {
+		for ( const auto& s : m_widget_strs ) {
 			errstr += " " +s.first;
 		}
 		GSE_ERROR( gse::EC.GAME_ERROR, errstr );
@@ -382,16 +386,19 @@ const widget_type_t UI::GetWidgetTypeByString( GSE_CALLABLE, const std::string& 
 
 void UI::AttachWidget( dom::Widget* const widget, const widget_type_t type ) {
 	std::lock_guard guard( m_widgets_mutex );
+	ASSERT( m_widget_configs.find( type ) != m_widget_configs.end(), "widget config not found" );
 	ASSERT( m_widget_types.find( widget ) == m_widget_types.end(), "widget already attached" );
 	auto it = m_widgets.find( type );
 	if ( it == m_widgets.end() ) {
 		it = m_widgets.insert({ type, {} } ).first;
 	}
 	ASSERT( it->second.find( widget ) == it->second.end(), "widget already attached" );
-	it->second.insert( widget );
+	widget_state_t state = {};
+	state.config = &m_widget_configs.at( type );
+	it->second.insert( { widget, state } );
 	m_widget_types.insert({ widget, type } );
-	ASSERT( m_widget_data.find( widget ) == m_widget_data.end(), "widget data already attached" );
-	m_widget_data.insert({ widget, nullptr });
+	ASSERT( state.config->f_init, "widget init not defined" );
+	state.config->f_init( widget );
 }
 
 void UI::DetachWidget( dom::Widget* const widget ) {
@@ -401,31 +408,30 @@ void UI::DetachWidget( dom::Widget* const widget ) {
 	const auto& widgets = m_widgets.find( it->second );
 	ASSERT( widgets != m_widgets.end(), "widget type not attached" );
 	ASSERT( widgets->second.find( widget ) != widgets->second.end(), "widget not attached" );
+	widget->Clear();
 	widgets->second.erase( widget );
 	if ( widgets->second.empty() ) {
 		m_widgets.erase( it->second );
 	}
 	m_widget_types.erase( widget );
-	ASSERT( m_widget_data.find( widget ) != m_widget_data.end(), "widget data not attached" );
-	m_widget_data.erase( widget );
 }
 
 void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data ) {
-	const auto& data_it = s_widget_data.find( type );
-	if ( data_it != s_widget_data.end() ) {
+	const auto& data_it = m_widget_configs.find( type );
+	if ( data_it != m_widget_configs.end() ) {
 		if ( data == nullptr ) {
 			GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing" );
 		}
 		for ( const auto& d : data->value ) {
-			const auto& data_it2 = data_it->second.find( d.first );
-			if ( data_it2 == data_it->second.end() ) {
+			const auto& data_it2 = data_it->second.data_config.find( d.first );
+			if ( data_it2 == data_it->second.data_config.end() ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data: " + d.first );
 			}
 			if ( data_it2->second != d.second->type ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be " + gse::Value::GetTypeStringStatic( data_it2->second ) + ", got " + d.second->GetTypeString() );
 			}
 		}
-		for ( const auto& d : data_it->second ) {
+		for ( const auto& d : data_it->second.data_config ) {
 			if ( data->value.find( d.first ) == data->value.end() ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing: " + d.first );
 			}
@@ -440,20 +446,24 @@ void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value:
 
 void UI::SetWidgetData( dom::Widget* const widget, gse::value::Object* const data ) {
 	std::lock_guard guard( m_widgets_mutex );
-	const auto& it = m_widget_data.find( widget );
-	ASSERT( it != m_widget_data.end(), "widget data not found" );
-	m_widget_data.insert_or_assign( widget, data );
+	const auto& it = m_widget_types.find( widget );
+	ASSERT( it != m_widget_types.end(), "widget type not found" );
+	const auto& it2 = m_widgets.find( it->second );
+	ASSERT( it2 != m_widgets.end(), "widget not found" );
+	const auto& it3 = it2->second.find( widget );
+	ASSERT( it3 != it2->second.end(), "widget not found" );
+	it3->second.data = data;
 }
 
 void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
 	std::lock_guard guard( m_widgets_mutex );
 	const auto& it = m_widgets.find( type );
 	if ( it != m_widgets.end() ) {
-		for ( const auto& widget : it->second ) {
+		for ( const auto& it2 : it->second ) {
+			const auto& widget = it2.first;
 			const auto* const g = widget->GetGeometry();
 			if ( g->GetWidth() > 0 && g->GetHeight() > 0 ) {
-				ASSERT( m_widget_data.find( widget ) != m_widget_data.end(), "widget data not found" );
-				f( widget->GetTexture(), m_widget_data.at( widget ) );
+				f( widget );
 				widget->Refresh();
 			}
 		}

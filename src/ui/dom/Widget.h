@@ -1,27 +1,37 @@
 #pragma once
 
-#include "Surface.h"
+#include <unordered_map>
+
+#include "Area.h"
 
 #include "ui/Types.h"
 
+namespace types {
+namespace texture {
+class Texture;
+}
+}
+
 namespace scene::actor {
-class Mesh;
+class Actor;
 }
 
 namespace ui {
-
-class Geometry;
-class UI;
-
 namespace dom {
 
-class Widget : public Surface {
+class Widget : public Area {
 public:
 
 	Widget( DOM_ARGS );
 
 	void Show() override;
 	void Hide() override;
+
+	void AddTexture( types::texture::Texture* const texture, const size_t index = 0 );
+	void AddActor( scene::actor::Actor* const actor );
+	void Clear();
+
+	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
 
 private:
 
@@ -37,9 +47,7 @@ private:
 	gse::value::Object* m_data = nullptr;
 	bool m_data_update_needed = false;
 
-private:
-	friend class ui::UI;
-	types::texture::Texture* const GetTexture();
+	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
 
 };
 

@@ -18,13 +18,14 @@
 #include "gse/value/Object.h"
 #include "Root.h"
 #include "ui/geometry/Geometry.h"
+#include "ui/geometry/Rectangle.h"
 
 #include "Object.colormap.cpp"
 
 namespace ui {
 namespace dom {
 
-static std::atomic< id_t > s_next_id = 0;
+static std::atomic< object_id_t > s_next_id = 0;
 
 const gse::value::Object::object_class_t Object::WRAP_CLASS = "Object";
 
@@ -94,11 +95,7 @@ Object::~Object() {
 	if ( !m_is_destroyed ) {
 		util::LogHelper::Println( "WARNING: object was not destroyed properly!" );
 	}
-	if ( !m_actors.empty() ) {
-		for ( const auto& actor : m_actors ) {
-			delete actor;
-		}
-	}
+	ClearActors();
 };
 
 gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
@@ -192,8 +189,11 @@ void Object::Destroy( GSE_CALLABLE ) {
 	if ( m_is_iterable_set ) {
 		m_ui->RemoveIterable( this );
 	}
-	for ( const auto& actor : m_actors ) {
-		m_ui->m_scene->RemoveActor( actor );
+	{
+		std::lock_guard guard( m_actors_mutex );
+		for ( const auto& actor : m_actors ) {
+			m_ui->m_scene->RemoveActor( actor );
+		}
 	}
 	m_is_destroyed = true;
 }
@@ -202,8 +202,11 @@ void Object::Show() {
 	ASSERT( !m_is_destroyed, "Show: object is destroyed" );
 	if ( !m_is_visible ) {
 		m_is_visible = true;
-		for ( const auto& actor : m_actors ) {
-			actor->Show();
+		{
+			std::lock_guard guard( m_actors_mutex );
+			for ( const auto& actor : m_actors ) {
+				actor->Show();
+			}
 		}
 	}
 }
@@ -211,8 +214,11 @@ void Object::Show() {
 void Object::Hide() {
 	ASSERT( !m_is_destroyed, "Hide: object is destroyed" );
 	if ( m_is_visible ) {
-		for ( const auto& actor : m_actors ) {
-			actor->Hide();
+		{
+			std::lock_guard guard( m_actors_mutex );
+			for ( const auto& actor : m_actors ) {
+				actor->Hide();
+			}
 		}
 		m_is_visible = false;
 	}
@@ -220,6 +226,7 @@ void Object::Hide() {
 
 void Object::Refresh() {
 	if ( m_is_visible ) {
+		std::lock_guard guard( m_actors_mutex );
 		for ( const auto& actor : m_actors ) {
 			actor->UpdateCache();
 		}
@@ -294,7 +301,27 @@ void Object::Actor( scene::actor::Actor* actor ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
 	m_ui->m_scene->AddActor( actor );
-	m_actors.push_back( actor );
+	{
+		std::lock_guard guard( m_actors_mutex );
+		m_actors.push_back( actor );
+	}
+}
+
+void Object::ClearActors() {
+	std::lock_guard guard( m_actors_mutex );
+	auto* g = GetGeometry();
+	if ( g ) {
+		g = g->AsRectangle();
+	}
+	for ( const auto& actor : m_actors ) {
+		m_ui->m_scene->RemoveActor( actor );
+		if ( g ) {
+			((geometry::Rectangle*)g)->SetMesh( nullptr );
+			((geometry::Rectangle*)g)->SetActor( nullptr );
+		}
+		delete actor;
+	}
+	m_actors.clear();
 }
 
 void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {

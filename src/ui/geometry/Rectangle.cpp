@@ -15,13 +15,17 @@ Rectangle::Rectangle( const UI* const ui, Geometry* const parent )
 }
 
 void Rectangle::SetMesh( types::mesh::Rectangle* const mesh ) {
-	m_mesh = mesh;
-	UpdateImpl();
+	if ( mesh != m_mesh ) {
+		m_mesh = mesh;
+		UpdateImpl();
+	}
 }
 
 void Rectangle::SetActor( scene::actor::Mesh* const actor ) {
-	m_actor = actor;
-	UpdateImpl();
+	if ( actor != m_actor ) {
+		m_actor = actor;
+		UpdateImpl();
+	}
 }
 
 void Rectangle::SetStretched() {

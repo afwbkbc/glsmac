@@ -31,8 +31,10 @@ Geometry::~Geometry() {
 }
 
 Rectangle* Geometry::AsRectangle() const {
-	ASSERT( m_type == GT_RECTANGLE, "invalid geometry type" );
-	return (Rectangle*)this;
+	if ( m_type == GT_RECTANGLE ) {
+		return (Rectangle*)this;
+	}
+	return nullptr;
 }
 
 Text* Geometry::AsText() const {

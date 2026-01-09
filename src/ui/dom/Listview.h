@@ -24,7 +24,7 @@ private:
 	scroll_type_t m_scroll_type = ST_VERTICAL;
 	size_t m_max_items = 0;
 
-	std::map< id_t, Object* > m_children = {};
+	std::map< object_id_t, Object* > m_children = {};
 
 	void SetItemSize( GSE_CALLABLE, const int item_size );
 	void SetMaxItems( GSE_CALLABLE, const int max_items );

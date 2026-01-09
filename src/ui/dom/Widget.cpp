@@ -8,7 +8,7 @@ namespace ui {
 namespace dom {
 
 Widget::Widget( DOM_ARGS )
-	: Surface( DOM_ARGS_PASS, "widget" ) {
+	: Area( DOM_ARGS_PASS, "widget" ) {
 
 	Property(
 		GSE_CALL, "type", gse::Value::T_STRING, nullptr, PF_NONE,
@@ -47,7 +47,7 @@ Widget::Widget( DOM_ARGS )
 
 void Widget::Show() {
 	if ( !m_is_visible ) {
-		Surface::Show();
+		Area::Show();
 		if ( m_type != WT_NONE ) {
 			Attach();
 		}
@@ -59,8 +59,30 @@ void Widget::Hide() {
 		if ( m_type != WT_NONE ) {
 			Detach();
 		}
-		Surface::Hide();
+		Area::Hide();
 	}
+}
+
+void Widget::AddTexture( types::texture::Texture* const texture, const size_t index ) {
+	ASSERT( m_textures.find( index ) == m_textures.end(), "texture id " + std::to_string( index ) + " already set" );
+	m_textures.insert( { index, texture } );
+}
+
+void Widget::AddActor( scene::actor::Actor* const actor ) {
+	Actor( actor );
+}
+
+void Widget::Clear() {
+	ClearActors();
+	for ( const auto& it : m_textures ) {
+		DELETE( it.second );
+	}
+	m_textures.clear();
+}
+
+types::texture::Texture* const Widget::GetTexture( const size_t index ) const {
+	ASSERT( m_textures.find( index ) != m_textures.end(), "texture id " + std::to_string( index ) + " not set" );
+	return m_textures.at( index );
 }
 
 void Widget::Enable( const widget_type_t type ) {
@@ -116,13 +138,6 @@ void Widget::Detach() {
 		}
 		m_is_attached = false;
 	}
-}
-
-types::texture::Texture* const Widget::GetTexture() {
-	CreateTexture();
-	m_background.texture->Resize( m_geometry->GetWidth(), m_geometry->GetHeight() );
-	ASSERT( m_background.is_texture_owned, "can't render into texture that is not owned" );
-	return m_background.texture;
 }
 
 }

@@ -494,6 +494,9 @@ private:
 	unit::Unit* m_unit_selected_before_base_popup = nullptr;
 	tile::Tile* m_tile_selected_before_base_popup = nullptr;
 
+	void RegisterWidgets();
+	void UnregisterWidgets();
+
 private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;

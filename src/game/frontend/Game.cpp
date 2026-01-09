@@ -56,6 +56,9 @@
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
 #include "ui/UI.h"
+#include "ui/dom/Widget.h"
+#include "ui/geometry/Rectangle.h"
+#include "types/mesh/Rectangle.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -111,6 +114,8 @@ void Game::Start() {
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
 
+	RegisterWidgets();
+
 	ShowLoader(
 		"Starting game", LCH( this ) {
 			CancelGame();
@@ -136,6 +141,8 @@ void Game::Stop() {
 	if ( m_is_initialized ) {
 		Deinitialize();
 	}
+
+	UnregisterWidgets();
 
 	if ( m_um ) {
 		DELETE( m_um );
@@ -468,8 +475,10 @@ void Game::Iterate() {
 			if ( m_glsmac ) {
 				// new ui
 				m_ui->WithWidget(
-					ui::WT_MINIMAP, [ &minimap_texture ]( types::texture::Texture* texture, const gse::value::Object* const data ) {
+					ui::WT_MINIMAP, F_WITH_WIDGET( &minimap_texture ) {
+						auto* const texture = widget->GetTexture();
 						texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
+						texture->FullUpdate();
 					}
 				);
 			}
@@ -2358,11 +2367,13 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 void Game::UpdateMinimap() {
 
 	m_ui->WithWidget(
-		ui::WT_MINIMAP, [ this ]( types::texture::Texture* const texture, const gse::value::Object* const data ) {
+		ui::WT_MINIMAP, F_WITH_WIDGET( this ) {
+
+			const auto& area = widget->GetGeometry()->m_area;
 
 			auto target_size = types::Vec2< size_t >{
-				texture->GetWidth(),
-				texture->GetHeight(),
+				area.width,
+				area.height,
 			};
 
 			const float sx = (float)target_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
@@ -2595,6 +2606,40 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 	SendBackendRequest( &br );
 }
 
+void Game::RegisterWidgets() {
+	m_ui->RegisterWidget(
+		ui::WT_MINIMAP, {
+			"minimap",
+			F_INIT_WIDGET() {
+				NEWV( mesh, types::mesh::Rectangle );
+				auto* g = widget->GetGeometry()->AsRectangle();
+				g->SetMesh( mesh );
+				NEWV( actor, scene::actor::Mesh, "UI::Widget::MiniMap", mesh );
+				g->SetActor( actor );
+				NEWV( texture, types::texture::Texture, g->m_area.width, g->m_area.height );
+				actor->SetTexture( texture );
+				widget->AddTexture( texture );
+				widget->AddActor( actor );
+			},
+			{}
+		}
+	);
+	m_ui->RegisterWidget(
+		ui::WT_TILE_PREVIEW, {
+			"tile-preview",
+			F_INIT_WIDGET( this ) {
+				// TODO
+			},
+			{}
+		}
+	);
+}
+
+void Game::UnregisterWidgets() {
+	m_ui->UnregisterWidget( ui::WT_MINIMAP );
+	m_ui->UnregisterWidget( ui::WT_TILE_PREVIEW );
+}
+
 const bool Game::IsTurnActive() const {
 	return m_is_turn_active;
 }
@@ -2609,9 +2654,8 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 
 void Game::UpdateTilePreview( tile::Tile* const tile ) {
 	m_ui->WithWidget(
-		ui::WT_TILE, [ this ]( types::texture::Texture* const texture, const gse::value::Object* const data ) {
+		ui::WT_TILE_PREVIEW, F_WITH_WIDGET( this ) {
 			// TODO
-			texture->Fill( 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1, { 0.0f, 0.0f, 0.0f, 1.0f } );
 		}
 	);
 }
