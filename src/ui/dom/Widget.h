@@ -27,8 +27,8 @@ public:
 	void Show() override;
 	void Hide() override;
 
-	void AddTexture( types::texture::Texture* const texture, const size_t index = 0 );
-	void AddActor( scene::actor::Actor* const actor );
+	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
+	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
 	void Clear();
 
 	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
@@ -48,6 +48,7 @@ private:
 	bool m_data_update_needed = false;
 
 	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
+	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
 
 };
 

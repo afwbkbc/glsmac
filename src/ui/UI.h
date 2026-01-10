@@ -32,6 +32,9 @@ class Object;
 
 namespace scene {
 class Scene;
+namespace actor {
+class Actor;
+}
 }
 
 namespace ui {
@@ -58,7 +61,6 @@ CLASS( UI, gse::GCWrappable )
 
 	WRAPDEFS_PTR( UI );
 
-	scene::Scene* const m_scene = nullptr;
 	gc::Space* const m_gc_space = nullptr;
 	gse::context::Context* const m_ctx = nullptr;
 
@@ -158,6 +160,13 @@ private:
 
 private:
 	friend class dom::Object;
+
+	struct {
+		scene::Scene* const m_ui = nullptr;
+		scene::Scene* const m_ortho_ui = nullptr;
+	} m_scenes;
+	scene::Scene* const GetSceneOfActor( scene::actor::Actor* actor ) const;
+
 	gc::Space* const GetGCSpace() const;
 
 };

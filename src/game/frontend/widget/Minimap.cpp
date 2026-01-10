@@ -11,8 +11,8 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-Minimap::Minimap( ui::UI* const ui )
-	: Widget( ui, ui::WT_MINIMAP, "minimap" ) {}
+Minimap::Minimap( const Game* const game, ui::UI* const ui )
+	: Widget( game, ui, ui::WT_MINIMAP, "minimap" ) {}
 
 void Minimap::Register( ui::dom::Widget* const widget ) {
 	NEWV( mesh, types::mesh::Rectangle );
@@ -22,8 +22,8 @@ void Minimap::Register( ui::dom::Widget* const widget ) {
 	g->SetActor( actor );
 	NEWV( texture, types::texture::Texture, g->m_area.width, g->m_area.height );
 	actor->SetTexture( texture );
-	widget->AddTexture( texture );
-	widget->AddActor( actor );
+	widget->SetTexture( texture );
+	widget->SetActor( actor );
 }
 
 const types::Vec2< ui::coord_t > Minimap::FindLargestArea() const {

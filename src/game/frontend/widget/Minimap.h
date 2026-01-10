@@ -15,7 +15,7 @@ namespace widget {
 CLASS( Minimap, Widget )
 public:
 
-	Minimap( ui::UI* const ui );
+	Minimap( const Game* const game, ui::UI* const ui );
 
 	const types::Vec2< ui::coord_t > FindLargestArea() const;
 	void Update( const types::texture::Texture* minimap_texture );

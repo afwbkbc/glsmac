@@ -8,7 +8,7 @@ namespace types {
 namespace mesh {
 
 Data::Data( const size_t vertex_count, const size_t surface_count )
-	: Mesh( MT_DATA, VERTEX_SIZE, vertex_count, surface_count ) {
+	: Mesh( MT_DATA, DT_DATA, VERTEX_SIZE, vertex_count, surface_count ) {
 	ASSERT( sizeof( coord_t ) == sizeof( data_t ), "coord_t is different size from data_t, this is not supported with current Data logic" );
 }
 

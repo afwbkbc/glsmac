@@ -9,7 +9,7 @@ namespace types {
 namespace mesh {
 
 Render::Render( const size_t vertex_count, const size_t surface_count )
-	: Mesh( MT_RENDER, VERTEX_SIZE, vertex_count, surface_count ) {
+	: Mesh( MT_RENDER, DT_RENDER, VERTEX_SIZE, vertex_count, surface_count ) {
 
 }
 

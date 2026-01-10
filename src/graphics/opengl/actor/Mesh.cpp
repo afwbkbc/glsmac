@@ -364,6 +364,9 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 
 									// TODO: instanced capture_request ?
 									if ( !ignore_camera ) {
+
+										ASSERT( camera || capture_request, "neither camera nor capture request set" );
+
 										glUniformMatrix4fv(
 											shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
 												? sp_data->uniforms.world

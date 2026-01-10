@@ -6,8 +6,9 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-Widget::Widget( ui::UI* const ui, const ui::widget_type_t type, const std::string& str )
-	: m_ui( ui )
+Widget::Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str )
+	: m_game( game )
+	, m_ui( ui )
 	, m_type( type ) {
 	m_ui->RegisterWidget(
 		m_type, {

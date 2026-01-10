@@ -13,14 +13,20 @@ class Widget;
 
 namespace game {
 namespace frontend {
+
+class Game;
+
 namespace widget {
 
 CLASS( Widget, common::Class )
 public:
-	Widget( ui::UI* const ui, const ui::widget_type_t type, const std::string& str );
+	Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str );
 	virtual ~Widget();
 
 protected:
+	const Game* const m_game;
+	ui::UI* const m_ui;
+	const ui::widget_type_t m_type;
 
 	void WithWidget( const ui::f_with_widget_t& f ) const;
 #define WITH_WIDGET( ... ) WithWidget( F_WITH_WIDGET( __VA_ARGS__ )
@@ -28,8 +34,6 @@ protected:
 	virtual void Register( ui::dom::Widget* const widget ) = 0;
 
 private:
-	ui::UI* const m_ui;
-	const ui::widget_type_t m_type;
 
 };
 

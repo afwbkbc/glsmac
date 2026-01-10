@@ -8,8 +8,8 @@
 namespace types {
 namespace mesh {
 
-Simple::Simple( const size_t vertex_count, const size_t surface_count )
-	: Mesh( MT_SIMPLE, VERTEX_SIZE, vertex_count, surface_count ) {
+Simple::Simple( const size_t vertex_count, const size_t surface_count, const type_t type )
+	: Mesh( type, DT_SIMPLE, VERTEX_SIZE, vertex_count, surface_count ) {
 
 }
 

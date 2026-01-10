@@ -2115,6 +2115,10 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 				// legacy ui
 				m_ui_legacy.bottom_bar->PreviewTile( tile, selected_unit_id );
 			}
+			else {
+				// new ui
+				UpdateTilePreview( tile );
+			}
 			break;
 		}
 		case backend::TQP_UNIT_SELECT: {
@@ -2595,7 +2599,7 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 }
 
 void Game::RegisterWidgets() {
-#define X_WIDGET( _x ) m_widgets._x = new widget::_x( m_ui );
+#define X_WIDGET( _x ) m_widgets._x = new widget::_x( this, m_ui );
 	X_WIDGETS
 #undef X_WIDGET
 }

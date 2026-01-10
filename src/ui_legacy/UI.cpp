@@ -143,11 +143,11 @@ void UI::RemoveObject( object::UIObject* object ) {
 }
 
 scene::Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
-	switch ( mesh->GetType() ) {
-		case types::mesh::Mesh::MT_SIMPLE: {
+	switch ( mesh->GetDataType() ) {
+		case types::mesh::Mesh::DT_SIMPLE: {
 			return m_shape_scene_simple2d;
 		}
-		case types::mesh::Mesh::MT_RENDER: {
+		case types::mesh::Mesh::DT_RENDER: {
 			return m_shape_scene_ortho;
 		}
 		default: {

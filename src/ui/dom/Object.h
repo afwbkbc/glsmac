@@ -32,6 +32,7 @@
     );
 
 namespace scene {
+class Scene;
 namespace actor {
 class Actor;
 }
@@ -111,7 +112,7 @@ protected:
 	typedef std::function< void( GSE_CALLABLE, gse::Value* const ) > f_on_set_t;
 	typedef std::function< void( GSE_CALLABLE ) > f_on_unset_t;
 
-	void Actor( scene::actor::Actor* actor );
+	void Actor( scene::actor::Actor* actor, const bool no_parent = false );
 	void ClearActors();
 
 	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
@@ -150,7 +151,11 @@ private:
 	properties_t m_default_properties = {};
 	std::vector< ui::Class* > m_classes = {};
 
-	std::vector< scene::actor::Actor* > m_actors = {};
+	struct actor_data_t {
+		scene::actor::Actor* actor;
+		scene::Scene* scene;
+	};
+	std::vector< actor_data_t > m_actors = {};
 	std::mutex m_actors_mutex;
 
 	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value );

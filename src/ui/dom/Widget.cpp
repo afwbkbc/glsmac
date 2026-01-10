@@ -3,6 +3,7 @@
 #include "ui/UI.h"
 #include "types/texture/Texture.h"
 #include "ui/geometry/Geometry.h"
+#include "ui/geometry/Rectangle.h"
 
 namespace ui {
 namespace dom {
@@ -63,17 +64,21 @@ void Widget::Hide() {
 	}
 }
 
-void Widget::AddTexture( types::texture::Texture* const texture, const size_t index ) {
+void Widget::SetTexture( types::texture::Texture* const texture, const size_t index ) {
 	ASSERT( m_textures.find( index ) == m_textures.end(), "texture id " + std::to_string( index ) + " already set" );
 	m_textures.insert( { index, texture } );
 }
 
-void Widget::AddActor( scene::actor::Actor* const actor ) {
-	Actor( actor );
+void Widget::SetActor( scene::actor::Actor* const actor, const size_t index ) {
+	ASSERT( m_actors.find( index ) == m_actors.end(), "actor id " + std::to_string( index ) + " already set" );
+	m_actors.insert( { index, actor } );
+	Actor( actor, true );
 }
 
 void Widget::Clear() {
+	m_geometry->AsRectangle()->Clear();
 	ClearActors();
+	m_actors.clear();
 	for ( const auto& it : m_textures ) {
 		DELETE( it.second );
 	}

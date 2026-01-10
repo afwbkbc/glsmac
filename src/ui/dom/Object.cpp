@@ -6,6 +6,7 @@
 #include "Container.h"
 #include "util/String.h"
 #include "scene/actor/Actor.h"
+#include "scene/actor/Mesh.h"
 #include "ui/UI.h"
 #include "ui/Class.h"
 #include "scene/Scene.h"
@@ -19,6 +20,7 @@
 #include "Root.h"
 #include "ui/geometry/Geometry.h"
 #include "ui/geometry/Rectangle.h"
+#include "types/mesh/Mesh.h"
 
 #include "Object.colormap.cpp"
 
@@ -191,8 +193,8 @@ void Object::Destroy( GSE_CALLABLE ) {
 	}
 	{
 		std::lock_guard guard( m_actors_mutex );
-		for ( const auto& actor : m_actors ) {
-			m_ui->m_scene->RemoveActor( actor );
+		for ( const auto& it : m_actors ) {
+			it.scene->RemoveActor( it.actor );
 		}
 	}
 	m_is_destroyed = true;
@@ -204,8 +206,8 @@ void Object::Show() {
 		m_is_visible = true;
 		{
 			std::lock_guard guard( m_actors_mutex );
-			for ( const auto& actor : m_actors ) {
-				actor->Show();
+			for ( const auto& it : m_actors ) {
+				it.actor->Show();
 			}
 		}
 	}
@@ -216,8 +218,8 @@ void Object::Hide() {
 	if ( m_is_visible ) {
 		{
 			std::lock_guard guard( m_actors_mutex );
-			for ( const auto& actor : m_actors ) {
-				actor->Hide();
+			for ( const auto& it : m_actors ) {
+				it.actor->Hide();
 			}
 		}
 		m_is_visible = false;
@@ -227,8 +229,8 @@ void Object::Hide() {
 void Object::Refresh() {
 	if ( m_is_visible ) {
 		std::lock_guard guard( m_actors_mutex );
-		for ( const auto& actor : m_actors ) {
-			actor->UpdateCache();
+		for ( const auto& it : m_actors ) {
+			it.actor->UpdateCache();
 		}
 	}
 }
@@ -294,16 +296,24 @@ void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 	}
 }
 
-void Object::Actor( scene::actor::Actor* actor ) {
+void Object::Actor( scene::actor::Actor* actor, const bool no_parent ) {
 	ASSERT( !m_is_destroyed, "Actor: object is destroyed" );
 	actor->SetPositionZ( 0.5f );
-	if ( m_parent ) {
+	if ( !no_parent && m_parent ) { // TODO: cache ortho ui too
 		actor->SetCacheParent( m_parent->m_cache );
 	}
-	m_ui->m_scene->AddActor( actor );
+	auto* const scene = m_ui->GetSceneOfActor( actor );
+	if ( scene->GetType() == scene::SCENE_TYPE_ORTHO_UI ) {
+		actor->SetRenderFlags(
+			scene::actor::Actor::RF_IGNORE_CAMERA |
+				scene::actor::Actor::RF_IGNORE_LIGHTING |
+				scene::actor::Actor::RF_IGNORE_DEPTH
+		);
+	}
+	scene->AddActor( actor );
 	{
 		std::lock_guard guard( m_actors_mutex );
-		m_actors.push_back( actor );
+		m_actors.push_back( { actor, scene } );
 	}
 }
 
@@ -313,13 +323,13 @@ void Object::ClearActors() {
 	if ( g ) {
 		g = g->AsRectangle();
 	}
-	for ( const auto& actor : m_actors ) {
-		m_ui->m_scene->RemoveActor( actor );
+	for ( const auto& it : m_actors ) {
+		it.scene->RemoveActor( it.actor );
 		if ( g ) {
 			((geometry::Rectangle*)g)->SetMesh( nullptr );
 			((geometry::Rectangle*)g)->SetActor( nullptr );
 		}
-		delete actor;
+		delete it.actor;
 	}
 	m_actors.clear();
 }

@@ -7,7 +7,7 @@ namespace types {
 namespace mesh {
 
 Rectangle::Rectangle()
-	: Simple( 4, 2 ) {
+	: Simple( 4, 2, MT_RECTANGLE ) {
 	Clear();
 }
 
