@@ -90,7 +90,6 @@ CLASS( UI, gse::GCWrappable )
 	void RemoveGlobalHandler( const size_t handler_id );
 
 	typedef std::function< void( dom::Widget* const widget ) > f_init_widget_t;
-#define F_INIT_WIDGET( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
 
 	typedef std::unordered_map< std::string, gse::Value::type_t > widget_data_config_t;
 	struct widget_config_t {
@@ -107,9 +106,6 @@ CLASS( UI, gse::GCWrappable )
 	void DetachWidget( dom::Widget* const widget );
 	void ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data );
 	void SetWidgetData( dom::Widget* const widget, gse::value::Object* const data );
-
-	typedef std::function< void( ui::dom::Widget* const widget ) > f_with_widget_t;
-#define F_WITH_WIDGET( ... ) [ __VA_ARGS__ ]( ui::dom::Widget* const widget )
 
 	void WithWidget( const widget_type_t type, const f_with_widget_t& f );
 

@@ -3,12 +3,18 @@
 #include <map>
 #include <string>
 #include <set>
+#include <cstdint>
+#include <functional>
 
 namespace gse {
 class Value;
-};
+}
 
 namespace ui {
+
+namespace dom {
+class Widget;
+}
 
 typedef float coord_t;
 
@@ -37,6 +43,9 @@ enum widget_type_t {
 	WT_MINIMAP,
 	WT_TILE_PREVIEW,
 };
+
+typedef std::function< void( ::ui::dom::Widget* const widget ) > f_with_widget_t;
+#define F_WITH_WIDGET( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
 
 typedef uint64_t object_id_t;
 

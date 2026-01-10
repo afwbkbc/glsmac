@@ -86,6 +86,16 @@ class Def;
 namespace game {
 namespace frontend {
 
+#define X_WIDGETS \
+    X_WIDGET( Minimap ) \
+    X_WIDGET( TilePreview )
+
+namespace widget {
+#define X_WIDGET( _x ) class _x;
+X_WIDGETS
+#undef X_WIDGET
+}
+
 namespace faction {
 class FactionManager;
 class Faction;
@@ -403,6 +413,12 @@ private:
 
 	void ShowLoader( const std::string& text, const ::ui_legacy::loader_cancel_handler_t on_cancel = 0 );
 	void HideLoader();
+
+	struct {
+#define X_WIDGET( _x ) widget::_x* _x = nullptr;
+		X_WIDGETS
+#undef X_WIDGET
+	} m_widgets;
 
 private:
 	friend class ui_legacy::ObjectsList;

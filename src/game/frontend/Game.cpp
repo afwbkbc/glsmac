@@ -55,10 +55,9 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
-#include "ui/UI.h"
-#include "ui/dom/Widget.h"
-#include "ui/geometry/Rectangle.h"
-#include "types/mesh/Rectangle.h"
+
+#include "widget/Minimap.h"
+#include "widget/TilePreview.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -474,13 +473,7 @@ void Game::Iterate() {
 		if ( minimap_texture ) {
 			if ( m_glsmac ) {
 				// new ui
-				m_ui->WithWidget(
-					ui::WT_MINIMAP, F_WITH_WIDGET( &minimap_texture ) {
-						auto* const texture = widget->GetTexture();
-						texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
-						texture->FullUpdate();
-					}
-				);
+				m_widgets.Minimap->Update( minimap_texture );
 			}
 			else {
 				// legacy ui
@@ -2366,39 +2359,34 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 
 void Game::UpdateMinimap() {
 
-	m_ui->WithWidget(
-		ui::WT_MINIMAP, F_WITH_WIDGET( this ) {
+	const auto minimap_size = m_widgets.Minimap->FindLargestArea();
 
-			const auto& area = widget->GetGeometry()->m_area;
+	const float sx = minimap_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
+	const float sy = minimap_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
+	const float ss = ( minimap_size.y / (float)m_viewport.window_height );
+	const float sa = minimap_size.y / minimap_size.x;
 
-			auto target_size = types::Vec2< size_t >{
-				area.width,
-				area.height,
-			};
+	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
+	camera->SetAngle( m_camera->GetAngle() );
+	camera->SetScale(
+		{
+			sx * ss / sa * 0.5f, // TODO: why 0.5 ?
+			sy * ss / sa,
+			0.01f,
+		}
+	);
+	camera->SetPosition(
+		{
+			ss,
+			1.0f - ss * 0.5f, // TODO: why 0.5 ?
+			0.5f
+		}
+	);
 
-			const float sx = (float)target_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
-			const float sy = (float)target_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
-			const float ss = ( (float)target_size.y / (float)m_viewport.window_height );
-			const float sa = (float)target_size.y / (float)target_size.x;
-
-			NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
-			camera->SetAngle( m_camera->GetAngle() );
-			camera->SetScale(
-				{
-					sx * ss / sa * 0.5f, // TODO: why 0.5 ?
-					sy * ss / sa,
-					0.01f,
-				}
-			);
-			camera->SetPosition(
-				{
-					ss,
-					1.0f - ss * 0.5f, // TODO: why 0.5 ?
-					0.5f
-				}
-			);
-
-			GetMinimapTexture( camera, target_size );
+	GetMinimapTexture(
+		camera, {
+			(size_t)std::floor( minimap_size.x ),
+			(size_t)std::floor( minimap_size.y ),
 		}
 	);
 }
@@ -2607,37 +2595,15 @@ void Game::SendAnimationFinished( const size_t animation_id ) {
 }
 
 void Game::RegisterWidgets() {
-	m_ui->RegisterWidget(
-		ui::WT_MINIMAP, {
-			"minimap",
-			F_INIT_WIDGET() {
-				NEWV( mesh, types::mesh::Rectangle );
-				auto* g = widget->GetGeometry()->AsRectangle();
-				g->SetMesh( mesh );
-				NEWV( actor, scene::actor::Mesh, "UI::Widget::MiniMap", mesh );
-				g->SetActor( actor );
-				NEWV( texture, types::texture::Texture, g->m_area.width, g->m_area.height );
-				actor->SetTexture( texture );
-				widget->AddTexture( texture );
-				widget->AddActor( actor );
-			},
-			{}
-		}
-	);
-	m_ui->RegisterWidget(
-		ui::WT_TILE_PREVIEW, {
-			"tile-preview",
-			F_INIT_WIDGET( this ) {
-				// TODO
-			},
-			{}
-		}
-	);
+#define X_WIDGET( _x ) m_widgets._x = new widget::_x( m_ui );
+	X_WIDGETS
+#undef X_WIDGET
 }
 
 void Game::UnregisterWidgets() {
-	m_ui->UnregisterWidget( ui::WT_MINIMAP );
-	m_ui->UnregisterWidget( ui::WT_TILE_PREVIEW );
+#define X_WIDGET( _x ) delete m_widgets._x; m_widgets._x = nullptr;
+	X_WIDGETS
+#undef X_WIDGET
 }
 
 const bool Game::IsTurnActive() const {
@@ -2653,11 +2619,7 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 }
 
 void Game::UpdateTilePreview( tile::Tile* const tile ) {
-	m_ui->WithWidget(
-		ui::WT_TILE_PREVIEW, F_WITH_WIDGET( this ) {
-			// TODO
-		}
-	);
+	m_widgets.TilePreview->Update( tile );
 }
 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
