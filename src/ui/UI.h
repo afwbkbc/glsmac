@@ -93,7 +93,6 @@ CLASS( UI, gse::GCWrappable )
 
 	typedef std::function< void( dom::Widget* const widget ) > f_init_widget_t;
 
-	typedef std::unordered_map< std::string, gse::Value::type_t > widget_data_config_t;
 	struct widget_config_t {
 		std::string str;
 		f_init_widget_t f_init;

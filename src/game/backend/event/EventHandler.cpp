@@ -57,14 +57,14 @@ const std::string* const EventHandler::Validate( GSE_CALLABLE, const gse::value:
 		return nullptr;
 	}
 	switch ( result->type ) {
-		case gse::Value::T_STRING: {
+		case gse::VT_STRING: {
 			const auto& v = ( (gse::value::String*)result )->value;
 			return v.empty()
 				? nullptr
 				: new std::string( v );
 		}
-		case gse::Value::T_UNDEFINED:
-		case gse::Value::T_NULL:
+		case gse::VT_UNDEFINED:
+		case gse::VT_NULL:
 			return nullptr;
 		default:
 			return new std::string( "unexpected result type from handler: " + result->GetTypeString() );

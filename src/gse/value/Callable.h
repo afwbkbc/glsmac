@@ -18,8 +18,8 @@ namespace value {
 class Callable : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_CALLABLE; }
-
+	static const value_type_t GetType() { return VT_CALLABLE; }
+	
 	Callable( gc::Space* const gc_space, context::Context* const ctx );
 
 	virtual ~Callable() = default;

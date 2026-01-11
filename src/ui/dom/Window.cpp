@@ -62,7 +62,7 @@ Window::Window( DOM_ARGS )
 	SetHeaderHeight( 20 );
 
 	Property(
-		GSE_CALL, "blocker", gse::Value::T_STRING, nullptr, PF_NONE,
+		GSE_CALL, "blocker", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* v ) {
 			WrapSetStatic( m_blocker, "background", v, GSE_CALL );
 			m_blocker->Show();
@@ -75,7 +75,7 @@ Window::Window( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "header_background", "background", m_header );
 	ForwardProperty( GSE_CALL, "header_border", "border", m_header );
 	Property(
-		GSE_CALL, "header_height", gse::Value::T_INT, VALUE( gse::value::Int, , 20 ), PF_NONE,
+		GSE_CALL, "header_height", gse::VT_INT, VALUE( gse::value::Int, , 20 ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			SetHeaderHeight( ( (gse::value::Int*)v )->value );
 		},
@@ -84,7 +84,7 @@ Window::Window( DOM_ARGS )
 		}
 	);
 	Property(
-		GSE_CALL, "header_padding", gse::Value::T_INT, nullptr, PF_NONE,
+		GSE_CALL, "header_padding", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			m_header->GetGeometry()->SetPadding( ( (gse::value::Int*)v )->value );
 		},

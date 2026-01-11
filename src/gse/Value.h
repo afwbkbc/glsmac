@@ -28,12 +28,16 @@ namespace context {
 class Context;
 }
 
+// TODO: move all this shit somewhere
+
 #define GSE_ERROR( _type, _text ) throw gse::Exception( _type, _text, GSE_CALL_NOGC );
 
 #define GSE_CALLABLE_NOGC gse::context::Context* ctx, const gse::si_t& si, gse::ExecutionPointer& ep
 #define GSE_CALLABLE gc::Space* const gc_space, GSE_CALLABLE_NOGC
 #define GSE_CALL_NOGC ctx, si, ep
 #define GSE_CALL gc_space, GSE_CALL_NOGC
+
+typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > f_args_t;
 
 #define VALUE( _type, ... ) ( new _type( gc_space __VA_ARGS__ ) )
 #define VALUEEXT( _type, ... ) ( new _type( __VA_ARGS__ ) )
@@ -184,7 +188,7 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
 
 #define WRAPIMPL_SET_MAPPED_CUSTOM( _property, _map ) \
     if ( key == #_property ) { \
-        if ( value->type != gse::Value::type_t::T_STRING ) { \
+        if ( value->type != gse::VT_STRING ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: String, got: " + value->GetTypeString() ); \
         } \
         obj->_property = _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
@@ -203,7 +207,7 @@ static const gse::Wrappable::wrapmap_t< _type > __wrap_##_name = { \
 #define UNWRAPIMPL_PTR( _type ) \
 _type* _type::Unwrap( gse::Value* const value ) { \
     const auto* valueobj = value->Deref(); \
-    ASSERT( valueobj->type == gse::Value::T_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
+    ASSERT( valueobj->type == gse::VT_OBJECT, "can't unwrap non-object: " + valueobj->Dump() ); \
     const auto* obj = (gse::value::Object*)valueobj; \
     ASSERT( !obj->object_class.empty() && ( obj->object_class == WRAP_CLASS || ( WRAP_CLASS == "Object" && obj->object_class[ 0 ] == '$' ) ), "can't unwrap object of different class ( " + obj->object_class + " != " + WRAP_CLASS + " )" ); \
     ASSERT( obj->wrapobj, "can't unwrap object without internal link" ); \
@@ -213,7 +217,7 @@ _type* _type::Unwrap( gse::Value* const value ) { \
 #define UNWRAPIMPL_NOPTR_BEGIN( _type ) \
 _type _type::Unwrap( gse::Value* const value ) { \
     const auto* valueobj = value->Deref(); \
-    ASSERT( valueobj->type == gse::Value::T_OBJECT, "can only unwrap objects" ); \
+    ASSERT( valueobj->type == gse::VT_OBJECT, "can only unwrap objects" ); \
     const auto* obj = (gse::value::Object*)valueobj; \
     ASSERT( obj->object_class == WRAP_CLASS, "can only unwrap objects of same class" ); \
     const auto& properties = obj->value;
@@ -226,27 +230,7 @@ public:
 
 	virtual ~Value();
 
-	enum type_t : uint8_t {
-		T_NULLPTR, // special type only for serialization/deserialization
-		T_NOTHING, // special type meaning 'no type'
-		T_UNDEFINED,
-		T_NULL,
-		T_BOOL,
-		T_INT,
-		T_FLOAT,
-		T_STRING,
-		T_ARRAY,
-		T_OBJECT,
-		T_CALLABLE,
-		T_ARRAYREF,
-		T_ARRAYRANGEREF,
-		T_OBJECTREF,
-		T_VALUEREF,
-		T_RANGE,
-		T_LOOPCONTROL,
-	};
-
-	static const std::string& GetTypeStringStatic( const type_t type );
+	static const std::string& GetTypeStringStatic( const value_type_t type );
 	const std::string& GetTypeString() const;
 	virtual const std::string ToString() const;
 	const std::string Dump() const;
@@ -263,7 +247,7 @@ public:
 	OP( >= )
 #undef OP
 
-	type_t type = T_UNDEFINED;
+	value_type_t type = VT_UNDEFINED;
 
 	Value* const New( const Value* value );
 
@@ -271,7 +255,7 @@ public:
 	static Value* Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game = nullptr );
 
 protected:
-	Value( gc::Space* const gc_space, const type_t type );
+	Value( gc::Space* const gc_space, const value_type_t type );
 
 	gc::Space* const m_gc_space = nullptr;
 

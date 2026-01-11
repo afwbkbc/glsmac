@@ -23,7 +23,7 @@ CLASS( TilePreview, Widget )
 public:
 	TilePreview( const Game* const game, ui::UI* const ui );
 
-	void Update( const tile::Tile* const tile );
+	void Update( ui::dom::Widget* const widget, const tile::Tile* const tile );
 
 protected:
 	void Register( ui::dom::Widget* const widget ) override;

@@ -28,8 +28,8 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 		N_EXPECT_ARGS( 2 ); \
 		for ( uint8_t i = 0 ; i < 2 ; i++ ) { \
 			const auto& value = arguments.at(i); \
-			if ( value->type != Value::T_INT && value->type != Value::T_FLOAT ) { \
-				GSE_ERROR( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + Value::GetTypeStringStatic( Value::T_INT ) + " or " + Value::GetTypeStringStatic( Value::T_FLOAT ) + ", found: " + value->GetTypeString() ); \
+			if ( value->type != VT_INT && value->type != VT_FLOAT ) { \
+				GSE_ERROR( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + Value::GetTypeStringStatic( VT_INT ) + " or " + Value::GetTypeStringStatic( VT_FLOAT ) + ", found: " + value->GetTypeString() ); \
 			} \
 		} \
 		const auto& a = arguments.at(0); \
@@ -38,9 +38,9 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 			GSE_ERROR( EC.INVALID_CALL, "Arguments are of different types: " + a->GetTypeString() + ", " + b->GetTypeString() ); \
 		} \
 		switch ( a->type ) { \
-			case Value::T_INT: \
+			case VT_INT: \
 				return VALUE( value::Int,, _f_int( ((value::Int*)a)->value, ((value::Int*)b)->value ) ); \
-			case Value::T_FLOAT: \
+			case VT_FLOAT: \
 				return VALUE( value::Float,, _f_float( ((value::Float*)a)->value, ((value::Float*)b)->value ) ); \
 			default: \
 				THROW( "unexpected type: " + a->GetTypeString() ); \

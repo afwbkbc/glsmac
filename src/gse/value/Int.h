@@ -10,7 +10,7 @@ namespace value {
 class Int : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_INT; }
+	static const value_type_t GetType() { return VT_INT; }
 
 	Int( gc::Space* const gc_space, const int64_t initial_value )
 		: Value( gc_space, GetType() )

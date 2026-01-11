@@ -52,7 +52,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_b
 	});
 
 	Property(
-		GSE_CALL, "overflow", gse::Value::T_STRING, nullptr, PF_NONE,
+		GSE_CALL, "overflow", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto& value = ((gse::value::String*)v)->value;
 			if ( value == "visible" ) {
@@ -246,7 +246,7 @@ void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
 	auto forward_it = m_forwarded_properties.find( key );
 	if ( forward_it != m_forwarded_properties.end() ) {
-		if ( value->type == gse::Value::T_UNDEFINED && !m_classes.empty() ) {
+		if ( value->type == gse::VT_UNDEFINED && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
 				const auto& properties = c->GetProperties();
 				const auto it = properties.find( key );
@@ -269,7 +269,7 @@ void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CA
 	}
 }
 
-void Container::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
+void Container::Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT( m_forwarded_properties.find( name ) == m_forwarded_properties.end(), "property '" + name + "' already exists (forwarded)" );
 	Object::Property( GSE_CALL, name, type, default_value, flags, f_on_set, f_on_unset );
 }
@@ -304,7 +304,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		properties_t initial_properties = {};
 		if ( arguments.size() == 1 ) {
 			const auto& v = arguments.at(0);
-			if ( v->type != gse::Value::T_OBJECT ) {
+			if ( v->type != gse::VT_OBJECT ) {
 				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Expected properties object, got " + v->GetTypeString() );
 			}
 			initial_properties = ((gse::value::Object*)v)->value;

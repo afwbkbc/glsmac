@@ -25,7 +25,7 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 	ctx->CreateBuiltin( "classof", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
-		if ( v && v->type == Value::T_OBJECT ) {
+		if ( v && v->type == VT_OBJECT ) {
 			return VALUE( value::String,, ( ( value::Object*)v )->object_class );
 		}
 		return VALUE( value::Undefined );
@@ -39,7 +39,7 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 			GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of Undefined" );
 		}
 		switch ( v->type ) {
-			case Value::T_ARRAY: {
+			case VT_ARRAY: {
 				size = ((value::Array*)v)->value.size();
 				break;
 			}
@@ -56,7 +56,7 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 			return VALUE( gse::value::Bool,, false );
 		}
 		switch ( v->type ) {
-			case Value::T_UNDEFINED:
+			case VT_UNDEFINED:
 				return VALUE( gse::value::Bool,, false );
 			default:
 				return VALUE( gse::value::Bool,, true );
@@ -69,15 +69,15 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 		bool is_empty = true;
 		if ( v ) {
 			switch ( v->type ) {
-				case Value::T_STRING: {
+				case VT_STRING: {
 					is_empty = ( (value::String*)v )->value.empty();
 					break;
 				}
-				case Value::T_ARRAY: {
+				case VT_ARRAY: {
 					is_empty = ( (value::Array*)v )->value.empty();
 					break;
 				}
-				case Value::T_OBJECT: {
+				case VT_OBJECT: {
 					is_empty = ( (value::Object*)v )->value.empty();
 					break;
 				}
@@ -93,8 +93,8 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 		N_EXPECT_ARGS( 1 );
 		const auto& v = arguments.at(0);
 		switch ( v->type ) {
-			case Value::T_OBJECT:
-			case Value::T_ARRAY:
+			case VT_OBJECT:
+			case VT_ARRAY:
 				return v->Clone();
 			default:
 				GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Cloning of type " + v->GetTypeString() + " is not supported" );

@@ -1,12 +1,14 @@
 #include "Widget.h"
 
 #include "ui/UI.h"
+#include "ui/dom/Widget.h"
+#include "game/frontend/Game.h"
 
 namespace game {
 namespace frontend {
 namespace widget {
 
-Widget::Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str )
+Widget::Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str, const ui::widget_data_config_t& data_config )
 	: m_game( game )
 	, m_ui( ui )
 	, m_type( type ) {
@@ -14,7 +16,7 @@ Widget::Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_
 		m_type, {
 			str,
 			std::bind( &Widget::Register, this, std::placeholders::_1 ),
-			{}
+			data_config
 		}
 	);
 }

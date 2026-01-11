@@ -97,8 +97,9 @@ void main(void) { \
 	} \
 	if ( ! " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
 		color *= ambient + diffuse; \
+		color = clamp( color * gamma - vec3( contrast, contrast, contrast ), 0.0, 1.0 ); \
 	} \
-	FragColor = vec4( clamp( color * gamma - vec3( contrast, contrast, contrast ), 0.0, 1.0 ), alpha ); \
+	FragColor = vec4( color, alpha ); \
 } \
 \
 "

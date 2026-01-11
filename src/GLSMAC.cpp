@@ -306,7 +306,7 @@ void GLSMAC::ShowError( const std::string& text, const std::function< void() >& 
 	});
 }
 
-gse::Value* const GLSMAC::TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args ) {
+gse::Value* const GLSMAC::TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
 	gse::ExecutionPointer ep;
 	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, f_args );
 }
@@ -581,7 +581,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 void GLSMAC::RunMain() {
 	ASSERT( m_gc_space, "gc space is null" );
 	for ( const auto& main : m_main_callables ) {
-		ASSERT( main->type == gse::Value::T_CALLABLE, "main not callable" );
+		ASSERT( main->type == gse::VT_CALLABLE, "main not callable" );
 		m_gc_space->Accumulate( this, [ this, &main ] (){
 			gse::ExecutionPointer ep;
 			if ( !m_wrapobj ) {

@@ -1360,6 +1360,9 @@ void Game::Initialize(
 ) {
 	ASSERT( !m_is_initialized, "already initialized" );
 
+	m_game = g_engine->GetGame();
+	ASSERT( m_game, "game is null" );
+
 	auto* ui = g_engine->GetUI();
 
 	if ( ui->HasPopup() ) {
@@ -1883,10 +1886,14 @@ void Game::Initialize(
 	ResetMapState();
 
 	m_is_initialized = true;
+
+	Trigger( m_game, "start_ui", {} );
 }
 
 void Game::Deinitialize() {
 	ASSERT( m_is_initialized, "not initialized" );
+
+	m_is_initialized = false;
 
 	CloseMenus();
 	DeselectTileOrUnit();
@@ -1962,42 +1969,7 @@ void Game::Deinitialize() {
 		DELETE( it.second );
 	}
 	m_actors_map.clear();
-/*
-	if ( m_fm ) {
-		DELETE( m_fm );
-		m_fm = nullptr;
-	}
 
-	if ( m_um ) {
-		DELETE( m_um );
-		m_um = nullptr;
-	}
-
-	if ( m_bm ) {
-		DELETE( m_bm );
-		m_bm = nullptr;
-	}
-
-	if ( m_tm ) {
-		DELETE( m_tm );
-		m_tm = nullptr;
-	}
-
-	if ( m_itm ) {
-		DELETE( m_itm );
-		m_itm = nullptr;
-	}
-
-	if ( m_ism ) {
-		DELETE( m_ism );
-		m_ism = nullptr;
-	}
-
-	if ( m_world_scene ) {
-		g_engine->GetGraphics()->RemoveScene( m_world_scene );
-		m_world_scene = nullptr;
-	}
-*/
 #define x( _obj ) \
     if ( _obj ) { \
         DELETE( _obj ); \
@@ -2010,8 +1982,7 @@ void Game::Deinitialize() {
 
 	m_textures.terrain = nullptr;
 
-	m_is_initialized = false;
-
+	m_game = nullptr;
 }
 
 void Game::AddMessage( const std::string& text ) {
@@ -2364,6 +2335,9 @@ types::texture::Texture* Game::GetMinimapTextureResult() {
 void Game::UpdateMinimap() {
 
 	const auto minimap_size = m_widgets.Minimap->FindLargestArea();
+	if ( !minimap_size.x || !minimap_size.y ) {
+		return;
+	}
 
 	const float sx = minimap_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = minimap_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
@@ -2610,6 +2584,18 @@ void Game::UnregisterWidgets() {
 #undef X_WIDGET
 }
 
+void Game::Trigger( gse::GCWrappable* const object, const std::string& event, const gse::f_args_t& f_args ) {
+	// TODO: some mutexes needed?
+	ASSERT( object, "triggered object is null" );
+	auto* state = m_game->GetState();
+	ASSERT( state, "game state is null" );
+	state->WithGSE(
+		state, [ state, object, event, f_args ]( GSE_CALLABLE ) {
+			state->TriggerObject( object, event, f_args );
+		}
+	);
+}
+
 const bool Game::IsTurnActive() const {
 	return m_is_turn_active;
 }
@@ -2623,7 +2609,16 @@ void Game::SetSelectedTile( tile::Tile* tile ) {
 }
 
 void Game::UpdateTilePreview( tile::Tile* const tile ) {
-	m_widgets.TilePreview->Update( tile );
+	const auto& c = tile->GetCoords();
+	auto* const t = m_game->GetMap()->GetTile( c.x, c.y );
+	Trigger(
+		m_game->GetMap(), "tile_select", ARGS_F( &t ) {
+			{
+				"tile",
+				t->Wrap( GSE_CALL )
+			},
+		}; }
+	);
 }
 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {

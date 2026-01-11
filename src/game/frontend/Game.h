@@ -30,6 +30,10 @@
 // for new ui
 class GLSMAC;
 
+namespace gse {
+class GCWrappable;
+}
+
 namespace ui {
 class UI;
 }
@@ -512,6 +516,10 @@ private:
 
 	void RegisterWidgets();
 	void UnregisterWidgets();
+
+	::game::backend::Game* m_game = nullptr;
+
+	void Trigger( gse::GCWrappable* const object, const std::string& event, const gse::f_args_t& f_args );
 
 private:
 	friend class unit::UnitManager;

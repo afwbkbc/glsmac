@@ -206,7 +206,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 						m_gc_space, ctx, condition->m_si, ep, false, [ this, &gc_space, &target, &condition, &result, &ep, &c, &need_break, &need_clear, &returnflag ]( gse::context::ChildContext* const subctx ) {
 
 							switch ( target->type ) {
-								case gse::Value::T_ARRAY: {
+								case gse::VT_ARRAY: {
 									const auto* arr = (value::Array*)target;
 									switch ( condition->for_inof_type ) {
 										case ForConditionInOf::FIC_IN: {
@@ -244,7 +244,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 									}
 									break;
 								}
-								case gse::Value::T_OBJECT: {
+								case gse::VT_OBJECT: {
 									const auto* obj = (value::Object*)target;
 									if ( condition->for_inof_type != ForConditionInOf::FIC_IN && condition->for_inof_type != ForConditionInOf::FIC_OF ) {
 										THROW( "unexpected for in_of condition type: " + std::to_string( condition->for_inof_type ) );
@@ -273,7 +273,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				default:
 					THROW( "unexpected for condition type: " + std::to_string( c->condition->for_type ) );
 			}
-			if ( result && result->type == gse::Value::T_LOOPCONTROL ) {
+			if ( result && result->type == gse::VT_LOOPCONTROL ) {
 				// we don't want to break out from parent scope
 				if ( returnflag ) {
 					*returnflag = false;
@@ -295,7 +295,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 				}
 				if ( it != h->properties.end() ) {
 					const auto f = EvaluateExpression( ctx, ep, it->second, returnflag );
-					if ( f->type != gse::Value::T_CALLABLE ) {
+					if ( f->type != gse::VT_CALLABLE ) {
 						// TODO: move check to parser
 						throw gse::Exception( EC.PARSE_ERROR, "Expected catch block, found: " + f->ToString(), ctx, it->second->m_si, ep );
 					}
@@ -432,7 +432,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				throw invalid_error_definition();
 			}
 			const auto reason = EvaluateExpression( ctx, ep, e->arguments[ 0 ] );
-			if ( reason->type != gse::Value::T_STRING ) {
+			if ( reason->type != gse::VT_STRING ) {
 				throw invalid_error_definition();
 			}
 
@@ -512,7 +512,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
                 throw operation_not_supported( a->ToString(), b->ToString() ); \
             } \
             switch ( a->type ) { \
-                case gse::Value::T_INT: { \
+                case gse::VT_INT: { \
                     const auto bval = ( (Int*)b )->value; \
                     if ( !_allow_b_zero && bval == 0 ) { \
                         throw math_error( "Division by zero" ); \
@@ -521,7 +521,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
                 }
 #define MATH_OP_BEGIN_F( _op, _allow_b_zero ) \
         MATH_OP_BEGIN( _op, _allow_b_zero ) \
-            case gse::Value::T_FLOAT: { \
+            case gse::VT_FLOAT: { \
                 const auto bval = ( (Float*)b )->value; \
                 if ( !_allow_b_zero && bval == 0.0f ) { \
                     throw math_error( "Division by zero" ); \
@@ -537,14 +537,14 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         MATH_OP_END()
 		case OT_ADD: {
 			MATH_OP_BEGIN_F( +, true )
-				case gse::Value::T_STRING:
+				case gse::VT_STRING:
 					return VALUE( String, , ( (String*)a )->value + ( (String*)b )->value );
-				case gse::Value::T_ARRAY: {
+				case gse::VT_ARRAY: {
 					array_elements_t elements = ( (value::Array*)a )->value;
 					elements.insert( elements.end(), ( (value::Array*)b )->value.begin(), ( (value::Array*)b )->value.end() );
 					return VALUE( value::Array, , elements );
 				}
-				case gse::Value::T_OBJECT: {
+				case gse::VT_OBJECT: {
 					object_properties_t properties = ( (value::Object*)a )->value;
 					for ( const auto& it : ( (value::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
@@ -579,7 +579,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
             ASSERT( !expression->b, "only one operand required, found two" ); \
             const auto varname = EvaluateVarName( ctx, ep, expression->a ); \
             gse::Value* value = ctx->GetVariable( varname, expression->a->m_si, ep ); \
-            if ( value->type != gse::Value::T_INT ) {                         \
+            if ( value->type != gse::VT_INT ) {                         \
                 throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->a->ToString(), ctx, expression->a->m_si, ep ); \
             } \
             ctx->UpdateVariable( varname, VALUE( Int,, ( (Int*)value )->value _op 1 ), expression->a->m_si, ep ); \
@@ -588,7 +588,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         else if ( expression->b ) { \
             const auto varname = EvaluateVarName( ctx, ep, expression->b ); \
             const gse::Value* value = ctx->GetVariable( varname, expression->b->m_si, ep ); \
-            if ( value->type != gse::Value::T_INT ) { \
+            if ( value->type != gse::VT_INT ) { \
                 throw gse::Exception( EC.TYPE_ERROR, "Expected int, found: " + expression->b->ToString(), ctx, expression->b->m_si, ep ); \
             } \
             const auto result = VALUE( Int,, ( (Int*)value )->value _op 1 ); \
@@ -616,13 +616,13 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         } \
         gse::Value* result = nullptr; \
         switch ( a->type ) { \
-            case gse::Value::T_INT: { \
+            case gse::VT_INT: { \
                 result = VALUE( Int,, ( (Int*)a )->value _op ( (Int*)b )->value ); \
                 break; \
             }
 #define MATH_OP_BEGIN_F( _op ) \
         MATH_OP_BEGIN( _op ) \
-            case gse::Value::T_FLOAT: { \
+            case gse::VT_FLOAT: { \
                 result = VALUE( Float,, ( (Float*)a )->value _op ( (Float*)b )->value ); \
                 break; \
             }
@@ -637,17 +637,17 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
         MATH_OP_END()
 		case OT_INC_BY: {
 			MATH_OP_BEGIN_F( + )
-				case gse::Value::T_STRING: {
+				case gse::VT_STRING: {
 					result = VALUE( String, , ( (String*)a )->value + ( (String*)b )->value );
 					break;
 				}
-				case gse::Value::T_ARRAY: {
+				case gse::VT_ARRAY: {
 					array_elements_t elements = ( (value::Array*)a )->value;
 					elements.insert( elements.end(), ( (value::Array*)b )->value.begin(), ( (value::Array*)b )->value.end() );
 					result = VALUE( value::Array, , elements );
 					break;
 				}
-				case gse::Value::T_OBJECT: {
+				case gse::VT_OBJECT: {
 					object_properties_t properties = ( (value::Object*)a )->value;
 					for ( const auto& it : ( (value::Object*)b )->value ) {
 						if ( properties.find( it.first ) != properties.end() ) {
@@ -687,10 +687,10 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				case Operand::OT_VARIABLE: {
 					const auto objv = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
 					const auto* obj = objv;
-					if ( obj->type == gse::Value::T_VALUEREF ) {
+					if ( obj->type == gse::VT_VALUEREF ) {
 						obj = ( (ValueRef*)obj )->target;
 					}
-					if ( obj->type != gse::Value::T_OBJECT ) {
+					if ( obj->type != gse::VT_OBJECT ) {
 						throw not_an_object( obj->ToString(), expression->a->m_si );
 					}
 					return ( (value::Object*)obj )->GetRef( childname );
@@ -699,13 +699,13 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				case Operand::OT_CALL: {
 					const auto objv = EvaluateOperand( ctx, ep, expression->a );
 					const auto* obj = objv;
-					ASSERT( obj->type == gse::Value::T_OBJECT, "parent is not object: " + obj->Dump() );
+					ASSERT( obj->type == gse::VT_OBJECT, "parent is not object: " + obj->Dump() );
 					return ( (value::Object*)obj )->Get( childname );
 				}
 				case Operand::OT_EXPRESSION: {
 					const auto objv = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
 					const auto* obj = objv;
-					if ( obj->type != gse::Value::T_OBJECT ) {
+					if ( obj->type != gse::VT_OBJECT ) {
 						throw not_an_object( obj->ToString(), expression->a->m_si );
 					}
 					return ( (value::Object*)obj )->GetRef( childname );
@@ -721,14 +721,14 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			std::optional< std::string > key;
 			const auto val = EvaluateRange( ctx, ep, expression->b );
 			switch ( val->type ) {
-				case gse::Value::T_INT: {
+				case gse::VT_INT: {
 					index = ( (Int*)val )->value;
 					from = std::nullopt;
 					to = std::nullopt;
 					key = std::nullopt;
 					break;
 				}
-				case gse::Value::T_RANGE: {
+				case gse::VT_RANGE: {
 					const auto* range = (Range*)val;
 					index = std::nullopt;
 					from = range->from;
@@ -736,7 +736,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					key = std::nullopt;
 					break;
 				}
-				case gse::Value::T_STRING: {
+				case gse::VT_STRING: {
 					index = std::nullopt;
 					from = std::nullopt;
 					to = std::nullopt;
@@ -746,7 +746,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				default:
 					THROW( "unexpected index type: " + val->ToString() );
 			}
-			const auto& check_indexable = [ &ctx, &ep, &index, &key, &from, &to ]( const gse::Value* const value, const si_t& si, const gse::Value::type_t expected_type ) {
+			const auto& check_indexable = [ &ctx, &ep, &index, &key, &from, &to ]( const gse::Value* const value, const si_t& si, const gse::value_type_t expected_type ) {
 				if ( value->type != expected_type ) {
 					throw gse::Exception(
 						EC.INVALID_DEREFERENCE, "Could not get " +
@@ -762,15 +762,15 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			};
 			const auto& process_indexable = [ this, &ctx, &ep, &index, &key, &from, &to, &check_indexable, &expression ]( const gse::Value* value ) {
 				if ( index.has_value() ) {
-					check_indexable( value, expression->a->m_si, gse::Value::T_ARRAY );
+					check_indexable( value, expression->a->m_si, gse::VT_ARRAY );
 					return ( (value::Array*)value )->GetRef( index.value() );
 				}
 				if ( key.has_value() ) {
-					check_indexable( value, expression->a->m_si, gse::Value::T_OBJECT );
+					check_indexable( value, expression->a->m_si, gse::VT_OBJECT );
 					return ( (value::Object*)value )->GetRef( key.value() );
 				}
 				else {
-					check_indexable( value, expression->a->m_si, gse::Value::T_ARRAY );
+					check_indexable( value, expression->a->m_si, gse::VT_ARRAY );
 					ValidateRange( ctx, expression->b->m_si, ep, (value::Array*)value, from, to );
 					return ( (value::Array*)value )->GetRangeRef( from, to );
 				}
@@ -782,7 +782,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				case Operand::OT_ARRAY: {
 					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
 					/*const auto arr = EvaluateOperand( ctx, ep, expression->a );
-					check_indexable( arr, expression->a->m_si, gse::Value::T_ARRAY );
+					check_indexable( arr, expression->a->m_si, gse::VT_ARRAY );
 					if ( index.has_value() ) {
 						return ( (value::Array*)arr )->Get( index.value() );
 					}
@@ -794,7 +794,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				case Operand::OT_OBJECT: {
 					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
 					/*const auto obj = EvaluateOperand( ctx, ep, expression->a );
-					check_indexable( obj, expression->a->m_si, gse::Value::T_OBJECT );
+					check_indexable( obj, expression->a->m_si, gse::VT_OBJECT );
 					if ( key.has_value() ) {
 						return ( (value::Object*)obj )->Get( key.value() );
 					}
@@ -806,7 +806,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					const auto refv = EvaluateExpression( ctx, ep, (Expression*)expression->a );
 					const auto* ref = refv;
 					switch ( ref->type ) {
-						case gse::Value::T_STRING: {
+						case gse::VT_STRING: {
 							const auto& v = ( (value::String*)ref )->value;
 							const auto f = from.has_value()
 								? from.value()
@@ -818,7 +818,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 								return VALUE( String, , v.substr( f ) );
 							}
 						}
-						case gse::Value::T_ARRAY: {
+						case gse::VT_ARRAY: {
 							return process_indexable( ref );
 							/*if ( index.has_value() ) {
 								return ( (value::Array*)ref )->Get( index.value() );
@@ -827,7 +827,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 								return ( (value::Array*)ref )->GetRangeRef( from, to );
 							}*/
 						}
-						case gse::Value::T_OBJECT: {
+						case gse::VT_OBJECT: {
 							return process_indexable( ref );
 							/*if ( key.has_value() ) {
 								return ( (value::Object*)ref )->Get( key.value() );
@@ -836,24 +836,24 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 								throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected object key", ctx, expression->a->m_si, ep );
 							}*/
 						}
-						case gse::Value::T_ARRAYREF: {
+						case gse::VT_ARRAYREF: {
 							const auto* r = (ArrayRef*)ref;
 							return process_indexable( r->array->Get( r->index ) );
 						}
-						case gse::Value::T_ARRAYRANGEREF: {
-							THROW( "TODO: T_ARRAYRANGEREF" );
+						case gse::VT_ARRAYRANGEREF: {
+							THROW( "TODO: VT_ARRAYRANGEREF" );
 						}
-						case gse::Value::T_LOOPCONTROL: {
-							THROW( "TODO: T_LOOPCONTROL" );
+						case gse::VT_LOOPCONTROL: {
+							THROW( "TODO: VT_LOOPCONTROL" );
 						}
-						case gse::Value::T_OBJECTREF: {
+						case gse::VT_OBJECTREF: {
 							return process_indexable( Deref( ctx, expression->a->m_si, ep, refv ) );
 						}
-						case gse::Value::T_VALUEREF: {
-							THROW( "TODO: T_VALUEREF" );
+						case gse::VT_VALUEREF: {
+							THROW( "TODO: VT_VALUEREF" );
 						}
 						default:
-							check_indexable( ref, expression->a->m_si, gse::Value::T_ARRAY );
+							check_indexable( ref, expression->a->m_si, gse::VT_ARRAY );
 					}
 				}
 				case Operand::OT_VALUE: {
@@ -878,7 +878,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					throw operation_not_supported_not_array( expression->a->ToString() );
 				}
 			}
-			if ( arr->type != gse::Value::T_ARRAY ) {
+			if ( arr->type != gse::VT_ARRAY ) {
 				throw operation_not_supported_not_array( expression->a->ToString() );
 			}
 			gse::Value* value = EvaluateOperand( ctx, ep, expression->b );
@@ -900,7 +900,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					throw operation_not_supported_not_array( expression->a->ToString() );
 				}
 			}
-			if ( arr->type != gse::Value::T_ARRAY ) {
+			if ( arr->type != gse::VT_ARRAY ) {
 				throw operation_not_supported_not_array( expression->a->ToString() );
 			}
 			auto& a = ( (value::Array*)arr )->value;
@@ -917,12 +917,12 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto arr = ctx->GetVariable( ( (Variable*)expression->a )->name, expression->a->m_si, ep );
-					if ( arr->type != gse::Value::T_ARRAY ) {
+					if ( arr->type != gse::VT_ARRAY ) {
 						throw operation_not_supported_not_array( expression->a->ToString() );
 					}
 					auto& a = ( (value::Array*)arr )->value;
 					const auto idxval = EvaluateOperand( ctx, ep, expression->b );
-					if ( idxval->type != gse::Value::T_INT ) {
+					if ( idxval->type != gse::VT_INT ) {
 						throw operation_not_supported( expression->a->ToString(), idxval->ToString() );
 					}
 					const auto idx = ( (value::Int*)idxval )->value;
@@ -949,14 +949,14 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 
 			if ( expression->a ) {
 				const auto fromr = EvaluateRange( ctx, ep, expression->a, true );
-				if ( fromr->type != gse::Value::T_INT ) {
+				if ( fromr->type != gse::VT_INT ) {
 					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + fromr->ToString(), ctx, expression->a->m_si, ep );
 				}
 				from = ( (Int*)fromr )->value;
 			}
 			if ( expression->b ) {
 				const auto tor = EvaluateRange( ctx, ep, expression->b, true );
-				if ( tor->type != gse::Value::T_INT ) {
+				if ( tor->type != gse::VT_INT ) {
 					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + tor->ToString(), ctx, expression->b->m_si, ep );
 				}
 				to = ( (Int*)tor )->value;
@@ -1026,7 +1026,7 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 			const auto* callable = Deref( ctx, call->m_si, ep, EvaluateExpression( ctx, ep, call->callable ) );
 			ASSERT( callable, "callable is null" );
 			switch ( callable->type ) {
-				case gse::Value::T_CALLABLE: {
+				case gse::VT_CALLABLE: {
 					function_arguments_t arguments = {};
 					for ( const auto& it : call->arguments ) {
 						arguments.push_back( Deref( ctx, it->m_si, ep, EvaluateExpression( ctx, ep, it ) ) );
@@ -1048,7 +1048,7 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 
 const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
-	if ( result->type != gse::Value::T_STRING ) {
+	if ( result->type != gse::VT_STRING ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return ( (String*)result )->value;
@@ -1060,10 +1060,10 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 	ASSERT( operand, "index operand missing" );
 	const auto& get_index = [ &ctx, &ep, &operand, this, &only_index, &gc_space ]( gse::Value* const value ) -> gse::Value* {
 		switch ( value->type ) {
-			case gse::Value::T_INT:
-			case gse::Value::T_STRING:
+			case gse::VT_INT:
+			case gse::VT_STRING:
 				return value;
-			case gse::Value::T_RANGE: {
+			case gse::VT_RANGE: {
 				ASSERT( !only_index, "range not allowed here" );
 				const auto* range = (Range*)value;
 				return VALUE( Range, , range->from, range->to );
@@ -1090,7 +1090,7 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 
 const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
 	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
-	if ( result->type != gse::Value::T_BOOL ) {
+	if ( result->type != gse::VT_BOOL ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
 	return ( (Bool*)result )->value;
@@ -1113,20 +1113,20 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 	CHECKACCUM( m_gc_space );
 	if ( value ) {
 		switch ( value->type ) {
-			case gse::Value::T_ARRAYREF: {
+			case gse::VT_ARRAYREF: {
 				const auto* ref = (ArrayRef*)value;
 				return ref->array->Get( ref->index );
 			}
-			case gse::Value::T_ARRAYRANGEREF: {
+			case gse::VT_ARRAYRANGEREF: {
 				const auto* ref = (ArrayRangeRef*)value;
 				ValidateRange( ctx, si, ep, ref->array, ref->from, ref->to );
 				return ref->array->GetSubArray( ref->from, ref->to );
 			}
-			case gse::Value::T_OBJECTREF: {
+			case gse::VT_OBJECTREF: {
 				const auto* ref = (ObjectRef*)value;
 				return ref->object->Get( ref->key );
 			}
-			case gse::Value::T_VALUEREF: {
+			case gse::VT_VALUEREF: {
 				return ( (ValueRef*)value )->target;
 			}
 			default: {
@@ -1139,24 +1139,24 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const ref, gse::Value* const value ) {
 	auto* gc_space = m_gc_space;
 	switch ( ref->type ) {
-		case gse::Value::T_OBJECTREF: {
+		case gse::VT_OBJECTREF: {
 			const auto* r = (ObjectRef*)ref;
 			r->object->Set( r->key, value, GSE_CALL );
 			break;
 		}
-		case gse::Value::T_ARRAYREF: {
+		case gse::VT_ARRAYREF: {
 			const auto* r = (ArrayRef*)ref;
 			r->array->Set( r->index, value );
 			break;
 		}
-		case gse::Value::T_ARRAYRANGEREF: {
+		case gse::VT_ARRAYRANGEREF: {
 			const auto* r = (ArrayRangeRef*)ref;
 			ValidateRange( ctx, si, ep, r->array, r->from, r->to );
 			r->array->SetSubArray( r->from, r->to, value );
 			break;
 		}
-		case gse::Value::T_VALUEREF: {
-			THROW( "TODO: T_VALUEREF" );
+		case gse::VT_VALUEREF: {
+			THROW( "TODO: VT_VALUEREF" );
 		}
 		default:
 			THROW( "reference expected, found " + ref->ToString() );
@@ -1189,7 +1189,7 @@ void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_brea
 		return;
 	}
 	switch ( result->type ) {
-		case gse::Value::T_LOOPCONTROL: {
+		case gse::VT_LOOPCONTROL: {
 			*need_clear = true;
 			const auto type = ( (value::LoopControl*)result )->value;
 			switch ( type ) {

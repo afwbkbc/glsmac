@@ -55,7 +55,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 	GEOMPROP( "zindex", SetZIndex, Float );
 #undef GEOMPROP
 
-	GEOMSETTER( "align", gse::Value::T_STRING ) {
+	GEOMSETTER( "align", gse::VT_STRING ) {
 		const auto strs = util::String::Split( ( (gse::value::String*)v )->value, ' ' );
 		uint8_t align = geometry::Geometry::ALIGN_NONE;
 		for ( const auto& str : strs ) {

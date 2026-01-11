@@ -6,6 +6,10 @@
 
 #include "ui/Types.h"
 
+namespace game::frontend::widget {
+class Widget;
+}
+
 namespace types {
 namespace texture {
 class Texture;
@@ -33,6 +37,8 @@ public:
 
 	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
 
+	void OnUpdate( const f_widget_update_t& on_widget_update );
+
 private:
 
 	widget_type_t m_type = WT_NONE;
@@ -49,6 +55,9 @@ private:
 
 	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
 	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
+
+	f_widget_update_t m_on_widget_update = nullptr;
+	void UpdateWidget();
 
 };
 

@@ -17,7 +17,7 @@ namespace value {
 class Array : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_ARRAY; }
+	static const value_type_t GetType() { return VT_ARRAY; }
 
 	Array( gc::Space* const gc_space, array_elements_t initial_value = {} );
 

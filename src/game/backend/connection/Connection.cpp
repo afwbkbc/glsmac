@@ -369,7 +369,7 @@ const std::string& Connection::GetGameStateStr( const game::backend::connection:
 	return s_game_state_str.at( game_state );
 }
 
-void Connection::WTrigger( const std::string& event, const f_args_t& fargs, const std::function<void()>& f_after ) {
+void Connection::WTrigger( const std::string& event, const gse::f_args_t& fargs, const std::function<void()>& f_after ) {
 	ASSERT( m_state, "state not set" );
 	m_state->WithGSE( this, [ this, event, fargs, f_after ]( GSE_CALLABLE ) {
 		Trigger( GSE_CALL, event, fargs );

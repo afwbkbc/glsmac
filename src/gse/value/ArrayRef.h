@@ -10,7 +10,7 @@ class Array;
 class ArrayRef : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_ARRAYREF; }
+	static const value_type_t GetType() { return VT_ARRAYREF; }
 
 	ArrayRef( gc::Space* const gc_space, Array* array, const size_t index )
 		: Value( gc_space, GetType() )

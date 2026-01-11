@@ -66,7 +66,7 @@ const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::T
 				slot->Wrap( GSE_CALL, gc_space )
 			},
 		}; } );
-		if ( result->type != gse::Value::T_INT ) {
+		if ( result->type != gse::VT_INT ) {
 			GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
 		}
 		yields.insert(

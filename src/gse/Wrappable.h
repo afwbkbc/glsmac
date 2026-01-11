@@ -91,13 +91,12 @@ public:
 	void Unlink( value::Object* wrapobj );
 
 	typedef uint16_t callback_id_t;
-	typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > f_args_t;
 	typedef std::function< void() > f_cleanup_t;
 	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback );
 	virtual void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
 	virtual const bool HasHandlers( const std::string& event );
-	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< Value::type_t > expected_return_type = {} );
-	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< Value::type_t > expected_return_type = {} );
+	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< value_type_t > expected_return_type = {} );
+	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< value_type_t > expected_return_type = {} );
 	virtual void ClearHandlers();
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );

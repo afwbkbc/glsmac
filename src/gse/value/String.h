@@ -10,7 +10,7 @@ namespace value {
 class String : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_STRING; }
+	static const value_type_t GetType() { return VT_STRING; }
 
 	String( gc::Space* const gc_space, const std::string& initial_value )
 		: Value( gc_space, GetType() )

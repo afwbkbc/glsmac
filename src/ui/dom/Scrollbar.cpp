@@ -36,7 +36,7 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	Embed( m_slider );
 
 	Property(
-		GSE_CALL, "scroll_type", gse::Value::T_STRING, nullptr, PF_NONE,
+		GSE_CALL, "scroll_type", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::String*)v )->value;
 			scroll_type_t st;
@@ -66,7 +66,7 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	PROPERTY( "speed", gse::value::Float, 1.0f, SetSpeed );
 
 	Property(
-		GSE_CALL, "fromto_size", gse::Value::T_INT, nullptr, PF_NONE,
+		GSE_CALL, "fromto_size", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::Int*)v )->value;
 			if ( value != m_fromto_size ) {
@@ -85,7 +85,7 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 	);
 
 	Property(
-		GSE_CALL, "slider_size", gse::Value::T_INT, nullptr, PF_NONE,
+		GSE_CALL, "slider_size", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::Int*)v )->value;
 			SetSliderSize( value );

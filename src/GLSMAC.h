@@ -16,10 +16,6 @@
 
 #include "util/Timer.h"
 
-namespace gse {
-class GCWrappable;
-}
-
 namespace ui {
 class UI;
 }
@@ -54,7 +50,7 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	void ShowError( const std::string& text, const std::function< void() >& on_close );
 
 	typedef std::function< void( GSE_CALLABLE, gse::value::object_properties_t& args ) > f_args_t;
-	gse::Value* const TriggerObject( gse::Wrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
+	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
 
 	void WithGSE( const std::function< void( GSE_CALLABLE ) >& f );
 

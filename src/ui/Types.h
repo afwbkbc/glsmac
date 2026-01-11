@@ -6,8 +6,13 @@
 #include <cstdint>
 #include <functional>
 
+#include "gse/Types.h"
+
 namespace gse {
 class Value;
+namespace value {
+class Object;
+}
 }
 
 namespace ui {
@@ -46,6 +51,14 @@ enum widget_type_t {
 
 typedef std::function< void( ::ui::dom::Widget* const widget ) > f_with_widget_t;
 #define F_WITH_WIDGET( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
+struct widget_data_config_entry_t {
+	gse::value_type_t type;
+	std::string object_class;
+};
+typedef std::unordered_map< std::string, widget_data_config_entry_t > widget_data_config_t;
+
+typedef std::function< void( ::ui::dom::Widget* const widget, gse::value::Object* const data ) > f_widget_update_t;
+#define F_WIDGET_UPDATE( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget, gse::value::Object* const data )
 
 typedef uint64_t object_id_t;
 

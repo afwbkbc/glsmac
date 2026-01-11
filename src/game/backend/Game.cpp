@@ -60,14 +60,6 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
-InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
-	: Exception(
-	"InvalidEvent", (std::string)
-		"Event validation failed!\n" +
-		TS_OFFSET + "reason: '" + reason + "'\n" +
-		TS_OFFSET + "event: " + event->ToString( /*TS_OFFSET*/ )
-) {}
-
 Game::Game()
 	: gse::GCWrappable( nullptr ) {}
 
@@ -206,361 +198,355 @@ void Game::Stop() {
 void Game::Iterate() {
 	MTModule::Iterate();
 
-	try {
-		if ( m_state ) {
-			m_state->Iterate();
+	if ( m_state ) {
+		m_state->Iterate();
+	}
+
+	if ( m_game_state == GS_INITIALIZING ) {
+
+		ASSERT( m_state, "state is null" );
+
+		if ( !m_state->IsMaster() ) {
+			ASSERT( m_state->m_connection, "not master but no connection" );
+			// notify server of successful download and continue initialization
+			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
+			m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
 		}
 
-		if ( m_game_state == GS_INITIALIZING ) {
+		auto ec = m_map->Initialize( m_init_cancel );
+		if ( !ec && m_init_cancel ) {
+			ec = map::Map::EC_ABORTED;
+		}
 
-			ASSERT( m_state, "state is null" );
+		if ( !ec ) {
 
-			if ( !m_state->IsMaster() ) {
-				ASSERT( m_state->m_connection, "not master but no connection" );
-				// notify server of successful download and continue initialization
-				m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
+#ifdef DEBUG
+			const auto* config = g_engine->GetConfig();
+			// also handy to have dump of generated map
+			if (
+				!ec &&
+					config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
+					!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
+				) {
+				MTModule::Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
+				SetLoaderText( "Saving dump" );
+				util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
+			}
+#endif
+
+			ASSERT( m_map, "map not set" );
+
+			NEW( m_response_map_data, response_map_data_t );
+
+			m_response_map_data->map_width = m_map->GetWidth();
+			m_response_map_data->map_height = m_map->GetHeight();
+
+			ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+			m_response_map_data->terrain_texture = m_map->m_textures.terrain;
+
+			ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+			m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
+
+			ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+			m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
+
+			m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+			m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
+
+			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+				for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
+					UpdateYields( GSE_CALL, tile );
+				}
+			});
+
+			m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+			m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
+
+			if ( m_old_map ) {
+				MTModule::Log( "Destroying old map state" );
+				DELETE( m_old_map );
+				m_old_map = nullptr;
+			}
+
+			// notify server of successful initialization
+			m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
+			if ( m_state->m_connection ) {
 				m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
 
-			auto ec = m_map->Initialize( m_init_cancel );
-			if ( !ec && m_init_cancel ) {
-				ec = map::Map::EC_ABORTED;
+			{
+				const auto factions = m_state->GetFM()->GetAll();
+				NEWV( faction_defines, FrontendRequest::faction_defines_t );
+				for ( const auto& faction : factions ) {
+					faction_defines->push_back( faction );
+				}
+				auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
+				fr.data.faction_define.factiondefs = faction_defines;
+				AddFrontendRequest( fr );
 			}
 
-			if ( !ec ) {
-
-#ifdef DEBUG
-				const auto* config = g_engine->GetConfig();
-				// also handy to have dump of generated map
-				if (
-					!ec &&
-						config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
-						!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
-					) {
-					MTModule::Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-					SetLoaderText( "Saving dump" );
-					util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
-				}
-#endif
-
-				ASSERT( m_map, "map not set" );
-
-				NEW( m_response_map_data, response_map_data_t );
-
-				m_response_map_data->map_width = m_map->GetWidth();
-				m_response_map_data->map_height = m_map->GetHeight();
-
-				ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
-				m_response_map_data->terrain_texture = m_map->m_textures.terrain;
-
-				ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
-				m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
-
-				ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
-				m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
-
-				m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
-				m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
-
-				m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
-					for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
-						UpdateYields( GSE_CALL, tile );
+			{
+				const auto& slots = m_state->m_slots->GetSlots();
+				NEWV( slot_defines, FrontendRequest::slot_defines_t );
+				for ( const auto& slot : slots ) {
+					if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
+						continue;
 					}
-				});
-
-				m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
-				m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
-
-				if ( m_old_map ) {
-					MTModule::Log( "Destroying old map state" );
-					DELETE( m_old_map );
-					m_old_map = nullptr;
-				}
-
-				// notify server of successful initialization
-				m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
-				if ( m_state->m_connection ) {
-					m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
-				}
-
-				{
-					const auto factions = m_state->GetFM()->GetAll();
-					NEWV( faction_defines, FrontendRequest::faction_defines_t );
-					for ( const auto& faction : factions ) {
-						faction_defines->push_back( faction );
-					}
-					auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
-					fr.data.faction_define.factiondefs = faction_defines;
-					AddFrontendRequest( fr );
-				}
-
-				{
-					const auto& slots = m_state->m_slots->GetSlots();
-					NEWV( slot_defines, FrontendRequest::slot_defines_t );
-					for ( const auto& slot : slots ) {
-						if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
-							continue;
+					ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+					auto* player = slot.GetPlayer();
+					ASSERT( player, "slot player not set" );
+					slot_defines->push_back(
+						FrontendRequest::slot_define_t{
+							slot.GetIndex(),
+							player->GetFaction()->m_id
 						}
-						ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-						auto* player = slot.GetPlayer();
-						ASSERT( player, "slot player not set" );
-						slot_defines->push_back(
-							FrontendRequest::slot_define_t{
-								slot.GetIndex(),
-								player->GetFaction()->m_id
-							}
+					);
+				}
+				auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
+				fr.data.slot_define.slotdefs = slot_defines;
+				AddFrontendRequest( fr );
+			}
+
+			HideLoader();
+
+			auto* gc_space = m_state->m_gc_space;
+
+			m_game_state = GS_STARTING;
+
+			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+
+				if ( m_state->IsMaster() ) {
+					try {
+						m_state->TriggerObject(
+							this, "create_world", ARGS_F( this ) {
+								{
+									"game",
+									Wrap( GSE_CALL )
+								},
+							}; }
 						);
+						InitComplete( GSE_CALL );
 					}
-					auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
-					fr.data.slot_define.slotdefs = slot_defines;
-					AddFrontendRequest( fr );
+					catch ( const gse::Exception& e ) {
+						MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
+						InitFailed( e.what() );
+						return;
+					}
+					if ( m_game_state == GS_RUNNING ) {
+						GlobalAdvanceTurn( GSE_CALL );
+					}
+				}
+				else {
+					InitComplete( GSE_CALL );
 				}
 
-				HideLoader();
+				if ( m_game_state == GS_RUNNING ) {
+					CheckTurnComplete();
+				}
 
-				auto* gc_space = m_state->m_gc_space;
+			});
 
-				m_game_state = GS_STARTING;
+		}
+		else {
+			InitFailed( map::Map::GetErrorString( ec ) );
+		}
+	}
+	if ( m_state ) {
 
-				m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+		m_state->m_gc_space->Accumulate( this, [ this ]() {
 
-					if ( m_state->IsMaster() ) {
-						try {
-							m_state->TriggerObject(
-								this, "create_world", ARGS_F( this ) {
+			{
+				std::lock_guard guard( m_pending_event_responses_mutex );
+				for ( const auto& it : m_pending_event_responses ) {
+					std::lock_guard guard2( m_events_waiting_for_responses_mutex );
+					ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
+					const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
+					const auto* const event = event_data.event;
+					const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
+					if ( !it.is_accepted ) {
+						if ( was_event_applied ) {
+							// event was rejected, rollback
+							m_state->WithGSE(
+								this, [ this, event_data, event ]( GSE_CALLABLE ) {
+									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+									if ( event_data.rollback_data ) {
+										obj->Set( "applied", event_data.rollback_data, GSE_CALL );
+									}
+									const auto fargs = gse::value::function_arguments_t{ obj };
+									event::EventHandler* h = nullptr;
 									{
-										"game",
-										Wrap( GSE_CALL )
-									},
-								}; }
+										std::lock_guard guard( m_event_handlers_mutex );
+										const auto& it = m_event_handlers.find( event->GetEventName() );
+										if ( it != m_event_handlers.end() ) {
+											h = it->second;
+										}
+										else {
+											MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+										}
+									}
+									if ( h ) {
+										WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+											h->Rollback( GSE_CALL, fargs );
+										});
+									}
+								}
 							);
-							InitComplete( GSE_CALL );
-						}
-						catch ( const gse::Exception& e ) {
-							MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
-							InitFailed( e.what() );
-							return;
-						}
-						if ( m_game_state == GS_RUNNING ) {
-							GlobalAdvanceTurn( GSE_CALL );
 						}
 					}
 					else {
-						InitComplete( GSE_CALL );
-					}
-
-					if ( m_game_state == GS_RUNNING ) {
-						CheckTurnComplete();
-					}
-
-				});
-
-			}
-			else {
-				InitFailed( map::Map::GetErrorString( ec ) );
-			}
-		}
-		if ( m_state ) {
-
-			m_state->m_gc_space->Accumulate( this, [ this ]() {
-
-				{
-					std::lock_guard guard( m_pending_event_responses_mutex );
-					for ( const auto& it : m_pending_event_responses ) {
-						std::lock_guard guard2( m_events_waiting_for_responses_mutex );
-						ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
-						const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
-						const auto* const event = event_data.event;
-						const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
-						if ( !it.is_accepted ) {
-							if ( was_event_applied ) {
-								// event was rejected, rollback
-								m_state->WithGSE(
-									this, [ this, event_data, event ]( GSE_CALLABLE ) {
-										auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
-										if ( event_data.rollback_data ) {
-											obj->Set( "applied", event_data.rollback_data, GSE_CALL );
+						// event was accepted (and maybe resolved)
+						if ( !was_event_applied ) {
+							m_state->WithGSE(
+								this, [ this, it, event ]( GSE_CALLABLE ) {
+									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+									if ( it.resolved ) {
+										obj->Set( "resolved", it.resolved, GSE_CALL );
+									}
+									const auto fargs = gse::value::function_arguments_t{ obj };
+									event::EventHandler* h = nullptr;
+									{
+										std::lock_guard guard( m_event_handlers_mutex );
+										const auto& it2 = m_event_handlers.find( event->GetEventName() );
+										if ( it2 != m_event_handlers.end() ) {
+											h = it2->second;
 										}
-										const auto fargs = gse::value::function_arguments_t{ obj };
-										event::EventHandler* h = nullptr;
-										{
-											std::lock_guard guard( m_event_handlers_mutex );
-											const auto& it = m_event_handlers.find( event->GetEventName() );
-											if ( it != m_event_handlers.end() ) {
-												h = it->second;
-											}
-											else {
-												MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
-											}
-										}
-										if ( h ) {
-											WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
-												h->Rollback( GSE_CALL, fargs );
-											});
+										else {
+											MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
 										}
 									}
-								);
+									if ( h ) {
+										WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+											h->Apply( GSE_CALL, fargs );
+										});
+									}
+								}
+							);
+						}
+					}
+					m_events_waiting_for_responses.erase( it.event_id );
+				}
+				m_pending_event_responses.clear();
+			}
+
+			std::vector< event::Event* > events;
+			{
+				std::lock_guard guard( m_pending_events_mutex );
+				events = m_pending_events;
+				m_pending_events.clear();
+			}
+			if ( !events.empty() ) {
+				m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
+					const std::string* errptr = nullptr;
+					for ( const auto& event : events ) {
+#if defined(DEBUG) || defined(FASTDEBUG)
+						MTModule::Log( "Processing event: " + event->ToString() );
+#endif
+						auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+						const auto fargs = gse::value::function_arguments_t{ obj };
+						event::EventHandler* handler = nullptr;
+						{
+							std::lock_guard guard( m_event_handlers_mutex );
+							const auto& it = m_event_handlers.find( event->GetEventName() );
+							handler = it != m_event_handlers.end()
+								? it->second
+								: nullptr;
+						}
+						if ( handler ) {
+							errptr = handler->Validate( GSE_CALL, fargs );
+						}
+						else {
+							errptr = new std::string( "Unknown event: " + event->GetEventName() );
+						}
+						if ( !errptr ) {
+
+							const auto f_process = [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
+								auto* applied = handler->Apply( GSE_CALL, fargs );
+								if ( applied ) {
+									obj->Set( "applied", applied, GSE_CALL );
+								}
+								return applied;
+							};
+
+							if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
+								ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
+								// process event
+								gse::Value* resolved = nullptr;
+								if ( handler->HasResolve() ) {
+									resolved = handler->Resolve( GSE_CALL, fargs );
+									if ( resolved ) {
+										event->SetResolved( resolved );
+										obj->Set( "resolved", resolved, GSE_CALL );
+									}
+								}
+								if ( m_state->m_connection ) {
+									if ( event->GetCaller() != 0 ) {
+										// notify caller of acceptance
+										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true, resolved );
+									}
+									// broadcast to clients
+									ASSERT( m_state->m_connection->IsServer(), "master but not server" );
+									m_state->m_connection->SendGameEvent( event );
+								}
+								WithRW( f_process );
+							}
+							else { // multiplayer non-host
+								ASSERT( event->GetSource() != event::Event::ES_CLIENT, "got event from client to client" );
+								ASSERT( m_state->m_connection, "not master but no connection" );
+								bool process_now = false;
+								if ( handler->HasResolve() ) {
+									if ( event->GetSource() == event::Event::ES_LOCAL ) {
+										// just send to server and wait for resolution
+										ASSERT( !event->GetResolved(), "client event already resolved" );
+										process_now = false;
+									}
+									else {
+										// resolution came from server
+										auto* const resolved = event->GetResolved();
+										ASSERT( resolved, "server sent unresolved event" );
+										obj->Set( "resolved", resolved, GSE_CALL );
+										process_now = true;
+									}
+								}
+								else {
+									process_now = true;
+								}
+								gse::Value* rollback_data = nullptr;
+								if ( process_now ) {
+									WithRW( [ &f_process, &rollback_data ](){
+										rollback_data = f_process();
+									} );
+								}
+								if ( event->GetSource() == event::Event::ES_LOCAL ) {
+									std::lock_guard guard( m_events_waiting_for_responses_mutex );
+									// send to server and wait for response asynchonously
+									ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
+									m_events_waiting_for_responses.insert(
+										{
+											event->GetId(),
+											{
+												event,
+												rollback_data
+											}
+										}
+									);
+									m_state->m_connection->SendGameEvent( event );
+								}
 							}
 						}
 						else {
-							// event was accepted (and maybe resolved)
-							if ( !was_event_applied ) {
-								m_state->WithGSE(
-									this, [ this, it, event ]( GSE_CALLABLE ) {
-										auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
-										if ( it.resolved ) {
-											obj->Set( "resolved", it.resolved, GSE_CALL );
-										}
-										const auto fargs = gse::value::function_arguments_t{ obj };
-										event::EventHandler* h = nullptr;
-										{
-											std::lock_guard guard( m_event_handlers_mutex );
-											const auto& it2 = m_event_handlers.find( event->GetEventName() );
-											if ( it2 != m_event_handlers.end() ) {
-												h = it2->second;
-											}
-											else {
-												MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
-											}
-										}
-										if ( h ) {
-											WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
-												h->Apply( GSE_CALL, fargs );
-											});
-										}
-									}
-								);
+							MTModule::Log( "Event rejected: " + *errptr );
+							if ( m_state->m_connection && m_state->IsMaster() ) {
+								if ( event->GetCaller() != 0 ) {
+									// notify caller of rejection
+									m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false, nullptr );
+								}
 							}
+							delete ( errptr );
 						}
-						m_events_waiting_for_responses.erase( it.event_id );
 					}
-					m_pending_event_responses.clear();
-				}
-
-				std::vector< event::Event* > events;
-				{
-					std::lock_guard guard( m_pending_events_mutex );
-					events = m_pending_events;
-					m_pending_events.clear();
-				}
-				if ( !events.empty() ) {
-					m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
-						const std::string* errptr = nullptr;
-						for ( const auto& event : events ) {
-#if defined(DEBUG) || defined(FASTDEBUG)
-							MTModule::Log( "Processing event: " + event->ToString() );
-#endif
-							auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
-							const auto fargs = gse::value::function_arguments_t{ obj };
-							event::EventHandler* handler = nullptr;
-							{
-								std::lock_guard guard( m_event_handlers_mutex );
-								const auto& it = m_event_handlers.find( event->GetEventName() );
-								handler = it != m_event_handlers.end()
-									? it->second
-									: nullptr;
-							}
-							if ( handler ) {
-								errptr = handler->Validate( GSE_CALL, fargs );
-							}
-							else {
-								errptr = new std::string( "Unknown event: " + event->GetEventName() );
-							}
-							if ( !errptr ) {
-
-								const auto f_process = [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
-									auto* applied = handler->Apply( GSE_CALL, fargs );
-									if ( applied ) {
-										obj->Set( "applied", applied, GSE_CALL );
-									}
-									return applied;
-								};
-
-								if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
-									ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
-									// process event
-									gse::Value* resolved = nullptr;
-									if ( handler->HasResolve() ) {
-										resolved = handler->Resolve( GSE_CALL, fargs );
-										if ( resolved ) {
-											event->SetResolved( resolved );
-											obj->Set( "resolved", resolved, GSE_CALL );
-										}
-									}
-									if ( m_state->m_connection ) {
-										if ( event->GetCaller() != 0 ) {
-											// notify caller of acceptance
-											m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true, resolved );
-										}
-										// broadcast to clients
-										ASSERT( m_state->m_connection->IsServer(), "master but not server" );
-										m_state->m_connection->SendGameEvent( event );
-									}
-									WithRW( f_process );
-								}
-								else { // multiplayer non-host
-									ASSERT( event->GetSource() != event::Event::ES_CLIENT, "got event from client to client" );
-									ASSERT( m_state->m_connection, "not master but no connection" );
-									bool process_now = false;
-									if ( handler->HasResolve() ) {
-										if ( event->GetSource() == event::Event::ES_LOCAL ) {
-											// just send to server and wait for resolution
-											ASSERT( !event->GetResolved(), "client event already resolved" );
-											process_now = false;
-										}
-										else {
-											// resolution came from server
-											auto* const resolved = event->GetResolved();
-											ASSERT( resolved, "server sent unresolved event" );
-											obj->Set( "resolved", resolved, GSE_CALL );
-											process_now = true;
-										}
-									}
-									else {
-										process_now = true;
-									}
-									gse::Value* rollback_data = nullptr;
-									if ( process_now ) {
-										WithRW( [ &f_process, &rollback_data ](){
-											rollback_data = f_process();
-										} );
-									}
-									if ( event->GetSource() == event::Event::ES_LOCAL ) {
-										std::lock_guard guard( m_events_waiting_for_responses_mutex );
-										// send to server and wait for response asynchonously
-										ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
-										m_events_waiting_for_responses.insert(
-											{
-												event->GetId(),
-												{
-													event,
-													rollback_data
-												}
-											}
-										);
-										m_state->m_connection->SendGameEvent( event );
-									}
-								}
-							}
-							else {
-								MTModule::Log( "Event rejected: " + *errptr );
-								if ( m_state->m_connection && m_state->IsMaster() ) {
-									if ( event->GetCaller() != 0 ) {
-										// notify caller of rejection
-										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false, nullptr );
-									}
-								}
-								delete ( errptr );
-							}
-						}
-					});
-				}
-			});
-		}
-	}
-	catch ( const InvalidEvent& e ) {
-		MTModule::Log( (std::string)e.what() );
-		Quit( "Event validation error" ); // TODO: fix reason
+				});
+			}
+		});
 	}
 	if ( m_um ) {
 		m_um->PushUpdates();
@@ -821,6 +807,16 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_map",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_map ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Map not initialized" );
+				}
+				return m_map->Wrap( GSE_CALL, true );
+			} )
+		},
+		{
 			"register_event",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 2 );
@@ -833,23 +829,23 @@ WRAPIMPL_BEGIN( Game )
 				}
 				N_GETVALUE( def, 1, Object );
 				auto validate_it = def.find( "validate" );
-				if ( validate_it == def.end() || validate_it->second->type != gse::Value::T_CALLABLE ) {
+				if ( validate_it == def.end() || validate_it->second->type != gse::VT_CALLABLE ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide validate method" );
 				}
 				gse::value::Callable* resolve = nullptr;
 				auto resolve_it = def.find( "resolve" );
 				if ( resolve_it != def.end() ) {
-					if ( resolve_it->second->type != gse::Value::T_CALLABLE ) {
+					if ( resolve_it->second->type != gse::VT_CALLABLE ) {
 						GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide resolve method" );
 					}
 					resolve = (gse::value::Callable*)resolve_it->second;
 				}
 				auto apply_it = def.find( "apply" );
-				if ( apply_it == def.end() || apply_it->second->type != gse::Value::T_CALLABLE ) {
+				if ( apply_it == def.end() || apply_it->second->type != gse::VT_CALLABLE ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide apply method" );
 				}
 				auto rollback_it = def.find( "rollback" );
-				if ( rollback_it == def.end() || rollback_it->second->type != gse::Value::T_CALLABLE ) {
+				if ( rollback_it == def.end() || rollback_it->second->type != gse::VT_CALLABLE ) {
 					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide rollback method" );
 				}
 				{
@@ -969,6 +965,10 @@ void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects
 	}
 	if ( m_am ) {
 		GC_REACHABLE( m_am );
+	}
+
+	if ( m_map ) {
+		GC_REACHABLE( m_map );
 	}
 
 	GC_DEBUG_BEGIN( "events" );

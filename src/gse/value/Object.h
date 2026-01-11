@@ -29,7 +29,7 @@ public:
 	// internal use only for now
 	typedef std::string object_class_t;
 
-	static const type_t GetType() { return Value::T_OBJECT; }
+	static const value_type_t GetType() { return VT_OBJECT; }
 
 	typedef void (wrapsetter_t)( Wrappable*, const std::string&, Value* const, GSE_CALLABLE ); // ( obj, key, value, GSE_CALL )
 	Object( GSE_CALLABLE, object_properties_t initial_value = {}, const object_class_t object_class = "", Wrappable* wrapobj = nullptr, wrapsetter_t* wrapsetter = nullptr );

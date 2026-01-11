@@ -12,7 +12,7 @@ Listview::Listview( DOM_ARGS_T )
 
 	PROPERTY( "itemsize", gse::value::Int, 0, SetItemSize );
 	Property(
-		GSE_CALL, "scroll_type", gse::Value::T_STRING, nullptr, PF_NONE,
+		GSE_CALL, "scroll_type", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::String*)v )->value;
 			scroll_type_t st;

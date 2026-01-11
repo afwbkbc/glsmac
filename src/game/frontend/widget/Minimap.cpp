@@ -12,7 +12,7 @@ namespace frontend {
 namespace widget {
 
 Minimap::Minimap( const Game* const game, ui::UI* const ui )
-	: Widget( game, ui, ui::WT_MINIMAP, "minimap" ) {}
+	: Widget( game, ui, ui::WT_MINIMAP, "minimap", {} ) {}
 
 void Minimap::Register( ui::dom::Widget* const widget ) {
 	NEWV( mesh, types::mesh::Rectangle );

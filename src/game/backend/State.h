@@ -77,7 +77,7 @@ CLASS( State, gse::GCWrappable )
 
 	faction::FactionManager* GetFM() const;
 
-	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args );
+	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const gse::f_args_t& f_args );
 
 	WRAPDEFS_PTR( State )
 

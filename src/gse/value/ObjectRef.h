@@ -10,7 +10,7 @@ class Object;
 class ObjectRef : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_OBJECTREF; }
+	static const value_type_t GetType() { return VT_OBJECTREF; }
 
 	ObjectRef( gc::Space* const gc_space, value::Object* object, const std::string& key )
 		: Value( gc_space, GetType() )

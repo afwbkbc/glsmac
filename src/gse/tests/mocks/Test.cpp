@@ -32,14 +32,14 @@ void Test::AddMocks( gc::Space* const gc_space, context::GlobalContext* ctx, con
 					GSE_ERROR( EC.INVALID_CALL, "Expected 1 or 2 arguments to test.assert, found: " + std::to_string( arguments.size() ) );
 				}
 				const auto& condition = arguments.at( 0 );
-				if ( condition->type != Value::T_BOOL ) {
+				if ( condition->type != VT_BOOL ) {
 					GSE_ERROR( EC.INVALID_CALL, "Condition to test.assert is not boolean: " + condition->ToString() );
 				}
 				if ( !( (value::Bool*)condition )->value ) {
 					std::string reason = "";
 					if ( arguments.size() == 2 ) {
 						const auto& reasonv = arguments.at( 1 );
-						ASSERT( reasonv->type == Value::T_STRING, "test.assert reason is not string: " + reasonv->ToString() );
+						ASSERT( reasonv->type == VT_STRING, "test.assert reason is not string: " + reasonv->ToString() );
 						reason = ( (value::String*)reasonv )->value;
 					}
 					GSE_ERROR( "TestError", "Assertion failed: " + reason );

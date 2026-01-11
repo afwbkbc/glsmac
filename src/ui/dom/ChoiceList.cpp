@@ -140,11 +140,11 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 	size_t idx = 0;
 	size_t top = m_itempadding;
 	for ( const auto& item : items ) {
-		if ( item->type != gse::Value::T_ARRAY ) {
+		if ( item->type != gse::VT_ARRAY ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be value-label pairs, got " + item->GetTypeString() + ": " + item->ToString() );
 		}
 		const auto& kv = ( (gse::value::Array*)item )->value;
-		if ( kv.size() < 2 || kv.size() > 3 || kv.at( 0 )->type != gse::Value::T_STRING || kv.at( 1 )->type != gse::Value::T_STRING ) {
+		if ( kv.size() < 2 || kv.size() > 3 || kv.at( 0 )->type != gse::VT_STRING || kv.at( 1 )->type != gse::VT_STRING ) {
 			GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to be pairs of two strings (value and label) (and optional style object), got: " + item->ToString() );
 		}
 		const auto& k = ( (gse::value::String*)kv.at( 0 ) )->value;
@@ -165,7 +165,7 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 		ForwardProperty( GSE_CALL, "itemcolor", "color", element );
 		if ( kv.size() >= 3 ) {
 			const auto &c = kv.at(2);
-			if ( c->type != gse::Value::T_OBJECT || ( !((gse::value::Object*)c)->object_class.empty() ) ) {
+			if ( c->type != gse::VT_OBJECT || ( !((gse::value::Object*)c)->object_class.empty() ) ) {
 				GSE_ERROR( gse::EC.TYPE_ERROR, "Choicelist items are expected to have style object as third element, got: " + c->ToString() );
 			}
 			const auto* style = (gse::value::Object*)c;

@@ -39,10 +39,10 @@ Object::Object( DOM_ARGS_T )
 	, m_id( ++s_next_id )
 	, m_parent( parent )
 	, m_initial_properties( properties ) {
-	Property( GSE_CALL, "id", gse::Value::T_STRING );
+	Property( GSE_CALL, "id", gse::VT_STRING );
 
 	Property(
-		GSE_CALL, "class", gse::Value::T_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const value ) {
+		GSE_CALL, "class", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const value ) {
 			const auto names = util::String::Split( ( (gse::value::String*)value )->value, ' ' );
 			// check for duplicates
 			std::unordered_set< std::string > names_set = {};
@@ -58,7 +58,7 @@ Object::Object( DOM_ARGS_T )
 	Method( GSE_CALL, "addclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT( m_properties.at("class")->type == gse::Value::T_STRING, "class is not string" );
+		ASSERT( m_properties.at("class")->type == gse::VT_STRING, "class is not string" );
 		auto names = util::String::Split( ((gse::value::String*)m_properties.at("class"))->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) == names.end() ) {
 			names.push_back( name );
@@ -70,7 +70,7 @@ Object::Object( DOM_ARGS_T )
 	Method( GSE_CALL, "removeclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT( m_properties.at( "class" )->type == gse::Value::T_STRING, "class is not string" );
+		ASSERT( m_properties.at( "class" )->type == gse::VT_STRING, "class is not string" );
 		const auto names = util::String::Split( ( (gse::value::String*)m_properties.at( "class" ) )->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) != names.end() ) {
 			std::vector< std::string > names_new = {};
@@ -135,7 +135,7 @@ void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLA
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	if ( value && value->type != gse::Value::T_UNDEFINED ) {
+	if ( value && value->type != gse::VT_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_manual_properties, key, value );
 		SetProperty( GSE_CALL, &m_properties, key, value );
 	}
@@ -281,7 +281,7 @@ const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		if ( HasHandlers( event_type ) ) {
 			gse::value::object_properties_t event_data = {};
 			WrapEvent( GSE_CALL, event, event_data );
-			const auto result = Trigger( GSE_CALL, event_type, ARGS( event_data ), gse::Value::T_BOOL );
+			const auto result = Trigger( GSE_CALL, event_type, ARGS( event_data ), gse::VT_BOOL );
 			return ( (gse::value::Bool*)result )->value;
 		}
 	}
@@ -334,7 +334,7 @@ void Object::ClearActors() {
 	m_actors.clear();
 }
 
-void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
+void Object::Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
 	ASSERT( !m_is_destroyed, "Property: object is destroyed" );
 	ASSERT( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
 	ASSERT( m_property_defs.find( name ) == m_property_defs.end(), "property def '" + name + "' already exists" );
@@ -372,8 +372,8 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::Value::
 }
 
 void Object::Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable ) {
-	ASSERT( callable->type == gse::Value::T_CALLABLE, "method is not callable: " + callable->ToString() );
-	Property( GSE_CALL, name, gse::Value::T_CALLABLE, callable, PF_READONLY );
+	ASSERT( callable->type == gse::VT_CALLABLE, "method is not callable: " + callable->ToString() );
+	Property( GSE_CALL, name, gse::VT_CALLABLE, callable, PF_READONLY );
 }
 
 void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
@@ -442,7 +442,7 @@ void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value*
 	const auto& def = m_property_defs.find( key );
 	ASSERT( def != m_property_defs.end(), "property def not found" );
 	const auto t1 = def->second.type;
-	if ( t1 != gse::Value::T_NOTHING ) {
+	if ( t1 != gse::VT_NOTHING ) {
 		const auto t2 = value->type;
 		if ( t1 != t2 ) {
 			GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
@@ -595,7 +595,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key ) {
 	ASSERT( !m_is_destroyed, "UnsetProperty: object is destroyed" );
 	const auto& it = properties->find( key );
-	if ( it != properties->end() && it->second->type != gse::Value::T_UNDEFINED ) {
+	if ( it != properties->end() && it->second->type != gse::VT_UNDEFINED ) {
 		if ( properties == &m_properties && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
 				const auto& pp = c->GetProperties();

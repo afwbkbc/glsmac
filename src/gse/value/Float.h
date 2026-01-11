@@ -6,7 +6,7 @@ namespace value {
 class Float : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_FLOAT; }
+	static const value_type_t GetType() { return VT_FLOAT; }
 
 	Float( gc::Space* const gc_space, const float initial_value )
 		: Value( gc_space, GetType() )

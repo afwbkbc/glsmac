@@ -46,6 +46,7 @@ return {
 
 		const pp = {
 			game: p.game,
+			map: p.map,
 			ui: p.ui,
 			el: el,
 			sections: {},

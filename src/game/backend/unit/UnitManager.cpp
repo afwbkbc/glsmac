@@ -287,7 +287,7 @@ WRAPIMPL_BEGIN( UnitManager )
 				}
 				unit::MoraleSet::morale_values_t values = {};
 				for ( const auto& v : arr ) {
-					if ( v->type != gse::Value::T_OBJECT ) {
+					if ( v->type != gse::VT_OBJECT ) {
 						GSE_ERROR( gse::EC.INVALID_CALL, "Moraleset elements must be objects");
 					}
 					const auto* obj = (gse::value::Object*)v;
@@ -485,7 +485,7 @@ WRAPIMPL_BEGIN( UnitManager )
 				m_game->CheckRW( GSE_CALL );
 
 				N_EXPECT_ARGS( 1 );
-				if ( arguments.at( 0 )->type == gse::Value::T_INT ) {
+				if ( arguments.at( 0 )->type == gse::VT_INT ) {
 					N_GETVALUE( unit_id, 0, Int );
 					DespawnUnit( GSE_CALL, unit_id );
 				}
@@ -682,10 +682,10 @@ const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker
 		},
 	}; } );
 	switch ( result->type ) {
-		case gse::Value::T_NULL:
-		case gse::Value::T_UNDEFINED:
+		case gse::VT_NULL:
+		case gse::VT_UNDEFINED:
 			return nullptr; // no errors
-		case gse::Value::T_STRING:
+		case gse::VT_STRING:
 			return new std::string( ( (gse::value::String*)result )->value ); // error
 		default:
 			THROW( "unexpected validation result type: " + result->GetTypeString() );

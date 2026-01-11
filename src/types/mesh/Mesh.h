@@ -46,7 +46,7 @@ CLASS( Mesh, Serializable )
 	surface_id_t AddSurface( const surface_t& surface );
 
 	void SetVertexCoord( const index_t index, const types::Vec3& coord );
-	void SetVertexCoord( const index_t index, const Vec2 <coord_t>& coord );
+	void SetVertexCoord( const index_t index, const Vec2< coord_t >& coord );
 	void SetSurface( const index_t index, const surface_t& surface );
 
 	virtual void Finalize();

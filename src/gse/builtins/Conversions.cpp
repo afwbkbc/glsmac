@@ -53,11 +53,11 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 		}
 		int64_t value = 0;
 		switch ( v->type ) {
-			case Value::T_INT: {
+			case VT_INT: {
 				value = ( (value::Int*)v )->value;
 				break;
 			}
-			case Value::T_STRING: {
+			case VT_STRING: {
 				try {
 					value = std::stol( ((value::String*)v)->value );
 				}
@@ -80,15 +80,15 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 		}
 		float value = 0.0f;
 		switch ( v->type ) {
-			case Value::T_FLOAT: {
+			case VT_FLOAT: {
 				value = ( (value::Float*)v)->value;
 				break;
 			}
-			case Value::T_INT: {
+			case VT_INT: {
 				value = ( (value::Int*)v)->value;
 				break;
 			}
-			case Value::T_STRING: {
+			case VT_STRING: {
 				try {
 					value = std::stof( ((value::String*)v)->value );
 				}
@@ -110,8 +110,8 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 		};
 
 		switch ( arguments.at( 0 )->type ) {
-			case Value::T_FLOAT: CONVERT_COLOR( Float, types::Color, 0.0f, 1.0f );
-			case Value::T_INT: CONVERT_COLOR( Int, types::Color::FromRGBA, 0, 255 );
+			case VT_FLOAT: CONVERT_COLOR( Float, types::Color, 0.0f, 1.0f );
+			case VT_INT: CONVERT_COLOR( Int, types::Color::FromRGBA, 0, 255 );
 			default:
 				f_err();
 		}

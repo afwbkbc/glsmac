@@ -44,7 +44,7 @@ void Array::Set( const size_t index, Value* const new_value ) {
 
 const void Array::SetSubArray( const std::optional< size_t > from, const std::optional< size_t > to, Value* const new_subarray ) {
 	ValidateFromTo( from, to );
-	ASSERT( new_subarray->type == Value::T_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
+	ASSERT( new_subarray->type == VT_ARRAY, "operand of range assignment is not array: " + new_subarray->ToString() );
 	auto* v = (value::Array*)new_subarray;
 	const auto dest_begin = from.has_value()
 		? value.begin() + from.value()

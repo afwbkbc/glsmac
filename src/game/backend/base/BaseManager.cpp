@@ -261,7 +261,7 @@ WRAPIMPL_BEGIN( BaseManager )
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {
-						if ( v->type != gse::Value::T_OBJECT ) {
+						if ( v->type != gse::VT_OBJECT ) {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Pop render elements must be objects" );
 						}
 						const auto* obj = (gse::value::Object*)v;
@@ -357,7 +357,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				N_EXPECT_ARGS( 1 );
 
-				if ( arguments.at( 0 )->type == gse::Value::T_INT ) {
+				if ( arguments.at( 0 )->type == gse::VT_INT ) {
 					N_GETVALUE( base_id, 0, Int );
 					DespawnBase( GSE_CALL, base_id );
 				}

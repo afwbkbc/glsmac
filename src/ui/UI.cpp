@@ -133,7 +133,7 @@ WRAPIMPL_BEGIN( UI )
 							const gse::value::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;
 							if ( arguments.size() == 2 ) {
-								if ( arguments.at(1)->type == gse::Value::T_STRING ) {
+								if ( arguments.at(1)->type == gse::VT_STRING ) {
 									N_GETVALUE( s, 1, String );
 									parent_class = &s;
 								}
@@ -460,8 +460,11 @@ void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value:
 			if ( data_it2 == data_it->second.data_config.end() ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data: " + d.first );
 			}
-			if ( data_it2->second != d.second->type ) {
-				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be " + gse::Value::GetTypeStringStatic( data_it2->second ) + ", got " + d.second->GetTypeString() );
+			if ( data_it2->second.type != d.second->type ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be " + gse::Value::GetTypeStringStatic( data_it2->second.type ) + ", got " + d.second->GetTypeString() );
+			}
+			if ( data_it2->second.type == gse::VT_OBJECT && data_it2->second.object_class != ((gse::value::Object*)d.second)->object_class ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be of class " + data_it2->second.object_class + ", got " + ((gse::value::Object*)d.second)->object_class );
 			}
 		}
 		for ( const auto& d : data_it->second.data_config ) {

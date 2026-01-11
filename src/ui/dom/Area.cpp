@@ -28,10 +28,10 @@ Area::Area( DOM_ARGS_T )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::Value::_type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
+        GSE_CALL, _key, gse::_type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
 #define GEOMPROP( _key, _method ) \
-    GEOMSETTER( _key, T_INT ) { \
+    GEOMSETTER( _key, VT_INT ) { \
         m_geometry->_method( ( (gse::value::Int*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \

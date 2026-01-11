@@ -153,7 +153,7 @@ void Class::AddObjectModifier( GSE_CALLABLE, dom::Object* object, const class_mo
 				}
 				const auto& props = m_subclasses.at( *it )->m_properties;
 				const auto& it_p = props.find( p.first );
-				if ( it_p != props.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+				if ( it_p != props.end() && it_p->second->type != gse::VT_UNDEFINED ) {
 					v = it_p->second;
 					break;
 				}
@@ -180,14 +180,14 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 			for ( auto it = modifiers.rbegin() ; it != modifiers.rend() ; it++ ) {
 				const auto& props = m_subclasses.at( *it )->m_properties;
 				const auto& it_p = props.find( p.first );
-				if ( it_p != props.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+				if ( it_p != props.end() && it_p->second->type != gse::VT_UNDEFINED ) {
 					v = it_p->second;
 					break;
 				}
 			}
 			if ( !v ) {
 				const auto& it_p = m_properties.find( p.first );
-				if ( it_p != m_properties.end() && it_p->second->type != gse::Value::T_UNDEFINED ) {
+				if ( it_p != m_properties.end() && it_p->second->type != gse::VT_UNDEFINED ) {
 					v = it_p->second;
 				}
 			}
@@ -229,7 +229,7 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 				std::vector< std::string > names = {};
 				names.reserve( properties.size() );
 				for ( const auto& v : properties ) {
-					if ( v->type != gse::Value::T_STRING ) {
+					if ( v->type != gse::VT_STRING ) {
 						GSE_ERROR( gse::EC.UI_ERROR, "Expected array of property names, got: " + arguments.at( 0 )->ToString() );
 					}
 					names.push_back( ((gse::value::String*)v)->value );
@@ -315,7 +315,7 @@ void Class::SetProperty( GSE_CALLABLE, const std::string& name, gse::Value* valu
 		const auto& it = s_name_to_modifier.find( name );
 		if ( it != s_name_to_modifier.end() ) {
 			ASSERT( m_subclasses.find( it->second ) != m_subclasses.end(), "subclass not found" );
-			if ( value->type != gse::Value::T_OBJECT ) {
+			if ( value->type != gse::VT_OBJECT ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Class " + name + " definition must be Object, found " + value->GetTypeString() + ": " + value->ToString() );
 			}
 			const auto& cls = m_subclasses.at( it->second );

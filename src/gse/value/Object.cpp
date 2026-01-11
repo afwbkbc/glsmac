@@ -52,7 +52,7 @@ Value* const Object::Get( const object_key_t& key ) {
 void Object::Assign( const object_key_t& key, Value* const new_value, const std::function< void() >& f_on_set ) {
 	CHECKACCUM( m_gc_space );
 
-	const bool has_value = new_value && new_value->type != T_UNDEFINED;
+	const bool has_value = new_value && new_value->type != VT_UNDEFINED;
 	const auto it = m_value.find( key );
 	if (
 		( has_value && ( it == m_value.end() || new_value != it->second ) ) ||
@@ -88,7 +88,7 @@ void Object::ValidatePrimitivity( GSE_CALLABLE, const std::string& prefix ) cons
 		GSE_ERROR( gse::EC.GAME_ERROR, "Unexpected non-primitive object at " + prefix + " : " + object_class );
 	}
 	for ( const auto& v : m_value ) {
-		if ( v.second->type == T_OBJECT ) {
+		if ( v.second->type == VT_OBJECT ) {
 			( (Object*)v.second )->ValidatePrimitivity( GSE_CALL, prefix + "." + v.first );
 		}
 	}
@@ -102,7 +102,7 @@ Value* const Object::GetRef( const object_key_t& key ) {
 void Object::Unlink() {
 	wrapobj = nullptr;
 	wrapsetter = nullptr;
-	type = T_UNDEFINED; // make sure all corresponding variables are inaccessible in scripts
+	type = VT_UNDEFINED; // make sure all corresponding variables are inaccessible in scripts
 }
 
 void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {

@@ -274,11 +274,6 @@ struct MT_Response {
 
 typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
-class InvalidEvent : public types::Exception {
-public:
-	InvalidEvent( const std::string& reason, const event::Event* event );
-};
-
 CLASS2( Game, MTModule, gse::GCWrappable )
 
 	Game();

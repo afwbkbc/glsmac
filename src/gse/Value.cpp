@@ -69,37 +69,37 @@ static const std::unordered_map< value::Object::object_class_t, custom_deseriali
 
 Value::~Value() {}
 
-const std::string& Value::GetTypeStringStatic( const type_t type ) {
+const std::string& Value::GetTypeStringStatic( const value_type_t type ) {
 	switch ( type ) {
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return s_t_undefined;
-		case T_NULL:
+		case VT_NULL:
 			return s_t_null;
-		case T_BOOL:
+		case VT_BOOL:
 			return s_t_bool;
-		case T_INT:
+		case VT_INT:
 			return s_t_int;
-		case T_FLOAT:
+		case VT_FLOAT:
 			return s_t_float;
-		case T_STRING:
+		case VT_STRING:
 			return s_t_string;
-		case T_ARRAY:
+		case VT_ARRAY:
 			return s_t_array;
-		case T_OBJECT:
+		case VT_OBJECT:
 			return s_t_object;
-		case T_CALLABLE:
+		case VT_CALLABLE:
 			return s_t_callable;
-		case T_ARRAYREF:
+		case VT_ARRAYREF:
 			return s_t_arrayref;
-		case T_ARRAYRANGEREF:
+		case VT_ARRAYRANGEREF:
 			return s_t_arrayrangeref;
-		case T_OBJECTREF:
+		case VT_OBJECTREF:
 			return s_t_objectref;
-		case T_VALUEREF:
+		case VT_VALUEREF:
 			return s_t_valueref;
-		case T_RANGE:
+		case VT_RANGE:
 			return s_t_range;
-		case T_LOOPCONTROL:
+		case VT_LOOPCONTROL:
 			return s_t_loopcontrol;
 		default:
 			return s_t_unknown;
@@ -112,21 +112,21 @@ const std::string& Value::GetTypeString() const {
 
 const std::string Value::ToString() const {
 	switch ( type ) {
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return "undefined";
-		case T_NULL:
+		case VT_NULL:
 			return "null";
-		case T_BOOL:
+		case VT_BOOL:
 			return ( (value::Bool*)this )->value
 				? "true"
 				: "false";
-		case T_INT:
+		case VT_INT:
 			return std::to_string( ( (value::Int*)this )->value );
-		case T_FLOAT:
+		case VT_FLOAT:
 			return util::String::FloatToString( ( (value::Float*)this )->value );
-		case T_STRING:
+		case VT_STRING:
 			return ( (value::String*)this )->value;
-		case T_ARRAY: {
+		case VT_ARRAY: {
 			std::string str = "";
 			str.append( "[ " );
 			bool first = true;
@@ -142,7 +142,7 @@ const std::string Value::ToString() const {
 			str.append( " ]" );
 			return str;
 		}
-		case T_OBJECT: {
+		case VT_OBJECT: {
 			const auto* obj = (value::Object*)this;
 			std::string str = "";
 			str.append( obj->object_class + "{ " );
@@ -159,25 +159,25 @@ const std::string Value::ToString() const {
 			str.append( " }" );
 			return str;
 		}
-		case T_CALLABLE:
+		case VT_CALLABLE:
 			return "()";
-		case T_ARRAYREF: {
+		case VT_ARRAYREF: {
 			const auto* that = (value::ArrayRef*)this;
 			return that->array->Get( that->index )->ToString();
 		}
-		case T_ARRAYRANGEREF: {
+		case VT_ARRAYRANGEREF: {
 			const auto* that = (value::ArrayRangeRef*)this;
 			return that->array->GetSubArray( that->from, that->to )->ToString();
 		}
-		case T_OBJECTREF: {
+		case VT_OBJECTREF: {
 			const auto* that = (value::ObjectRef*)this;
 			return that->object->Get( that->key )->ToString();
 		}
-		case T_VALUEREF: {
+		case VT_VALUEREF: {
 			const auto* that = (value::ValueRef*)this;
 			return that->target->ToString();
 		}
-		case T_RANGE: {
+		case VT_RANGE: {
 			const auto* that = (value::Range*)this;
 			return "[" + (
 				that->from
@@ -189,7 +189,7 @@ const std::string Value::ToString() const {
 					: ""
 			) + "]";
 		}
-		case T_LOOPCONTROL: {
+		case VT_LOOPCONTROL: {
 			switch ( ( (value::LoopControl*)this )->value ) {
 				case program::LCT_BREAK:
 					return "break";
@@ -206,22 +206,22 @@ const std::string Value::ToString() const {
 
 const std::string Value::Dump() const {
 	switch ( type ) {
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return "undefined{}";
-		case T_NULL:
+		case VT_NULL:
 			return "null{}";
-		case T_BOOL:
+		case VT_BOOL:
 			return "bool{" + (std::string)( ( (value::Bool*)this )->value
 				? "true"
 				: "false"
 			) + "}";
-		case T_INT:
+		case VT_INT:
 			return "int{" + std::to_string( ( (value::Int*)this )->value ) + "}";
-		case T_FLOAT:
+		case VT_FLOAT:
 			return "float{" + std::to_string( ( (value::Float*)this )->value ) + "}";
-		case T_STRING:
+		case VT_STRING:
 			return "string{" + ( (value::String*)this )->value + "}";
-		case T_ARRAY: {
+		case VT_ARRAY: {
 			std::string str = "";
 			str.append( "array{" );
 			bool first = true;
@@ -237,7 +237,7 @@ const std::string Value::Dump() const {
 			str.append( "}" );
 			return str;
 		}
-		case T_OBJECT: {
+		case VT_OBJECT: {
 			const auto* obj = (value::Object*)this;
 			std::string str = "";
 			str.append( "object(" + obj->object_class + "){" );
@@ -254,13 +254,13 @@ const std::string Value::Dump() const {
 			str.append( "}" );
 			return str;
 		}
-		case T_CALLABLE:
+		case VT_CALLABLE:
 			return "callable{}"; // TODO
-		case T_ARRAYREF: {
+		case VT_ARRAYREF: {
 			const auto* that = (value::ArrayRef*)this;
 			return "arrayref{" + std::to_string( (ptr_int_t)that->array ) + "," + std::to_string( that->index ) + +"}";
 		}
-		case T_ARRAYRANGEREF: {
+		case VT_ARRAYRANGEREF: {
 			const auto* that = (value::ArrayRangeRef*)this;
 			return "arrayrangeref{" + std::to_string( (ptr_int_t)that->array ) + "," + (
 				that->from.has_value()
@@ -272,15 +272,15 @@ const std::string Value::Dump() const {
 					: ""
 			) + +"}";
 		}
-		case T_OBJECTREF: {
+		case VT_OBJECTREF: {
 			const auto* that = (value::ObjectRef*)this;
 			return "objectref{" + std::to_string( (ptr_int_t)that->object ) + "," + that->key + "}";
 		}
-		case T_VALUEREF: {
+		case VT_VALUEREF: {
 			const auto* that = (value::ValueRef*)this;
 			return "valueref{" + std::to_string( (ptr_int_t)that->target ) + "}";
 		}
-		case T_RANGE: {
+		case VT_RANGE: {
 			const auto* that = (value::Range*)this;
 			return "range{" + (
 				that->from
@@ -292,7 +292,7 @@ const std::string Value::Dump() const {
 					: ""
 			) + "}";
 		}
-		case T_LOOPCONTROL: {
+		case VT_LOOPCONTROL: {
 			return "loopcontrol{" + ToString() + "}";
 		}
 		default:
@@ -303,18 +303,18 @@ const std::string Value::Dump() const {
 Value* const Value::Deref() {
 	CHECKACCUM( m_gc_space );
 	switch ( type ) {
-		case T_ARRAYREF: {
+		case VT_ARRAYREF: {
 			const auto* that = (value::ArrayRef*)this;
 			return that->array->Get( that->index );
 		}
-		case T_ARRAYRANGEREF: {
+		case VT_ARRAYRANGEREF: {
 			THROW( "deref of array range refs not supported here" );
 		}
-		case T_OBJECTREF: {
+		case VT_OBJECTREF: {
 			const auto* that = (value::ObjectRef*)this;
 			return that->object->Get( that->key );
 		}
-		case T_VALUEREF: {
+		case VT_VALUEREF: {
 			const auto* that = (value::ValueRef*)this;
 			return that->target;
 		}
@@ -329,13 +329,13 @@ Value* const Value::Clone() {
 }
 
 #define DEFAULT_COMPARE( _op ) \
-          case T_BOOL: \
+          case VT_BOOL: \
                 return ( (value::Bool*)this )->value _op ( (value::Bool*)&other )->value; \
-          case T_INT: \
+          case VT_INT: \
                 return ( (value::Int*)this )->value _op ( (value::Int*)&other )->value; \
-          case T_FLOAT: \
+          case VT_FLOAT: \
                 return ( (value::Float*)this )->value _op ( (value::Float*)&other )->value; \
-          case T_STRING: \
+          case VT_STRING: \
                 return ( (value::String*)this )->value _op ( (value::String*)&other )->value; \
           default: \
                 THROW( "operator " #_op " not implemented for type " + GetTypeString() );
@@ -344,9 +344,9 @@ Value* const Value::Clone() {
           THROW( "can't compare type " + GetTypeStringStatic( type ) + " to type " + GetTypeStringStatic( other.type ) + " using operator " #_op ); \
      } \
      switch ( type ) { \
-          case T_UNDEFINED: \
+          case VT_UNDEFINED: \
                 return false; \
-          case T_NULL: \
+          case VT_NULL: \
                 return false; \
           DEFAULT_COMPARE( _op ) \
      }
@@ -356,11 +356,11 @@ const bool Value::operator==( const Value& other ) const {
 		return false;
 	}
 	switch ( type ) {
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return true;
-		case T_NULL:
+		case VT_NULL:
 			return true;
-		case T_ARRAY: {
+		case VT_ARRAY: {
 			const auto& a = ( (const value::Array*)this )->value;
 			const auto& b = ( (const value::Array*)&other )->value;
 			if ( a.size() != b.size() ) {
@@ -375,7 +375,7 @@ const bool Value::operator==( const Value& other ) const {
 				return true;
 			}
 		}
-		case T_OBJECT: {
+		case VT_OBJECT: {
 			const auto* obj_a = (const value::Object*)this;
 			const auto* obj_b = (const value::Object*)&other;
 			if ( obj_a->object_class != obj_b->object_class ) {
@@ -400,7 +400,7 @@ const bool Value::operator==( const Value& other ) const {
 			}
 			return true;
 		}
-		case T_CALLABLE: {
+		case VT_CALLABLE: {
 			const auto* obj_a = (const value::Callable*)this;
 			const auto* obj_b = (const value::Callable*)&other;
 			return obj_a == obj_b;
@@ -437,19 +437,19 @@ Value* const Value::New( const Value* value ) {
 	ASSERT( gc_space, "value gc space is null" );
 	CHECKACCUM( gc_space );
 	switch ( type ) {
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return VALUE( value::Undefined );
-		case T_NULL:
+		case VT_NULL:
 			return VALUE( value::Null );
-		case T_BOOL:
+		case VT_BOOL:
 			return VALUE( value::Bool, , ( (value::Bool*)value )->value );
-		case T_INT:
+		case VT_INT:
 			return VALUE( value::Int, , ( (value::Int*)value )->value );
-		case T_FLOAT:
+		case VT_FLOAT:
 			return VALUE( value::Float, , ( (value::Float*)value )->value );
-		case T_STRING:
+		case VT_STRING:
 			return VALUE( value::String, , ( (value::String*)value )->value );
-		case T_ARRAY: {
+		case VT_ARRAY: {
 			value::array_elements_t elements = {};
 			const auto* arr = (value::Array*)value;
 			for ( const auto& it : arr->value ) {
@@ -457,7 +457,7 @@ Value* const Value::New( const Value* value ) {
 			}
 			return VALUE( value::Array, , elements );
 		}
-		case T_OBJECT: {
+		case VT_OBJECT: {
 			value::object_properties_t properties = {};
 			const auto* obj = (value::Object*)value;
 			for ( const auto& it : obj->value ) {
@@ -466,18 +466,18 @@ Value* const Value::New( const Value* value ) {
 			auto ep = obj->m_ep;
 			return VALUE( value::Object, , (context::Context*)obj->m_ctx, obj->m_si, ep, properties, obj->object_class, obj->wrapobj, obj->wrapsetter );
 		}
-		case T_CALLABLE:
+		case VT_CALLABLE:
 			return this; // ?????
-		case T_ARRAYREF:
-		case T_ARRAYRANGEREF:
-		case T_OBJECTREF:
-		case T_VALUEREF: {
+		case VT_ARRAYREF:
+		case VT_ARRAYRANGEREF:
+		case VT_OBJECTREF:
+		case VT_VALUEREF: {
 			// no need to keep ref to old value if it's a copy
 			return Deref();
 		}
-		case T_RANGE:
+		case VT_RANGE:
 			THROW( "ranges are not supposed to be cloned" );
-		case T_LOOPCONTROL:
+		case VT_LOOPCONTROL:
 			THROW( "loop controls are not supposed to be cloned" );
 		default: {
 			THROW( "unsupported value type: " + ToString() );
@@ -489,31 +489,31 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 	buf->WriteInt(
 		value
 			? value->type
-			: T_NULLPTR
+			: VT_NULLPTR
 	);
 	if ( value ) {
 		switch ( value->type ) {
-			case T_UNDEFINED:
+			case VT_UNDEFINED:
 				break;
-			case T_NULL:
+			case VT_NULL:
 				break;
-			case T_BOOL: {
+			case VT_BOOL: {
 				buf->WriteBool( ( (value::Bool*)value )->value );
 				break;
 			}
-			case T_INT: {
+			case VT_INT: {
 				buf->WriteInt( ( (value::Int*)value )->value );
 				break;
 			}
-			case T_FLOAT: {
+			case VT_FLOAT: {
 				buf->WriteFloat( ( (value::Float*)value )->value );
 				break;
 			}
-			case T_STRING: {
+			case VT_STRING: {
 				buf->WriteString( ( (value::String*)value )->value );
 				break;
 			}
-			case T_ARRAY: {
+			case VT_ARRAY: {
 				const auto& elements = ( (value::Array*)value )->value;
 				buf->WriteInt( elements.size() );
 				for ( const auto& e : elements ) {
@@ -521,7 +521,7 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 				}
 				break;
 			}
-			case T_OBJECT: {
+			case VT_OBJECT: {
 				const auto* obj = (value::Object*)value;
 				buf->WriteString( obj->object_class );
 				if ( obj->object_class.empty() ) {
@@ -549,23 +549,23 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 }
 
 Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game* const game ) {
-	type_t type = (type_t)buf->ReadInt();
+	auto type = (value_type_t)buf->ReadInt();
 	switch ( type ) {
-		case T_NULLPTR:
+		case VT_NULLPTR:
 			return nullptr;
-		case T_UNDEFINED:
+		case VT_UNDEFINED:
 			return VALUE( value::Undefined );
-		case T_NULL:
+		case VT_NULL:
 			return VALUE( value::Null );
-		case T_BOOL:
+		case VT_BOOL:
 			return VALUE( value::Bool, , buf->ReadBool() );
-		case T_INT:
+		case VT_INT:
 			return VALUE( value::Int, , buf->ReadInt() );
-		case T_FLOAT:
+		case VT_FLOAT:
 			return VALUE( value::Float, , buf->ReadFloat() );
-		case T_STRING:
+		case VT_STRING:
 			return VALUE( value::String, , buf->ReadString() );
-		case T_ARRAY: {
+		case VT_ARRAY: {
 			value::array_elements_t elements = {};
 			const auto size = buf->ReadInt();
 			elements.reserve( size );
@@ -574,7 +574,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 			}
 			return VALUE( value::Array, , elements );
 		}
-		case T_OBJECT: {
+		case VT_OBJECT: {
 			const auto object_class = buf->ReadString();
 			if ( object_class.empty() ) {
 				value::object_properties_t properties = {};
@@ -602,7 +602,7 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 	}
 }
 
-Value::Value( gc::Space* const gc_space, const type_t type )
+Value::Value( gc::Space* const gc_space, const value_type_t type )
 	: gc::Object( gc_space )
 	, type( type )
 	, m_gc_space( gc_space ) {}

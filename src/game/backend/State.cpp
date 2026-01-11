@@ -217,7 +217,7 @@ faction::FactionManager* State::GetFM() const {
 	return m_fm;
 }
 
-gse::Value* const State::TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
+gse::Value* const State::TriggerObject( gse::GCWrappable* object, const std::string& event, const gse::f_args_t& f_args ) {
 	CHECKACCUM( m_gc_space );
 	if ( m_glsmac ) {
 		// new ui

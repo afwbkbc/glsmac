@@ -8,7 +8,7 @@ namespace value {
 class Bool : public Value {
 public:
 
-	static const type_t GetType() { return Value::T_BOOL; }
+	static const value_type_t GetType() { return VT_BOOL; }
 
 	Bool( gc::Space* const gc_space, const bool initial_value )
 		: Value( gc_space, GetType() )

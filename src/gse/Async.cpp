@@ -31,7 +31,7 @@ void Async::Iterate( ExecutionPointer& ep ) {
 static Async::timer_id_t s_next_id = 0;
 
 const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_CALLABLE_NOGC ) {
-	ASSERT( f->type == Value::T_CALLABLE, "invalid callable type: " + f->GetTypeString() );
+	ASSERT( f->type == VT_CALLABLE, "invalid callable type: " + f->GetTypeString() );
 	if ( s_next_id == SIZE_MAX - 1 ) {
 		s_next_id = 0;
 	}
@@ -93,7 +93,7 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 			const auto sleep_for = it->first > now
 				? it->first - now
 				: 0;
-			
+
 			//Log( "Waiting for " + std::to_string( sleep_for ) + "ms" );
 			if ( sleep_for > 0 ) {
 				std::this_thread::sleep_for( std::chrono::milliseconds( sleep_for ) );
@@ -105,9 +105,9 @@ void Async::ProcessAndExit( ExecutionPointer& ep ) {
 
 void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	gc::Object::GetReachableObjects( reachable_objects );
-	
+
 	GC_DEBUG_BEGIN( "Async" );
-	
+
 	// timer callables are reachable
 	GC_DEBUG_BEGIN( "timer_callables" );
 	for ( const auto& timers : m_timers ) {
@@ -117,7 +117,7 @@ void Async::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_ob
 		}
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_END();
 }
 
@@ -132,38 +132,38 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 
 void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
 	std::lock_guard guard( m_process_timers_mutex );
-	
+
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
-	
+
 	for ( const auto& it2 : it->second ) {
 		const auto& timer = it2.second;
-		
+
 		auto* ctx = timer.ctx;
 		const auto f = timer.callable;
 		const auto si = timer.si;
-		
+
 		size_t ms = 0;
 		bool repeat = false;
 		m_gc_space->Accumulate(
 			this,
 			[ this, &ctx, &ep, &si, &f, &timer, &repeat, &ms ]() {
-				
+
 				const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
-				
+
 				const auto& r = result;
 				if ( r ) {
 					switch ( r->type ) {
-						case Value::T_UNDEFINED:
-						case Value::T_NULL:
+						case VT_UNDEFINED:
+						case VT_NULL:
 							break;
-						case Value::T_BOOL: {
+						case VT_BOOL: {
 							if ( ( (value::Bool*)r )->value ) {
 								repeat = true;
 								ms = timer.ms;
 							}
 							break;
 						}
-						case Value::T_INT: {
+						case VT_INT: {
 							ms = ( (value::Int*)r )->value;
 							ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
 							repeat = true;
@@ -175,7 +175,7 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 				}
 			}
 		);
-		
+
 		if ( repeat ) {
 			timers_new[ util::Time::Now() + ms ].insert(
 				{
@@ -192,7 +192,7 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 		ASSERT( m_timers_ms.find( it2.first ) != m_timers_ms.end(), "related timers_ms entry not found" );
 		m_timers_ms.erase( it2.first );
 	}
-	
+
 	{
 		m_timers.erase( it );
 		for ( const auto& it_new : timers_new ) {

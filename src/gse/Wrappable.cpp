@@ -38,7 +38,7 @@ const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& e
 	if ( event == "*" ) {
 		m_catchall = true;
 	}
-	ASSERT( callback->type == Value::T_CALLABLE, "callback not callable" );
+	ASSERT( callback->type == VT_CALLABLE, "callback not callable" );
 	auto it = m_callbacks.find( event );
 	if ( it == m_callbacks.end() ) {
 		it = m_callbacks.insert(
@@ -86,7 +86,7 @@ const bool Wrappable::HasHandlers( const std::string& event ) {
 	return m_callbacks.find( event ) != m_callbacks.end() || m_callbacks.find( "*" ) != m_callbacks.end();
 }
 
-Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< Value::type_t > expected_return_type ) {
+Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args, const std::optional< value_type_t > expected_return_type ) {
 	bool has_handler = false;
 	{
 		std::lock_guard guard( m_callbacks_mutex );
@@ -110,7 +110,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 	return VALUE( gse::value::Bool, , false );
 }
 
-Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* const args_obj, const std::optional< Value::type_t > expected_return_type ) {
+Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* const args_obj, const std::optional< value_type_t > expected_return_type ) {
 	std::lock_guard guard( m_callbacks_mutex );
 	ASSERT( args_obj, "args_obj is null" );
 	Value* result = nullptr;
@@ -119,8 +119,8 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 		const auto callbacks = it->second; // copy because callbacks may be changed during trigger
 		for ( const auto& it2 : callbacks ) {
 			const auto& cb = it2.second.callable;
-			if ( cb->type != Value::T_CALLABLE ) {
-				ASSERT( cb->type == Value::T_CALLABLE, "callback not callable" );
+			if ( cb->type != VT_CALLABLE ) {
+				ASSERT( cb->type == VT_CALLABLE, "callback not callable" );
 			}
 			m_callbacks_mutex.unlock(); // TODO: improve?
 			try {
@@ -140,7 +140,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 					throw gse::Exception( gse::EC.INVALID_HANDLER, "Event handler is expected to return " + Value::GetTypeStringStatic( expected_return_type.value() ) + ", got " + result->GetTypeString() + ": " + result->ToString(), it2.second.ctx, it2.second.si, ep );
 				}
 			}
-			if ( result && result->type != Value::T_UNDEFINED ) {
+			if ( result && result->type != VT_UNDEFINED ) {
 				// TODO: resolve result conflicts somehow
 			}
 		}

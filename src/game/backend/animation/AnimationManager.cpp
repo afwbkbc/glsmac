@@ -266,7 +266,7 @@ WRAPIMPL_BEGIN( AnimationManager )
 					m_animation_sequences.insert( { m_next_animation_sequence_id, sequence } );
 
 					for ( const auto& value : animations ) {
-						if ( value->type != gse::Value::T_OBJECT ) {
+						if ( value->type != gse::VT_OBJECT ) {
 							GSE_ERROR( gse::EC.GAME_ERROR, "Invalid array element in show_animations(): expected Object, got " + value->GetTypeString() + ": " + value->ToString() );
 						}
 
