@@ -218,7 +218,6 @@ void Map::Deserialize( types::Buffer buf ) {
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles );
 	m_tiles->Deserialize( buf.ReadString() );
-	SelectTile( nullptr );
 
 	ASSERT( !m_map_state, "map state already set" );
 	NEW( m_map_state, MapState );
@@ -617,14 +616,6 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 WRAPIMPL_BEGIN( Map )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
-		{
-			"get_selected_tile",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				ASSERT( m_selected_tile, "no tile is selected" );
-				return m_selected_tile->Wrap( GSE_CALL, true );
-			} ),
-		}
 	};
 WRAPIMPL_END_PTR()
 
@@ -667,7 +658,6 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 		m_tiles = nullptr;
 		return EC_ABORTED;
 	}
-	SelectTile( nullptr );
 #ifdef DEBUG
 	Log( "Map generation took " + std::to_string( timer.GetElapsed().count() ) + "ms" );
 	// if crash happens - it's handy to have a map file to reproduce it
@@ -693,10 +683,8 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 		Log( e.what() );
 		DELETE( m_tiles );
 		m_tiles = nullptr;
-		m_selected_tile = nullptr;
 		return EC_MAPFILE_FORMAT_ERROR;
 	}
-	SelectTile( nullptr );
 }
 
 const Map::error_code_t Map::LoadFromFile( const std::string& path ) {
@@ -974,18 +962,6 @@ void Map::CalculateTextureVariants( const texture_variants_type_t type, const te
 			}
 			i--;
 		}
-	}
-}
-
-void Map::SelectTile( tile::Tile* tile ) {
-	if ( !tile ) {
-		// select any tile
-		ASSERT( m_tiles, "tiles not set" );
-		ASSERT( m_tiles->GetWidth() > 0 && m_tiles->GetHeight() > 0, "tiles are empty" );
-		tile = &m_tiles->At( 0, 0 );
-	}
-	if ( tile != m_selected_tile ) {
-		m_selected_tile = tile;
 	}
 }
 

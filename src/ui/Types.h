@@ -47,6 +47,7 @@ enum widget_type_t {
 	WT_NONE,
 	WT_MINIMAP,
 	WT_TILE_PREVIEW,
+	WT_UNIT_PREVIEW,
 };
 
 typedef std::function< void( ::ui::dom::Widget* const widget ) > f_with_widget_t;

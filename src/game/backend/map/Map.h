@@ -189,8 +189,6 @@ private:
 
 	tile::TileState* m_current_ts = nullptr;
 	const tile::Tile* m_current_tile = nullptr;
-
-	void SelectTile( tile::Tile* tile );
 };
 
 }

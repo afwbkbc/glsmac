@@ -36,17 +36,12 @@ void TilePreview::Register( ui::dom::Widget* const widget ) {
 void TilePreview::Update( ui::dom::Widget* const widget, const tile::Tile* const tile ) {
 	widget->Clear();
 
-	auto* g = widget->GetGeometry()->AsRectangle();
 	const auto& render = tile->GetRenderData();
 
 	size_t index = 0;
+	auto* const texture = m_game->GetTerrainTexture();
 	for ( auto& preview_mesh : render.preview_meshes ) {
-		NEWV( mesh_copy, types::mesh::Render, *preview_mesh );
-		g->AddMesh( mesh_copy );
-		NEWV( actor, scene::actor::Mesh, "UI::Widget::TilePreview::Layer" + std::to_string( index ), mesh_copy );
-		g->AddActor( actor );
-		actor->SetTexture( m_game->GetTerrainTexture() );
-		widget->SetActor( actor, index++ );
+		AddMeshAndTexture( widget, index++, preview_mesh, texture );
 	}
 }
 

@@ -23,7 +23,7 @@ CLASS( Rectangle, Simple )
 		const Vec2< size_t >& tx,
 		const coord_t z
 	);
-	void SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z );
+	void SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z, bool keep_tex = false );
 
 };
 

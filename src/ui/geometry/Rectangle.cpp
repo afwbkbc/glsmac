@@ -17,21 +17,6 @@ Rectangle::~Rectangle() {
 	Clear();
 }
 
-void Rectangle::SetMesh( types::mesh::Mesh* const mesh ) {
-	if ( mesh != m_mesh ) {
-		m_mesh = mesh;
-		InitMesh( m_mesh );
-		UpdateImpl();
-	}
-}
-
-void Rectangle::SetActor( scene::actor::Mesh* const actor ) {
-	if ( actor != m_actor ) {
-		m_actor = actor;
-		UpdateImpl();
-	}
-}
-
 void Rectangle::SetStretched() {
 	if ( m_tile_dimensions.x || m_tile_dimensions.y ) {
 		m_tile_dimensions = {};
@@ -51,9 +36,9 @@ void Rectangle::AddActor( scene::actor::Mesh* const actor ) {
 	UpdateActor( actor );
 }
 
-void Rectangle::AddMesh( types::mesh::Mesh* const mesh ) {
+void Rectangle::AddMesh( types::mesh::Mesh* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
 	m_meshes.push_back( mesh );
-	InitMesh( mesh );
+	InitMesh( mesh, keep_tex, scale, offset );
 	UpdateMesh( mesh );
 }
 
@@ -67,12 +52,6 @@ void Rectangle::Clear() {
 }
 
 void Rectangle::UpdateImpl() {
-	if ( m_mesh ) {
-		UpdateMesh( m_mesh );
-	}
-	if ( m_actor ) {
-		UpdateActor( m_actor );
-	}
 	for ( const auto& mesh : m_meshes ) {
 		UpdateMesh( mesh );
 	}
@@ -81,38 +60,57 @@ void Rectangle::UpdateImpl() {
 	}
 }
 
-void Rectangle::InitMesh( types::mesh::Mesh* const mesh ) {
-	if ( mesh && mesh->GetType() == types::mesh::Mesh::MT_RENDER ) {
-		const auto* const m = (types::mesh::Render*)mesh;
-		const auto& it = m_render_mesh_originals.find( m );
-		if ( it != m_render_mesh_originals.end() ) {
-			delete it->second;
+void Rectangle::InitMesh( types::mesh::Mesh* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
+	if ( !mesh ) {
+		ASSERT( mesh, "mesh is null" );
+	}
+	if ( keep_tex ) {
+		ASSERT( mesh->GetType() == types::mesh::Mesh::MT_RECTANGLE, "keep_tex on non-rectangle meshes is unexpected" );
+	}
+	switch ( mesh->GetType() ) {
+		case types::mesh::Mesh::MT_RECTANGLE: {
+			const auto* const m = (types::mesh::Rectangle*)mesh;
+			m_rectangle_mesh_keep_tex.insert_or_assign( m, keep_tex );
+			m_rectangle_mesh_scales.insert_or_assign( m, scale );
+			m_rectangle_mesh_offsets.insert_or_assign( m, offset );
+			break;
 		}
+		case types::mesh::Mesh::MT_RENDER: {
+			const auto* const m = (types::mesh::Render*)mesh;
+			const auto& it = m_render_mesh_originals.find( m );
+			if ( it != m_render_mesh_originals.end() ) {
+				delete it->second;
+			}
 
-		// need to save original because we'll scale active mesh from it
-		m_render_mesh_originals.insert_or_assign( m, new types::mesh::Render( *m ) );
+			// need to save original because we'll scale active mesh from it
+			m_render_mesh_originals.insert_or_assign( m, new types::mesh::Render( *m ) );
 
-		// calculate and store original size (for future scaling)
-		const auto sz = m->GetVertexCount();
+			// calculate and store original size (for future scaling)
+			const auto sz = m->GetVertexCount();
 
-		area_t area = {};
-		types::Vec3 coord = {};
-		for ( size_t i = 0 ; i < sz ; i++ ) {
-			m->GetVertexCoord( i, &coord );
-			if ( coord.x < area.left ) {
-				area.left = coord.x;
+			area_t area = {};
+			types::Vec3 coord = {};
+			for ( size_t i = 0 ; i < sz ; i++ ) {
+				m->GetVertexCoord( i, &coord );
+				if ( coord.x < area.left ) {
+					area.left = coord.x;
+				}
+				if ( coord.x > area.right ) {
+					area.right = coord.x;
+				}
+				if ( coord.y < area.top ) {
+					area.top = coord.y;
+				}
+				if ( coord.y > area.bottom ) {
+					area.bottom = coord.y;
+				}
 			}
-			if ( coord.x > area.right ) {
-				area.right = coord.x;
-			}
-			if ( coord.y < area.top ) {
-				area.top = coord.y;
-			}
-			if ( coord.y > area.bottom ) {
-				area.bottom = coord.y;
-			}
+			m_render_mesh_original_areas.insert_or_assign( m, area );
+			break;
 		}
-		m_render_mesh_original_areas.insert_or_assign( m, area );
+		default: {
+			// nothing
+		}
 	}
 }
 
@@ -124,23 +122,30 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 	switch ( mesh->GetType() ) {
 		case types::mesh::Mesh::MT_RECTANGLE: {
 			auto* m = (types::mesh::Rectangle*)mesh;
+			const auto& scale = m_rectangle_mesh_scales.at( m );
+			const auto& offset = m_rectangle_mesh_offsets.at( m );
+			auto area = m_area;
+			area.left += area.width * offset.x;
+			area.top += area.height * offset.y;
+			area.right = area.left + area.width * scale.x;
+			area.bottom = area.top + area.height * scale.y;
 			const auto top_left = m_ui->ClampXY(
 				{
-					std::round( m_area.left ),
-					std::round( m_area.top ),
+					std::round( area.left ),
+					std::round( area.top ),
 				}
 			);
 			const auto bottom_right = m_ui->ClampXY(
 				{
-					std::round( m_area.right ),
-					std::round( m_area.bottom ),
+					std::round( area.right ),
+					std::round( area.bottom ),
 				}
 			);
 			if ( m_tile_dimensions.x && m_tile_dimensions.y ) {
 				m->SetCoordsTiled( top_left, bottom_right, m_tile_dimensions, m_area.zindex );
 			}
 			else {
-				m->SetCoords( top_left, bottom_right, m_area.zindex );
+				m->SetCoords( top_left, bottom_right, m_area.zindex, m_rectangle_mesh_keep_tex.at( m ) );
 			}
 			break;
 		}
@@ -183,15 +188,17 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 
 			for ( size_t i = 0 ; i < count ; i++ ) {
 				original->GetVertexCoord( i, &coord );
+				original->GetVertexTexCoord( i, &tex_coord );
 				coord.z = 0.5f; // doesn't do anything currently
 				coord.x = m_ui->ClampX( clamp_x.Clamp( coord.x ) );
 				coord.y = m_ui->ClampY( clamp_y.Clamp( coord.y ) );
 				m->SetVertexCoord( i, coord );
+				m->SetVertexTexCoord( i, tex_coord );
 			}
 			break;
 		}
 		default: {
-			ASSERT( false, "unsupported mesh type: " + std::to_string( m_mesh->GetType() ) );
+			ASSERT( false, "unsupported mesh type: " + std::to_string( mesh->GetType() ) );
 		}
 	}
 }

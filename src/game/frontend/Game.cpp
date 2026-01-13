@@ -58,6 +58,7 @@
 
 #include "widget/Minimap.h"
 #include "widget/TilePreview.h"
+#include "widget/UnitPreview.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -2582,6 +2583,10 @@ void Game::UnregisterWidgets() {
 #define X_WIDGET( _x ) delete m_widgets._x; m_widgets._x = nullptr;
 	X_WIDGETS
 #undef X_WIDGET
+}
+
+::game::backend::Game* const Game::GetGame() const {
+	return m_game;
 }
 
 void Game::Trigger( gse::GCWrappable* const object, const std::string& event, const gse::f_args_t& f_args ) {

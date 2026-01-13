@@ -16,6 +16,10 @@
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
 #include "SlotBadges.h"
+#include "game/backend/Game.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/map/Map.h"
 
 namespace game {
 namespace frontend {
@@ -185,6 +189,17 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 }
 
 void BaseManager::SelectBase( Base* base ) {
+	m_game->UpdateTilePreview( base->GetTile() );
+	auto* game = m_game->GetGame();
+	auto* const b = game->GetBM()->GetBase( base->GetId() );
+	m_game->Trigger(
+		game->GetMap(), "base_select", ARGS_F( &b ) {
+			{
+				"base",
+				b->Wrap( GSE_CALL )
+			},
+		}; }
+	);
 	m_game->OpenBasePopup( base );
 }
 

@@ -6,6 +6,16 @@
 #include "common/Common.h"
 
 #include "ui/Types.h"
+#include "types/Vec2.h"
+
+namespace types {
+namespace mesh {
+class Mesh;
+}
+namespace texture {
+class Texture;
+}
+}
 
 namespace gse::value {
 class Object;
@@ -40,6 +50,16 @@ protected:
 	const Game* const m_game;
 	ui::UI* const m_ui;
 	const ui::widget_type_t m_type;
+
+	void AddMeshAndTexture(
+		ui::dom::Widget* const widget,
+		size_t index,
+		const types::mesh::Mesh* const mesh,
+		types::texture::Texture* const texture,
+		const bool keep_tex = false,
+		const types::Vec2< float >& scale = { 1.0f, 1.0f },
+		const types::Vec2< float >& offset = { 0.0f, 0.0f }
+	);
 
 	// TODO: remove this
 	void WithWidget( const ui::f_with_widget_t& f ) const;

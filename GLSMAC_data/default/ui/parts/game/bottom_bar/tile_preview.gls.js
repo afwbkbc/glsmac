@@ -85,14 +85,13 @@ return {
 	set_lines: (tile) => {
 
 		if (#is_defined(this.lines)) {
-			this.lines.remove();
+			this.lines.remove(); // TODO: fix this.lines.clear();
 		}
 		this.lines = this.frame.listview({
 			left: 3,
 			right: 3,
 			top: 63,
 			bottom: 3,
-			max_items: 50,
 		});
 
 		let line_top = 0;
@@ -160,18 +159,12 @@ return {
 			width: 106,
 		});
 
-		this.cls_line = 'bottombar-tile-preview-line';
 		this.line_height = 16;
 
-		const f_update = (tile) => {
-			this.set_image(tile);
-			this.set_lines(tile);
-		};
-
 		p.map.on('tile_select', (e) => {
-			f_update(e.tile);
+			this.set_image(e.tile);
+			this.set_lines(e.tile);
 		});
-		f_update(p.map.get_selected_tile());
 
 	},
 

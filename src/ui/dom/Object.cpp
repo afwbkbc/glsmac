@@ -104,6 +104,22 @@ gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
 		WRAPIMPL_TRIGGERS
+			{
+				"show",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					Show();
+					return VALUE( gse::value::Undefined );
+				} ),
+			},
+			{
+				"hide",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					Hide();
+					return VALUE( gse::value::Undefined );
+				} ),
+			},
 		};
 		for ( const auto& p : m_properties ) {
 			properties.insert(
@@ -326,8 +342,7 @@ void Object::ClearActors() {
 	for ( const auto& it : m_actors ) {
 		it.scene->RemoveActor( it.actor );
 		if ( g ) {
-			((geometry::Rectangle*)g)->SetMesh( nullptr );
-			((geometry::Rectangle*)g)->SetActor( nullptr );
+			((geometry::Rectangle*)g)->Clear();
 		}
 		delete it.actor;
 	}

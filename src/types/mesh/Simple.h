@@ -27,6 +27,7 @@ CLASS( Simple, Mesh )
 	}
 	);
 
+	void SetVertex( const index_t index, const types::Vec3& coord );
 	void SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord );
 	void GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const;
 	void SetVertex( const index_t index, const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord );

@@ -15,15 +15,7 @@ Minimap::Minimap( const Game* const game, ui::UI* const ui )
 	: Widget( game, ui, ui::WT_MINIMAP, "minimap", {} ) {}
 
 void Minimap::Register( ui::dom::Widget* const widget ) {
-	NEWV( mesh, types::mesh::Rectangle );
-	auto* g = widget->GetGeometry()->AsRectangle();
-	g->SetMesh( mesh );
-	NEWV( actor, scene::actor::Mesh, "UI::Widget::MiniMap", mesh );
-	g->SetActor( actor );
-	NEWV( texture, types::texture::Texture, g->m_area.width, g->m_area.height );
-	actor->SetTexture( texture );
-	widget->SetTexture( texture );
-	widget->SetActor( actor );
+	AddMeshAndTexture( widget, 0, nullptr, nullptr );
 }
 
 const types::Vec2< ui::coord_t > Minimap::FindLargestArea() const {

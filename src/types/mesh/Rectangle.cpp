@@ -157,47 +157,45 @@ void Rectangle::SetCoords(
 	Update();
 }
 
-void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z ) {
+void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z, bool keep_tex ) {
 	SetVertex(
 		0, {
 			top_left.x,
-			top_left.y,
+			bottom_right.y,
 			z
-		}, {
-			0.0f,
-			0.0f
 		}
 	);
 	SetVertex(
 		1, {
 			bottom_right.x,
-			top_left.y,
+			bottom_right.y,
 			z
-		}, {
-			1.0f,
-			0.0f
 		}
 	);
 	SetVertex(
 		2, {
 			bottom_right.x,
-			bottom_right.y,
+			top_left.y,
 			z
-		}, {
-			1.0f,
-			1.0f
 		}
 	);
 	SetVertex(
 		3, {
 			top_left.x,
-			bottom_right.y,
+			top_left.y,
 			z
-		}, {
-			0.0f,
-			1.0f
 		}
 	);
+	if ( !keep_tex ) {
+		SetVertexTexCoord( 0, { 0.0f, 1.0f } );
+		SetVertexTexCoord( 1, { 1.0f, 1.0f } );
+		SetVertexTexCoord( 2, { 1.0f, 0.0f } );
+		SetVertexTexCoord( 3, { 0.0f, 0.0f } );
+	}
+	else {
+		int a = 5;
+
+	}
 	SetSurface(
 		0, {
 			0,

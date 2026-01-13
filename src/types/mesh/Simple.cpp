@@ -29,11 +29,17 @@ index_t Simple::AddVertex( const Vec2< coord_t >& coord, const Vec2< coord_t >& 
 	return AddVertex( types::Vec3( coord.x, coord.y, 0.0f ), tex_coord );
 }
 
-void Simple::SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord ) {
+void Simple::SetVertex( const index_t index, const types::Vec3& coord ) {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
 	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof( coord ) );
-	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
+	Update();
+}
+
+void Simple::SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord ) {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	SetVertex( index, coord );
+	size_t offset = index * VERTEX_SIZE * sizeof( coord_t ) + VERTEX_COORD_SIZE * sizeof( coord_t );
 	memcpy( ptr( m_vertex_data, offset, sizeof( tex_coord ) ), &tex_coord, sizeof( tex_coord ) );
 	Update();
 }

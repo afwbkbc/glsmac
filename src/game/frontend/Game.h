@@ -92,7 +92,8 @@ namespace frontend {
 
 #define X_WIDGETS \
     X_WIDGET( Minimap ) \
-    X_WIDGET( TilePreview )
+    X_WIDGET( TilePreview ) \
+    X_WIDGET( UnitPreview )
 
 namespace widget {
 #define X_WIDGET( _x ) class _x;
@@ -519,8 +520,6 @@ private:
 
 	::game::backend::Game* m_game = nullptr;
 
-	void Trigger( gse::GCWrappable* const object, const std::string& event, const gse::f_args_t& f_args );
-
 private:
 	friend class unit::UnitManager;
 	friend class base::BaseManager;
@@ -537,6 +536,9 @@ private:
 	void SelectAnyUnitAtTile( tile::Tile* tile );
 	void SelectUnitOrSelectedTile( unit::Unit* selected_unit );
 	unit::Unit* GetSelectedTileMostImportantUnit() const;
+
+	::game::backend::Game* const GetGame() const;
+	void Trigger( gse::GCWrappable* const object, const std::string& event, const gse::f_args_t& f_args );
 
 private:
 	friend class ui_legacy::popup::base_popup::BasePopup;

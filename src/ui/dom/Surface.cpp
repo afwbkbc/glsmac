@@ -19,10 +19,10 @@ Surface::Surface( DOM_ARGS_T )
 
 	NEW( m_mesh, types::mesh::Rectangle );
 	auto* g = m_geometry->AsRectangle();
-	g->SetMesh( m_mesh );
+	g->AddMesh( m_mesh );
 	m_actor = new scene::actor::Mesh( "UI::Surface", m_mesh );
 	Actor( m_actor );
-	g->SetActor( m_actor );
+	g->AddActor( m_actor );
 
 	Property(
 		GSE_CALL, "background", gse::VT_STRING, nullptr, PF_NONE,

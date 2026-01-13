@@ -10,6 +10,10 @@
 #include "game/frontend/tile/TileManager.h"
 #include "BadgeDefs.h"
 #include "types/mesh/Rectangle.h"
+#include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/map/Map.h"
 
 namespace game {
 namespace frontend {
@@ -237,7 +241,18 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 			most_important_unit->Hide();
 		}
 		m_selected_unit->StartBadgeBlink();
-		Log( "Selected unit " + std::to_string( m_selected_unit->GetId() ) );
+		const auto id = m_selected_unit->GetId();
+		Log( "Selected unit " + std::to_string( id ) );
+		auto* game = m_game->GetGame();
+		auto* const u = game->GetUM()->GetUnit( id );
+		m_game->Trigger(
+			game->GetMap(), "unit_select", ARGS_F( &u ) {
+				{
+					"unit",
+					u->Wrap( GSE_CALL )
+				},
+			}; }
+		);
 	}
 }
 
