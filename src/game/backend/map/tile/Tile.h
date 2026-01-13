@@ -110,6 +110,9 @@ public:
 private:
 	bool m_is_locked = false;
 	size_t m_lock_initiator_slot = 0;
+
+	gse::Value* const GetFeatures( GSE_CALLABLE ) const;
+	gse::Value* const GetResources( GSE_CALLABLE ) const;
 };
 
 }

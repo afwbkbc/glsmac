@@ -14,6 +14,8 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
 
+#include "util/String.h"
+
 namespace game {
 namespace backend {
 namespace map {
@@ -206,18 +208,6 @@ WRAPIMPL_BEGIN( Tile )
 			"elevation",
 			VALUE( gse::value::Int,, *elevation.center )
 		},
-		{
-			"is_rocky",
-			VALUE( gse::value::Bool,, rockiness == ROCKINESS_ROCKY )
-		},
-		{
-			"has_fungus",
-			VALUE( gse::value::Bool,, features & FEATURE_XENOFUNGUS )
-		},
-		{
-			"has_river",
-			VALUE( gse::value::Bool,, features & FEATURE_RIVER )
-		},
 		GETN( W ),
 		GETN( NW ),
 		GETN( N ),
@@ -245,6 +235,8 @@ WRAPIMPL_BEGIN( Tile )
 				return VALUE( gse::value::Array,, result );
 			})
 		},
+		{ "features", GetFeatures( GSE_CALL ) },
+		{ "resources", GetResources( GSE_CALL ) },
 		{
 			"get_units",
 			NATIVE_CALL( this ) {
@@ -288,6 +280,31 @@ const bool Tile::IsLocked() const {
 const bool Tile::IsLockedBy( const size_t initiator_slot ) const {
 	return m_is_locked && m_lock_initiator_slot == initiator_slot;
 }
+
+gse::Value* const Tile::GetFeatures( GSE_CALLABLE ) const {
+	gse::value::object_properties_t result = {};
+#define X_FEATURE( _x, _i ) \
+	result.insert_or_assign(   \
+		util::String::GetLowerCase( # _x ), \
+		VALUE( gse::value::Bool,, features & backend::map::tile::FEATURE_ ## _x ) \
+	);
+X_FEATURES
+#undef X_FEATURE
+	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
+}
+
+gse::Value* const Tile::GetResources( GSE_CALLABLE ) const {
+	gse::value::object_properties_t result = {};
+#define X_BONUS( _x, _i ) \
+	result.insert_or_assign(   \
+		util::String::GetLowerCase( # _x ), \
+		VALUE( gse::value::Bool,, bonus == backend::map::tile::BONUS_ ## _x ) \
+	);
+	X_BONUSES
+#undef X_BONUS
+	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
+}
+
 
 }
 }

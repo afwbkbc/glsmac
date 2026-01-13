@@ -107,14 +107,14 @@ return (glsmac) => {
 
 										units_spawned++;
 									} else {
-										if (tile.has_fungus && e.game.random.get_int(0, 3) == 0) {
+										if (tile.features.xenofungus && e.game.random.get_int(0, 3) == 0) {
 											// morale depends on count of fungus tiles around
 											let morale = 1;
 											for (neighbour of tile.get_surrounding_tiles()) {
 												if (morale >= 6) {
 													break;
 												}
-												if (neighbour.has_fungus) {
+												if (neighbour.features.xenofungus) {
 													morale++;
 												}
 											}

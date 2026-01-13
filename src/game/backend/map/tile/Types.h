@@ -102,31 +102,41 @@ static constexpr rockiness_t ROCKINESS_ROCKY = 3;
 // scalar
 typedef uint8_t bonus_t;
 static constexpr bonus_t BONUS_NONE = 0;
-static constexpr bonus_t BONUS_NUTRIENT = 1;
-static constexpr bonus_t BONUS_ENERGY = 2;
-static constexpr bonus_t BONUS_MINERALS = 3;
-
-// bitflags
-typedef uint16_t feature_t;
-static constexpr feature_t FEATURE_NONE = 0;
-static constexpr feature_t FEATURE_RIVER = 1 << 0;
-static constexpr feature_t FEATURE_MONOLITH = 1 << 1;
-static constexpr feature_t FEATURE_XENOFUNGUS = 1 << 2;
-static constexpr feature_t FEATURE_JUNGLE = 1 << 3;
-static constexpr feature_t FEATURE_URANIUM = 1 << 4;
-static constexpr feature_t FEATURE_GEOTHERMAL = 1 << 5;
-static constexpr feature_t FEATURE_UNITY_POD = 1 << 6;
-static constexpr feature_t FEATURE_VOLCANO = 1 << 7;
-static constexpr feature_t FEATURE_SUNNY_MESA = 1 << 8;
-static constexpr feature_t FEATURE_GARLAND_CRATER = 1 << 9;
-static constexpr feature_t FEATURE_FOSSIL_FIELD_RIDGE = 1 << 10;
-static constexpr feature_t FEATURE_UNITY_ENERGY = 1 << 11;
-static constexpr feature_t FEATURE_UNITY_CHOPPER = 1 << 12;
-static constexpr feature_t FEATURE_UNITY_RADAR = 1 << 13;
-static constexpr feature_t FEATURE_DUNES = 1 << 14;
+// TODO: make dynamic and configurable via scripts
+#define X_BONUSES \
+    X_BONUS( NUTRIENT, 1 ) \
+    X_BONUS( ENERGY, 2 ) \
+    X_BONUS( MINERALS, 3 )
+#define X_BONUS( _x, _i ) static constexpr bonus_t BONUS_ ## _x = _i;
+X_BONUSES
+#undef X_BONUS
 
 // bitflags
 typedef uint16_t terraforming_t;
+#define X_FEATURES \
+    X_FEATURE( RIVER, 0 ) \
+    X_FEATURE( MONOLITH, 1 ) \
+    X_FEATURE( XENOFUNGUS, 2 ) \
+    X_FEATURE( JUNGLE, 3 ) \
+    X_FEATURE( URANIUM, 4 ) \
+    X_FEATURE( GEOTHERMAL, 5 ) \
+    X_FEATURE( UNITY_POD, 6 ) \
+    X_FEATURE( VOLCANO, 7 ) \
+    X_FEATURE( SUNNY_MESA, 8 ) \
+    X_FEATURE( GARLAND_CRATER, 9 ) \
+    X_FEATURE( FOSSIL_FIELD_RIDGE, 10 ) \
+    X_FEATURE( UNITY_ENERGY, 11 ) \
+    X_FEATURE( UNITY_CHOPPER, 12 ) \
+    X_FEATURE( UNITY_RADAR, 13 ) \
+    X_FEATURE( DUNES, 14 )
+
+typedef uint16_t feature_t;
+static constexpr feature_t FEATURE_NONE = 0;
+#define X_FEATURE( _x, _i ) static constexpr feature_t FEATURE_ ## _x = 1 << _i;
+X_FEATURES
+#undef X_FEATURE
+
+// bitflags
 static constexpr terraforming_t TERRAFORMING_NONE = 0;
 static constexpr terraforming_t TERRAFORMING_ROAD = 1 << 0;
 static constexpr terraforming_t TERRAFORMING_MAG_TUBE = 1 << 1;

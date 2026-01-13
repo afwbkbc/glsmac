@@ -29,7 +29,7 @@ const result = {
 		game.rm.on('get_yield', (e) => {
 
 			if (e.resource == 'Nutrients') {
-				if (!e.tile.has_fungus) {
+				if (!e.tile.features.xenofungus) {
 					if (e.tile.is_land) {
 						return e.tile.moisture - 1;
 					} else {
@@ -40,7 +40,7 @@ const result = {
 				}
 			}
 			if (e.resource == 'Minerals') {
-				if (!e.tile.has_fungus) {
+				if (!e.tile.features.xenofungus) {
 					if (e.tile.is_land) {
 						let result = 0;
 						if (e.tile.rockiness > 1) {
@@ -55,10 +55,10 @@ const result = {
 				}
 			}
 			if (e.resource == 'Energy') {
-				if (!e.tile.has_fungus) {
+				if (!e.tile.features.xenofungus) {
 					if (e.tile.is_land) {
 						let result = e.tile.elevation / 1000;
-						if (e.tile.has_river) {
+						if (e.tile.features.river) {
 							result = result + 1;
 						}
 						return result;

@@ -3,14 +3,14 @@ const get_movement_cost = (unit, src_tile, dst_tile) => {
 
 	if (
 		dst_tile.is_land &&
-		src_tile.has_river &&
-		dst_tile.has_river
+		src_tile.features.river &&
+		dst_tile.features.river
 		// TODO: roads
 	) {
 		return 1.0 / 3.0;
 	}
 
-	if (dst_tile.has_fungus) {
+	if (dst_tile.features.xenofungus) {
 		if (is_native) {
 			if (dst_tile.is_water) {
 				return 1.0;
@@ -24,10 +24,10 @@ const get_movement_cost = (unit, src_tile, dst_tile) => {
 
 const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 	const is_native = true; // TODO: non-native units
-	if (is_native && dst_tile.has_fungus) {
+	if (is_native && dst_tile.features.xenofungus) {
 		return 0.0;
 	}
-	if (dst_tile.is_land && dst_tile.is_rocky) {
+	if (dst_tile.is_land && dst_tile.rockiness >= 3) {
 		return 1.0;
 	}
 	return 0.0;
