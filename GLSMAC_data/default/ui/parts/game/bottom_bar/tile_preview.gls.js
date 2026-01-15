@@ -157,7 +157,7 @@ return {
 			width: 106,
 		});
 
-		p.map.on('tile_select', (e) => {
+		p.map.on('tile_preview', (e) => {
 			this.set_image(e.tile);
 			this.set_lines(e.tile);
 		});

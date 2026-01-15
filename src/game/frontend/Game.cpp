@@ -60,6 +60,7 @@
 #include "widget/Minimap.h"
 #include "widget/TilePreview.h"
 #include "widget/UnitPreview.h"
+#include "gse/value/Null.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -2090,7 +2091,10 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 			}
 			else {
 				// new ui
-				UpdateTilePreview( tile );
+				const auto* const selected_unit = selected_unit_id
+					? this->m_um->GetUnitById( selected_unit_id )
+					: nullptr;
+				UpdatePreviews( tile, selected_unit );
 			}
 			break;
 		}
@@ -2618,7 +2622,7 @@ void Game::UpdateTilePreview( tile::Tile* const tile ) {
 	const auto& c = tile->GetCoords();
 	auto* const t = m_game->GetMap()->GetTile( c.x, c.y );
 	Trigger(
-		m_game->GetMap(), "tile_select", ARGS_F( &t ) {
+		m_game->GetMap(), "tile_preview", ARGS_F( &t ) {
 			{
 				"tile",
 				t->Wrap( GSE_CALL )
@@ -2628,15 +2632,33 @@ void Game::UpdateTilePreview( tile::Tile* const tile ) {
 }
 
 void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
-	auto* const u = m_game->GetUM()->GetUnit( unit->GetId() );
+	auto* const u = unit
+		? m_game->GetUM()->GetUnit( unit->GetId() )
+		: nullptr;
 	Trigger(
-		m_game->GetMap(), "unit_select", ARGS_F( &u ) {
+		m_game->GetMap(), "unit_preview", ARGS_F( &u ) {
 			{
 				"unit",
-				u->Wrap( GSE_CALL )
+				u
+					? u->Wrap( GSE_CALL )
+					: VALUE( gse::value::Null ),
 			},
 		}; }
 	);
+}
+
+void Game::UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit ) {
+	// new ui
+	UpdateTilePreview( tile );
+	if ( unit && unit->GetTile() == tile ) {
+		UpdateUnitPreview( unit );
+	}
+	else {
+		const auto* const selected_unit = m_um->GetSelectedUnit();
+		if ( !selected_unit || selected_unit->GetTile() != tile ) {
+			UpdateUnitPreview( tile->GetMostImportantUnit() );
+		}
+	}
 }
 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
@@ -2652,15 +2674,12 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 		}
 		else {
 			// new ui
-			UpdateTilePreview( selected_tile );
-			if ( selected_unit ) {
-				UpdateUnitPreview( selected_unit );
-			}
+			UpdatePreviews( selected_tile, selected_unit );
 		}
 	}
 }
 
-void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit ) {
+void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* const selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile && selected_tile == if_tile ) {
 		if ( !m_glsmac ) {
@@ -2673,10 +2692,7 @@ void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selecte
 		}
 		else {
 			// new ui
-			UpdateTilePreview( selected_tile );
-			if ( selected_unit ) {
-				UpdateUnitPreview( selected_unit );
-			}
+			UpdatePreviews( selected_tile, selected_unit );
 		}
 	}
 }

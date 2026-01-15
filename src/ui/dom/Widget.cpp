@@ -91,8 +91,10 @@ types::texture::Texture* const Widget::GetTexture( const size_t index ) const {
 }
 
 void Widget::OnUpdate( const f_widget_update_t& on_widget_update ) {
-	ASSERT( !m_on_widget_update, "m_on_widget_update already set" );
-	m_on_widget_update = on_widget_update;
+	if ( !m_on_widget_update ) { // TODO: refactor
+		ASSERT( !m_on_widget_update, "m_on_widget_update already set" );
+		m_on_widget_update = on_widget_update;
+	}
 	if ( m_type && m_data ) {
 		UpdateWidget();
 	}

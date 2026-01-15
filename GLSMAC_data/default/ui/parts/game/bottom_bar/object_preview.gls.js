@@ -21,6 +21,13 @@ return {
 	},
 
 	set_image: (object) => {
+		if (object == null) {
+			if (this.last_object_class != null) {
+				this.previews[this.last_object_class].hide();
+			}
+			this.last_object_class = null;
+			return;
+		}
 		const cls = #classof(object);
 		if (cls == 'Base') {
 			return; // TODO
@@ -70,6 +77,12 @@ return {
 		if (#is_defined(this.lines)) {
 			this.lines.remove(); // TODO: fix this.lines.clear();
 		}
+
+		if (object == null) {
+			this.lines = #undefined;
+			return;
+		}
+
 		this.lines = this.frame.listview({
 			left: 3,
 			right: 3, // TODO: fix
@@ -139,10 +152,10 @@ return {
 			this.set_lines(object);
 		};
 
-		p.map.on('unit_select', (e) => {
+		p.map.on('unit_preview', (e) => {
 			f_update(e.unit);
 		});
-		p.map.on('base_select', (e) => {
+		p.map.on('base_preview', (e) => {
 			f_update(e.base);
 		})
 

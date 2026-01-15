@@ -246,7 +246,7 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		auto* game = m_game->GetGame();
 		auto* const u = game->GetUM()->GetUnit( id );
 		m_game->Trigger(
-			game->GetMap(), "unit_select", ARGS_F( &u ) {
+			game->GetMap(), "unit_preview", ARGS_F( &u ) {
 				{
 					"unit",
 					u->Wrap( GSE_CALL )

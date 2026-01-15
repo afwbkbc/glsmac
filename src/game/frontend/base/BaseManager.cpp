@@ -193,7 +193,7 @@ void BaseManager::SelectBase( Base* base ) {
 	auto* game = m_game->GetGame();
 	auto* const b = game->GetBM()->GetBase( base->GetId() );
 	m_game->Trigger(
-		game->GetMap(), "base_select", ARGS_F( &b ) {
+		game->GetMap(), "base_preview", ARGS_F( &b ) {
 			{
 				"base",
 				b->Wrap( GSE_CALL )
