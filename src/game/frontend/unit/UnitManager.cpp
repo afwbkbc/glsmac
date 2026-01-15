@@ -65,8 +65,10 @@ void UnitManager::Iterate() {
 }
 
 Unit* UnitManager::GetUnitById( const size_t id ) const {
-	ASSERT( m_units.find( id ) != m_units.end(), "unit id not found" );
-	return m_units.at( id );
+	const auto& it = m_units.find( id );
+	return it != m_units.end()
+		? it->second
+		: nullptr;
 }
 
 void UnitManager::DefineUnit( const backend::unit::Def* def ) {

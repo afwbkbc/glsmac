@@ -27,8 +27,9 @@ void UnitPreview::Register( ui::dom::Widget* const widget ) {
 			const auto* const u = ::game::backend::unit::Unit::Unwrap( data->value.at( "unit" ) );
 			ASSERT( u, "invalid unit ptr" );
 			const auto* const unit = m_game->GetUM()->GetUnitById( u->m_id );
-			ASSERT( unit, "invalid unit" );
-			Update( widget, unit );
+			if ( unit ) {
+				Update( widget, unit );
+			}
 		}
 	);
 }

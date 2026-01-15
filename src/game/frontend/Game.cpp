@@ -1189,6 +1189,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		case FrontendRequest::FR_UNIT_UPDATE: {
 			const auto& d = request->data.unit_update;
 			auto* unit = m_um->GetUnitById( d.unit_id );
+			ASSERT( unit, "unit is null" );
 			unit->SetMovement( d.movement );
 			unit->SetHealth( d.health );
 			const auto& c = unit->GetTile()->GetCoords();
@@ -1216,6 +1217,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		case FrontendRequest::FR_UNIT_MOVE: {
 			const auto& d = request->data.unit_move;
 			auto* unit = m_um->GetUnitById( d.unit_id );
+			ASSERT( unit, "unit is null" );
 			auto* dst_tile = m_tm->GetTile(
 				{
 					d.dst_tile_coords.x,
