@@ -93,7 +93,8 @@ namespace frontend {
 #define X_WIDGETS \
     X_WIDGET( Minimap ) \
     X_WIDGET( TilePreview ) \
-    X_WIDGET( UnitPreview )
+    X_WIDGET( UnitPreview ) \
+    X_WIDGET( BasePreview )
 
 namespace widget {
 #define X_WIDGET( _x ) class _x;
@@ -531,6 +532,7 @@ private:
 	void SetSelectedTile( tile::Tile* tile );
 	void UpdateTilePreview( tile::Tile* const tile );
 	void UpdateUnitPreview( const unit::Unit* const unit );
+	void UpdateBasePreview( const base::Base* const base );
 	void UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit );
 	void RefreshSelectedTile( unit::Unit* selected_unit = nullptr );
 	void RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* const selected_unit );

@@ -53,6 +53,8 @@
 #include "GLSMAC.h"
 #include "game/backend/unit/UnitManager.h"
 #include "game/backend/unit/Unit.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/Base.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
 #include "ui/UI.h"
@@ -60,6 +62,7 @@
 #include "widget/Minimap.h"
 #include "widget/TilePreview.h"
 #include "widget/UnitPreview.h"
+#include "widget/BasePreview.h"
 #include "gse/value/Null.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
@@ -2647,6 +2650,22 @@ void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
 	);
 }
 
+void Game::UpdateBasePreview( const base::Base* const base ) {
+	auto* const b = base
+		? m_game->GetBM()->GetBase( base->GetId() )
+		: nullptr;
+	Trigger(
+		m_game->GetMap(), "base_preview", ARGS_F( &b ) {
+			{
+				"base",
+				b
+					? b->Wrap( GSE_CALL )
+					: VALUE( gse::value::Null ),
+			},
+		}; }
+	);
+}
+
 void Game::UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit ) {
 	// new ui
 	UpdateTilePreview( tile );
@@ -2656,7 +2675,14 @@ void Game::UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit 
 	else {
 		const auto* const selected_unit = m_um->GetSelectedUnit();
 		if ( !selected_unit || selected_unit->GetTile() != tile ) {
-			UpdateUnitPreview( tile->GetMostImportantUnit() );
+			const auto* const important_unit = tile->GetMostImportantUnit();
+			const auto* base = tile->GetBase();
+			if ( !important_unit && base ) {
+				UpdateBasePreview( base );
+			}
+			else {
+				UpdateUnitPreview( important_unit );
+			}
 		}
 	}
 }

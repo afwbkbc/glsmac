@@ -4,5 +4,6 @@ SET( SRC ${SRC}
 	${PWD}/Minimap.cpp
 	${PWD}/TilePreview.cpp
 	${PWD}/UnitPreview.cpp
+	${PWD}/BasePreview.cpp
 
 	PARENT_SCOPE )

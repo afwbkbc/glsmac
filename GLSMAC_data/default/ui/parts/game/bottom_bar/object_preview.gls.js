@@ -29,9 +29,6 @@ return {
 			return;
 		}
 		const cls = #classof(object);
-		if (cls == 'Base') {
-			return; // TODO
-		}
 		if (this.last_object_class != cls) {
 			if (this.last_object_class != null) {
 				this.previews[this.last_object_class].hide();
@@ -85,7 +82,7 @@ return {
 
 		this.lines = this.frame.listview({
 			left: 3,
-			right: 3, // TODO: fix
+			right: 3,
 			top: 86,
 			bottom: 3,
 			itemsize: 17,
@@ -93,7 +90,7 @@ return {
 
 		const f_line = (text, size, align) => {
 			this.lines.text({
-				align: 'top ' + align, // TODO: fix centered align
+				align: 'top ' + align,
 				color: 'rgb(116,156,56)',
 				font: 'arialnb.ttf:' + #to_string(size),
 				text: text,
@@ -126,6 +123,11 @@ return {
 				break;
 			}
 			case 'Base': {
+
+				f_line(object.name, 14, 'center');
+				
+				f_line('Producing:', 14, 'left'); // TODO
+
 				break;
 			}
 			default: {
