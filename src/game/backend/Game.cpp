@@ -894,6 +894,16 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_um",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return m_um
+					? m_um->Wrap( GSE_CALL, true )
+					: VALUE( gse::value::Undefined )
+					;
+			} )
+		},
+		{
 			"is_started",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );

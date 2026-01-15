@@ -55,7 +55,8 @@
 #include "game/backend/unit/Unit.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/map/tile/Tile.h"
-
+#include "ui/UI.h"
+#include "ui/dom/Widget.h"
 #include "widget/Minimap.h"
 #include "widget/TilePreview.h"
 #include "widget/UnitPreview.h"
@@ -2626,6 +2627,18 @@ void Game::UpdateTilePreview( tile::Tile* const tile ) {
 	);
 }
 
+void Game::UpdateUnitPreview( const unit::Unit* const unit ) {
+	auto* const u = m_game->GetUM()->GetUnit( unit->GetId() );
+	Trigger(
+		m_game->GetMap(), "unit_select", ARGS_F( &u ) {
+			{
+				"unit",
+				u->Wrap( GSE_CALL )
+			},
+		}; }
+	);
+}
+
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile ) {
@@ -2640,6 +2653,9 @@ void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 		else {
 			// new ui
 			UpdateTilePreview( selected_tile );
+			if ( selected_unit ) {
+				UpdateUnitPreview( selected_unit );
+			}
 		}
 	}
 }
@@ -2658,6 +2674,9 @@ void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selecte
 		else {
 			// new ui
 			UpdateTilePreview( selected_tile );
+			if ( selected_unit ) {
+				UpdateUnitPreview( selected_unit );
+			}
 		}
 	}
 }

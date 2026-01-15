@@ -92,18 +92,16 @@ return {
 			right: 3,
 			top: 63,
 			bottom: 3,
+			itemsize: 16,
 		});
 
-		let line_top = 0;
 		const f_line = (text) => {
 			this.lines.text({
 				color: 'rgb(116,156,56)',
 				font: 'arialnb.ttf:14',
 				text: text,
-				top: line_top,
 				left: 3,
 			});
-			line_top += this.line_height;
 		};
 
 		if (tile.is_water) {
@@ -158,8 +156,6 @@ return {
 			left: 137,
 			width: 106,
 		});
-
-		this.line_height = 16;
 
 		p.map.on('tile_select', (e) => {
 			this.set_image(e.tile);

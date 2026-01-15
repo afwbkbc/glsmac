@@ -530,6 +530,7 @@ private:
 
 	void SetSelectedTile( tile::Tile* tile );
 	void UpdateTilePreview( tile::Tile* const tile );
+	void UpdateUnitPreview( const unit::Unit* const unit );
 	void RefreshSelectedTile( unit::Unit* selected_unit = nullptr );
 	void RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* selected_unit );
 	void ScrollToSelectedTile( const bool center_on_tile );

@@ -319,6 +319,27 @@ WRAPIMPL_BEGIN( UnitManager )
 			} )
 		},
 		{
+			"get_moraleset",
+			NATIVE_CALL( this ) {
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				const auto& moraleset = m_unit_moralesets.find( id );
+				if ( moraleset == m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" not found" );
+				}
+
+				gse::value::array_elements_t result = {};
+				for ( const auto& morale : moraleset->second->m_morale_values ) {
+					// TODO: refactor with Wrap()
+					result.push_back( VALUE( gse::value::String,, morale.m_name ) );
+				}
+
+				return VALUE( gse::value::Array,, result );
+			} )
+		},
+		{
 			"define_unit",
 			NATIVE_CALL( this ) {
 

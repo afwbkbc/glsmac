@@ -3,6 +3,23 @@ return {
 	previews: {},
 	last_object_class: null,
 
+	moralesets: {},
+
+	get_morale: (type, value) => {
+		if (!#is_defined(this.moralesets[type])) {
+			this.moralesets[type] = this.um.get_moraleset('NATIVE');
+		}
+		if (value >= #sizeof(this.moralesets[type])) {
+			console.warn('Morale not found: ' + type = '/' + #to_string(value));
+			return '(???)';
+		}
+		return this.moralesets[type][value];
+	},
+
+	format_movement: (movement) => {
+		return #to_string(#to_float(#round(movement * 100.0)) / 100.0);
+	},
+
 	set_image: (object) => {
 		const cls = #classof(object);
 		if (cls == 'Base') {
@@ -58,19 +75,17 @@ return {
 			right: 3, // TODO: fix
 			top: 86,
 			bottom: 3,
+			itemsize: 17,
 		});
 
-		let line_top = 0;
 		const f_line = (text, size, align) => {
 			this.lines.text({
 				align: 'top ' + align, // TODO: fix centered align
 				color: 'rgb(116,156,56)',
 				font: 'arialnb.ttf:' + #to_string(size),
 				text: text,
-				top: line_top,
 				left: 3,
 			});
-			line_top += size + 1;
 		};
 
 		switch (#classof(object)) {
@@ -86,13 +101,13 @@ return {
 				} else {
 					stats_str += '?';
 				}
-				stats_str += ' - ? - ' + #to_string(def.movement_per_turn);
+				stats_str += ' - ? - ' + #to_string(#round(def.movement_per_turn));
 				f_line(stats_str, 14, 'center');
 
-				// TODO: morale
+				f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
 
 				if (!object.is_immovable) {
-					f_line('Moves: ' + #to_string(object.movement), 14, 'left');
+					f_line('Moves: ' + this.format_movement(object.movement), 14, 'left');
 				}
 
 				break;
@@ -107,6 +122,8 @@ return {
 	},
 
 	init: (p) => {
+
+		this.um = p.game.get_um();
 
 		this.frame = p.el.panel({
 			class: 'bottombar-frame',
