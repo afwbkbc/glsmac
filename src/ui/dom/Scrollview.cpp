@@ -24,8 +24,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	m_inner = new Container( GSE_CALL, ui, this, {}, "inner", false, true );
 	{
 		auto* g = m_inner->GetGeometry();
-		g->SetWidth( 0 );
-		g->SetHeight( 0 );
+		g->SetParent( m_geometry );
 		g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
 		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
 			if ( !m_is_updating ) {
