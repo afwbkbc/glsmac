@@ -44,6 +44,11 @@ Widget::Widget( DOM_ARGS )
 		}
 	);
 
+	m_geometry->m_on_resize = [ this ]( const size_t width, const size_t height ) {
+		for ( const auto& it : m_textures ) {
+			it.second->Resize( width, height );
+		}
+	};
 }
 
 void Widget::Show() {

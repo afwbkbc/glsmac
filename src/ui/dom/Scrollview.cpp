@@ -106,7 +106,15 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 		UpdateScrollbars();
 	};
 
-	UpdateScrollbars( 0, 0 );
+	UpdateScrollbars();
+}
+
+void Scrollview::Destroy( GSE_CALLABLE ) {
+	if ( m_drag.drag_handler_id ) {
+		m_ui->RemoveGlobalHandler( m_drag.drag_handler_id );
+		m_drag.drag_handler_id = 0;
+	}
+	Panel::Destroy( GSE_CALL );
 }
 
 const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
@@ -197,7 +205,12 @@ void Scrollview::UpdateScrollbars( size_t width, size_t height ) {
 		if ( needscroll ) {
 			m_vscroll->SetValueRaw( diff );
 		}
-		m_vscroll->SetSliderSizeByPercentage( outer_h * 0.99f /* TODO: fix properly */ / ( inner_g->GetInnerHeight() ) );
+		const auto ih = inner_g->GetInnerHeight();
+		m_vscroll->SetSliderSizeByPercentage(
+			ih > 0
+				? outer_h * 0.99f /* TODO: fix properly */ / ih
+				: 0
+		);
 		m_vscroll->Show();
 	}
 
@@ -216,7 +229,12 @@ void Scrollview::UpdateScrollbars( size_t width, size_t height ) {
 		if ( needscroll ) {
 			m_hscroll->SetValueRaw( diff );
 		}
-		m_hscroll->SetSliderSizeByPercentage( outer_w * 0.99f /* TODO: fix properly */ / ( inner_g->GetInnerWidth() ) );
+		const auto iw = inner_g->GetInnerWidth();
+		m_hscroll->SetSliderSizeByPercentage(
+			iw > 0
+				? outer_w * 0.99f /* TODO: fix properly */ / iw
+				: 0
+		);
 		m_hscroll->Show();
 	}
 

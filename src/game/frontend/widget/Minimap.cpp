@@ -36,8 +36,12 @@ void Minimap::Update( const types::texture::Texture* minimap_texture ) {
 	WITH_WIDGET( &minimap_texture ) {
 		// TODO: downscale in case of multiple minimaps of different sizes
 		auto* const texture = widget->GetTexture();
-		texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1 );
-		texture->FullUpdate();
+		const auto w = minimap_texture->GetWidth();
+		const auto h = minimap_texture->GetHeight();
+		if ( w == texture->GetWidth() && h == texture->GetHeight() ) { // update only if matches exactly (won't match for example during resize)
+			texture->AddFrom( minimap_texture, types::texture::AM_MIRROR_Y, 0, 0, w - 1, h - 1 );
+			texture->FullUpdate();
+		}
 	} );
 }
 

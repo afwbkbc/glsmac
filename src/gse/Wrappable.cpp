@@ -130,10 +130,6 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, gse::va
 				m_callbacks_mutex.lock(); // to prevent error when guard exits
 				throw e;
 			}
-			catch ( const std::runtime_error& e ) {
-				m_callbacks_mutex.lock(); // to prevent error when guard exits
-				throw e;
-			}
 			m_callbacks_mutex.lock();
 			if ( expected_return_type.has_value() ) {
 				if ( !result || result->type != expected_return_type.value() ) {

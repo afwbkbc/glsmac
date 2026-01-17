@@ -103,16 +103,8 @@ return {
 				const def = object.get_def();
 
 				f_line(def.name, 16, 'center');
-				let stats_str = '';
 
-				// tmp
-				if (def.id == 'SporeLauncher') {
-					stats_str += '(?)';
-				} else {
-					stats_str += '?';
-				}
-				stats_str += ' - ? - ' + #to_string(#round(def.movement_per_turn));
-				f_line(stats_str, 14, 'center');
+				f_line(this.p.get_stats_str(object), 14, 'center');
 
 				f_line(this.get_morale('NATIVE', object.morale), 14, 'left');
 
@@ -125,7 +117,7 @@ return {
 			case 'Base': {
 
 				f_line(object.name, 14, 'center');
-				
+
 				f_line('Producing:', 14, 'left'); // TODO
 
 				break;
@@ -137,6 +129,8 @@ return {
 	},
 
 	init: (p) => {
+
+		this.p = p;
 
 		this.um = p.game.get_um();
 

@@ -27,8 +27,9 @@ void BasePreview::Register( ui::dom::Widget* const widget ) {
 			const auto* const u = ::game::backend::base::Base::Unwrap( data->value.at( "base" ) );
 			ASSERT( u, "invalid base ptr" );
 			const auto* const base = m_game->GetBM()->GetBaseById( u->m_id );
-			ASSERT( base, "invalid base" );
-			Update( widget, base );
+			if ( base ) {
+				Update( widget, base );
+			}
 		}
 	);
 }

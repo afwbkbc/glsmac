@@ -14,6 +14,8 @@ class Scrollview : public Panel {
 public:
 	Scrollview( DOM_ARGS_TD( "scrollview" ), const bool factories_allowed = true );
 
+	void Destroy( GSE_CALLABLE ) override;
+
 protected:
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 

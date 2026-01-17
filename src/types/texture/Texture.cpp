@@ -55,6 +55,8 @@ void Texture::Resize( const size_t width, const size_t height ) {
 	if ( m_width != width || m_height != height ) {
 
 		//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
+		ASSERT( width < VERY_BIG_NUMBER, "texture width overflow" );
+		ASSERT( height < VERY_BIG_NUMBER, "texture height overflow" );
 
 		m_width = width;
 		m_height = height;
@@ -158,6 +160,9 @@ void Texture::Fill( const size_t x1, const size_t y1, const size_t x2, const siz
 void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::random::Random* rng, util::Perlin* perlin ) {
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
 	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( source, "source texture is null" );
+	ASSERT( x2 < source->m_width, "source x overflow ( " + std::to_string( x2 ) + " >= " + std::to_string( source->m_width ) + " )" );
+	ASSERT( y2 < source->m_height, "source y overflow ( " + std::to_string( y2 ) + " >= " + std::to_string( source->m_height ) + " )" );
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
@@ -177,8 +182,11 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	const size_t w = x2 - x1 + 1;
 	const size_t h = y2 - y1 + 1;
 
-	const void* from;
-	void* to;
+	ASSERT( w > 0, "w is zero" );
+	ASSERT( h > 0, "h is zero" );
+
+	const void* from = nullptr;
+	void* to = nullptr;
 
 	ASSERT( rotate < 4, "invalid rotate value " + std::to_string( rotate ) );
 	if ( rotate > 0 ) {
@@ -884,21 +892,28 @@ Texture* Texture::FromColor( const Color& color ) {
 }
 
 void Texture::Update( const updated_area_t updated_area ) {
-	//Log( "Need texture update [ "+ std::to_string( updated_area.left ) + " " + std::to_string( updated_area.top ) + " " + std::to_string( updated_area.right ) + " " + std::to_string( updated_area.bottom ) + " ]" );
+	//Log( "Need texture update [ " + std::to_string( updated_area.left ) + " " + std::to_string( updated_area.top ) + " " + std::to_string( updated_area.right ) + " " + std::to_string( updated_area.bottom ) + " ]" );
+	ASSERT( updated_area.right > updated_area.left && updated_area.right < VERY_BIG_NUMBER, "invalid area right" );
+	ASSERT( updated_area.bottom > updated_area.top && updated_area.bottom < VERY_BIG_NUMBER, "invalid area right" );
 	m_updated_areas.push_back( updated_area );
 	m_update_counter++;
 }
 
 void Texture::FullUpdate() {
 	ClearUpdatedAreas();
-	Update(
-		{
-			0,
-			0,
-			m_width,
-			m_height
-		}
-	);
+	if ( m_width > 0 && m_height > 0 ) {
+		Update(
+			{
+				0,
+				0,
+				m_width,
+				m_height
+			}
+		);
+	}
+	else {
+		m_update_counter++;
+	}
 }
 
 const size_t Texture::UpdatedCount() const {

@@ -46,8 +46,10 @@ BaseManager::~BaseManager() {
 }
 
 base::Base* BaseManager::GetBaseById( const size_t id ) const {
-	ASSERT( m_bases.find( id ) != m_bases.end(), "base id not found" );
-	return m_bases.at( id );
+	const auto& it = m_bases.find( id );
+	return it != m_bases.end()
+		? it->second
+		: nullptr;
 }
 
 void BaseManager::DefinePop( const backend::base::PopDef* def ) {

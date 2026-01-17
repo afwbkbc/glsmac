@@ -60,6 +60,7 @@ class Object : public gse::GCWrappable {
 public:
 
 	Object( DOM_ARGS_T );
+	virtual ~Object();
 
 	virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override;
 	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
@@ -93,8 +94,6 @@ public:
 	static const gse::value::Object::object_class_t WRAP_CLASS;
 
 protected:
-
-	virtual ~Object();
 
 	virtual const bool IsEventRelevant( const input::Event& event ) const;
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event );

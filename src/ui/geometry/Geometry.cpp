@@ -279,10 +279,19 @@ void Geometry::Update() {
 	}
 }
 
+#define VERY_BIG_FLOAT 10000000.0f // to catch some strange bugs
+
 void Geometry::UpdateArea() {
 	//Log( "Stick bits = " + std::to_string( m_stick_bits ) );
 	area_t object_area = {};
 	object_area.zindex = m_zindex;
+
+	ASSERT( m_top < VERY_BIG_FLOAT, "geometry top overflow" );
+	ASSERT( m_left < VERY_BIG_FLOAT, "geometry left overflow" );
+	ASSERT( m_right < VERY_BIG_FLOAT, "geometry right overflow" );
+	ASSERT( m_bottom < VERY_BIG_FLOAT, "geometry bottom overflow" );
+	ASSERT( m_width < VERY_BIG_FLOAT, "geometry width overflow" );
+	ASSERT( m_height < VERY_BIG_FLOAT, "geometry height overflow" );
 
 	if ( m_parent ) {
 		area_t area;

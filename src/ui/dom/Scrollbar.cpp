@@ -432,6 +432,7 @@ void Scrollbar::Scroll( const float value ) {
 }
 
 void Scrollbar::SetSliderSize( const size_t size ) {
+	ASSERT( size < VERY_BIG_NUMBER, "scrollbar size overflow" );
 	if ( size != m_slider_size ) {
 		m_slider_size = size;
 		ResizeSlider();

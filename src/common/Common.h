@@ -6,6 +6,8 @@
 
 #include "Assert.h"
 
+#define VERY_BIG_NUMBER 99999999999 // to detect sign overflows
+
 // used in multiline ToString() implementations
 
 #define TS_DEF() const std::string ToString( const std::string& prefix ) const override;

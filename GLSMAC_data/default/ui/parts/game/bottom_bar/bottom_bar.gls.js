@@ -50,6 +50,23 @@ return {
 			ui: p.ui,
 			el: el,
 			sections: {},
+			get_stats_str: (object) => {
+				switch (#classof(object)) {
+					case 'Unit': {
+						let stats_str = '';
+						// tmp
+						const def = object.get_def();
+						if (def.id == 'SporeLauncher') {
+							stats_str += '(?)';
+						} else {
+							stats_str += '?';
+						}
+						stats_str += ' - ? - ' + #to_string(#round(def.movement_per_turn));
+						return stats_str;
+					}
+				}
+				return '';
+			},
 		};
 		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map']) {
 			pp.sections[s] = #include(s);

@@ -1265,6 +1265,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		case FrontendRequest::FR_BASE_UPDATE: {
 			const auto& d = request->data.base_update;
 			auto* base = m_bm->GetBaseById( d.base_id );
+			ASSERT( base, "base is null" );
 			base->SetName( *d.name );
 			// TODO: update slot index
 			if ( base->GetFaction()->m_id != *d.faction_id ) {
@@ -1521,6 +1522,7 @@ void Game::Initialize(
                         case ::ui_legacy::event::_altkey: { \
                             td = backend::map::tile::_direction; \
                             is_tile_selected = true; \
+                            m_tile_at_query_purpose = backend::TQP_TILE_SELECT; \
                             break; \
                         }
 						X( K_LEFT, K_KP_LEFT, D_W )
@@ -2326,7 +2328,6 @@ void Game::GetMinimapTexture( scene::Camera* camera, const types::Vec2< size_t >
 		Log( "Canceling minimap texture request" );
 		m_actors.terrain->GetMeshActor()->CancelDataRequest( m_minimap_texture_request_id );
 	}
-	Log( "Requesting minimap texture" );
 	m_minimap_texture_request_id = m_actors.terrain->GetMeshActor()->CaptureToTexture( camera, texture_dimensions );
 }
 
@@ -2349,6 +2350,7 @@ void Game::UpdateMinimap() {
 	if ( !minimap_size.x || !minimap_size.y ) {
 		return;
 	}
+	Log( "Requesting minimap ( " + std::to_string( minimap_size.x ) + "x" + std::to_string( minimap_size.y ) + " )" );
 
 	const float sx = minimap_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
 	const float sy = minimap_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
