@@ -11,6 +11,12 @@ Scene::~Scene() {
 	if ( m_local_camera ) {
 		DELETE( m_local_camera );
 	}
+	{
+		std::lock_guard guard( m_actors_mutex );
+		for ( const auto& actor : m_actors ) {
+			actor->SetScene( nullptr );
+		}
+	}
 }
 
 void Scene::AddActor( actor::Actor* actor ) {

@@ -340,7 +340,9 @@ void Object::ClearActors() {
 		g = g->AsRectangle();
 	}
 	for ( const auto& it : m_actors ) {
-		it.scene->RemoveActor( it.actor );
+		if ( it.scene ) {
+			it.scene->RemoveActor( it.actor );
+		}
 		if ( g ) {
 			((geometry::Rectangle*)g)->Clear();
 		}

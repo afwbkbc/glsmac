@@ -1147,6 +1147,14 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			AbortAnimation( request->data.animation_abort.running_animation_id );
 			break;
 		}
+		case FrontendRequest::FR_UNIT_SELECT: {
+			auto* const unit = m_um->GetUnitById( request->data.unit_select.unit_id );
+			if ( unit && unit->IsActive() ) {
+				m_um->SelectUnit( unit, true );
+				ScrollToTile( unit->GetTile(), true );
+			}
+			break;
+		}
 		case FrontendRequest::FR_UNIT_DEFINE: {
 			types::Buffer buf( *request->data.unit_define.serialized_unitdef );
 			const auto* unitdef = backend::unit::Def::Deserialize( buf );

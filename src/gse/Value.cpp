@@ -111,6 +111,11 @@ const std::string& Value::GetTypeString() const {
 }
 
 const std::string Value::ToString() const {
+	std::unordered_set< const Value* > stack = {};
+	return ToStringImpl( stack );
+}
+
+const std::string Value::ToStringImpl( std::unordered_set< const Value* >& stack ) const {
 	switch ( type ) {
 		case VT_UNDEFINED:
 			return "undefined";
@@ -147,6 +152,7 @@ const std::string Value::ToString() const {
 			std::string str = "";
 			str.append( obj->object_class + "{ " );
 			bool first = true;
+			stack.insert( this );
 			for ( const auto& it : obj->value ) {
 				if ( first ) {
 					first = false;
@@ -154,8 +160,16 @@ const std::string Value::ToString() const {
 				else {
 					str.append( ", " );
 				}
-				str.append( it.first + ": " + it.second->ToString() );
+				const auto* const v = it.second;
+				str.append(
+					it.first + ": " + (
+						stack.find( v ) == stack.end()
+							? it.second->ToStringImpl( stack )
+							: "<recursion>"
+					)
+				);
 			}
+			stack.erase( this );
 			str.append( " }" );
 			return str;
 		}

@@ -234,6 +234,7 @@ public:
 	static const std::string& GetTypeStringStatic( const value_type_t type );
 	const std::string& GetTypeString() const;
 	virtual const std::string ToString() const;
+	const std::string ToStringImpl( std::unordered_set< const Value* >& stack ) const;
 	const std::string Dump() const;
 
 	Value* const Deref();

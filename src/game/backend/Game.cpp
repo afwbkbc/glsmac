@@ -910,6 +910,17 @@ WRAPIMPL_BEGIN( Game )
 				return VALUE( gse::value::Bool,, m_game_state != GS_NONE );
 			} )
 		},
+		{
+			"select_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SELECT );
+				fr.data.unit_select.unit_id = unit->m_id;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
 	};
 	if ( m_tm ) {
 		properties.insert(

@@ -176,7 +176,9 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 					ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
 			}
 			m_slider_drag.is_dragging = true;
-			m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
+			if ( !m_slider_drag.drag_handler_id ) {
+				m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
+			}
 		}
 		return true;
 	};

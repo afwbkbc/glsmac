@@ -53,12 +53,9 @@ return {
 		}
 		if (!#is_defined(this.previews[cls])) {
 			this.previews[cls] = this.frame.widget({
+				class: 'bottombar-object-preview',
 				type: type,
 				data: data,
-				align: 'top center',
-				top: 12,
-				width: 100,
-				height: 75,
 			});
 		} else {
 			this.previews[cls].data = data;
@@ -128,11 +125,22 @@ return {
 		}
 	},
 
+	show: (object) => {
+		this.set_image(object);
+		this.set_lines(object);
+	},
+
 	init: (p) => {
 
 		this.p = p;
-
 		this.um = p.game.get_um();
+
+		p.ui.class('bottombar-object-preview').set({
+			align: 'top center',
+			top: 12,
+			width: 100,
+			height: 75,
+		});
 
 		this.frame = p.el.panel({
 			class: 'bottombar-frame',
@@ -143,16 +151,11 @@ return {
 			width: 129,
 		});
 
-		const f_update = (object) => {
-			this.set_image(object);
-			this.set_lines(object);
-		};
-
 		p.map.on('unit_preview', (e) => {
-			f_update(e.unit);
+			this.show(e.unit);
 		});
 		p.map.on('base_preview', (e) => {
-			f_update(e.base);
+			this.show(e.base);
 		})
 
 	},

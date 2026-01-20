@@ -36,6 +36,7 @@ public:
 		FR_ANIMATION_UNDEFINE,
 		FR_ANIMATION_SHOW,
 		FR_ANIMATION_ABORT,
+		FR_UNIT_SELECT,
 		FR_UNIT_DEFINE,
 		FR_UNIT_UNDEFINE,
 		FR_UNIT_SPAWN,
@@ -124,6 +125,9 @@ public:
 		struct {
 			size_t running_animation_id;
 		} animation_abort;
+		struct {
+			size_t unit_id;
+		} unit_select;
 		struct {
 			const std::string* serialized_unitdef; // can be optimized
 		} unit_define;
