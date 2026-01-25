@@ -115,6 +115,12 @@ void Rectangle::InitMesh( types::mesh::Mesh* const mesh, const bool keep_tex, co
 }
 
 void Rectangle::UpdateActor( scene::actor::Mesh* const actor ) {
+	actor->SetAreaLimits(
+		{
+			{ m_ui->ClampX( m_area.left ),  m_ui->ClampY( m_area.top ),    -1.0f },
+			{ m_ui->ClampX( m_area.right ), m_ui->ClampY( m_area.bottom ), 1.0f }
+		}
+	);
 	actor->SetPositionZ( m_area.zindex );
 }
 

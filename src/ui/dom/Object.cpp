@@ -323,7 +323,8 @@ void Object::Actor( scene::actor::Actor* actor, const bool no_parent ) {
 		actor->SetRenderFlags(
 			scene::actor::Actor::RF_IGNORE_CAMERA |
 				scene::actor::Actor::RF_IGNORE_LIGHTING |
-				scene::actor::Actor::RF_IGNORE_DEPTH
+				scene::actor::Actor::RF_IGNORE_DEPTH |
+				scene::actor::Actor::RF_USE_AREA_LIMITS
 		);
 	}
 	scene->AddActor( actor );

@@ -30,6 +30,10 @@ void Cache::RemoveCacheChild( Actor* actor ) {
 
 void Cache::SetEffectiveArea( const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const types::mesh::coord_t z ) {
 	if ( m_top_left != top_left || m_bottom_right != bottom_right || m_position.z != z ) {
+		ASSERT( top_left.x < VERY_BIG_NUMBER, "effective area left overflow" );
+		ASSERT( top_left.y < VERY_BIG_NUMBER, "effective area top overflow" );
+		ASSERT( bottom_right.x < VERY_BIG_NUMBER, "effective area right overflow" );
+		ASSERT( bottom_right.y < VERY_BIG_NUMBER, "effective area bottom overflow" );
 		m_top_left = top_left;
 		m_bottom_right = bottom_right;
 		m_position.z = z;
