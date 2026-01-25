@@ -128,10 +128,6 @@ void FBO::Resize( size_t width, size_t height ) {
 	ASSERT( width > 0, "fbo width zero" );
 	ASSERT( height > 0, "fbo height zero" );
 
-	// upscale
-	width *= INTERNAL_RESOLUTION_MULTIPLIER;
-	height *= INTERNAL_RESOLUTION_MULTIPLIER;
-
 	if ( width != m_width || height != m_height ) {
 
 		m_width = width;
@@ -170,11 +166,6 @@ void FBO::WriteBegin() {
 	m_opengl->WithBindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 
-	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
-		// upscale
-		glViewport( 0, 0, m_width, m_height );
-	}
-
 	// start with clean state
 	// TODO: partial redraws?
 	//glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
@@ -200,11 +191,6 @@ void FBO::WriteEnd() {
 
 	glDrawBuffer( GL_NONE );
 	m_opengl->WithBindFramebufferEnd( GL_DRAW_FRAMEBUFFER );
-
-	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
-		// restore
-		glViewport( 0, 0, m_width / INTERNAL_RESOLUTION_MULTIPLIER, m_height / INTERNAL_RESOLUTION_MULTIPLIER );
-	}
 
 	m_is_enabled = false;
 }
@@ -273,19 +259,15 @@ types::texture::Texture* FBO::CaptureToTexture() {
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
 
-	// downscale
-	const auto width = m_width / INTERNAL_RESOLUTION_MULTIPLIER;
-	const auto height = m_height / INTERNAL_RESOLUTION_MULTIPLIER;
-
-	NEWV( texture, types::texture::Texture, "FBOCapture", width, height );
+	NEWV( texture, types::texture::Texture, "FBOCapture", m_width, m_height );
 
 	CaptureToTexture(
 		texture, {
 			0,
 			0
 		}, {
-			width,
-			height
+			m_width,
+			m_height
 		}
 	);
 

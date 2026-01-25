@@ -2360,24 +2360,19 @@ void Game::UpdateMinimap() {
 	}
 	Log( "Requesting minimap ( " + std::to_string( minimap_size.x ) + "x" + std::to_string( minimap_size.y ) + " )" );
 
-	const float sx = minimap_size.x / (float)( m_map_data.width ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.x;
-	const float sy = minimap_size.y / (float)( m_map_data.height ) / (float)backend::map::s_consts.tc.texture_pcx.dimensions.y;
-	const float ss = ( minimap_size.y / (float)m_viewport.window_height );
-	const float sa = minimap_size.y / minimap_size.x;
-
 	NEWV( camera, scene::Camera, scene::Camera::CT_ORTHOGRAPHIC );
 	camera->SetAngle( m_camera->GetAngle() );
 	camera->SetScale(
 		{
-			sx * ss / sa * 0.5f, // TODO: why 0.5 ?
-			sy * ss / sa,
+			minimap_size.x / (float)m_viewport.window_width / m_viewport.window_aspect_ratio / (float)m_map_data.width * 2.0f,
+			minimap_size.y / (float)m_viewport.window_height / (float)( m_map_data.height + 1 ) * 2.82f,
 			0.01f,
 		}
 	);
 	camera->SetPosition(
 		{
-			ss,
-			1.0f - ss * 0.5f, // TODO: why 0.5 ?
+			0.0f,
+			1.014f - ( minimap_size.y / 2.0f / (float)m_viewport.window_height ),
 			0.5f
 		}
 	);

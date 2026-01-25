@@ -26,9 +26,6 @@ class Simple2D;
 
 CLASS( FBO, common::Class )
 
-	// this doesn't seem to help with anything, keep it at 1 for now
-	static constexpr ssize_t INTERNAL_RESOLUTION_MULTIPLIER = 1;
-
 	FBO( OpenGL* opengl, const size_t width, const size_t height );
 	~FBO();
 
