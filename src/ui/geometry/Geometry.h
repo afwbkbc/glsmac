@@ -152,10 +152,13 @@ public:
 	void Destroy();
 
 protected:
+	friend class Rectangle;
 
 	virtual void UpdateImpl() = 0;
 
 	const UI* const m_ui;
+	Geometry* m_parent;
+	overflow_mode_t m_overflow_mode = OM_VISIBLE;
 
 private:
 	bool m_is_visible = false;
@@ -164,7 +167,6 @@ private:
 
 	void Update();
 
-	Geometry* m_parent;
 	std::unordered_set< Geometry* > m_children = {};
 
 	enum stick_bits_t : uint8_t {
@@ -188,7 +190,6 @@ private:
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	position_t m_position = POSITION_RELATIVE;
 	coord_t m_zindex = 0.5f;
-	overflow_mode_t m_overflow_mode = OM_VISIBLE;
 
 	void UpdateArea();
 	void UpdateEffectiveArea();

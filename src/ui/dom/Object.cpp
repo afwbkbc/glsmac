@@ -321,10 +321,10 @@ void Object::Actor( scene::actor::Actor* actor, const bool no_parent ) {
 	auto* const scene = m_ui->GetSceneOfActor( actor );
 	if ( scene->GetType() == scene::SCENE_TYPE_ORTHO_UI ) {
 		actor->SetRenderFlags(
+			actor->GetRenderFlags() |
 			scene::actor::Actor::RF_IGNORE_CAMERA |
 				scene::actor::Actor::RF_IGNORE_LIGHTING |
-				scene::actor::Actor::RF_IGNORE_DEPTH |
-				scene::actor::Actor::RF_USE_AREA_LIMITS
+				scene::actor::Actor::RF_IGNORE_DEPTH
 		);
 	}
 	scene->AddActor( actor );

@@ -479,10 +479,28 @@ void Geometry::UpdateEffectiveArea() {
 
 void Geometry::FixArea( area_t& area ) {
 	const auto& g = g_engine->GetGraphics();
-	const auto maxx = g->GetViewportWidth() - 1;
-	const auto maxy = g->GetViewportHeight() - 1;
-	if ( area.left < 0 ) {
-		area.left = 0;
+	double minx = 0;
+	double miny = 0;
+	double maxx = g->GetViewportWidth() - 1;
+	double maxy = g->GetViewportHeight() - 1;
+	if ( m_parent ) {
+		const auto& a = m_parent->m_effective_area;
+		if ( minx < a.left ) {
+			minx = a.left;
+		}
+		if ( miny < a.top ) {
+			miny = a.top;
+		}
+		if ( maxx > a.right ) {
+			maxx = a.right;
+		}
+		if ( maxy > a.bottom ) {
+			maxy = a.bottom;
+		}
+	}
+
+	if ( area.left < minx ) {
+		area.left = minx;
 	}
 	if ( area.left > maxx ) {
 		area.left = maxx;
@@ -490,8 +508,8 @@ void Geometry::FixArea( area_t& area ) {
 	if ( area.right > maxx ) {
 		area.right = maxx;
 	}
-	if ( area.top < 0 ) {
-		area.top = 0;
+	if ( area.top < miny ) {
+		area.top = miny;
 	}
 	if ( area.top > maxy ) {
 		area.top = maxy;
