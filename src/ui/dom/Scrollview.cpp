@@ -43,6 +43,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	{
 		auto* g = m_vscroll->GetGeometry();
 		g->SetAlign( geometry::Geometry::ALIGN_RIGHT_CENTER );
+		g->SetWidth( 0 );
 		g->SetTop( 0 );
 		g->SetBottom( 0 );
 		g->SetRight( 0 );
@@ -58,6 +59,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	{
 		auto* g = m_hscroll->GetGeometry();
 		g->SetAlign( geometry::Geometry::ALIGN_BOTTOM_CENTER );
+		g->SetHeight( 0 );
 		g->SetLeft( 0 );
 		g->SetRight( 0 );
 		g->SetBottom( 0 );

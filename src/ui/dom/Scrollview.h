@@ -32,7 +32,7 @@ protected:
 	bool m_autoscroll = false;
 
 private:
-
+	
 	Container* m_inner = nullptr;
 
 	bool m_has_vscroll = true;

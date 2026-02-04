@@ -162,6 +162,10 @@ void Geometry::SetZIndex( const coord_t zindex ) {
 void Geometry::SetOverflowMode( const overflow_mode_t mode ) {
 	if ( mode != m_overflow_mode ) {
 		m_overflow_mode = mode;
+		if ( m_overflow_mode == OM_RESIZE ) {
+			m_stick_bits |= STICK_WIDTH | STICK_HEIGHT;
+			ResizeAreaFromChildren();
+		}
 		NeedUpdate();
 	}
 }
@@ -177,14 +181,7 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 
 void Geometry::OnChildUpdate() {
 	if ( m_overflow_mode == OM_RESIZE ) {
-		// resize area from children ( TODO: optimize? )
-		m_area = {};
-		for ( const auto& child : m_children ) {
-			if ( child->m_is_visible ) {
-				m_area.EnlargeTo( child->m_area );
-			}
-		}
-		FixArea( m_area );
+		ResizeAreaFromChildren();
 		NeedUpdate();
 	}
 	UpdateEffectiveArea();
@@ -483,21 +480,6 @@ void Geometry::FixArea( area_t& area ) {
 	double miny = 0;
 	double maxx = g->GetViewportWidth() - 1;
 	double maxy = g->GetViewportHeight() - 1;
-	if ( m_parent ) {
-		const auto& a = m_parent->m_effective_area;
-		if ( minx < a.left ) {
-			minx = a.left;
-		}
-		if ( miny < a.top ) {
-			miny = a.top;
-		}
-		if ( maxx > a.right ) {
-			maxx = a.right;
-		}
-		if ( maxy > a.bottom ) {
-			maxy = a.bottom;
-		}
-	}
 
 	if ( area.left < minx ) {
 		area.left = minx;
@@ -586,6 +568,18 @@ void Geometry::RemoveBoundaries( Geometry* const g ) {
 			m_on_resize( m_boundaries.width, m_boundaries.height );
 		}
 	}
+}
+
+void Geometry::ResizeAreaFromChildren() {
+	// resize area from children ( TODO: optimize? )
+	ASSERT( m_overflow_mode == OM_RESIZE, "overflow mode mismatch" );
+	m_area = {};
+	for ( const auto& child : m_children ) {
+		if ( child->m_is_visible ) {
+			m_area.EnlargeTo( child->m_area );
+		}
+	}
+	FixArea( m_area );
 }
 
 }

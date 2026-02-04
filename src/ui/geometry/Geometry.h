@@ -221,6 +221,7 @@ private:
 	} m_boundaries = {};
 	void AddBoundaries( Geometry* const g );
 	void RemoveBoundaries( Geometry* const g );
+	void ResizeAreaFromChildren();
 
 };
 
