@@ -409,14 +409,14 @@ void Scrollbar::ResizeSlider() {
 void Scrollbar::RealignSlider() {
 	switch ( m_scroll_type ) {
 		case ST_VERTICAL: {
-			size_t mintop = m_fromto_size;
-			size_t maxtop = m_geometry->m_area.height - m_fromto_size * 2;
+			coord_t mintop = m_fromto_size;
+			coord_t maxtop = m_geometry->m_area.height - m_fromto_size * 2;
 			m_slider->GetGeometry()->SetTop( mintop + ( maxtop - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}
 		case ST_HORIZONTAL: {
-			size_t minleft = m_fromto_size;
-			size_t maxleft = m_geometry->m_area.width - m_fromto_size * 2;
+			coord_t minleft = m_fromto_size;
+			coord_t maxleft = m_geometry->m_area.width - m_fromto_size * 2;
 			m_slider->GetGeometry()->SetLeft( minleft + ( maxleft - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}

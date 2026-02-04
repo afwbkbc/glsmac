@@ -46,17 +46,18 @@ public:
 		s_next_mt_id_mutex.unlock();
 		state.is_executed = false;
 		state.request = data;
-		m_mt_states_mutex.lock();
-		ASSERT( m_mt_states.find( mt_id ) == m_mt_states.end(), "duplicate mt_id" );
-		m_mt_states[ mt_id ] = state;
-		m_mt_states_mutex.unlock();
+		{
+			std::lock_guard guard( m_mt_states_mutex );
+			ASSERT( m_mt_states.find( mt_id ) == m_mt_states.end(), "duplicate mt_id" );
+			m_mt_states[ mt_id ] = state;
+		}
 		//Log( "MT Request " + to_string( mt_id ) + " created" );
 		return mt_id;
 	}
 
 	const RESPONSE_TYPE MT_GetResponse( const mt_id_t mt_id ) {
+		std::lock_guard guard( m_mt_states_mutex );
 		RESPONSE_TYPE response = {};
-		m_mt_states_mutex.lock();
 		auto it = m_mt_states.find( mt_id );
 		if ( it == m_mt_states.end() ) {
 			return response;
@@ -67,8 +68,6 @@ public:
 			m_mt_states.erase( it );
 			//Log( "MT Request " + to_string( mt_id ) + " result returned" );
 		}
-		m_mt_states_mutex.unlock();
-
 		return response;
 	}
 
@@ -78,7 +77,7 @@ public:
 	}
 
 	void MT_Cancel( const mt_id_t mt_id ) {
-		m_mt_states_mutex.lock();
+		std::lock_guard guard( m_mt_states_mutex );
 		auto it = m_mt_states.find( mt_id );
 		if ( it == m_mt_states.end() ) {
 			return; // already gone
@@ -91,7 +90,7 @@ public:
 				Log( "Waiting for MT Request " + std::to_string( mt_id ) + " to finish" );
 				while ( it->second.is_processing ) {
 					m_mt_states_mutex.unlock();
-					std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+					std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
 					m_mt_states_mutex.lock();
 				}
 			}
@@ -100,7 +99,6 @@ public:
 			DestroyResponse( it->second.response );
 			m_mt_states.erase( it );
 		}
-		m_mt_states_mutex.unlock();
 	}
 
 protected:
@@ -116,17 +114,21 @@ protected:
 			//Log( "MT Processing " + to_string( requests.size() ) + " requests" );
 			mt_response_map_t responses = {};
 			for ( auto& request : requests ) {
-				m_mt_states_mutex.lock();
-				const mt_id_t previous_request_id = m_current_request_id;
-				const bool was_canceled = m_is_canceled;
-				m_current_request_id = request.first;
-				m_is_canceled = false;
-				m_mt_states_mutex.unlock();
+				mt_id_t previous_request_id = 0;
+				bool was_canceled = false;
+				{
+					std::lock_guard guard( m_mt_states_mutex );
+					previous_request_id = m_current_request_id;
+					was_canceled = m_is_canceled;
+					m_current_request_id = request.first;
+					m_is_canceled = false;
+				}
 				responses[ request.first ] = ProcessRequest( request.second, m_is_canceled );
-				m_mt_states_mutex.lock();
-				m_current_request_id = previous_request_id;
-				m_is_canceled = was_canceled;
-				m_mt_states_mutex.unlock();
+				{
+					std::lock_guard guard( m_mt_states_mutex );
+					m_current_request_id = previous_request_id;
+					m_is_canceled = was_canceled;
+				}
 			}
 			if ( !responses.empty() ) {
 				MT_SetResponses( responses );
@@ -146,21 +148,20 @@ private:
 	typedef std::map< mt_id_t, RESPONSE_TYPE > mt_response_map_t;
 
 	mt_request_map_t MT_GetRequests() {
+		std::lock_guard guard( m_mt_states_mutex );
 		mt_request_map_t result = {};
-		m_mt_states_mutex.lock();
 		for ( auto& it : m_mt_states ) {
 			if ( !it.second.is_executed && !it.second.is_processing ) {
 				it.second.is_processing = true;
 				result[ it.first ] = it.second.request;
 			}
 		}
-		m_mt_states_mutex.unlock();
 		return result;
 	}
 
 	void MT_SetResponses( const mt_response_map_t& responses ) {
 		if ( !responses.empty() ) {
-			m_mt_states_mutex.lock();
+			std::lock_guard guard( m_mt_states_mutex );
 			for ( auto& response : responses ) {
 				auto it = m_mt_states.find( response.first );
 				ASSERT( it != m_mt_states.end(), "invalid response mt_id" );
@@ -170,7 +171,6 @@ private:
 				it->second.is_processing = false;
 				//Log( "MT Request " + to_string( response.first ) + " executed" );
 			}
-			m_mt_states_mutex.unlock();
 		}
 	}
 
