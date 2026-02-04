@@ -24,9 +24,6 @@
 #include "util/Timer.h"
 #endif
 
-// TODO: move to config
-const size_t g_max_fps = 500;
-
 engine::Engine* g_engine = NULL;
 
 namespace engine {
@@ -73,7 +70,7 @@ Engine::Engine(
 		t_main->SetIPS( 999999.9f );
 	}
 	else {
-		t_main->SetIPS( g_max_fps );
+		t_main->SetIPS( m_config->GetMaxIPS() );
 	}
 	t_main->AddModule( m_config );
 	t_main->AddModule( m_error_handler );
@@ -87,10 +84,6 @@ Engine::Engine(
 	if ( !m_config->HasDebugFlag( config::Config::DF_GSE_ONLY ) )
 #endif
 	{
-		if ( m_config->HasLaunchFlag( config::Config::LF_LEGACY_UI ) ) {
-			// with new ui this will happen in script
-			m_resource_manager->Init( m_config->GetPossibleSMACPaths(), m_config->GetSMACType() );
-		}
 		t_main->AddModule( m_resource_manager );
 	}
 	t_main->AddModule( m_input );
@@ -141,7 +134,7 @@ Engine::Engine(
 			NEW( t_game, common::Thread, "GAME" );
 			m_threads.push_back( t_game );
 		}
-		t_game->SetIPS( g_max_fps );
+		t_game->SetIPS( m_config->GetMaxIPS() );
 		t_game->AddModule( m_game );
 	}
 };

@@ -284,15 +284,17 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"legacy-ui", "Use legacy UI, development purposes only (broken, will be removed soon)", AH( this ) {
-			m_launch_flags |= LF_LEGACY_UI;
+		"maxips", "IPS", "Maximum allowed IPS (iterations per second, determine FPS, default: 500)", AH( this ) {
+			m_launch_flags |= LF_MAXIPS;
+			long int maxips = 0;
+			if ( !util::String::ParseInt( value, maxips ) || maxips < 1 || maxips > 1000 ) {
+				Error( "--maxips value must be a number from 1 to 1000" );
+			}
+			m_maxips = maxips;
 		}
 	);
 	m_manager->AddRule(
 		"mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
-			if ( HasLaunchFlag( LF_LEGACY_UI ) ) {
-				Error( "--mainscript is not supported for legacy UI!" );
-			}
 			m_mainscript = value;
 		}
 	);
@@ -487,6 +489,10 @@ const std::string& Config::GetJoinAddress() const {
 
 const std::string& Config::GetMainScript() const {
 	return m_mainscript;
+}
+
+const uint16_t Config::GetMaxIPS() const {
+	return m_maxips;
 }
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

@@ -5,9 +5,6 @@
 #include <atomic>
 #include <string>
 
-// TODO: move to config
-extern const size_t g_max_fps;
-
 namespace common {
 class Thread;
 }

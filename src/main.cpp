@@ -103,9 +103,6 @@ int main( const int argc, const char* argv[] ) {
 
 	config.Init( argc, argv );
 
-	// this changes the whole flow
-	const auto legacy_ui = config.HasLaunchFlag( config::Config::LF_LEGACY_UI );
-
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
@@ -157,9 +154,6 @@ int main( const int argc, const char* argv[] ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		loggers.push_back( new logger::Stdout() );
-	}
-	if ( legacy_ui ) {
-		loggers.push_back( new logger::Console() );
 	}
 #endif
 
@@ -254,17 +248,6 @@ int main( const int argc, const char* argv[] ) {
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
 
-		if ( legacy_ui ) {
-#ifdef DEBUG
-			NEWV( debug_overlay, debug::DebugOverlay );
-			scheduler.AddTask( debug_overlay );
-#endif
-
-			// game common stuff
-			NEWV( task_common, task::Common );
-			scheduler.AddTask( task_common );
-		}
-
 		// game entry point
 		common::Task* task = nullptr;
 
@@ -286,54 +269,7 @@ int main( const int argc, const char* argv[] ) {
 			&game
 		);
 
-		if ( legacy_ui ) {
-			NEWV( console_task, task::console::Console );
-			scheduler.AddTask( console_task );
-		}
-
-		if ( !legacy_ui ) {
-			NEW( task, task::main::Main );
-		}
-		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-			NEWV( state, game::backend::State, nullptr, nullptr, nullptr ); // TODO: initialize settings randomly
-			state->m_settings.global.rules.Initialize();
-			state->InitBindings();
-			state->Configure();
-			const auto& rules = state->m_settings.global.rules;
-			game::backend::faction::Faction* faction = nullptr;
-			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-				faction = state->GetFM()->Get( config.GetQuickstartFaction() );
-				if ( !faction ) {
-					std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
-					for ( const auto& f : state->GetFM()->GetAll() ) {
-						errmsg += " " + f->m_id;
-					}
-					THROW( errmsg );
-				}
-			}
-			NEWV(
-				player, game::backend::Player,
-				"Player",
-				game::backend::Player::PR_HOST,
-				faction,
-				rules.GetDefaultDifficultyLevel()
-			);
-			state->AddPlayer( player );
-			state->AddCIDSlot( 0, 0 );
-			state->m_slots->Resize( 1 );
-			auto& slot = state->m_slots->GetSlot( 0 );
-			slot.SetPlayer( player, 0, "" );
-			slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
-			NEW( task, task::game::Game, state, 0, UH() {
-				g_engine->ShutDown();
-			} );
-		}
-		else if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
-			NEW( task, task::mainmenu::MainMenu );
-		}
-		else {
-			NEW( task, task::intro::Intro );
-		}
+		NEW( task, task::main::Main );
 
 		scheduler.AddTask( task );
 
