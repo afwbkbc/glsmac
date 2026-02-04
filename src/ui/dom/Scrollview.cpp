@@ -124,7 +124,9 @@ const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 				m_drag.initial_offset_x = event.data.mouse.x + m_hscroll->m_value;
 				m_drag.initial_offset_y = event.data.mouse.y + m_vscroll->m_value;
 				m_drag.is_dragging = true;
-				m_drag.drag_handler_id = m_ui->AddGlobalHandler( m_drag.handler );
+				if ( !m_drag.drag_handler_id ) {
+					m_drag.drag_handler_id = m_ui->AddGlobalHandler( m_drag.handler );
+				}
 				return true;
 			}
 			case input::EV_MOUSE_UP: {
