@@ -57,7 +57,6 @@ void Actor::SetScene( Scene* scene ) {
 }
 
 Scene* Actor::GetScene() {
-	ASSERT( m_scene, "scene not set" );
 	return m_scene;
 }
 

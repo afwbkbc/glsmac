@@ -79,7 +79,7 @@ void Widget::SetTexture( types::texture::Texture* const texture, const size_t in
 void Widget::SetActor( scene::actor::Actor* const actor, const size_t index ) {
 	ASSERT( m_actors.find( index ) == m_actors.end(), "actor id " + std::to_string( index ) + " already set" );
 	m_actors.insert( { index, actor } );
-	Actor( actor, true );
+	Actor( actor );
 }
 
 void Widget::Clear() {

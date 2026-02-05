@@ -312,10 +312,10 @@ void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
 	}
 }
 
-void Object::Actor( scene::actor::Actor* actor, const bool no_parent ) {
+void Object::Actor( scene::actor::Actor* actor ) {
 	ASSERT( !m_is_destroyed, "Actor: object is destroyed" );
 	actor->SetPositionZ( 0.5f );
-	if ( !no_parent && m_parent ) { // TODO: cache ortho ui too
+	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
 	auto* const scene = m_ui->GetSceneOfActor( actor );

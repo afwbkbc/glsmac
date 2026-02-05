@@ -137,10 +137,14 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 
 		m_opengl->CaptureToTexture(
 			m_texture, tl, br, [ this, &shader_program, &camera ]() {
+				auto* const scene = this->GetActor()->GetScene();
 				for ( const auto& it : m_cache_children_by_zindex ) {
 					for ( const auto& child : it.second ) {
-						if ( child->GetActor()->IsVisible() ) {
-							child->DrawImpl( shader_program, camera );
+						auto* const actor = child->GetActor();
+						if ( actor->GetScene() == scene ) {
+							if ( actor->IsVisible() ) {
+								child->DrawImpl( shader_program, camera );
+							}
 						}
 					}
 				}

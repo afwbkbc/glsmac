@@ -1,6 +1,11 @@
 return {
 
+	selected_tile: null,
+
 	selected_unit: null,
+
+	unit_items: {},
+	base_items: {},
 	active_item: null,
 
 	set_active_item: (object) => {
@@ -47,8 +52,10 @@ return {
 			class: 'bottombar-objects-list-item-preview',
 			top: top,
 		});
+		const key = #to_string(object.id);
 		switch (cls) {
 			case 'Unit': {
+				this.unit_items[key] = item;
 				const p = this.p; // TODO: make this work within object
 				item.text({
 					class: 'bottombar-objects-list-item-text',
@@ -72,6 +79,7 @@ return {
 				break;
 			}
 			case 'Base': {
+				this.base_items[key] = item;
 				// TODO:
 				break;
 			}
@@ -80,17 +88,23 @@ return {
 
 	update_tile: (tile) => {
 
+		if (this.selected_tile == tile) {
+			return;
+		}
+
 		if (#is_defined(this.list)) {
 			this.list.remove();
 			this.set_active_item(null);
+			this.unit_items = {};
+			this.base_items = {};
 		}
 		this.list = this.frame.scrollview({
 			left: 2,
 			right: 2,
-			top: -8,
+			top: 0,
 			bottom: -8,
-			padding: 10,
-			has_hscroll: false,
+			padding: 2,
+			has_hscroll: true,
 			has_vscroll: false,
 		});
 
@@ -108,6 +122,7 @@ return {
 			left += this.object_width;
 		}
 
+		this.selected_tile = tile;
 	},
 
 	init: (p) => {
@@ -157,7 +172,15 @@ return {
 			if (e.unit != this.selected_unit) {
 				this.selected_unit = e.unit;
 				if (this.selected_unit != null) {
-					this.update_tile(this.selected_unit.get_tile());
+					const tile = this.selected_unit.get_tile();
+					if (tile != this.selected_tile) {
+						this.update_tile(tile);
+					} else {
+						const key = #to_string(this.selected_unit.id);
+						if (#is_defined(this.unit_items[key])) {
+							this.set_active_item(this.unit_items[key]);
+						}
+					}
 				}
 			}
 		});
