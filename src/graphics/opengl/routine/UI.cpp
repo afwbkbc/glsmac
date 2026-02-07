@@ -3,7 +3,7 @@
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/actor/Text.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
 #include "scene/Scene.h"
 #include "scene/actor/Actor.h"
 #include "scene/actor/Text.h"
@@ -12,7 +12,7 @@ namespace graphics {
 namespace opengl {
 namespace routine {
 
-UI::UI( OpenGL* opengl, shader_program::Simple2D* shader_program )
+UI::UI( OpenGL* opengl, shader_program::Orthographic* shader_program )
 	: Routine( opengl )
 	, m_shader_program( shader_program ) {
 	//

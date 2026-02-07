@@ -23,8 +23,6 @@ CLASS( Null, Graphics )
 	void SetFullscreen() override {}
 	void SetWindowed() override {}
 
-	void RedrawOverlay() override {}
-
 	const bool IsMouseLocked() const override { return false; }
 
 	void ResizeWindow( const size_t width, const size_t height ) override {}

@@ -4,7 +4,6 @@
 #include "engine/Engine.h"
 #include "scene/actor/Mesh.h"
 #include "types/mesh/Mesh.h"
-#include "types/mesh/Simple.h"
 #include "types/mesh/Render.h"
 #include "types/texture/Texture.h"
 #include "graphics/Graphics.h"
@@ -252,13 +251,6 @@ void Mesh::Align() {
 
 			ASSERT( m_mesh->GetType() == m_original_mesh->GetType(), "mesh and original mesh have different types" );
 			switch ( m_mesh->GetType() ) {
-				case types::mesh::Mesh::MT_SIMPLE: {
-					auto* from = (types::mesh::Simple*)m_original_mesh;
-					auto* to = (types::mesh::Simple*)m_mesh;
-					from->GetVertexTexCoord( i, &tex_coord );
-					to->SetVertexTexCoord( i, tex_coord );
-					break;
-				}
 				case types::mesh::Mesh::MT_RENDER: {
 					auto* from = (types::mesh::Render*)m_original_mesh;
 					auto* to = (types::mesh::Render*)m_mesh;

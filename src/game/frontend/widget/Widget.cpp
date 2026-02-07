@@ -30,11 +30,11 @@ Widget::~Widget() {
 	m_ui->UnregisterWidget( m_type );
 }
 
-void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, const types::mesh::Mesh* const mesh, types::texture::Texture* const texture, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
+void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, const types::mesh::Render* const mesh, types::texture::Texture* const texture, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
 	auto* g = widget->GetGeometry()->AsRectangle();
 	ASSERT( g, "geometry is null or not rectangle" );
 	types::texture::Texture* t;
-	types::mesh::Mesh* m;
+	types::mesh::Render* m;
 	if ( texture ) {
 		t = texture;
 	}
@@ -42,7 +42,9 @@ void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, con
 		NEW( t, types::texture::Texture, g->m_area.width, g->m_area.height );
 	}
 	if ( mesh ) {
-		NEW( m, types::mesh::Mesh, *mesh );
+		ASSERT( mesh->GetType() == types::mesh::Mesh::MT_RENDER, "AddMeshAndTexture with non-render mesh is not supported" );
+		NEW( m, types::mesh::Render, *mesh );
+		ASSERT( m->GetType() == types::mesh::Mesh::MT_RENDER, "mesh type lost" );
 	}
 	else {
 		NEW( m, types::mesh::Rectangle );

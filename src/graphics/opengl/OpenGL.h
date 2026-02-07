@@ -66,8 +66,6 @@ CLASS( OpenGL, Graphics )
 	void SetFullscreen() override;
 	void SetWindowed() override;
 
-	void RedrawOverlay() override;
-
 	const bool IsMouseLocked() const override;
 
 	void ResizeViewport( const size_t width, const size_t height );
@@ -101,8 +99,6 @@ protected:
 	std::vector< shader_program::ShaderProgram* > m_shader_programs;
 
 	std::vector< routine::Routine* > m_routines;
-	// some routines are special
-	routine::Overlay* m_routine_overlay = nullptr;
 
 	void OnWindowResize() override;
 

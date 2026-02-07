@@ -4,7 +4,7 @@
 #include "scene/actor/Text.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/texture/FontTexture.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
 
 namespace graphics {
 namespace opengl {
@@ -94,10 +94,10 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 
 				boxes.push_back(
 					{
-						{ x2,     -y2,     0, tbx1, tby1 },
-						{ x2 + w, -y2,     0, tbx2, tby1 },
-						{ x2,     -y2 - h, 0, tbx1, tby2 },
-						{ x2 + w, -y2 - h, 0, tbx2, tby2 },
+						{ x2,     -y2,     0, tbx1, tby1, 1.0f, 1.0f, 1.0f, 1.0f },
+						{ x2 + w, -y2,     0, tbx2, tby1, 1.0f, 1.0f, 1.0f, 1.0f },
+						{ x2,     -y2 - h, 0, tbx1, tby2, 1.0f, 1.0f, 1.0f, 1.0f },
+						{ x2 + w, -y2 - h, 0, tbx2, tby2, 1.0f, 1.0f, 1.0f, 1.0f },
 					}
 				);
 
@@ -127,9 +127,9 @@ void Text::Update( types::Font* font, const std::string& text, const float x, co
 }
 
 void Text::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
-	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "unexpected shader program" );
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO, "unexpected shader program" );
 	if ( m_boxes_count > 0 ) {
-		auto* sp = (shader_program::Simple2D*)shader_program;
+		auto* sp = (shader_program::Orthographic*)shader_program;
 
 		auto* text_actor = (const scene::actor::Text*)m_actor;
 

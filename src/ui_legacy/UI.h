@@ -143,7 +143,6 @@ protected:
 private:
 	object::Root* m_root_object;
 
-	scene::Scene* m_shape_scene_simple2d = nullptr;
 	scene::Scene* m_shape_scene_ortho = nullptr;
 
 	struct {

@@ -32,7 +32,6 @@
     );
 
 namespace scene {
-class Scene;
 namespace actor {
 class Actor;
 }
@@ -150,11 +149,7 @@ private:
 	properties_t m_default_properties = {};
 	std::vector< ui::Class* > m_classes = {};
 
-	struct actor_data_t {
-		scene::actor::Actor* actor;
-		scene::Scene* scene;
-	};
-	std::vector< actor_data_t > m_actors = {};
+	std::vector< scene::actor::Actor* > m_actors = {};
 	std::mutex m_actors_mutex;
 
 	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value );

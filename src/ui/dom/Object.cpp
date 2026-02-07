@@ -209,8 +209,9 @@ void Object::Destroy( GSE_CALLABLE ) {
 	}
 	{
 		std::lock_guard guard( m_actors_mutex );
-		for ( const auto& it : m_actors ) {
-			it.scene->RemoveActor( it.actor );
+		auto* const scene = m_ui->GetScene();
+		for ( const auto& actor : m_actors ) {
+			scene->RemoveActor( actor );
 		}
 	}
 	m_is_destroyed = true;
@@ -222,8 +223,8 @@ void Object::Show() {
 		m_is_visible = true;
 		{
 			std::lock_guard guard( m_actors_mutex );
-			for ( const auto& it : m_actors ) {
-				it.actor->Show();
+			for ( const auto& actor : m_actors ) {
+				actor->Show();
 			}
 		}
 	}
@@ -234,8 +235,8 @@ void Object::Hide() {
 	if ( m_is_visible ) {
 		{
 			std::lock_guard guard( m_actors_mutex );
-			for ( const auto& it : m_actors ) {
-				it.actor->Hide();
+			for ( const auto& actor : m_actors ) {
+				actor->Hide();
 			}
 		}
 		m_is_visible = false;
@@ -245,8 +246,8 @@ void Object::Hide() {
 void Object::Refresh() {
 	if ( m_is_visible ) {
 		std::lock_guard guard( m_actors_mutex );
-		for ( const auto& it : m_actors ) {
-			it.actor->UpdateCache();
+		for ( const auto& actor : m_actors ) {
+			actor->UpdateCache();
 		}
 	}
 }
@@ -318,19 +319,16 @@ void Object::Actor( scene::actor::Actor* actor ) {
 	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
-	auto* const scene = m_ui->GetSceneOfActor( actor );
-	if ( scene->GetType() == scene::SCENE_TYPE_ORTHO_UI ) {
-		actor->SetRenderFlags(
-			actor->GetRenderFlags() |
-			scene::actor::Actor::RF_IGNORE_CAMERA |
-				scene::actor::Actor::RF_IGNORE_LIGHTING |
-				scene::actor::Actor::RF_IGNORE_DEPTH
-		);
-	}
-	scene->AddActor( actor );
+	actor->SetRenderFlags(
+		actor->GetRenderFlags() |
+		scene::actor::Actor::RF_IGNORE_CAMERA |
+		scene::actor::Actor::RF_IGNORE_LIGHTING |
+		scene::actor::Actor::RF_IGNORE_DEPTH
+	);
+	m_ui->GetScene()->AddActor( actor );
 	{
 		std::lock_guard guard( m_actors_mutex );
-		m_actors.push_back( { actor, scene } );
+		m_actors.push_back( actor );
 	}
 }
 
@@ -340,14 +338,13 @@ void Object::ClearActors() {
 	if ( g ) {
 		g = g->AsRectangle();
 	}
-	for ( const auto& it : m_actors ) {
-		if ( it.scene ) {
-			it.scene->RemoveActor( it.actor );
-		}
+	auto* const scene = m_ui->GetScene();
+	for ( const auto& actor : m_actors ) {
+		scene->RemoveActor( actor );
 		if ( g ) {
 			((geometry::Rectangle*)g)->Clear();
 		}
-		delete it.actor;
+		delete actor;
 	}
 	m_actors.clear();
 }

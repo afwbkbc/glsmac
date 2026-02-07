@@ -6,13 +6,10 @@
 #include "scene/actor/Actor.h"
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
-#include "graphics/Graphics.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/shader_program/Orthographic.h"
 #include "graphics/opengl/shader_program/OrthographicData.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
-#include "graphics/opengl/shader_program/World.h"
 #include "rr/GetData.h"
 #include "rr/Capture.h"
 #include "types/Matrix44.h"
@@ -285,23 +282,6 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 
 							const auto sptype = shader_program->GetType();
 							switch ( sptype ) {
-								case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
-									auto* sp = (shader_program::Simple2D*)shader_program;
-									glUniform1ui( sp->uniforms.flags, flags );
-									if ( flags & scene::actor::Actor::RF_USE_TINT ) {
-										glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
-									}
-									if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-										const auto& limits = mesh_actor->GetAreaLimits();
-										glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-										glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-									}
-									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
-									}
-									glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
-									break;
-								}
 								case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 								case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
 									auto* sp = sptype == shader_program::ShaderProgram::TYPE_ORTHO
@@ -424,14 +404,6 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 									}
 
 									break;
-								}
-								case ( shader_program::ShaderProgram::TYPE_PERSP ): {
-
-									// TODO
-									THROW( "perspective projection not implemented yet" );
-
-									break;
-
 								}
 								default: {
 									THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );

@@ -5,7 +5,7 @@
 #include "engine/Engine.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
 #include "scene/actor/Cache.h"
 #include "types/mesh/Rectangle.h"
 #include "types/texture/Texture.h"
@@ -150,25 +150,14 @@ void Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scen
 				}
 			}
 		);
-
 		if ( !m_texture->IsEmpty() ) {
-/*			const types::Color c = types::Color::FromRGB( rand() % 256, rand() % 256, rand() % 256 );
-			for ( auto y = 0 ; y < m_texture->m_height ; y++ ) {
-				m_texture->SetPixel( 0, y, c );
-				m_texture->SetPixel( m_texture->m_width - 1, y, c );
-			}
-			for ( auto x = 0 ; x < m_texture->m_width ; x++ ) {
-				m_texture->SetPixel( x, 0, c );
-				m_texture->SetPixel( x, m_texture->m_height - 1, c );
-			}*/
 			m_opengl->LoadTexture( m_texture, false );
 		}
-
 	}
 }
 
 void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
-	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_SIMPLE2D, "invalid shader program type" );
+	ASSERT( shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO, "invalid shader program type" );
 
 	if ( m_texture && !m_texture->IsEmpty() ) {
 		m_opengl->WithBindBuffers(
@@ -180,8 +169,13 @@ void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Came
 						m_opengl->WithTexture(
 							m_texture, [ this, &shader_program ]() {
 
-								auto* sp = (shader_program::Simple2D*)shader_program;
-								glUniform1ui( sp->uniforms.flags, scene::actor::Actor::RF_NONE );
+								auto* sp = (shader_program::Orthographic*)shader_program;
+								glUniform1ui(
+									sp->uniforms.flags,
+									scene::actor::Actor::RF_IGNORE_CAMERA |
+										scene::actor::Actor::RF_IGNORE_DEPTH |
+										scene::actor::Actor::RF_IGNORE_LIGHTING
+								);
 								glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
 
 							}

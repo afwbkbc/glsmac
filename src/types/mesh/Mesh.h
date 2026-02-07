@@ -14,14 +14,12 @@ CLASS( Mesh, Serializable )
 	enum type_t {
 		MT_NONE,
 		MT_RECTANGLE,
-		MT_SIMPLE,
 		MT_RENDER,
 		MT_DATA,
 	};
 
 	enum data_type_t {
 		DT_BARE, // coordinates only
-		DT_SIMPLE, // coordinates, texture
 		DT_RENDER, // coordinates, texture, tint, normals
 		DT_DATA // coordinates, data
 	};

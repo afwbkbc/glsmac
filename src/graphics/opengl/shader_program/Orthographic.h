@@ -6,8 +6,10 @@ namespace graphics {
 namespace opengl {
 
 class Sprite;
-
 class Mesh;
+class Text;
+class FBO;
+class Cache;
 
 namespace shader_program {
 
@@ -19,6 +21,9 @@ CLASS( Orthographic, ShaderProgram )
 protected:
 	friend class opengl::Sprite;
 	friend class opengl::Mesh;
+	friend class opengl::Text;
+	friend class opengl::FBO;
+	friend class opengl::Cache;
 
 	struct {
 		GLuint position;
@@ -42,6 +47,7 @@ protected:
 		GLuint normal;
 	} attributes;
 
+protected:
 	void AddShaders() override;
 	void Initialize() override;
 	void EnableAttributes() const override;

@@ -47,8 +47,6 @@ CLASS( Graphics, common::Module )
 	virtual void SetFullscreen() = 0;
 	virtual void SetWindowed() = 0;
 
-	virtual void RedrawOverlay() = 0;
-
 	virtual const bool IsMouseLocked() const = 0;
 
 	virtual void ResizeWindow( const size_t width, const size_t height ) = 0;

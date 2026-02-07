@@ -159,15 +159,12 @@ private:
 
 private:
 	friend class dom::Object;
-
-	struct {
-		scene::Scene* const m_ui = nullptr;
-		scene::Scene* const m_ortho_ui = nullptr;
-	} m_scenes;
-	scene::Scene* const GetSceneOfActor( scene::actor::Actor* actor ) const;
-
+	scene::Scene* const GetScene() const;
 	gc::Space* const GetGCSpace() const;
 
+private:
+	scene::Scene* const m_scene = nullptr;
+	
 };
 
 }

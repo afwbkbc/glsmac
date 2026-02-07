@@ -25,9 +25,7 @@ namespace ui_legacy {
 void UI::Start() {
 	Log( "Creating UI" );
 
-	NEW( m_shape_scene_simple2d, scene::Scene, "UIScene::Simple2D", scene::SCENE_TYPE_SIMPLE2D );
-	g_engine->GetGraphics()->AddScene( m_shape_scene_simple2d );
-	NEW( m_shape_scene_ortho, scene::Scene, "UIScene::Ortho", scene::SCENE_TYPE_ORTHO_UI );
+	NEW( m_shape_scene_ortho, scene::Scene, "UIScene::Ortho", scene::SCENE_TYPE_UI );
 	g_engine->GetGraphics()->AddScene( m_shape_scene_ortho );
 
 	NEW( m_root_object, object::Root );
@@ -83,8 +81,8 @@ void UI::Start() {
 	);
 
 #ifdef DEBUG
-	NEW( m_debug_scene, scene::Scene, "UIDebug", scene::SCENE_TYPE_SIMPLE2D );
-	g_engine->GetGraphics()->AddScene( m_debug_scene );
+	//NEW( m_debug_scene, scene::Scene, "UIDebug", scene::SCENE_TYPE_SIMPLE2D );
+	//g_engine->GetGraphics()->AddScene( m_debug_scene );
 #endif
 }
 
@@ -96,8 +94,8 @@ void UI::Stop() {
 	}
 
 #ifdef DEBUG
-	g_engine->GetGraphics()->RemoveScene( m_debug_scene );
-	DELETE( m_debug_scene );
+	//g_engine->GetGraphics()->RemoveScene( m_debug_scene );
+	//DELETE( m_debug_scene );
 #endif
 
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
@@ -114,8 +112,6 @@ void UI::Stop() {
 
 	m_active_module = nullptr;
 
-	g_engine->GetGraphics()->RemoveScene( m_shape_scene_simple2d );
-	DELETE( m_shape_scene_simple2d );
 	g_engine->GetGraphics()->RemoveScene( m_shape_scene_ortho );
 	DELETE( m_shape_scene_ortho );
 
@@ -144,9 +140,6 @@ void UI::RemoveObject( object::UIObject* object ) {
 
 scene::Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 	switch ( mesh->GetDataType() ) {
-		case types::mesh::Mesh::DT_SIMPLE: {
-			return m_shape_scene_simple2d;
-		}
 		case types::mesh::Mesh::DT_RENDER: {
 			return m_shape_scene_ortho;
 		}
@@ -159,7 +152,7 @@ scene::Scene* UI::GetShapeScene( const types::mesh::Mesh* mesh ) {
 }
 
 scene::Scene* UI::GetTextScene() {
-	return m_shape_scene_simple2d;
+	return m_shape_scene_ortho;
 }
 
 void UI::SetWorldUIMatrix( const types::Matrix44& matrix ) {
@@ -205,7 +198,7 @@ void UI::Iterate() {
 
 	if ( m_is_redraw_needed ) {
 		//Log( "Redrawing UI" );
-		g_engine->GetGraphics()->RedrawOverlay();
+		//g_engine->GetGraphics()->RedrawOverlay();
 		m_is_redraw_needed = false;
 	}
 }
@@ -581,7 +574,7 @@ void UI::ShowDebugFrame( object::UIObject* object ) {
 
 		ResizeDebugFrame( object, &data );
 
-		m_debug_scene->AddActor( data.actor );
+		//m_debug_scene->AddActor( data.actor );
 
 		m_debug_frames[ object ] = data;
 	}
@@ -591,7 +584,7 @@ void UI::HideDebugFrame( object::UIObject* object ) {
 	auto it = m_debug_frames.find( object );
 	if ( it != m_debug_frames.end() ) {
 		Log( "Hiding debug frame for " + object->GetName() );
-		m_debug_scene->RemoveActor( it->second.actor );
+		//m_debug_scene->RemoveActor( it->second.actor );
 		DELETE( it->second.actor );
 		DELETE( it->second.texture );
 		m_debug_frames.erase( it );

@@ -10,7 +10,7 @@
 
 namespace types {
 namespace mesh {
-class Mesh;
+class Render;
 }
 namespace texture {
 class Texture;
@@ -54,7 +54,7 @@ protected:
 	void AddMeshAndTexture(
 		ui::dom::Widget* const widget,
 		size_t index,
-		const types::mesh::Mesh* const mesh,
+		const types::mesh::Render* const mesh,
 		types::texture::Texture* const texture,
 		const bool keep_tex = false,
 		const types::Vec2< float >& scale = { 1.0f, 1.0f },

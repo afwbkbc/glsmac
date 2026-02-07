@@ -15,7 +15,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Mesh;
+class Render;
 }
 }
 
@@ -107,7 +107,7 @@ public:
 	const bool IsMoving() const;
 
 	struct meshtex_t {
-		const types::mesh::Mesh* mesh = nullptr;
+		const types::mesh::Render* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {

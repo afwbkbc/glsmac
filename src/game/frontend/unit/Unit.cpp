@@ -492,7 +492,7 @@ void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* spr
 	if ( meshtex.mesh ) {
 		DELETE( meshtex.mesh );
 	}
-	meshtex.mesh = mesh;
+	meshtex.mesh = mesh->ToRenderMesh();
 	meshtex.texture = texture;
 }
 

@@ -41,7 +41,7 @@ void BasePreview::Update( ui::dom::Widget* const widget, const base::Base* const
 
 	size_t index = 0;
 
-	ASSERT( render.base.mesh->GetType() == types::mesh::Mesh::MT_RECTANGLE, "base mesh not rectangle" ); // TODO: 3d bases
+	ASSERT( render.base.mesh->GetType() == types::mesh::Mesh::MT_RENDER, "base mesh not render" );
 
 	AddMeshAndTexture( widget, index++, render.base.mesh, render.base.texture, true );
 	AddMeshAndTexture( widget, index++, render.badge.mesh, render.badge.texture, true, { 0.16f, 0.27f }, { 0.04f, 0.04f } );

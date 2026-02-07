@@ -109,7 +109,7 @@ void Game::Start() {
 
 	}
 
-	NEW( m_world_scene, scene::Scene, "Game", scene::SCENE_TYPE_ORTHO );
+	NEW( m_world_scene, scene::Scene, "World", scene::SCENE_TYPE_WORLD );
 	g_engine->GetGraphics()->AddScene( m_world_scene );
 
 	NEW( m_ism, sprite::InstancedSpriteManager, m_world_scene );

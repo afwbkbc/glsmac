@@ -25,10 +25,7 @@ UI::UI( GSE_CALLABLE )
 	: gse::GCWrappable( gc_space )
 	, m_ctx( ctx )
 	, m_gc_space( gc_space )
-	, m_scenes({
-		new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ),
-		new scene::Scene( "Scene::OrthoUI", scene::SCENE_TYPE_ORTHO_UI ),
-	}) {
+	, m_scene( new scene::Scene( "UI", scene::SCENE_TYPE_UI ) ) {
 
 	m_clamp.x.SetRange(
 		{
@@ -53,8 +50,7 @@ UI::UI( GSE_CALLABLE )
 		}
 	);
 
-	g_engine->GetGraphics()->AddScene( m_scenes.m_ui );
-	g_engine->GetGraphics()->AddScene( m_scenes.m_ortho_ui );
+	g_engine->GetGraphics()->AddScene( m_scene );
 
 	m_root = new dom::Root( GSE_CALL, this );
 	Resize();
@@ -94,17 +90,12 @@ UI::UI( GSE_CALLABLE )
 }
 
 UI::~UI() {
-
 	g_engine->GetInput()->RemoveHandler( this );
 
-	g_engine->GetGraphics()->RemoveScene( m_scenes.m_ortho_ui );
-	g_engine->GetGraphics()->RemoveScene( m_scenes.m_ui );
-
-	delete m_scenes.m_ortho_ui;
-	delete m_scenes.m_ui;
+	g_engine->GetGraphics()->RemoveScene( m_scene );
+	delete m_scene;
 
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
-
 }
 
 void UI::Iterate() {
@@ -288,26 +279,9 @@ void UI::RemoveIterable( const dom::Object* const obj ) {
 	m_iterables.erase( obj );
 }
 
-scene::Scene* const UI::GetSceneOfActor( scene::actor::Actor* actor ) const {
-	switch ( actor->GetType() ) {
-		case ( scene::actor::Actor::TYPE_TEXT ):
-		case ( scene::actor::Actor::TYPE_CACHE ):
-			return m_scenes.m_ui;
-		case ( scene::actor::Actor::TYPE_MESH ): {
-			const auto& mesh = ( (scene::actor::Mesh*)actor )->GetMesh();
-			switch ( mesh->GetType() ) {
-				case types::mesh::Mesh::MT_RECTANGLE:
-				case types::mesh::Mesh::MT_SIMPLE:
-					return m_scenes.m_ui;
-				case types::mesh::Mesh::MT_RENDER:
-					return m_scenes.m_ortho_ui;
-				default:
-					THROW( "unsupported actor mesh type: " + std::to_string( mesh->GetType() ) );
-			}
-		}
-		default:
-			THROW( "unsupported actor type: " + std::to_string( actor->GetType() ) );
-	}
+scene::Scene* const UI::GetScene() const {
+	ASSERT( m_scene, "ui scene not set" );
+	return m_scene;
 }
 
 gc::Space* const UI::GetGCSpace() const {

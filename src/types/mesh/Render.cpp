@@ -8,8 +8,8 @@
 namespace types {
 namespace mesh {
 
-Render::Render( const size_t vertex_count, const size_t surface_count )
-	: Mesh( MT_RENDER, DT_RENDER, VERTEX_SIZE, vertex_count, surface_count ) {
+Render::Render( const size_t vertex_count, const size_t surface_count, const type_t type )
+	: Mesh( type, DT_RENDER, VERTEX_SIZE, vertex_count, surface_count ) {
 
 }
 
@@ -31,6 +31,13 @@ index_t Render::AddVertex( const types::Vec3& coord, const Vec2< coord_t >& tex_
 
 index_t Render::AddVertex( const Vec2< coord_t >& coord, const Vec2< coord_t >& tex_coord, const Color::color_t tint, const types::Vec3& normal ) {
 	return AddVertex( types::Vec3( coord.x, coord.y, 0.0f ), tex_coord, tint, normal );
+}
+
+void Render::SetVertex( const index_t index, const types::Vec3& coord ) {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
+	memcpy( ptr( m_vertex_data, offset, sizeof( coord ) ), &coord, sizeof( coord ) );
+	Update();
 }
 
 void Render::SetVertex( const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord, const Color::color_t tint, const types::Vec3& normal ) {

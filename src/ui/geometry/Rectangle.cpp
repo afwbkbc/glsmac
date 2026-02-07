@@ -36,7 +36,7 @@ void Rectangle::AddActor( scene::actor::Mesh* const actor ) {
 	UpdateActor( actor );
 }
 
-void Rectangle::AddMesh( types::mesh::Mesh* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
+void Rectangle::AddMesh( types::mesh::Render* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
 	m_meshes.push_back( mesh );
 	InitMesh( mesh, keep_tex, scale, offset );
 	UpdateMesh( mesh );
@@ -60,23 +60,21 @@ void Rectangle::UpdateImpl() {
 	}
 }
 
-void Rectangle::InitMesh( types::mesh::Mesh* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
+void Rectangle::InitMesh( types::mesh::Render* const mesh, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
 	if ( !mesh ) {
 		ASSERT( mesh, "mesh is null" );
 	}
-	if ( keep_tex ) {
-		ASSERT( mesh->GetType() == types::mesh::Mesh::MT_RECTANGLE, "keep_tex on non-rectangle meshes is unexpected" );
-	}
+	m_mesh_keep_tex.insert_or_assign( mesh, keep_tex );
+	m_mesh_scales.insert_or_assign( mesh, scale );
+	m_mesh_offsets.insert_or_assign( mesh, offset );
 	switch ( mesh->GetType() ) {
 		case types::mesh::Mesh::MT_RECTANGLE: {
-			const auto* const m = (types::mesh::Rectangle*)mesh;
-			m_rectangle_mesh_keep_tex.insert_or_assign( m, keep_tex );
-			m_rectangle_mesh_scales.insert_or_assign( m, scale );
-			m_rectangle_mesh_offsets.insert_or_assign( m, offset );
+			// nothing
 			break;
 		}
 		case types::mesh::Mesh::MT_RENDER: {
 			const auto* const m = (types::mesh::Render*)mesh;
+
 			const auto& it = m_render_mesh_originals.find( m );
 			if ( it != m_render_mesh_originals.end() ) {
 				delete it->second;
@@ -106,10 +104,11 @@ void Rectangle::InitMesh( types::mesh::Mesh* const mesh, const bool keep_tex, co
 				}
 			}
 			m_render_mesh_original_areas.insert_or_assign( m, area );
+
 			break;
 		}
 		default: {
-			// nothing
+			ASSERT( false, "unexpected mesh type" );
 		}
 	}
 }
@@ -128,12 +127,12 @@ void Rectangle::UpdateActor( scene::actor::Mesh* const actor ) {
 	actor->SetPositionZ( m_area.zindex );
 }
 
-void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
+void Rectangle::UpdateMesh( types::mesh::Render* const mesh ) {
+	const auto& scale = m_mesh_scales.at( mesh );
+	const auto& offset = m_mesh_offsets.at( mesh );
 	switch ( mesh->GetType() ) {
 		case types::mesh::Mesh::MT_RECTANGLE: {
 			auto* m = (types::mesh::Rectangle*)mesh;
-			const auto& scale = m_rectangle_mesh_scales.at( m );
-			const auto& offset = m_rectangle_mesh_offsets.at( m );
 			auto area = m_area;
 			area.left += area.width * offset.x;
 			area.top += area.height * offset.y;
@@ -155,11 +154,12 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 				m->SetCoordsTiled( top_left, bottom_right, m_tile_dimensions, m_area.zindex );
 			}
 			else {
-				m->SetCoords( top_left, bottom_right, m_area.zindex, m_rectangle_mesh_keep_tex.at( m ) );
+				m->SetCoords( top_left, bottom_right, m_area.zindex, m_mesh_keep_tex.at( m ) );
 			}
 			break;
 		}
 		case types::mesh::Mesh::MT_RENDER: {
+
 			auto* m = (types::mesh::Render*)mesh;
 
 			ASSERT( m_render_mesh_originals.find( m ) != m_render_mesh_originals.end(), "render mesh original not set" );
@@ -171,6 +171,12 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 			types::Vec3 coord = {};
 			types::Vec2< float > tex_coord = {};
 
+			auto area = m_area;
+			area.left += area.width * offset.x;
+			area.top += area.height * offset.y;
+			area.right = area.left + area.width * scale.x;
+			area.bottom = area.top + area.height * scale.y;
+
 			util::Clamper< float > clamp_x(
 				{
 					{
@@ -178,8 +184,8 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 						original_area.right,
 					},
 					{
-						m_area.left,
-						m_area.right,
+						area.left,
+						area.right,
 					}
 				}
 			);
@@ -190,8 +196,8 @@ void Rectangle::UpdateMesh( types::mesh::Mesh* const mesh ) {
 						original_area.bottom,
 					},
 					{
-						m_area.top,
-						m_area.bottom,
+						area.top,
+						area.bottom,
 					}
 				}
 			);

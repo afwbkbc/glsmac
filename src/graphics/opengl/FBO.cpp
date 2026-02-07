@@ -1,9 +1,9 @@
 #include "FBO.h"
 
-#include "types/mesh/Simple.h"
+#include "types/mesh/Render.h"
 #include "types/texture/Texture.h"
 #include "graphics/opengl/OpenGL.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
 
 namespace graphics {
 namespace opengl {
@@ -15,7 +15,7 @@ FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
 
-	NEW( m_mesh, types::mesh::Simple, 4, 2 ); // TODO: quad mesh
+	NEW( m_mesh, types::mesh::Render, 4, 2 ); // TODO: quad mesh
 	auto top_left = m_mesh->AddVertex(
 		{
 			-1,
@@ -195,7 +195,7 @@ void FBO::WriteEnd() {
 	m_is_enabled = false;
 }
 
-void FBO::Draw( shader_program::Simple2D* sp ) {
+void FBO::Draw( shader_program::Orthographic* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
@@ -249,7 +249,6 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 				glReadBuffer( GL_NONE );
 			}
 		);
-
 		texture->FullUpdate(); // TODO: partial updates
 	}
 }

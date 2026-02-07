@@ -3,7 +3,6 @@
 #include "ui_legacy/object/Mesh.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
-#include "types/mesh/Simple.h"
 #include "types/mesh/Render.h"
 #include "types/texture/Texture.h"
 #include "game/frontend/base/Base.h"
@@ -139,7 +138,7 @@ void Resource::PreviewTileSprites( const tile::Tile* tile, const types::Vec2< in
 	if ( base ) {
 		const auto& base_render = base->GetRenderData();
 		NEWV( preview, ::ui_legacy::object::Mesh, "BPCenterAreaResourceSprite" );
-		preview->SetMesh( base_render.base.mesh->CopyAsRenderMesh() );
+		preview->SetMesh( new types::mesh::Render( *base_render.base.mesh ) );
 		preview->SetTintColor(
 			{
 				0.7f,

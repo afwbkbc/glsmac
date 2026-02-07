@@ -41,7 +41,7 @@ void UnitPreview::Update( ui::dom::Widget* const widget, const unit::Unit* const
 
 	size_t index = 0;
 
-	ASSERT( render.unit.mesh->GetType() == types::mesh::Mesh::MT_RECTANGLE, "unit mesh not rectangle" ); // TODO: 3d units
+	ASSERT( render.unit.mesh->GetType() == types::mesh::Mesh::MT_RENDER, "unit mesh not render" );
 
 	AddMeshAndTexture( widget, index++, render.unit.mesh, render.unit.texture, true );
 	AddMeshAndTexture( widget, index++, render.badge.mesh, render.badge.texture, true, { 0.23f, 0.4f }, { 0.06f, 0.08f } );

@@ -2,12 +2,10 @@
 
 #include "engine/Engine.h"
 
-#include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/OrthographicData.h"
 #include "scene/Scene.h"
 #include "scene/Camera.h"
-#include "routine/Overlay.h"
 #include "routine/UI.h"
 #include "routine/World.h"
 #include "FBO.h"
@@ -117,21 +115,12 @@ void OpenGL::Start() {
 	m_shader_programs.push_back( sp_orthographic );
 	NEWV( sp_orthographic_data, shader_program::OrthographicData );
 	m_shader_programs.push_back( sp_orthographic_data );
-	NEWV( sp_simple2d, shader_program::Simple2D );
-	m_shader_programs.push_back( sp_simple2d );
 
 	// routines ( order is important )
-	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
+	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_WORLD, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
-	m_routines.push_back( r_overlay );
-	NEWV( r_ui, routine::UI, this, sp_simple2d );
+	NEWV( r_ui, routine::UI, this, sp_orthographic );
 	m_routines.push_back( r_ui );
-	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world_ui );
-
-	// some routines are special
-	m_routine_overlay = r_overlay;
 
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Start();
@@ -752,10 +741,6 @@ void OpenGL::SetWindowed() {
 	SDL_SetWindowGrab( m_window, SDL_FALSE );
 
 	ResizeViewport( m_window_size.x, m_window_size.y );
-}
-
-void OpenGL::RedrawOverlay() {
-	m_routine_overlay->Redraw();
 }
 
 void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {

@@ -11,7 +11,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Simple;
+class Render;
 }
 }
 
@@ -21,7 +21,7 @@ namespace opengl {
 class OpenGL;
 
 namespace shader_program {
-class Simple2D;
+class Orthographic;
 }
 
 CLASS( FBO, common::Class )
@@ -35,7 +35,7 @@ CLASS( FBO, common::Class )
 	void Write( const std::function< void() >& f );
 	void WriteEnd();
 
-	void Draw( shader_program::Simple2D* sp );
+	void Draw( shader_program::Orthographic* sp );
 
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right );
 	types::texture::Texture* CaptureToTexture();
@@ -57,7 +57,7 @@ protected:
 	GLuint m_vbo;
 	GLuint m_ibo;
 	size_t m_ibo_size;
-	types::mesh::Simple* m_mesh = nullptr;
+	types::mesh::Render* m_mesh = nullptr;
 
 private:
 	OpenGL* m_opengl;

@@ -14,10 +14,8 @@ namespace shader_program {
 
 CLASS( ShaderProgram, common::Module )
 	enum type_t {
-		TYPE_SIMPLE2D,
 		TYPE_ORTHO,
 		TYPE_ORTHO_DATA,
-		TYPE_PERSP,
 	};
 	ShaderProgram( const type_t type )
 		: m_type( type ) {};

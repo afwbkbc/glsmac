@@ -7,12 +7,12 @@ namespace types {
 namespace mesh {
 
 Rectangle::Rectangle()
-	: Simple( 4, 2, MT_RECTANGLE ) {
+	: Render( 4, 2, MT_RECTANGLE ) {
 	Clear();
 }
 
 Rectangle::Rectangle( const Vec2< coord_t >& top_left, const Vec2< coord_t >& bottom_right, const coord_t z )
-	: Simple( 4, 2 ) {
+	: Render( 4, 2, MT_RECTANGLE ) {
 	Clear();
 	SetCoords( top_left, bottom_right, z );
 }
@@ -35,7 +35,7 @@ void Rectangle::SetCoordsTiled( const Vec2< coord_t >& top_left, const Vec2< coo
 		}, {
 			0,
 			0
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		1, {
@@ -45,7 +45,7 @@ void Rectangle::SetCoordsTiled( const Vec2< coord_t >& top_left, const Vec2< coo
 		}, {
 			sx,
 			0
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		2, {
@@ -55,7 +55,7 @@ void Rectangle::SetCoordsTiled( const Vec2< coord_t >& top_left, const Vec2< coo
 		}, {
 			sx,
 			sy
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		3, {
@@ -65,7 +65,7 @@ void Rectangle::SetCoordsTiled( const Vec2< coord_t >& top_left, const Vec2< coo
 		}, {
 			0,
 			sy
-		}
+		}, m_full_tint
 	);
 	SetSurface(
 		0, {
@@ -108,7 +108,7 @@ void Rectangle::SetCoords(
 		}, {
 			x1,
 			y1
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		1, {
@@ -118,7 +118,7 @@ void Rectangle::SetCoords(
 		}, {
 			x2,
 			y1
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		2, {
@@ -128,7 +128,7 @@ void Rectangle::SetCoords(
 		}, {
 			x2,
 			y2
-		}
+		}, m_full_tint
 	);
 	SetVertex(
 		3, {
@@ -138,7 +138,7 @@ void Rectangle::SetCoords(
 		}, {
 			x1,
 			y2
-		}
+		}, m_full_tint
 	);
 	SetSurface(
 		0, {
@@ -186,15 +186,15 @@ void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t 
 			z
 		}
 	);
+	SetVertexTint( 0, m_full_tint );
+	SetVertexTint( 1, m_full_tint );
+	SetVertexTint( 2, m_full_tint );
+	SetVertexTint( 3, m_full_tint );
 	if ( !keep_tex ) {
 		SetVertexTexCoord( 0, { 0.0f, 1.0f } );
 		SetVertexTexCoord( 1, { 1.0f, 1.0f } );
 		SetVertexTexCoord( 2, { 1.0f, 0.0f } );
 		SetVertexTexCoord( 3, { 0.0f, 0.0f } );
-	}
-	else {
-		int a = 5;
-
 	}
 	SetSurface(
 		0, {
@@ -211,6 +211,46 @@ void Rectangle::SetCoords( const Vec2< coord_t >& top_left, const Vec2< coord_t 
 		}
 	);
 	Update();
+}
+
+void Rectangle::GetVertex( const index_t index, Vec3* coord, Vec2< coord_t >* tex_coord ) const {
+	ASSERT( index < m_vertex_count, "index out of bounds" );
+	size_t offset = index * VERTEX_SIZE * sizeof( coord_t );
+	memcpy( ptr( coord, 0, sizeof( Vec3 ) ), ptr( m_vertex_data, offset, sizeof( Vec3 ) ), sizeof( Vec3 ) );
+	offset += VERTEX_COORD_SIZE * sizeof( coord_t );
+	memcpy( ptr( tex_coord, 0, sizeof( Vec2< coord_t > ) ), ptr( m_vertex_data, offset, sizeof( Vec2< coord_t > ) ), sizeof( Vec2< coord_t > ) );
+}
+
+Render* Rectangle::CopyAsRenderMesh() const {
+	Vec3 coord;
+	Vec2< float > tex_coord;
+	NEWV( render_mesh, Render, 4, 2 );
+	for ( uint8_t i = 0 ; i < 4 ; i++ ) {
+		GetVertex( i, &coord, &tex_coord );
+		coord.y *= -1; // TODO: why?
+		render_mesh->SetVertex( i, coord, tex_coord );
+	}
+	render_mesh->SetSurface(
+		0, {
+			0,
+			3,
+			2
+		}
+	);
+	render_mesh->SetSurface(
+		1, {
+			2,
+			1,
+			0
+		}
+	);
+	return render_mesh;
+}
+
+Render* Rectangle::ToRenderMesh() {
+	auto* render_mesh = CopyAsRenderMesh();
+	delete this;
+	return render_mesh;
 }
 
 }

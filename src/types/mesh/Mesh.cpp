@@ -86,6 +86,7 @@ void Mesh::SetSurface( const index_t index, const surface_t& surface ) {
 	ASSERT( index < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
+	Update();
 }
 
 void Mesh::Finalize() {
@@ -98,7 +99,7 @@ void Mesh::Finalize() {
 
 void Mesh::GetVertexCoord( const index_t index, types::Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
+	memcpy( ptr( coord, 0, sizeof( types::Vec3 ) ), ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {
