@@ -20,7 +20,7 @@ Server::Server( gc::Space* const gc_space, settings::LocalSettings* const settin
 void Server::ProcessEvent( const network::Event& event ) {
 	Connection::ProcessEvent( event );
 
-	ASSERT( event.cid || event.type == network::Event::ET_LISTEN, "server connection received event without cid" );
+	ASSERT( event.cid || event.type == network::Event::ET_LISTEN || event.type == network::Event::ET_DISCONNECT, "server connection received event without cid" );
 
 	switch ( event.type ) {
 		case network::Event::ET_LISTEN: {

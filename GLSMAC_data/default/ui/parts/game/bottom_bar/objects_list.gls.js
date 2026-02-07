@@ -101,7 +101,7 @@ return {
 		this.list = this.frame.scrollview({
 			left: 2,
 			right: 2,
-			top: 0,
+			top: 1,
 			bottom: -8,
 			padding: 2,
 			has_hscroll: true,
