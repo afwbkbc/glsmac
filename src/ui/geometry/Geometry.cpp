@@ -17,7 +17,7 @@ Geometry::Geometry( const UI* const ui, Geometry* const parent, const geometry_t
 	UpdateArea();
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
-		m_parent->UpdateEffectiveArea();
+		m_parent->UpdateEffectiveArea( false );
 	}
 }
 
@@ -46,11 +46,11 @@ void Geometry::SetParent( Geometry* const other ) {
 	ASSERT( other, "other geometry is null" );
 	if ( m_parent ) {
 		m_parent->m_children.erase( this );
-		m_parent->UpdateEffectiveArea();
+		m_parent->UpdateEffectiveArea( false );
 	}
 	m_parent = other;
 	m_parent->m_children.insert( this );
-	m_parent->UpdateEffectiveArea();
+	m_parent->UpdateEffectiveArea( false );
 }
 
 void Geometry::SetLeft( const coord_t px ) {
@@ -184,7 +184,7 @@ void Geometry::SetOverflowMode( const overflow_mode_t mode ) {
 
 void Geometry::NeedUpdate() {
 	// for now update immediately, later queue and execute it once after
-	Update();
+	Update( false );
 }
 
 const Geometry::area_t& Geometry::GetEffectiveArea() const {
@@ -196,7 +196,7 @@ void Geometry::OnChildUpdate() {
 		ResizeAreaFromChildren();
 		NeedUpdate();
 	}
-	UpdateEffectiveArea();
+	UpdateEffectiveArea( false );
 	RunHandlers( GH_ON_CHILD_UPDATE );
 	if ( m_parent ) {
 		m_parent->OnChildUpdate();
@@ -271,13 +271,13 @@ void Geometry::Destroy() {
 	}
 }
 
-void Geometry::Update() {
+void Geometry::Update( const bool is_update_from_parent ) {
 	UpdateArea();
 	UpdateImpl();
 	for ( const auto& geometry : m_children ) {
-		geometry->Update();
+		geometry->Update( true );
 	}
-	UpdateEffectiveArea();
+	UpdateEffectiveArea( is_update_from_parent );
 	if ( m_parent ) {
 		if ( !m_is_destroying && ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) ) { // TODO: other variants
 			m_parent->AddBoundaries( this );
@@ -451,7 +451,7 @@ void Geometry::UpdateArea() {
 	}
 }
 
-void Geometry::UpdateEffectiveArea() {
+void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 	area_t effective_area = {};
 	if ( m_is_visible ) {
 		effective_area = m_area;
@@ -479,7 +479,7 @@ void Geometry::UpdateEffectiveArea() {
 		if ( should_resize && m_on_resize ) {
 			m_on_resize( m_effective_area.width, m_effective_area.height );
 		}
-		if ( m_parent ) {
+		if ( m_parent && !is_update_from_parent ) {
 			m_parent->OnChildUpdate();
 		}
 		RunHandlers( GH_ON_EFFECTIVE_AREA_UPDATE );

@@ -165,7 +165,7 @@ private:
 	bool m_is_destroying = false;
 	const geometry_type_t m_type;
 
-	void Update();
+	void Update( const bool is_update_from_parent );
 
 	std::unordered_set< Geometry* > m_children = {};
 
@@ -192,7 +192,7 @@ private:
 	coord_t m_zindex = 0.5f;
 
 	void UpdateArea();
-	void UpdateEffectiveArea();
+	void UpdateEffectiveArea( const bool is_update_from_parent );
 
 	void FixArea( area_t& area );
 
