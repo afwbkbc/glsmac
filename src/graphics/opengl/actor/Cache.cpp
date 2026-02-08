@@ -173,7 +173,6 @@ void Cache::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Came
 								glUniform1ui(
 									sp->uniforms.flags,
 									scene::actor::Actor::RF_IGNORE_CAMERA |
-										scene::actor::Actor::RF_IGNORE_DEPTH |
 										scene::actor::Actor::RF_IGNORE_LIGHTING
 								);
 								glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );

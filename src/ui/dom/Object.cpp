@@ -322,8 +322,7 @@ void Object::Actor( scene::actor::Actor* actor ) {
 	actor->SetRenderFlags(
 		actor->GetRenderFlags() |
 		scene::actor::Actor::RF_IGNORE_CAMERA |
-		scene::actor::Actor::RF_IGNORE_LIGHTING |
-		scene::actor::Actor::RF_IGNORE_DEPTH
+		scene::actor::Actor::RF_IGNORE_LIGHTING
 	);
 	m_ui->GetScene()->AddActor( actor );
 	{
