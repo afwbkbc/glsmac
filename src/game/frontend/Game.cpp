@@ -1755,7 +1755,7 @@ void Game::Initialize(
 		}, ::ui_legacy::UI::GH_AFTER
 	);
 
-	m_handlers.mousemove = ui->AddGlobalEventHandler(
+	m_handlers.mousemove = ui->AddGlobalEventHandler( // TODO: stop using legacy UI
 		::ui_legacy::event::EV_MOUSE_MOVE, EH( this, ui ) {
 			m_map_control.last_mouse_position = {
 				GetFixedX( data->mouse.absolute.x ),

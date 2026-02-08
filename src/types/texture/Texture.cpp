@@ -51,34 +51,36 @@ const bool Texture::IsEmpty() const {
 	return m_width == 0 || m_height == 0;
 }
 
-void Texture::Resize( const size_t width, const size_t height ) {
-	if ( m_width != width || m_height != height ) {
-
-		//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
-		ASSERT( width < VERY_BIG_NUMBER, "texture width overflow" );
-		ASSERT( height < VERY_BIG_NUMBER, "texture height overflow" );
-
-		m_width = width;
-		m_height = height;
-
-		if ( m_bitmap ) {
-			free( m_bitmap );
-		}
-
-		m_bitmap_size = m_width * m_height * m_bpp;
-
-		if ( m_height > 0 && m_width > 0 ) {
-
-			m_aspect_ratio = m_height / m_width;
-
-			m_bitmap = (unsigned char*)malloc( m_bitmap_size );
-			memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
-		}
-		else {
-			m_bitmap = nullptr;
-		}
-		FullUpdate();
+const bool Texture::Resize( const size_t width, const size_t height ) {
+	if ( m_width == width && m_height == height ) {
+		return false;
 	}
+
+	//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
+	ASSERT( width < VERY_BIG_NUMBER, "texture width overflow" );
+	ASSERT( height < VERY_BIG_NUMBER, "texture height overflow" );
+
+	m_width = width;
+	m_height = height;
+
+	if ( m_bitmap ) {
+		free( m_bitmap );
+	}
+
+	m_bitmap_size = m_width * m_height * m_bpp;
+
+	if ( m_height > 0 && m_width > 0 ) {
+
+		m_aspect_ratio = m_height / m_width;
+
+		m_bitmap = (unsigned char*)malloc( m_bitmap_size );
+		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
+	}
+	else {
+		m_bitmap = nullptr;
+	}
+	FullUpdate();
+	return true;
 }
 
 const size_t Texture::GetWidth() const {

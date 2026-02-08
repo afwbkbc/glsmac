@@ -35,7 +35,7 @@ CLASS( Texture, Serializable )
 	virtual ~Texture();
 
 	virtual const bool IsEmpty() const;
-	virtual void Resize( const size_t width, const size_t height );
+	virtual const bool Resize( const size_t width, const size_t height );
 	virtual const size_t GetWidth() const;
 	virtual const size_t GetHeight() const;
 	virtual unsigned char* const GetBitmap() const;

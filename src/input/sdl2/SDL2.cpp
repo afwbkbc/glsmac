@@ -43,6 +43,8 @@ void SDL2::Iterate() {
 	input::Event e = {}; // new
 	ui_legacy::event::UIEvent* le = nullptr; // legacy
 
+	input::Event e_mouse_move = {}; // send only once per iteration
+
 	while ( SDL_PollEvent( &event ) ) {
 		e.SetType( EV_NONE );
 		switch ( event.type ) {
@@ -64,9 +66,9 @@ void SDL2::Iterate() {
 				// legacy
 				NEW( le, ui_legacy::event::MouseMove, event.motion.x, event.motion.y );
 				// new ui
-				e.SetType( EV_MOUSE_MOVE );
-				e.data.mouse.x = event.motion.x;
-				e.data.mouse.y = event.motion.y;
+				e_mouse_move.SetType( EV_MOUSE_MOVE );
+				e_mouse_move.data.mouse.x = event.motion.x;
+				e_mouse_move.data.mouse.y = event.motion.y;
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
@@ -174,7 +176,14 @@ void SDL2::Iterate() {
 			}
 		}
 	}
-
+	if ( e_mouse_move.type != EV_NONE ) {
+		if ( !ProcessEvent( e_mouse_move ) ) {
+			// try legacy
+			NEW( le, ui_legacy::event::MouseMove, e_mouse_move.data.mouse.x, e_mouse_move.data.mouse.y );
+			g_engine->GetUI()->ProcessEvent( le );
+			DELETE( le );
+		}
+	}
 }
 
 const std::string SDL2::GetClipboardText() const {

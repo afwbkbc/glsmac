@@ -1394,7 +1394,6 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
-	auto* gc_space = GetGCSpace();
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
 	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );

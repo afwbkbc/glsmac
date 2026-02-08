@@ -54,12 +54,14 @@ void Geometry::SetParent( Geometry* const other ) {
 }
 
 void Geometry::SetLeft( const coord_t px ) {
-	m_left = px;
-	m_stick_bits |= STICK_LEFT;
-	if ( m_stick_bits & STICK_RIGHT ) {
-		m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
+	if ( m_left != px || !( m_stick_bits & STICK_LEFT ) || ( m_stick_bits & STICK_RIGHT ) ) {
+		m_left = px;
+		m_stick_bits |= STICK_LEFT;
+		if ( m_stick_bits & STICK_RIGHT ) {
+			m_stick_bits &= ~( STICK_RIGHT | STICK_WIDTH );
+		}
+		NeedUpdate();
 	}
-	NeedUpdate();
 }
 
 const coord_t Geometry::GetLeft() const {
@@ -67,12 +69,14 @@ const coord_t Geometry::GetLeft() const {
 }
 
 void Geometry::SetTop( const coord_t px ) {
-	m_top = px;
-	m_stick_bits |= STICK_TOP;
-	if ( m_stick_bits & STICK_BOTTOM ) {
-		m_stick_bits &= ~( STICK_BOTTOM | STICK_HEIGHT );
+	if ( m_top != px || !( m_stick_bits & STICK_TOP ) || ( m_stick_bits & STICK_BOTTOM ) ) {
+		m_top = px;
+		m_stick_bits |= STICK_TOP;
+		if ( m_stick_bits & STICK_BOTTOM ) {
+			m_stick_bits &= ~( STICK_BOTTOM | STICK_HEIGHT );
+		}
+		NeedUpdate();
 	}
-	NeedUpdate();
 }
 
 const coord_t Geometry::GetTop() const {
@@ -80,27 +84,33 @@ const coord_t Geometry::GetTop() const {
 }
 
 void Geometry::SetRight( const coord_t px ) {
-	m_right = px;
-	m_stick_bits |= STICK_RIGHT;
-	if ( m_stick_bits & STICK_LEFT ) {
-		m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
+	if ( m_right != px || !( m_stick_bits & STICK_RIGHT ) || ( m_stick_bits & STICK_LEFT ) ) {
+		m_right = px;
+		m_stick_bits |= STICK_RIGHT;
+		if ( m_stick_bits & STICK_LEFT ) {
+			m_stick_bits &= ~( STICK_LEFT | STICK_WIDTH );
+		}
+		NeedUpdate();
 	}
-	NeedUpdate();
 }
 
 void Geometry::SetBottom( const coord_t px ) {
-	m_bottom = px;
-	m_stick_bits |= STICK_BOTTOM;
-	if ( m_stick_bits & STICK_TOP ) {
-		m_stick_bits &= ~( STICK_TOP | STICK_HEIGHT );
+	if ( m_bottom != px || !( m_stick_bits & STICK_BOTTOM ) || ( m_stick_bits & STICK_TOP ) ) {
+		m_bottom = px;
+		m_stick_bits |= STICK_BOTTOM;
+		if ( m_stick_bits & STICK_TOP ) {
+			m_stick_bits &= ~( STICK_TOP | STICK_HEIGHT );
+		}
+		NeedUpdate();
 	}
-	NeedUpdate();
 }
 
 void Geometry::SetWidth( const coord_t px ) {
-	m_width = px;
-	m_stick_bits |= STICK_WIDTH;
-	NeedUpdate();
+	if ( m_width != px || !( m_stick_bits & STICK_WIDTH ) ) {
+		m_width = px;
+		m_stick_bits |= STICK_WIDTH;
+		NeedUpdate();
+	}
 }
 
 const coord_t Geometry::GetWidth() const {
@@ -112,9 +122,11 @@ const coord_t Geometry::GetInnerWidth() const {
 }
 
 void Geometry::SetHeight( const coord_t px ) {
-	m_height = px;
-	m_stick_bits |= STICK_HEIGHT;
-	NeedUpdate();
+	if ( m_height != px || !( m_stick_bits & STICK_HEIGHT ) ) {
+		m_height = px;
+		m_stick_bits |= STICK_HEIGHT;
+		NeedUpdate();
+	}
 }
 
 const coord_t Geometry::GetHeight() const {
