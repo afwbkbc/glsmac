@@ -17,7 +17,6 @@ Geometry::Geometry( const UI* const ui, Geometry* const parent, const geometry_t
 	UpdateArea();
 	if ( m_parent ) {
 		m_parent->m_children.insert( this );
-		m_parent->UpdateEffectiveArea( false );
 	}
 }
 
@@ -454,35 +453,41 @@ void Geometry::UpdateArea() {
 void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 	area_t effective_area = {};
 	if ( m_is_visible ) {
-		effective_area = m_area;
-		if ( m_overflow_mode != OM_HIDDEN ) {
-			for ( const auto& child : m_children ) {
-				if ( child->m_is_visible ) {
-					effective_area.EnlargeTo( child->GetEffectiveArea() );
+		if ( m_overflow_mode == OM_RESIZE ) { // for scrollviews
+			ASSERT( m_parent, "overflow resize without parent" );
+			effective_area = m_parent->m_effective_area;
+		}
+		else {
+			effective_area = m_area;
+			if ( m_overflow_mode != OM_HIDDEN ) {
+				for ( const auto& child : m_children ) {
+					if ( child->m_is_visible ) {
+						effective_area.EnlargeTo( child->GetEffectiveArea() );
+					}
 				}
 			}
+			FixArea( effective_area );
 		}
-		FixArea( effective_area );
-	}
-	if ( effective_area != m_effective_area ) {
+		if ( effective_area != m_effective_area ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
-		const auto& g = g_engine->GetGraphics();
-		const auto maxx = g->GetViewportWidth() - 1;
-		const auto maxy = g->GetViewportHeight() - 1;
+			const auto& g = g_engine->GetGraphics();
+			const auto maxx = g->GetViewportWidth() - 1;
+			const auto maxy = g->GetViewportHeight() - 1;
 #endif
-		ASSERT( effective_area.left >= 0 && effective_area.left <= maxx, "effective area left overflow" );
-		ASSERT( effective_area.top >= 0 && effective_area.top <= maxy, "effective area top overflow" );
-		ASSERT( effective_area.right >= 0 && effective_area.right <= maxx, "effective area right overflow" );
-		ASSERT( effective_area.bottom >= 0 && effective_area.bottom <= maxy, "effective area bottom overflow" );
-		const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
-		m_effective_area = effective_area;
-		if ( should_resize && m_on_resize ) {
-			m_on_resize( m_effective_area.width, m_effective_area.height );
+			ASSERT( effective_area.left >= 0 && effective_area.left <= maxx, "effective area left overflow" );
+			ASSERT( effective_area.top >= 0 && effective_area.top <= maxy, "effective area top overflow" );
+			ASSERT( effective_area.right >= 0 && effective_area.right <= maxx, "effective area right overflow" );
+			ASSERT( effective_area.bottom >= 0 && effective_area.bottom <= maxy, "effective area bottom overflow" );
+			const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
+			if ( should_resize && m_on_resize ) {
+				m_on_resize( effective_area.width, effective_area.height );
+			}
+			m_effective_area = effective_area;
+			if ( m_parent && !is_update_from_parent ) {
+				m_parent->OnChildUpdate();
+			}
+			RunHandlers( GH_ON_EFFECTIVE_AREA_UPDATE );
 		}
-		if ( m_parent && !is_update_from_parent ) {
-			m_parent->OnChildUpdate();
-		}
-		RunHandlers( GH_ON_EFFECTIVE_AREA_UPDATE );
 	}
 }
 
@@ -561,6 +566,9 @@ void Geometry::RemoveBoundaries( Geometry* const g ) {
     if ( m_boundaries._a._b.child == g ) { \
         m_boundaries._a._b = {}; \
         for ( const auto& c : m_children ) { \
+            if ( c->m_is_destroying ) { \
+                continue; \
+            } \
             const auto& v = _get; \
             if ( !m_boundaries._a._b.child || m_boundaries._a._b.value _op v ) { \
                 m_boundaries._a._b = { c, v }; \
@@ -591,7 +599,6 @@ void Geometry::ResizeAreaFromChildren() {
 			m_area.EnlargeTo( child->m_area );
 		}
 	}
-	FixArea( m_area );
 }
 
 }

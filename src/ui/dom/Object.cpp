@@ -204,12 +204,14 @@ void Object::Destroy( GSE_CALLABLE ) {
 	}
 	Hide();
 	SetClasses( GSE_CALL, {} );
-	if ( m_is_iterable_set ) {
-		m_ui->RemoveIterable( this );
+	if ( m_ui ) {
+		if ( m_is_iterable_set ) {
+			m_ui->RemoveIterable( this );
+		}
 	}
 	{
-		std::lock_guard guard( m_actors_mutex );
 		auto* const scene = m_ui->GetScene();
+		std::lock_guard guard( m_actors_mutex );
 		for ( const auto& actor : m_actors ) {
 			scene->RemoveActor( actor );
 		}
@@ -324,6 +326,7 @@ void Object::Actor( scene::actor::Actor* actor ) {
 		scene::actor::Actor::RF_IGNORE_CAMERA |
 		scene::actor::Actor::RF_IGNORE_LIGHTING
 	);
+	ASSERT( m_ui, "ui detached" );
 	m_ui->GetScene()->AddActor( actor );
 	{
 		std::lock_guard guard( m_actors_mutex );
@@ -337,15 +340,17 @@ void Object::ClearActors() {
 	if ( g ) {
 		g = g->AsRectangle();
 	}
-	auto* const scene = m_ui->GetScene();
-	for ( const auto& actor : m_actors ) {
-		scene->RemoveActor( actor );
-		if ( g ) {
-			((geometry::Rectangle*)g)->Clear();
+	if ( m_ui ) {
+		auto* const scene = m_ui->GetScene();
+		for ( const auto& actor : m_actors ) {
+			scene->RemoveActor( actor );
+			if ( g ) {
+				( (geometry::Rectangle*)g )->Clear();
+			}
+			delete actor;
 		}
-		delete actor;
+		m_actors.clear();
 	}
-	m_actors.clear();
 }
 
 void Object::Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
@@ -402,6 +407,7 @@ void Object::Iterable( const std::function< void() >& f ) {
 	ASSERT( !m_is_destroyed, "Iterable: object is destroyed" );
 	ASSERT( !m_is_iterable_set, "iterable already set" );
 	m_is_iterable_set = true;
+	ASSERT( m_ui, "ui detached" );
 	m_ui->AddIterable( this, f );
 }
 
@@ -542,6 +548,7 @@ void Object::Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglob
 	if ( m_is_globalized ) {
 		Deglobalize( GSE_CALL );
 	}
+	ASSERT( m_ui, "ui detached" );
 	ASSERT( m_parent == m_ui->GetRoot(), "can only globalize children of root object" );
 	m_ui->SetGlobalSingleton( GSE_CALL, this, f_on_deglobalize );
 	m_is_globalized = true;
@@ -549,6 +556,7 @@ void Object::Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglob
 
 void Object::Deglobalize( GSE_CALLABLE ) {
 	if ( m_is_globalized ) {
+		ASSERT( m_ui, "ui detached" );
 		ASSERT( m_parent == m_ui->GetRoot(), "can only deglobalize children of root object" );
 		m_ui->RemoveGlobalSingleton( GSE_CALL, this );
 		m_is_globalized = false;
@@ -644,6 +652,7 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 		ASSERT( m_classes.empty(), "not initialized but classes not empty" );
 	}
 	m_classes.reserve( names.size() );
+	ASSERT( m_ui, "ui detached" );
 	for ( const auto& name : names ) {
 		auto* c = m_ui->GetClass( name );
 		if ( !c ) {
@@ -712,6 +721,11 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 	else {
 		UnsetProperty( GSE_CALL, &m_properties, key );
 	}
+}
+
+void Object::DetachUI() {
+	ASSERT( m_ui, "ui already detached" );
+	m_ui = nullptr;
 }
 
 }

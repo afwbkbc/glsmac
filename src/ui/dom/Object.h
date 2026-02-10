@@ -99,7 +99,7 @@ protected:
 
 	void UpdateProperty( const std::string& name, gse::Value* const v );
 
-	UI* const m_ui;
+	UI* m_ui;
 	gc::Space* const m_gc_space;
 	const properties_t m_initial_properties;
 
@@ -179,6 +179,9 @@ protected:
 	virtual void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier );
 	virtual void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key );
 
+protected:
+	friend class ui::UI;
+	virtual void DetachUI();
 };
 
 }

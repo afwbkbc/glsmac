@@ -108,22 +108,6 @@ void Drawable::GeometryHandler( const geometry_handler_type_t type, const std::f
 	m_geometry_handler_ids.push_back( m_geometry->AddHandler( type, f ) );
 }
 
-const bool Drawable::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	switch ( event.type ) {
-		case input::EV_MOUSE_OVER: {
-			m_is_mouse_over = true;
-			break;
-		}
-		case input::EV_MOUSE_OUT: {
-			m_is_mouse_over = false;
-			break;
-		}
-		default: {
-		}
-	}
-	return Object::ProcessEvent( GSE_CALL, event );
-}
-
 void Drawable::Show() {
 	if ( !m_is_visible ) {
 		Object::Show();

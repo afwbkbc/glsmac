@@ -161,13 +161,19 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_OUT: {
+			if ( !m_is_mouse_over ) {
+				//return false; // TODO: why this breaks _hover styles?
+			}
+			m_is_mouse_over = false;
 			if ( m_mouse_over_object ) {
 				SetMouseOverChild( GSE_CALL, nullptr, { event.data.mouse.x, event.data.mouse.y } );
 			}
-			m_is_mouse_over = false;
 			break;
 		}
 		case input::EV_MOUSE_OVER: {
+			if ( m_is_mouse_over ) {
+				//return false; // TODO: why this breaks _hover styles?
+			}
 			m_is_mouse_over = true;
 			break;
 		}
@@ -439,6 +445,15 @@ void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
 		obj->Destroy( GSE_CALL );
 	}
 }
+
+void Container::DetachUI() {
+	for ( const auto& it : m_children ) {
+		it.second->DetachUI();
+	}
+	Object::DetachUI();
+}
+
+
 
 }
 }

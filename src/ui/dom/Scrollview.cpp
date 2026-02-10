@@ -26,6 +26,8 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 		auto* g = m_inner->GetGeometry();
 		g->SetParent( m_geometry );
 		g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
+		g->SetLeft( 0 );
+		g->SetTop( 0 );
 		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
 			if ( !m_is_updating ) {
 				m_is_updating = true;
@@ -174,6 +176,9 @@ void Scrollview::UpdateScrollbars( size_t width, size_t height ) {
 		width = g->GetInnerWidth();
 		height = g->GetInnerHeight();
 	}
+
+	ASSERT( width < VERY_BIG_NUMBER, "scrollbars width overflow" );
+	ASSERT( height < VERY_BIG_NUMBER, "scrollbars height overflow" );
 
 	const auto vscroll_w = m_vscroll->GetGeometry()->m_area.width;
 	const auto hscroll_h = m_hscroll->GetGeometry()->m_area.height;

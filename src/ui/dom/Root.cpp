@@ -17,6 +17,10 @@ Root::Root( GSE_CALLABLE, UI* const ui )
 	Show();
 }
 
+Root::~Root() {
+	Container::DetachUI();
+}
+
 void Root::Resize( const uint16_t window_width, const uint16_t window_height ) {
 	m_geometry->SetWidth( window_width );
 	m_geometry->SetHeight( window_height );

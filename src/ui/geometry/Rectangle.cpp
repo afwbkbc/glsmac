@@ -11,7 +11,11 @@ namespace ui {
 namespace geometry {
 
 Rectangle::Rectangle( const UI* const ui, Geometry* const parent )
-	: Geometry( ui, parent, GT_RECTANGLE ) {}
+	: Geometry( ui, parent, GT_RECTANGLE ) {
+	if ( m_parent ) {
+		m_parent->UpdateEffectiveArea( false );
+	}
+}
 
 Rectangle::~Rectangle() {
 	Clear();

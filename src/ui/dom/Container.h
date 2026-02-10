@@ -14,6 +14,9 @@ class Cache;
 }
 
 namespace ui {
+
+class UI;
+
 namespace dom {
 
 #define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, m_factory_owner, p ); })
@@ -87,6 +90,10 @@ protected:
 	friend class Listview;
 	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible );
 	void RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy = false );
+
+protected:
+	friend class ui::UI;
+	void DetachUI() override;
 
 };
 
