@@ -49,8 +49,6 @@ Widget::Widget( DOM_ARGS )
 			it.second->Resize( width, height );
 		}
 	};
-
-	m_geometry->SetOverflowMode( geometry::Geometry::OM_HIDDEN );
 }
 
 void Widget::Show() {

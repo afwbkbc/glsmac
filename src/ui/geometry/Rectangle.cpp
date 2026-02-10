@@ -114,16 +114,12 @@ void Rectangle::InitMesh( types::mesh::Render* const mesh, const bool keep_tex, 
 }
 
 void Rectangle::UpdateActor( scene::actor::Mesh* const actor ) {
-	if ( m_parent && m_overflow_mode == OM_HIDDEN ) {
-		const auto& area = m_parent->m_effective_area;
-		actor->SetAreaLimits(
-			{
-				{ m_ui->ClampX( area.left ),  m_ui->ClampY( area.top ),    -1.0f },
-				{ m_ui->ClampX( area.right ), m_ui->ClampY( area.bottom ), 1.0f }
-			}
-
-		);
-	}
+	actor->SetAreaLimits(
+		{
+			{ m_ui->ClampX( m_area.left ),  m_ui->ClampY( m_area.top ),    -1.0f },
+			{ m_ui->ClampX( m_area.right ), m_ui->ClampY( m_area.bottom ), 1.0f }
+		}
+	);
 	actor->SetPositionZ( m_area.zindex );
 }
 

@@ -273,11 +273,11 @@ void Geometry::Destroy() {
 
 void Geometry::Update( const bool is_update_from_parent ) {
 	UpdateArea();
-	UpdateImpl();
 	for ( const auto& geometry : m_children ) {
 		geometry->Update( true );
 	}
 	UpdateEffectiveArea( is_update_from_parent );
+	UpdateImpl();
 	if ( m_parent ) {
 		if ( !m_is_destroying && ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) ) { // TODO: other variants
 			m_parent->AddBoundaries( this );
