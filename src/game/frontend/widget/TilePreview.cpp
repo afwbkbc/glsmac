@@ -14,7 +14,7 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-TilePreview::TilePreview( const Game* const game, ui::UI* const ui )
+TilePreview::TilePreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_TILE_PREVIEW, "tile-preview", {
 		{ "tile", { gse::VT_OBJECT, ::game::backend::map::tile::Tile::WRAP_CLASS } },
@@ -33,7 +33,9 @@ void TilePreview::Register( ui::dom::Widget* const widget ) {
 	);
 }
 
-void TilePreview::Update( ui::dom::Widget* const widget, const tile::Tile* const tile ) {
+void TilePreview::Update( ui::dom::Widget* const widget, const void* const data ) {
+	const auto* const tile = (const tile::Tile*)data;
+
 	widget->Clear();
 
 	const auto& render = tile->GetRenderData();

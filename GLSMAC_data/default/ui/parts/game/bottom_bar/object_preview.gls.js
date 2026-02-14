@@ -1,6 +1,6 @@
 return {
 
-	previews: {},
+	preview: null,
 	last_object_class: null,
 
 	moralesets: {},
@@ -23,7 +23,8 @@ return {
 	set_image: (object) => {
 		if (object == null) {
 			if (this.last_object_class != null) {
-				this.previews[this.last_object_class].hide();
+				this.preview.remove();
+				this.preview = null;
 			}
 			this.last_object_class = null;
 			return;
@@ -31,8 +32,10 @@ return {
 		const cls = #classof(object);
 		if (this.last_object_class != cls) {
 			if (this.last_object_class != null) {
-				this.previews[this.last_object_class].hide();
+				this.preview.remove();
+				this.preview = null;
 			}
+			this.last_object_class = cls;
 		}
 		let type = '';
 		let data = {};
@@ -51,18 +54,14 @@ return {
 				throw Error('Unknown object class: ' + cls);
 			}
 		}
-		if (!#is_defined(this.previews[cls])) {
-			this.previews[cls] = this.frame.widget({
+		if (this.preview == null) {
+			this.preview = this.frame.widget({
 				class: 'bottombar-object-preview',
 				type: type,
 				data: data,
 			});
 		} else {
-			this.previews[cls].data = data;
-		}
-		if (this.last_object_class != cls) {
-			this.previews[cls].show();
-			this.last_object_class = cls;
+			this.preview.data = data;
 		}
 	},
 

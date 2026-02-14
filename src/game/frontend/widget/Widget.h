@@ -38,7 +38,7 @@ namespace widget {
 CLASS( Widget, common::Class )
 public:
 	Widget(
-		const Game* const game,
+		Game* const game,
 		ui::UI* const ui,
 		const ui::widget_type_t type,
 		const std::string& str,
@@ -46,8 +46,10 @@ public:
 	);
 	virtual ~Widget();
 
+	virtual void Update( ui::dom::Widget* const widget, const void* const data ) = 0;
+
 protected:
-	const Game* const m_game;
+	Game* const m_game;
 	ui::UI* const m_ui;
 	const ui::widget_type_t m_type;
 

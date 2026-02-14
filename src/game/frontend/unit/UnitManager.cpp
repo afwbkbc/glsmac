@@ -178,7 +178,6 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 void UnitManager::RefreshUnit( Unit* unit ) {
 	const auto was_active = unit->IsActive();
-	unit->Refresh();
 	UpdateSelectable( unit );
 	m_game->RenderTile( unit->GetTile(), m_selected_unit );
 	if ( m_selected_unit == unit && was_active ) {
@@ -189,6 +188,7 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 			unit->StartBadgeBlink();
 		}
 	}
+	m_game->UpdateRelatedWidgets( ui::WT_UNIT_PREVIEW, unit->GetId(), unit );
 }
 
 void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id ) {

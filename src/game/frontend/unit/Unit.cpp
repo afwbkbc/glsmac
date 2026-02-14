@@ -297,6 +297,7 @@ void Unit::Refresh() {
 		if ( is_badge_visible ) {
 			ShowBadge();
 		}
+		m_um->RefreshUnit( this );
 	}
 }
 

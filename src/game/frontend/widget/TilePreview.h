@@ -13,17 +13,13 @@ class Texture;
 namespace game {
 namespace frontend {
 
-namespace tile {
-class Tile;
-}
-
 namespace widget {
 
 CLASS( TilePreview, Widget )
 public:
-	TilePreview( const Game* const game, ui::UI* const ui );
+	TilePreview( Game* const game, ui::UI* const ui );
 
-	void Update( ui::dom::Widget* const widget, const tile::Tile* const tile );
+	void Update( ui::dom::Widget* const widget, const void* const data ) override;
 
 protected:
 	void Register( ui::dom::Widget* const widget ) override;

@@ -30,6 +30,7 @@ public:
 
 	void Show() override;
 	void Hide() override;
+	void Destroy( GSE_CALLABLE ) override;
 
 	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
 	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
@@ -38,6 +39,7 @@ public:
 	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
 
 	void OnUpdate( const f_widget_update_t& on_widget_update );
+	void OnRemove( const f_widget_remove_t& on_widget_remove );
 
 private:
 
@@ -57,6 +59,7 @@ private:
 	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
 
 	f_widget_update_t m_on_widget_update = nullptr;
+	f_widget_remove_t m_on_widget_remove = nullptr;
 	void UpdateWidget();
 
 };

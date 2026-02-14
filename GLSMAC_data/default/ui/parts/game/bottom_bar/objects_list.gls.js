@@ -61,36 +61,36 @@ return {
 					class: 'bottombar-objects-list-item-text',
 					text: p.get_stats_str(object),
 				});
-				if (object == this.selected_unit) {
-					this.set_active_item(item);
-				}
 				item.on('mousedown', (e) => {
 					this.p.game.select_unit(object);
-					return true;
-				});
-				item.on('mouseover', (e) => {
-					this.p.sections.object_preview.show(object);
-					return true;
-				});
-				item.on('mouseout', (e) => {
-					this.p.sections.object_preview.show(this.selected_unit);
 					return true;
 				});
 				break;
 			}
 			case 'Base': {
 				this.base_items[key] = item;
-				// TODO:
+				item.on('mousedown', (e) => {
+					// TODO
+					#print('TODO: select_base', object);
+					return true;
+				});
 				break;
 			}
+		}
+		item.on('mouseover', (e) => {
+			this.p.sections.object_preview.show(object);
+			return true;
+		});
+		item.on('mouseout', (e) => {
+			this.p.sections.object_preview.show(this.selected_unit);
+			return true;
+		});
+		if (object == this.selected_unit) {
+			this.set_active_item(item);
 		}
 	},
 
 	update_tile: (tile) => {
-
-		if (this.selected_tile == tile) {
-			return;
-		}
 
 		if (#is_defined(this.list)) {
 			this.list.remove();
@@ -169,7 +169,7 @@ return {
 		});
 
 		p.map.on('unit_preview', (e) => {
-			if (e.unit != this.selected_unit) {
+			if (e.unit != this.selected_unit || (this.selected_unit != null && e.unit.movement != this.selected_unit.movement)) { // TODO: dynamic updates of wrapped objects
 				this.selected_unit = e.unit;
 				if (this.selected_unit != null) {
 					const tile = this.selected_unit.get_tile();
@@ -183,6 +183,12 @@ return {
 					}
 				}
 			}
+		});
+
+		p.map.on('base_preview', (e) => {
+			this.selected_unit = null;
+			this.set_active_item(null);
+			this.update_tile(e.base.get_tile());
 		});
 
 		p.map.on('tile_preview', (e) => {

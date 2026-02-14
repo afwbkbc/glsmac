@@ -69,6 +69,13 @@ void Widget::Hide() {
 	}
 }
 
+void Widget::Destroy( GSE_CALLABLE ) {
+	if ( m_on_widget_remove ) {
+		m_on_widget_remove( this );
+	}
+	Area::Destroy( GSE_CALL );
+}
+
 void Widget::SetTexture( types::texture::Texture* const texture, const size_t index ) {
 	ASSERT( m_textures.find( index ) == m_textures.end(), "texture id " + std::to_string( index ) + " already set" );
 	m_textures.insert( { index, texture } );
@@ -103,6 +110,10 @@ void Widget::OnUpdate( const f_widget_update_t& on_widget_update ) {
 	if ( m_type && m_data ) {
 		UpdateWidget();
 	}
+}
+
+void Widget::OnRemove( const f_widget_remove_t& on_widget_remove ) {
+	m_on_widget_remove = on_widget_remove;
 }
 
 void Widget::Enable( const widget_type_t type ) {

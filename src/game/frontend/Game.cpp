@@ -479,7 +479,7 @@ void Game::Iterate() {
 		if ( minimap_texture ) {
 			if ( m_glsmac ) {
 				// new ui
-				m_widgets.Minimap->Update( minimap_texture );
+				m_widgets.Minimap->Update( nullptr, minimap_texture );
 			}
 			else {
 				// legacy ui
@@ -938,6 +938,69 @@ const bool Game::IsInitialized() const {
 	return m_is_initialized;
 }
 
+void Game::SetWidgetRelation( const ui::widget_type_t type, const size_t id, ui::dom::Widget* const widget ) {
+	//Log( "WR SET ( " + std::to_string( type ) + ", " + std::to_string( id ) + ", " + std::to_string( (long long)widget ) + " )" );
+	auto it = m_widget_relations.find( type );
+	if ( it == m_widget_relations.end() ) {
+		it = m_widget_relations.insert( { type, {} } ).first;
+	}
+	const auto& it2 = it->second.find( widget );
+	if ( it2 != it->second.end() ) {
+		if ( it2->second == id ) {
+			return; // nothing changed
+		}
+		// clear previous relation
+		ASSERT(
+			m_related_widgets.find( type ) != m_related_widgets.end() &&
+				m_related_widgets.at( type ).find( it2->second ) != m_related_widgets.at( type ).end() &&
+				m_related_widgets.at( type ).at( it2->second ).find( widget ) != m_related_widgets.at( type ).at( it2->second ).end(),
+			"no related widgets entry or mismatch (on set)" );
+		it->second.erase( it2 );
+		m_related_widgets.at( type ).at( it2->second ).erase( widget );
+	}
+	it->second.insert_or_assign( widget, id );
+	auto it3 = m_related_widgets.find( type );
+	if ( it3 == m_related_widgets.end() ) {
+		it3 = m_related_widgets.insert( { type, {} } ).first;
+	}
+	auto it4 = it3->second.find( id );
+	if ( it4 == it3->second.end() ) {
+		it4 = it3->second.insert( { id, {} } ).first;
+	}
+	it4->second.insert( widget );
+	switch ( type ) {
+		case ui::WT_UNIT_PREVIEW: {
+			UpdateRelatedWidgets( type, id, m_um->GetUnitById( id ) );
+			break;
+		}
+		case ui::WT_BASE_PREVIEW: {
+			UpdateRelatedWidgets( type, id, m_bm->GetBaseById( id ) );
+			break;
+		}
+		default: {
+			// nothing
+		}
+	}
+}
+
+void Game::ClearWidgetRelation( const ui::widget_type_t type, ui::dom::Widget* const widget ) {
+	//Log( "WR CLEAR ( " + std::to_string( type ) + ", " + std::to_string( (long long)widget ) + " )" );
+	const auto& it = m_widget_relations.find( type );
+	ASSERT(
+		it != m_widget_relations.end() &&
+			it->second.find( widget ) != m_widget_relations.at( type ).end(),
+		"widget relation entry not found" );
+	const auto related_id = it->second.at( widget );
+	ASSERT(
+		m_related_widgets.find( type ) != m_related_widgets.end() &&
+			m_related_widgets.at( type ).find( related_id ) != m_related_widgets.at( type ).end() &&
+			m_related_widgets.at( type ).at( related_id ).find( widget ) != m_related_widgets.at( type ).at( related_id ).end(),
+		"no related widgets entry or mismatch (on clear)"
+	);
+	m_related_widgets.at( type ).at( related_id ).erase( widget );
+	it->second.erase( widget );
+}
+
 void Game::DefineSlot(
 	const size_t slot_index,
 	faction::Faction* faction
@@ -1218,7 +1281,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 				THROW( "deprecated, shouldnt be here" );
 			}
 			else {
-				m_um->RefreshUnit( unit );
+				unit->Refresh();
 			}
 			break;
 		}
@@ -2595,6 +2658,16 @@ void Game::RegisterWidgets() {
 }
 
 void Game::UnregisterWidgets() {
+
+	// detach widget handlers
+	for ( const auto& it : m_widget_relations ) {
+		for ( const auto& it2 : it.second ) {
+			it2.first->OnRemove( nullptr );
+		}
+	}
+	m_widget_relations.clear();
+	m_related_widgets.clear();
+
 #define X_WIDGET( _x ) delete m_widgets._x; m_widgets._x = nullptr;
 	X_WIDGETS
 #undef X_WIDGET
@@ -2614,6 +2687,38 @@ void Game::Trigger( gse::GCWrappable* const object, const std::string& event, co
 			state->TriggerObject( object, event, f_args );
 		}
 	);
+}
+
+void Game::UpdateRelatedWidgets( const ui::widget_type_t type, const size_t id, const void* const data ) {
+	//Log( "WR UPDATE ( " + std::to_string( type ) + ", " + std::to_string( id ) + ", " + std::to_string( (long long)data ) + " )" );
+	const auto& it = m_related_widgets.find( type );
+	if ( it == m_related_widgets.end() ) {
+		return;
+	}
+	const auto& it2 = it->second.find( id );
+	if ( it2 == it->second.end() ) {
+		return;
+	}
+	// TODO: refactor this switch to unordered map find
+	switch ( type ) {
+		case ui::WT_UNIT_PREVIEW: {
+			auto* const unit = m_um->GetUnitById( id );
+			for ( const auto& widget : it2->second ) {
+				m_widgets.UnitPreview->Update( widget, unit );
+			}
+			break;
+		}
+		case ui::WT_BASE_PREVIEW: {
+			auto* const base = m_bm->GetBaseById( id );
+			for ( const auto& widget : it2->second ) {
+				m_widgets.BasePreview->Update( widget, base );
+			}
+			break;
+		}
+		default: {
+			// nothing
+		}
+	}
 }
 
 const bool Game::IsTurnActive() const {

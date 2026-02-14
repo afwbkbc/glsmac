@@ -91,12 +91,12 @@ CLASS( UI, gse::GCWrappable )
 	const size_t AddGlobalHandler( const global_handler_t& global_handler );
 	void RemoveGlobalHandler( const size_t handler_id );
 
-	typedef std::function< void( dom::Widget* const widget ) > f_init_widget_t;
+	typedef std::function< void( dom::Widget* const widget ) > f_widget_func_t;
 
 	struct widget_config_t {
 		std::string str;
-		f_init_widget_t f_init;
 		widget_data_config_t data_config;
+		f_widget_func_t f_init;
 	};
 
 	void RegisterWidget( const widget_type_t type, const widget_config_t& config );
@@ -164,7 +164,7 @@ private:
 
 private:
 	scene::Scene* const m_scene = nullptr;
-	
+
 };
 
 }

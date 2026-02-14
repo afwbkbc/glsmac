@@ -14,7 +14,7 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-BasePreview::BasePreview( const Game* const game, ui::UI* const ui )
+BasePreview::BasePreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_BASE_PREVIEW, "base-preview", {
 		{ "base", { gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
@@ -24,18 +24,26 @@ BasePreview::BasePreview( const Game* const game, ui::UI* const ui )
 void BasePreview::Register( ui::dom::Widget* const widget ) {
 	widget->OnUpdate(
 		F_WIDGET_UPDATE( this ) {
-			const auto* const u = ::game::backend::base::Base::Unwrap( data->value.at( "base" ) );
-			ASSERT( u, "invalid base ptr" );
-			const auto* const base = m_game->GetBM()->GetBaseById( u->m_id );
-			if ( base ) {
-				Update( widget, base );
-			}
+			const auto* const b = ::game::backend::base::Base::Unwrap( data->value.at( "base" ) );
+			ASSERT( b, "invalid base ptr" );
+			m_game->SetWidgetRelation( m_type, b->m_id, widget );
+		}
+	);
+	widget->OnRemove(
+		F_WIDGET_REMOVE( this ) {
+			m_game->ClearWidgetRelation( m_type, widget );
 		}
 	);
 }
 
-void BasePreview::Update( ui::dom::Widget* const widget, const base::Base* const base ) {
+void BasePreview::Update( ui::dom::Widget* const widget, const void* const data ) {
+	const auto* const base = (const base::Base*)data;
+
 	widget->Clear();
+
+	if ( !base ) {
+		return;
+	}
 
 	const auto& render = base->GetRenderData();
 

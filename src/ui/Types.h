@@ -61,6 +61,8 @@ typedef std::unordered_map< std::string, widget_data_config_entry_t > widget_dat
 
 typedef std::function< void( ::ui::dom::Widget* const widget, gse::value::Object* const data ) > f_widget_update_t;
 #define F_WIDGET_UPDATE( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget, gse::value::Object* const data )
+typedef std::function< void( ::ui::dom::Widget* const widget ) > f_widget_remove_t;
+#define F_WIDGET_REMOVE( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
 
 typedef uint64_t object_id_t;
 

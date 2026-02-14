@@ -13,15 +13,15 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-Widget::Widget( const Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str, const ui::widget_data_config_t& data_config )
+Widget::Widget( Game* const game, ui::UI* const ui, const ui::widget_type_t type, const std::string& str, const ui::widget_data_config_t& data_config )
 	: m_game( game )
 	, m_ui( ui )
 	, m_type( type ) {
 	m_ui->RegisterWidget(
 		m_type, {
 			str,
-			std::bind( &Widget::Register, this, std::placeholders::_1 ),
-			data_config
+			data_config,
+			std::bind( &Widget::Register, this, std::placeholders::_1 )
 		}
 	);
 }

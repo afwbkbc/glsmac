@@ -5,17 +5,13 @@
 namespace game {
 namespace frontend {
 
-namespace base {
-class Base;
-}
-
 namespace widget {
 
 CLASS( BasePreview, Widget )
 public:
-	BasePreview( const Game* const game, ui::UI* const ui );
+	BasePreview( Game* const game, ui::UI* const ui );
 
-	void Update( ui::dom::Widget* const widget, const base::Base* const unit );
+	void Update( ui::dom::Widget* const widget, const void* const data ) override;
 
 protected:
 	void Register( ui::dom::Widget* const widget ) override;

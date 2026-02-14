@@ -14,7 +14,7 @@ namespace game {
 namespace frontend {
 namespace widget {
 
-UnitPreview::UnitPreview( const Game* const game, ui::UI* const ui )
+UnitPreview::UnitPreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_UNIT_PREVIEW, "unit-preview", {
 		{ "unit", { gse::VT_OBJECT, ::game::backend::unit::Unit::WRAP_CLASS } },
@@ -24,18 +24,27 @@ UnitPreview::UnitPreview( const Game* const game, ui::UI* const ui )
 void UnitPreview::Register( ui::dom::Widget* const widget ) {
 	widget->OnUpdate(
 		F_WIDGET_UPDATE( this ) {
+			ASSERT( data->value.find( "unit" ) != data->value.end(), "unit property missing" );
 			const auto* const u = ::game::backend::unit::Unit::Unwrap( data->value.at( "unit" ) );
 			ASSERT( u, "invalid unit ptr" );
-			const auto* const unit = m_game->GetUM()->GetUnitById( u->m_id );
-			if ( unit ) {
-				Update( widget, unit );
-			}
+			m_game->SetWidgetRelation( m_type, u->m_id, widget );
+		}
+	);
+	widget->OnRemove(
+		F_WIDGET_REMOVE( this ) {
+			m_game->ClearWidgetRelation( m_type, widget );
 		}
 	);
 }
 
-void UnitPreview::Update( ui::dom::Widget* const widget, const unit::Unit* const unit ) {
+void UnitPreview::Update( ui::dom::Widget* const widget, const void* const data ) {
+	const auto* const unit = (const unit::Unit*)data;
+
 	widget->Clear();
+
+	if ( !unit ) {
+		return;
+	}
 
 	const auto& render = unit->GetRenderData();
 

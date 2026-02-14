@@ -155,6 +155,7 @@ void BaseManager::DespawnBase( const size_t base_id ) {
 
 void BaseManager::RefreshBase( Base* base ) {
 	m_game->RenderTile( base->GetTile(), m_game->GetUM()->GetSelectedUnit() );
+	m_game->UpdateRelatedWidgets( ui::WT_BASE_PREVIEW, base->GetId(), base );
 }
 
 /* TODO void BaseManager::DespawnBase( const size_t base_id ) {

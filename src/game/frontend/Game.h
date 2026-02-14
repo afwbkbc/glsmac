@@ -21,6 +21,7 @@
 #include "types/Color.h"
 #include "util/Clamper.h"
 #include "util/Scroller.h"
+#include "ui/Types.h"
 
 // TODO: remove those
 #include "game/backend/map/tile/TileState.h"
@@ -273,6 +274,9 @@ CLASS( Game, common::Module )
 
 	const bool IsInitialized() const;
 
+	void SetWidgetRelation( const ui::widget_type_t type, const size_t id, ui::dom::Widget* const widget );
+	void ClearWidgetRelation( const ui::widget_type_t type, ui::dom::Widget* const widget );
+
 private:
 
 	task::game::Game* m_task = nullptr;
@@ -520,6 +524,21 @@ private:
 	void UnregisterWidgets();
 
 	::game::backend::Game* m_game = nullptr;
+
+	std::unordered_map<
+		ui::widget_type_t, std::unordered_map<
+			size_t,
+			std::unordered_set< ui::dom::Widget* >
+		>
+	> m_related_widgets = {};
+	std::unordered_map<
+		ui::widget_type_t, std::unordered_map<
+			ui::dom::Widget*,
+			size_t
+		>
+	> m_widget_relations = {};
+
+	void UpdateRelatedWidgets( const ui::widget_type_t type, const size_t id, const void* const data );
 
 private:
 	friend class unit::UnitManager;
