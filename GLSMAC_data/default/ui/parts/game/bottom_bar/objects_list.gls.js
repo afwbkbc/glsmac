@@ -2,18 +2,18 @@ return {
 
 	selected_tile: null,
 
-	selected_unit: null,
+	selected_object: null,
 
 	unit_items: {},
 	base_items: {},
 	active_item: null,
 
-	set_active_item: (object) => {
+	set_active_item: (item) => {
 		if (this.active_item != null) {
 			this.active_item.class = 'bottombar-objects-list-item';
 			this.active_item.border = #undefined; // TODO: fix class switching logic to also apply modifier styles correctly
 		}
-		this.active_item = object;
+		this.active_item = item;
 		if (this.active_item != null) {
 			this.active_item.class = 'bottombar-objects-list-item-active';
 		}
@@ -82,10 +82,10 @@ return {
 			return true;
 		});
 		item.on('mouseout', (e) => {
-			this.p.sections.object_preview.show(this.selected_unit);
+			this.p.sections.object_preview.show(this.selected_object);
 			return true;
 		});
-		if (object == this.selected_unit) {
+		if (cls == 'Unit' && object == this.selected_object) {
 			this.set_active_item(item);
 		}
 	},
@@ -108,18 +108,18 @@ return {
 			has_vscroll: false,
 		});
 
-		let left = 0;
+		this.list_width = 0;
 
 		const base = tile.get_base();
 
 		if (base != null) {
-			this.add_object(base, left);
-			left += this.object_width;
+			this.add_object(base, this.list_width);
+			this.list_width = this.list_width + this.object_width;
 		}
 
 		for (unit of tile.get_units()) {
-			this.add_object(unit, left);
-			left += this.object_width;
+			this.add_object(unit, this.list_width);
+			this.list_width = this.list_width + this.object_width;
 		}
 
 		this.selected_tile = tile;
@@ -169,16 +169,25 @@ return {
 		});
 
 		p.map.on('unit_preview', (e) => {
-			if (e.unit != this.selected_unit || (this.selected_unit != null && e.unit.movement != this.selected_unit.movement)) { // TODO: dynamic updates of wrapped objects
-				this.selected_unit = e.unit;
-				if (this.selected_unit != null) {
-					const tile = this.selected_unit.get_tile();
+			if (e.unit != this.selected_object || (this.selected_object != null && e.unit.movement != this.selected_object.movement)) { // TODO: dynamic updates of wrapped objects
+				this.selected_object = e.unit;
+				if (this.selected_object != null) {
+					const tile = this.selected_object.get_tile();
 					if (tile != this.selected_tile) {
 						this.update_tile(tile);
 					} else {
-						const key = #to_string(this.selected_unit.id);
-						if (#is_defined(this.unit_items[key])) {
-							this.set_active_item(this.unit_items[key]);
+						{
+							const key = #to_string(e.unit.id);
+							if (!#is_defined(this.unit_items[key])) {
+								this.add_object(e.unit, this.list_width);
+								this.list_width = this.list_width + this.object_width;
+							}
+						}
+						{
+							const key = #to_string(this.selected_object.id);
+							if (#is_defined(this.unit_items[key])) {
+								this.set_active_item(this.unit_items[key]);
+							}
 						}
 					}
 				}
@@ -186,13 +195,20 @@ return {
 		});
 
 		p.map.on('base_preview', (e) => {
-			this.selected_unit = null;
-			this.set_active_item(null);
-			this.update_tile(e.base.get_tile());
+			if (e.base != this.selected_object) {
+				this.selected_object = e.base;
+				this.set_active_item(null);
+				const tile = e.base.get_tile();
+				if (tile != this.selected_tile) {
+					this.update_tile(tile);
+				}
+			}
 		});
 
 		p.map.on('tile_preview', (e) => {
-			this.update_tile(e.tile);
+			if (e.tile != this.selected_tile) {
+				this.update_tile(e.tile);
+			}
 		});
 
 	},

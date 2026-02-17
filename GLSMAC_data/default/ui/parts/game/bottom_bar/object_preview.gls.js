@@ -85,12 +85,16 @@ return {
 		});
 
 		const f_line = (text, size, align) => {
+			let left = #undefined;
+			if (align == 'left') {
+				left = 3;
+			}
 			this.lines.text({
 				align: 'top ' + align,
 				color: 'rgb(116,156,56)',
 				font: 'arialnb.ttf:' + #to_string(size),
 				text: text,
-				left: 3,
+				left: left,
 			});
 		};
 

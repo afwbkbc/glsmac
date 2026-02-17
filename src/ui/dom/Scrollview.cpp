@@ -194,8 +194,15 @@ void Scrollview::UpdateScrollbars( size_t width, size_t height ) {
 		outer_w -= vscroll_w;
 		inner_g->SetWidth( outer_w );
 	}
+	else if ( inner_g->GetWidth() < outer_w ) {
+		inner_g->SetWidth( outer_w );
+	}
+
 	if ( need_h ) {
 		outer_h -= hscroll_h;
+		inner_g->SetHeight( outer_h );
+	}
+	else if ( inner_g->GetHeight() < outer_h ) {
 		inner_g->SetHeight( outer_h );
 	}
 

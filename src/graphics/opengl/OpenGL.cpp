@@ -564,20 +564,19 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
 	std::lock_guard guard( m_texture_objs_to_unload_mutex );
-	m_textures_map::iterator it = m_textures.find( texture );
-	if ( it != m_textures.end() ) {
-		//Log( "Unloading texture '" + texture->m_name + "'" );
-		m_texture_objs_to_unload.push_back( it->second.obj );
-		m_textures.erase( it );
-	}
+	m_texture_objs_to_unload.push_back( texture );
 }
 
 void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f ) {
 	GLuint obj;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
-		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->GetFilename() + " ) not found" );
-		obj = it->second.obj;
+		if ( it != m_textures.end() ) {
+			obj = it->second.obj;
+		}
+		else {
+			obj = m_no_texture;
+		}
 	}
 	else {
 		obj = m_no_texture;
@@ -752,9 +751,14 @@ void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
 
 void OpenGL::ProcessPendingUnloads() {
 	std::lock_guard guard( m_texture_objs_to_unload_mutex );
-	for ( auto& obj : m_texture_objs_to_unload ) {
-		glActiveTexture( GL_TEXTURE0 );
-		glDeleteTextures( 1, &obj );
+	for ( auto& texture : m_texture_objs_to_unload ) {
+		m_textures_map::iterator it = m_textures.find( texture );
+		if ( it != m_textures.end() ) {
+			//Log( "Unloading texture '" + texture->m_name + "'" );
+			glActiveTexture( GL_TEXTURE0 );
+			glDeleteTextures( 1, &it->second.obj );
+			m_textures.erase( it );
+		}
 	}
 	m_texture_objs_to_unload.clear();
 }

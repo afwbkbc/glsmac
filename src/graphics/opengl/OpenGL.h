@@ -130,7 +130,7 @@ private:
 
 	// unload requests can be done from multiple threads but actual unloading done from main one
 	std::mutex m_texture_objs_to_unload_mutex;
-	std::vector< GLuint > m_texture_objs_to_unload = {};
+	std::vector< const types::texture::Texture* > m_texture_objs_to_unload = {};
 	void ProcessPendingUnloads();
 
 	std::mutex m_render_mutex;

@@ -480,7 +480,12 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			ASSERT( effective_area.bottom >= 0 && effective_area.bottom <= maxy, "effective area bottom overflow" );
 			const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
 			if ( should_resize && m_on_resize ) {
-				m_on_resize( effective_area.width, effective_area.height );
+				if ( m_overflow_mode == OM_RESIZE ) {
+					m_on_resize( m_boundaries.width, m_boundaries.height );
+				}
+				else {
+					m_on_resize( effective_area.width, effective_area.height );
+				}
 			}
 			m_effective_area = effective_area;
 			if ( m_parent && !is_update_from_parent ) {
