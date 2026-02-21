@@ -36,6 +36,7 @@ CLASS( Texture, Serializable )
 
 	virtual const bool IsEmpty() const;
 	virtual const bool Resize( const size_t width, const size_t height );
+	void Clear();
 	virtual const size_t GetWidth() const;
 	virtual const size_t GetHeight() const;
 	virtual unsigned char* const GetBitmap() const;
@@ -46,6 +47,7 @@ CLASS( Texture, Serializable )
 	// call Update() manually after you're done
 	virtual void SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba );
 	virtual void SetPixel( const size_t x, const size_t y, const Color& color );
+	void SetPixelMaybe( const ssize_t x, const ssize_t y, const Color& color );
 	virtual void SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha );
 
 	virtual const Color::rgba_t GetPixel( const size_t x, const size_t y ) const;

@@ -83,6 +83,12 @@ const bool Texture::Resize( const size_t width, const size_t height ) {
 	return true;
 }
 
+void Texture::Clear() {
+	ASSERT( m_bitmap, "bitmap is null" );
+	memset( m_bitmap, 0, m_bitmap_size );
+	FullUpdate();
+}
+
 const size_t Texture::GetWidth() const {
 	return m_width;
 }
@@ -104,11 +110,19 @@ const std::string& Texture::GetFilename() const {
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
+	ASSERT( x < m_width, "SetPixel x overflow ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( y < m_height, "SetPixel y overflow ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color& color ) {
 	SetPixel( x, y, color.GetRGBA() );
+}
+
+void Texture::SetPixelMaybe( const ssize_t x, const ssize_t y, const Color& color ) {
+	if ( x > 0 && x < m_width && y > 0 && y < m_height ) {
+		SetPixel( x, y, color );
+	}
 }
 
 void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha ) {

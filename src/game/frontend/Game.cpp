@@ -700,20 +700,23 @@ void Game::UpdateCameraPosition() {
 		}
 	);
 
+	const types::Vec2< float >& percents = {
+		1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
+		1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
+	};
+	const types::Vec2< float >& zoom = {
+		2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
+		2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
+	};
 	if ( !m_glsmac ) {
 		// legacy ui
 		if ( m_ui_legacy.bottom_bar ) {
-
-			m_ui_legacy.bottom_bar->SetMinimapSelection(
-				{
-					1.0f - m_map_data.range.percent_to_absolute.x.Unclamp( m_camera_position.x / m_camera_position.z / m_viewport.window_aspect_ratio ),
-					1.0f - m_map_data.range.percent_to_absolute.y.Unclamp( m_camera_position.y / m_camera_position.z / m_viewport.ratio.y / 0.707f )
-				}, {
-					2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
-					2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
-				}
-			);
+			m_ui_legacy.bottom_bar->SetMinimapSelection( percents, zoom );
 		}
+	}
+	else {
+		// new ui
+		m_widgets.Minimap->SetMinimapSelection( percents, zoom );
 	}
 }
 

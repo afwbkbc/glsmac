@@ -55,7 +55,7 @@ void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, con
 	actor->SetTexture( t );
 	widget->SetActor( actor, index );
 	if ( !texture ) {
-		widget->SetTexture( t, 0 );
+		widget->SetTexture( t, index );
 	}
 }
 

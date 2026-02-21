@@ -56,8 +56,8 @@ protected:
 	void AddMeshAndTexture(
 		ui::dom::Widget* const widget,
 		size_t index,
-		const types::mesh::Render* const mesh,
-		types::texture::Texture* const texture,
+		const types::mesh::Render* const mesh = nullptr,
+		types::texture::Texture* const texture = nullptr,
 		const bool keep_tex = false,
 		const types::Vec2< float >& scale = { 1.0f, 1.0f },
 		const types::Vec2< float >& offset = { 0.0f, 0.0f }

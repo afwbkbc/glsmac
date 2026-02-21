@@ -17,9 +17,16 @@ public:
 
 	void Update( ui::dom::Widget* const widget, const void* const data ) override;
 
+	void SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom );
+
 protected:
 	void Register( ui::dom::Widget* const widget ) override;
 
+private:
+	enum layer_index_t {
+		LI_PREVIEW = 0,
+		LI_SELECTION = 1,
+	};
 };
 
 }
