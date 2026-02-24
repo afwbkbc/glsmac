@@ -4,6 +4,7 @@
 #include "types/texture/Texture.h"
 #include "ui/geometry/Geometry.h"
 #include "ui/geometry/Rectangle.h"
+#include "input/Event.h"
 
 namespace ui {
 namespace dom {
@@ -70,10 +71,24 @@ void Widget::Hide() {
 }
 
 void Widget::Destroy( GSE_CALLABLE ) {
+	if ( m_global_handler_id ) {
+		m_ui->RemoveGlobalHandler( m_global_handler_id );
+	}
 	if ( m_on_widget_remove ) {
 		m_on_widget_remove( this );
 	}
 	Area::Destroy( GSE_CALL );
+}
+
+const bool Widget::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	// TODO: move into Object class?
+	const auto& it = m_event_handlers.find( event.type );
+	if ( it != m_event_handlers.end() ) {
+		if ( it->second( event ) ) {
+			return true;
+		}
+	}
+	return Area::ProcessEvent( GSE_CALL, event );
 }
 
 void Widget::SetTexture( types::texture::Texture* const texture, const size_t index ) {
@@ -114,6 +129,28 @@ void Widget::OnUpdate( const f_widget_update_t& on_widget_update ) {
 
 void Widget::OnRemove( const f_widget_remove_t& on_widget_remove ) {
 	m_on_widget_remove = on_widget_remove;
+}
+
+void Widget::SetEventHandler( const input::event_type_t type, const f_on_event_t& f ) {
+	ASSERT( m_event_handlers.find( type ) == m_event_handlers.end(), "widget event handler already set" );
+	m_event_handlers.insert_or_assign( type, f );
+	Event( type );
+}
+
+void Widget::SetGlobalEventHandler( const input::event_type_t type, const f_on_event_t& f ) {
+	ASSERT( m_global_event_handlers.find( type ) == m_global_event_handlers.end(), "widget global event handler already set" );
+	m_global_event_handlers.insert_or_assign( type, f );
+	if ( !m_global_handler_id ) {
+		m_global_handler_id = m_ui->AddGlobalHandler(
+			[ this ]( GSE_CALLABLE, const input::Event& event ) {
+				const auto& it = m_global_event_handlers.find( event.type );
+				if ( it != m_global_event_handlers.end() ) {
+					return it->second( event );
+				}
+				return false;
+			}
+		);
+	}
 }
 
 void Widget::Enable( const widget_type_t type ) {

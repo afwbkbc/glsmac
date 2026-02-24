@@ -27,6 +27,8 @@ private:
 		LI_PREVIEW = 0,
 		LI_SELECTION = 1,
 	};
+
+	bool m_is_dragging = false;
 };
 
 }

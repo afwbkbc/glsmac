@@ -395,6 +395,10 @@ void Object::Method( GSE_CALLABLE, const std::string& name, gse::Value* const ca
 	Property( GSE_CALL, name, gse::VT_CALLABLE, callable, PF_READONLY );
 }
 
+void Object::Event( const input::event_type_t type ) {
+	m_supported_events.insert( type );
+}
+
 void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
 	ASSERT( !m_is_destroyed, "Events: object is destroyed" );
 	for ( const auto& event : events ) {

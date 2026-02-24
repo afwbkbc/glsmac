@@ -6,6 +6,8 @@
 #include "scene/actor/Mesh.h"
 #include "types/texture/Texture.h"
 #include "ui/UI.h"
+#include "input/Event.h"
+#include "game/frontend/Game.h"
 
 namespace game {
 namespace frontend {
@@ -17,7 +19,7 @@ Minimap::Minimap( Game* const game, ui::UI* const ui )
 void Minimap::SetMinimapSelection( const types::Vec2< float > position_percents, const types::Vec2< float > zoom ) {
 
 	WithWidget(
-		F_WITH_WIDGET( this, &position_percents, &zoom ) {
+		F_WITH_WIDGET( &position_percents, &zoom ) {
 
 			const size_t w = widget->GetGeometry()->m_area.width;
 			const size_t h = widget->GetGeometry()->m_area.height;
@@ -70,6 +72,76 @@ void Minimap::SetMinimapSelection( const types::Vec2< float > position_percents,
 void Minimap::Register( ui::dom::Widget* const widget ) {
 	AddMeshAndTexture( widget, LI_PREVIEW );
 	AddMeshAndTexture( widget, LI_SELECTION );
+
+	const auto* a = &widget->GetGeometry()->m_area;
+
+	const auto f_scrollto = [ this, a ]( const types::Vec2< ui::coord_t > coords ) -> void {
+		//Log( "Minimap select at " + coords.ToString() );
+		auto x = coords.x;
+		if ( x < 0 ) {
+			x = 0;
+		}
+		if ( x >= a->width ) {
+			x = a->width - 1;
+		}
+		x -= a->width / 2;
+		if ( x < 0 ) {
+			x += a->width - 4; // TODO: where does this 4 come from?
+		}
+		m_game->CenterAtCoordinatePercents(
+			{
+				x / a->width,
+				coords.y / a->height
+			}
+		);
+	};
+
+	widget->SetEventHandler(
+		input::EV_MOUSE_DOWN, F_EVENT_HANDLER( this, a, f_scrollto ) {
+			m_is_dragging = true;
+			f_scrollto(
+				{
+					event.data.mouse.x - a->left,
+					event.data.mouse.y - a->top
+				}
+			);
+			return true;
+		}
+	);
+	widget->SetGlobalEventHandler(
+		input::EV_MOUSE_MOVE, F_EVENT_HANDLER( this, a, f_scrollto ) {
+			if ( m_is_dragging ) {
+				f_scrollto(
+					{
+						event.data.mouse.x - a->left,
+						event.data.mouse.y - a->top
+					}
+				);
+			}
+			return false;
+		}
+	);
+	widget->SetGlobalEventHandler(
+		input::EV_MOUSE_UP, F_EVENT_HANDLER( this ) {
+			if ( m_is_dragging ) {
+				m_is_dragging = false;
+			}
+			return false;
+		}
+	);
+	widget->SetEventHandler(
+		input::EV_MOUSE_SCROLL, F_EVENT_HANDLER( this, a, f_scrollto ) {
+			f_scrollto(
+				{
+					event.data.mouse.x - a->left,
+					event.data.mouse.y - a->top
+				}
+			);
+			m_game->SmoothScroll( event.data.mouse.scroll_y );
+			return true;
+		}
+	);
+
 }
 
 const types::Vec2< ui::coord_t > Minimap::FindLargestArea() const {

@@ -115,6 +115,7 @@ protected:
 
 	virtual void Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr );
 	void Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable );
+	void Event( const input::event_type_t type );
 	void Events( const std::unordered_set< input::event_type_t >& events );
 	void Iterable( const std::function< void() >& f );
 

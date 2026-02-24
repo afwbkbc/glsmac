@@ -31,6 +31,7 @@ public:
 	void Show() override;
 	void Hide() override;
 	void Destroy( GSE_CALLABLE ) override;
+	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
 	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
 	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
@@ -40,6 +41,11 @@ public:
 
 	void OnUpdate( const f_widget_update_t& on_widget_update );
 	void OnRemove( const f_widget_remove_t& on_widget_remove );
+
+	typedef std::function< bool( const input::Event& ) > f_on_event_t;
+#define F_EVENT_HANDLER( ... ) [ __VA_ARGS__ ]( const input::Event& event )
+	void SetEventHandler( const input::event_type_t type, const f_on_event_t& f );
+	void SetGlobalEventHandler( const input::event_type_t type, const f_on_event_t& f );
 
 private:
 
@@ -62,6 +68,9 @@ private:
 	f_widget_remove_t m_on_widget_remove = nullptr;
 	void UpdateWidget();
 
+	std::unordered_map< input::event_type_t, f_on_event_t > m_event_handlers = {};
+	std::unordered_map< input::event_type_t, f_on_event_t > m_global_event_handlers;
+	size_t m_global_handler_id = 0;
 };
 
 }
