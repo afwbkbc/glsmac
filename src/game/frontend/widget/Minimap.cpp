@@ -98,14 +98,17 @@ void Minimap::Register( ui::dom::Widget* const widget ) {
 
 	widget->SetEventHandler(
 		input::EV_MOUSE_DOWN, F_EVENT_HANDLER( this, a, f_scrollto ) {
-			m_is_dragging = true;
-			f_scrollto(
-				{
-					event.data.mouse.x - a->left,
-					event.data.mouse.y - a->top
-				}
-			);
-			return true;
+			if ( event.data.mouse.button == input::MB_LEFT ) {
+				m_is_dragging = true;
+				f_scrollto(
+					{
+						event.data.mouse.x - a->left,
+						event.data.mouse.y - a->top
+					}
+				);
+				return true;
+			}
+			return false;
 		}
 	);
 	widget->SetGlobalEventHandler(
@@ -117,14 +120,18 @@ void Minimap::Register( ui::dom::Widget* const widget ) {
 						event.data.mouse.y - a->top
 					}
 				);
+				return true;
 			}
 			return false;
 		}
 	);
 	widget->SetGlobalEventHandler(
 		input::EV_MOUSE_UP, F_EVENT_HANDLER( this ) {
-			if ( m_is_dragging ) {
-				m_is_dragging = false;
+			if ( event.data.mouse.button == input::MB_LEFT ) {
+				if ( m_is_dragging ) {
+					m_is_dragging = false;
+					return true;
+				}
 			}
 			return false;
 		}

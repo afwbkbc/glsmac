@@ -1784,6 +1784,9 @@ void Game::Initialize(
 
 	m_handlers.mousedown_after = ui->AddGlobalEventHandler(
 		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
+
+			const auto& c = data->mouse.absolute;
+
 			if ( ui->HasPopup() ) {
 				return false;
 			}
@@ -1808,7 +1811,7 @@ void Game::Initialize(
 					}
 
 				}
-				SelectTileAtPoint( backend::TQP_TILE_SELECT, data->mouse.absolute.x, data->mouse.absolute.y ); // async
+				SelectTileAtPoint( backend::TQP_TILE_SELECT, c.x, c.y ); // async
 				m_editing_draw_timer.SetInterval( Game::s_consts.map_editing.draw_frequency_ms ); // keep drawing until mouseup
 			}
 			else {
@@ -1816,8 +1819,8 @@ void Game::Initialize(
 					case ::ui_legacy::event::M_LEFT: {
 						SelectTileAtPoint(
 							backend::TQP_OBJECT_SELECT,
-							data->mouse.absolute.x,
-							data->mouse.absolute.y
+							c.x,
+							c.y
 						); // async
 						break;
 					}
@@ -1825,8 +1828,8 @@ void Game::Initialize(
 						m_scroller.Stop();
 						m_map_control.is_dragging = true;
 						m_map_control.last_drag_position = {
-							m_clamp.x.Clamp( data->mouse.absolute.x ),
-							m_clamp.y.Clamp( data->mouse.absolute.y )
+							m_clamp.x.Clamp( c.x ),
+							m_clamp.y.Clamp( c.y )
 						};
 						break;
 					}
@@ -1839,15 +1842,17 @@ void Game::Initialize(
 	m_handlers.mousemove_before = ui->AddGlobalEventHandler( // TODO: stop using legacy UI
 		::ui_legacy::event::EV_MOUSE_MOVE, EH( this, ui ) {
 
+			const auto& c = data->mouse.absolute;
+
 			m_map_control.last_mouse_position = {
-				GetFixedX( data->mouse.absolute.x ),
-				(float)data->mouse.absolute.y
+				GetFixedX( c.x ),
+				(float)c.y
 			};
 
 			if ( m_map_control.is_dragging ) {
 				types::Vec2< float > current_drag_position = {
-					m_clamp.x.Clamp( data->mouse.absolute.x ),
-					m_clamp.y.Clamp( data->mouse.absolute.y )
+					m_clamp.x.Clamp( c.x ),
+					m_clamp.y.Clamp( c.y )
 				};
 				types::Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
 
@@ -1862,19 +1867,19 @@ void Game::Initialize(
 					const ssize_t edge_distance = m_viewport.is_fullscreen
 						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 						: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
-					if ( data->mouse.absolute.x < edge_distance ) {
+					if ( c.x < edge_distance ) {
 						m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
 					}
-					else if ( data->mouse.absolute.x >= m_viewport.window_width - edge_distance ) {
+					else if ( c.x >= m_viewport.window_width - edge_distance ) {
 						m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
 					}
 					else {
 						m_map_control.edge_scrolling.speed.x = 0;
 					}
-					if ( data->mouse.absolute.y <= edge_distance ) {
+					if ( c.y <= edge_distance ) {
 						m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
 					}
-					else if ( data->mouse.absolute.y >= m_viewport.window_height - edge_distance ) {
+					else if ( c.y >= m_viewport.window_height - edge_distance ) {
 						m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
 					}
 					else {
