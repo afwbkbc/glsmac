@@ -1,6 +1,6 @@
 return (glsmac) => {
 
-	for (style of ['system', 'popup', 'lobby']) {
+	for (style of ['common', 'system', 'popup', 'lobby']) {
 		#include('styles/' + style)(glsmac.ui);
 	}
 

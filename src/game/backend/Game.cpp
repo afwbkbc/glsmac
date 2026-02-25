@@ -1321,9 +1321,19 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::Message( const std::string& text ) {
+	// legacy ui
 	auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
 	NEW( fr.data.global_message.message, std::string, text );
 	AddFrontendRequest( fr );
+
+	// new ui
+	m_state->WithGSE( this, [ this, text ]( GSE_CALLABLE ){
+		m_state->TriggerObject(
+			this, "message", ARGS_F( text ) {
+				{ "text", VALUE( gse::value::String,, text ) }
+			}; }
+		);
+	});
 }
 
 void Game::Quit( const std::string& reason ) {
@@ -1806,9 +1816,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		);
 
 		connection->m_on_message = [ this ]( const std::string& message ) -> void {
-			auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
-			NEW( fr.data.global_message.message, std::string, message );
-			AddFrontendRequest( fr );
+			Message( message );
 		};
 
 		connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {

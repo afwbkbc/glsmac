@@ -1,5 +1,23 @@
 return {
 
+	pp: {},
+
+	message_fade_timer: null,
+
+	process_message: (text) => {
+
+		if (this.message_fade_timer != null) {
+			this.message_fade_timer.stop();
+		}
+		this.message.text = text;
+		this.message_fade_timer = #async(5000, () => {
+			this.message_fade_timer = null;
+			this.message.text = '';
+		});
+
+		this.pp.sections.middle_area.process_message(text);
+	},
+
 	init: (p) => {
 
 		p.ui.class('bottombar-frame').set({
@@ -44,7 +62,14 @@ return {
 			}),
 		};
 
-		const pp = {
+		this.message = el.text({
+			left: 228,
+			top: 10,
+			font: 'arialnb.ttf:18',
+			color: 'rgb(232,212,140)',
+		});
+
+		this.pp = {
 			game: p.game,
 			map: p.map,
 			ui: p.ui,
@@ -69,10 +94,10 @@ return {
 			},
 		};
 		for (s of ['object_preview', 'tile_preview', 'middle_area', 'objects_list', 'mini_map']) {
-			pp.sections[s] = #include(s);
+			this.pp.sections[s] = #include(s);
 		}
-		for (s of pp.sections) {
-			s.init(pp);
+		for (s of this.pp.sections) {
+			s.init(this.pp);
 		}
 
 	},

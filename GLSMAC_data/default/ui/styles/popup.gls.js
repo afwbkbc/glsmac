@@ -155,53 +155,13 @@ return (ui) => {
 		font: 'arialnb.ttf:18',
 	});
 
-	ui.class('popup-list-scroll-from').set({
-		background: 'icons.pcx:crop(107, 4, 124, 21)',
-		_hover: {
-			background: 'icons.pcx:crop(132, 4, 149, 21)',
-		},
-		_active: {
-			background: 'icons.pcx:crop(157, 4, 174, 21)',
-		},
-	});
-	ui.class('popup-list-scroll-to').set({
-		background: 'icons.pcx:crop(107, 29, 124, 46)',
-		_hover: {
-			background: 'icons.pcx:crop(132, 29, 149, 46)',
-		},
-		_active: {
-			background: 'icons.pcx:crop(157, 29, 174, 46)',
-		},
-	});
-	ui.class('popup-list-scroll-slider').set({
-		background: 'icons.pcx:crop(260, 4, 276, 17)',
-		_hover: {
-			background: 'icons.pcx:crop(104, 104, 121, 115)',
-		},
-	});
-	ui.class('popup-list-scrollbar').set({
-		scroll_type: 'vertical',
-		fromto_size: 18,
-		slider_size: 18,
-		class_from: 'popup-list-scroll-from',
-		class_to: 'popup-list-scroll-to',
-		class_slider: 'popup-list-scroll-slider',
-		min: 0.0,
-		max: 1.0,
-		value: 0.0,
-		speed: 0.5,
-		width: 18,
-		top: 3,
-		bottom: 3,
-		right: 3,
-	});
 	ui.class('popup-list').set({
 		background: 'interface.pcx:crop(86, 353, 109, 376)',
 		border: 'rgb(60, 82, 106),2',
 		padding: 3,
 		itemsize: 20,
 		scroll_type: 'vertical',
-		vscroll_class: 'popup-list-scrollbar',
+		vscroll_class: 'default-scroll-v',
 		autoscroll: true,
 		has_hscroll: false,
 	});
