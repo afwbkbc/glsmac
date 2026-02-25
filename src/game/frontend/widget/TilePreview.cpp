@@ -9,6 +9,9 @@
 #include "game/frontend/Game.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/frontend/tile/TileManager.h"
+#include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "scene/actor/Instanced.h"
+#include "scene/actor/Sprite.h"
 
 namespace game {
 namespace frontend {
@@ -41,10 +44,21 @@ void TilePreview::Update( ui::dom::Widget* const widget, const void* const data 
 	const auto& render = tile->GetRenderData();
 
 	size_t index = 0;
+
+	// add tile texture
 	auto* const texture = m_game->GetTerrainTexture();
 	for ( auto& preview_mesh : render.preview_meshes ) {
 		AddMeshAndTexture( widget, index++, preview_mesh, texture );
 	}
+
+	// add tile sprites
+	for ( auto& s : render.sprites ) {
+		auto* actor = m_game->GetISM()->GetInstancedSpriteByKey( s )->actor;
+		auto sprite = actor->GetSpriteActor();
+		auto mesh = sprite->GenerateMesh();
+		AddMeshAndTexture( widget, index++, mesh, sprite->GetTexture() );
+	}
+
 }
 
 }
