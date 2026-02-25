@@ -71,7 +71,7 @@ jobs:
           artifacts: "scanbuild-report/*,glsmac-ubuntu64/*,glsmac-win64/*"
           tag: "development"
           name: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}-dev"
-          title: "development version"
+#          title: "development version"
           prerelease: true
   release:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
           artifacts: "scanbuild-report/*,glsmac-ubuntu64/*,glsmac-win64/*"
           tag: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
           name: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
-          title: "stable version"
+#          title: "stable version"
           commit: stable
       - uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
