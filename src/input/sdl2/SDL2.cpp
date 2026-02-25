@@ -45,6 +45,8 @@ void SDL2::Iterate() {
 
 	input::Event e_mouse_move = {}; // send only once per iteration
 
+	auto* const ui = g_engine->GetUI();
+
 	while ( SDL_PollEvent( &event ) ) {
 		e.SetType( EV_NONE );
 		switch ( event.type ) {
@@ -165,24 +167,44 @@ void SDL2::Iterate() {
 			}
 				// TODO: keypress?
 		}
+
 		if ( e.type != EV_NONE ) {
-			// try new
-			if ( !ProcessEvent( e ) ) {
-				if ( le ) {
-					// try legacy
-					g_engine->GetUI()->ProcessEvent( le );
-					DELETE( le );
+			if ( le ) {
+				// legacy 'before' handlers
+				ui->ProcessEvent( le, ui_legacy::UI::GH_BEFORE );
+			}
+
+			if ( !le || !le->IsProcessed() ) {
+				// new ui
+				if ( !ProcessEvent( e ) ) {
+					if ( le ) {
+						// legacy 'after' handlers
+						ui->ProcessEvent( le, ui_legacy::UI::GH_AFTER );
+					}
 				}
+			}
+
+			if ( le ) {
+				DELETE( le );
+				le = nullptr;
 			}
 		}
 	}
 	if ( e_mouse_move.type != EV_NONE ) {
-		if ( !ProcessEvent( e_mouse_move ) ) {
-			// try legacy
-			NEW( le, ui_legacy::event::MouseMove, e_mouse_move.data.mouse.x, e_mouse_move.data.mouse.y );
-			g_engine->GetUI()->ProcessEvent( le );
-			DELETE( le );
+
+		NEW( le, ui_legacy::event::MouseMove, e_mouse_move.data.mouse.x, e_mouse_move.data.mouse.y );
+
+		// call legacy 'before' handlers
+		ui->ProcessEvent( le, ui_legacy::UI::GH_BEFORE );
+		if ( !le->IsProcessed() ) {
+			// new ui
+			if ( !ProcessEvent( e_mouse_move ) ) {
+				// call legacy 'after' handlers
+				ui->ProcessEvent( le, ui_legacy::UI::GH_AFTER );
+			}
 		}
+
+		DELETE( le );
 	}
 }
 

@@ -218,86 +218,98 @@ void UI::TriggerGlobalEventHandlers( global_event_handler_order_t order, ui_lega
 	}
 }
 
-void UI::ProcessEvent( event::UIEvent* event ) {
-	if ( event->m_type == ui_legacy::event::EV_MOUSE_MOVE ) {
-		// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
-		m_last_mouse_position = {
-			event->m_data.mouse.absolute.x,
-			event->m_data.mouse.absolute.y
-		};
-	}
+void UI::ProcessEvent( event::UIEvent* event, const global_event_handler_order_t order ) {
 
-	// toggle fullscreen
-	if (
-		event->m_type == ui_legacy::event::EV_KEY_DOWN &&
-			( event->m_data.key.modifiers & ui_legacy::event::KM_ALT ) &&
-			event->m_data.key.code == ui_legacy::event::K_ENTER
-		) {
-		g_engine->GetGraphics()->ToggleFullscreen();
-		return;
-	}
+	switch ( order ) {
+		case GH_BEFORE: {
+			if ( event->m_type == ui_legacy::event::EV_MOUSE_MOVE ) {
+				// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
+				m_last_mouse_position = {
+					event->m_data.mouse.absolute.x,
+					event->m_data.mouse.absolute.y
+				};
+			}
 
-	// modules block other ui when active
-	if (
-		m_active_module
+			// toggle fullscreen
+			if (
+				event->m_type == ui_legacy::event::EV_KEY_DOWN &&
+					( event->m_data.key.modifiers & ui_legacy::event::KM_ALT ) &&
+					event->m_data.key.code == ui_legacy::event::K_ENTER
+				) {
+				g_engine->GetGraphics()->ToggleFullscreen();
+				event->SetProcessed();
+				return;
+			}
+
+			// modules block other ui when active
+			if (
+				m_active_module
 #ifdef DEBUG
-			&& !( event->m_type == ui_legacy::event::EV_KEY_DOWN && event->m_data.key.code == ui_legacy::event::K_GRAVE ) // debug overlay
+					&& !( event->m_type == ui_legacy::event::EV_KEY_DOWN && event->m_data.key.code == ui_legacy::event::K_GRAVE ) // debug overlay
 #endif
-		) {
-		m_active_module->ProcessEvent( event );
-		return;
-	}
-
-	if ( event->m_type == ui_legacy::event::EV_MOUSE_DOWN ) {
-		// notify of offclicks
-		for ( auto& obj : m_offclick_aware_objects ) {
-			if ( obj->IsVisible() && !obj->IsPointInside(
-				event->m_data.mouse.absolute.x,
-				event->m_data.mouse.absolute.y
-			) ) {
-				obj->Trigger( ui_legacy::event::EV_OFFCLICK, &event->m_data );
+				) {
+				m_active_module->ProcessEvent( event );
+				return;
 			}
-		}
-	}
 
-	// other ui
-
-	TriggerGlobalEventHandlers( GH_BEFORE, event );
-
-	if ( event->m_type == ui_legacy::event::EV_KEY_DOWN ) {
-		if (
-			m_focused_object &&
-				m_focusable_objects.size() > 1 &&
-				!event->m_data.key.modifiers &&
-				( event->m_data.key.code == ui_legacy::event::K_TAB )
-			) {
-			FocusNextObject();
-			event->SetProcessed();
-		}
-	}
-
-	if ( !event->IsProcessed() ) {
-		if ( HasPopup() ) {
-			m_popups.back()->ProcessEvent( event );
-		}
-		else {
-			m_root_object->ProcessEvent( event );
-		}
-	}
-
-	if ( !event->IsProcessed() ) {
-		if ( event->m_type == ui_legacy::event::EV_KEY_DOWN ) {
-			if ( m_focused_object && !event->m_data.key.modifiers && (
-				( event->m_data.key.key ) || // ascii key
-					( event->m_data.key.code == ui_legacy::event::K_BACKSPACE )
-			) ) {
-				m_focused_object->ProcessEvent( event );
+			if ( event->m_type == ui_legacy::event::EV_MOUSE_DOWN ) {
+				// notify of offclicks
+				for ( auto& obj : m_offclick_aware_objects ) {
+					if ( obj->IsVisible() && !obj->IsPointInside(
+						event->m_data.mouse.absolute.x,
+						event->m_data.mouse.absolute.y
+					) ) {
+						obj->Trigger( ui_legacy::event::EV_OFFCLICK, &event->m_data );
+					}
+				}
 			}
-		}
-	}
 
-	if ( !event->IsProcessed() ) {
-		TriggerGlobalEventHandlers( GH_AFTER, event );
+			// other ui
+			TriggerGlobalEventHandlers( GH_BEFORE, event );
+
+			break;
+		}
+
+		case GH_AFTER: {
+			if ( event->m_type == ui_legacy::event::EV_KEY_DOWN ) {
+				if (
+					m_focused_object &&
+						m_focusable_objects.size() > 1 &&
+						!event->m_data.key.modifiers &&
+						( event->m_data.key.code == ui_legacy::event::K_TAB )
+					) {
+					FocusNextObject();
+					event->SetProcessed();
+				}
+			}
+
+			if ( !event->IsProcessed() ) {
+				if ( HasPopup() ) {
+					m_popups.back()->ProcessEvent( event );
+				}
+				else {
+					m_root_object->ProcessEvent( event );
+				}
+			}
+
+			if ( !event->IsProcessed() ) {
+				if ( event->m_type == ui_legacy::event::EV_KEY_DOWN ) {
+					if ( m_focused_object && !event->m_data.key.modifiers && (
+						( event->m_data.key.key ) || // ascii key
+							( event->m_data.key.code == ui_legacy::event::K_BACKSPACE )
+					) ) {
+						m_focused_object->ProcessEvent( event );
+					}
+				}
+			}
+
+			if ( !event->IsProcessed() ) {
+				// other ui
+				TriggerGlobalEventHandlers( GH_AFTER, event );
+			}
+			break;
+		}
+		
 	}
 
 }

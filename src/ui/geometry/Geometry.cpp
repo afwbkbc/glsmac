@@ -469,15 +469,17 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			FixArea( effective_area );
 		}
 		if ( effective_area != m_effective_area ) {
+			if ( m_overflow_mode != OM_RESIZE ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
-			const auto& g = g_engine->GetGraphics();
-			const auto maxx = g->GetViewportWidth() - 1;
-			const auto maxy = g->GetViewportHeight() - 1;
+				const auto& g = g_engine->GetGraphics();
+				const auto maxx = g->GetViewportWidth() - 1;
+				const auto maxy = g->GetViewportHeight() - 1;
 #endif
-			ASSERT( effective_area.left >= 0 && effective_area.left <= maxx, "effective area left overflow" );
-			ASSERT( effective_area.top >= 0 && effective_area.top <= maxy, "effective area top overflow" );
-			ASSERT( effective_area.right >= 0 && effective_area.right <= maxx, "effective area right overflow" );
-			ASSERT( effective_area.bottom >= 0 && effective_area.bottom <= maxy, "effective area bottom overflow" );
+				ASSERT( effective_area.left >= 0 && effective_area.left <= maxx, "effective area left overflow" );
+				ASSERT( effective_area.top >= 0 && effective_area.top <= maxy, "effective area top overflow" );
+				ASSERT( effective_area.right >= 0 && effective_area.right <= maxx, "effective area right overflow" );
+				ASSERT( effective_area.bottom >= 0 && effective_area.bottom <= maxy, "effective area bottom overflow" );
+			}
 			const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
 			if ( should_resize && m_on_resize ) {
 				if ( m_overflow_mode == OM_RESIZE ) {

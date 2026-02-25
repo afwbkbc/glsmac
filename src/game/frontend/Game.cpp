@@ -1767,7 +1767,22 @@ void Game::Initialize(
 		}, ::ui_legacy::UI::GH_BEFORE
 	);
 
-	m_handlers.mousedown = ui->AddGlobalEventHandler(
+	// track pressed mouse buttons
+	m_handlers.mousedown_before = ui->AddGlobalEventHandler(
+		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
+			m_map_control.mouse_buttons_pressed++;
+			return false;
+		}, ::ui_legacy::UI::GH_BEFORE
+	);
+	m_handlers.mouseup_before = ui->AddGlobalEventHandler(
+		::ui_legacy::event::EV_MOUSE_UP, EH( this, ui ) {
+			ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
+			m_map_control.mouse_buttons_pressed--;
+			return false;
+		}, ::ui_legacy::UI::GH_BEFORE
+	);
+
+	m_handlers.mousedown_after = ui->AddGlobalEventHandler(
 		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
 			if ( ui->HasPopup() ) {
 				return false;
@@ -1821,16 +1836,13 @@ void Game::Initialize(
 		}, ::ui_legacy::UI::GH_AFTER
 	);
 
-	m_handlers.mousemove = ui->AddGlobalEventHandler( // TODO: stop using legacy UI
+	m_handlers.mousemove_before = ui->AddGlobalEventHandler( // TODO: stop using legacy UI
 		::ui_legacy::event::EV_MOUSE_MOVE, EH( this, ui ) {
+
 			m_map_control.last_mouse_position = {
 				GetFixedX( data->mouse.absolute.x ),
 				(float)data->mouse.absolute.y
 			};
-
-			if ( ui->HasPopup() ) {
-				return false;
-			}
 
 			if ( m_map_control.is_dragging ) {
 				types::Vec2< float > current_drag_position = {
@@ -1845,8 +1857,8 @@ void Game::Initialize(
 
 				m_map_control.last_drag_position = current_drag_position;
 			}
-			else if ( !m_glsmac && !m_ui_legacy.bottom_bar->IsMouseDraggingMiniMap() ) {
-				if ( g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable in fullscreen
+			else {
+				if ( !m_map_control.mouse_buttons_pressed && g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable when not dragging and in fullscreen
 					const ssize_t edge_distance = m_viewport.is_fullscreen
 						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 						: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
@@ -1888,24 +1900,24 @@ void Game::Initialize(
 					}
 				}
 			}
-			return true;
-		}, ::ui_legacy::UI::GH_AFTER
+			return m_map_control.is_dragging;
+		}, ::ui_legacy::UI::GH_BEFORE
 	);
 
-	m_handlers.mouseup = ui->AddGlobalEventHandler(
+	m_handlers.mouseup_after = ui->AddGlobalEventHandler(
 		::ui_legacy::event::EV_MOUSE_UP, EH( this ) {
 			switch ( data->mouse.button ) {
 				case ::ui_legacy::event::M_MIDDLE: {
 					m_map_control.is_dragging = false;
-					break;
+					return true;
 				}
 			}
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
 				m_editing_draw_timer.Stop();
 				m_editor_draw_mode = backend::map_editor::DM_NONE;
 			}
-			return true;
-		}, ::ui_legacy::UI::GH_AFTER
+			return false;
+		}, ::ui_legacy::UI::GH_BEFORE
 	);
 
 	m_handlers.mousescroll = ui->AddGlobalEventHandler(
@@ -2005,9 +2017,12 @@ void Game::Deinitialize() {
 	x( keydown_before );
 	x( keydown_after );
 	x( keyup );
-	x( mousedown );
-	x( mousemove );
-	x( mouseup );
+	x( mousedown_before );
+	x( mousedown_after );
+	x( mousemove_before );
+	x( mousemove_after );
+	x( mouseup_before );
+	x( mouseup_after );
 	x( mousescroll );
 #undef x
 

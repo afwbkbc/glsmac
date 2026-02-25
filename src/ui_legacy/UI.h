@@ -75,13 +75,14 @@ CLASS( UI, common::Module )
 	const coord_t UnclampX( const coord_t value ) const;
 	const coord_t UnclampY( const coord_t value ) const;
 
-	void ProcessEvent( event::UIEvent* event );
-	void SendMouseMoveEvent( object::UIObject* object );
-
 	enum global_event_handler_order_t {
 		GH_BEFORE, // will be called before UI elements
 		GH_AFTER, // will be called after UI elements
 	};
+
+	void ProcessEvent( event::UIEvent* event, const global_event_handler_order_t order );
+	void SendMouseMoveEvent( object::UIObject* object );
+
 	const event::UIEventHandler* AddGlobalEventHandler( const event::event_type_t event_type, const event::handler_function_t& func, const global_event_handler_order_t order );
 	void RemoveGlobalEventHandler( const event::UIEventHandler* handler );
 

@@ -365,6 +365,7 @@ private:
 			};
 		} edge_scrolling;
 		types::Vec2< float > last_mouse_position;
+		unsigned char mouse_buttons_pressed;
 		float key_zooming = 0;
 	} m_map_control = {};
 
@@ -392,9 +393,12 @@ private:
 		const ::ui_legacy::event::UIEventHandler* keydown_before = nullptr;
 		const ::ui_legacy::event::UIEventHandler* keydown_after = nullptr;
 		const ::ui_legacy::event::UIEventHandler* keyup = nullptr;
-		const ::ui_legacy::event::UIEventHandler* mousedown = nullptr;
-		const ::ui_legacy::event::UIEventHandler* mousemove = nullptr;
-		const ::ui_legacy::event::UIEventHandler* mouseup = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousedown_before = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousedown_after = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousemove_before = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mousemove_after = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mouseup_before = nullptr;
+		const ::ui_legacy::event::UIEventHandler* mouseup_after = nullptr;
 		const ::ui_legacy::event::UIEventHandler* mousescroll = nullptr;
 	} m_handlers;
 	void UpdateViewport();
