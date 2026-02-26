@@ -31,6 +31,8 @@ Button::Button( DOM_ARGS )
 	Events(
 		{
 			input::EV_CLICK,
+			input::EV_ON,
+			input::EV_OFF,
 		}
 	);
 
@@ -52,13 +54,39 @@ Button::Button( DOM_ARGS )
 			m_is_cancel = false;
 		}
 	);
+	Property(
+		GSE_CALL, "group", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& group = ( (gse::value::String*)v )->value;
+			if ( group != m_group ) {
+				if ( !m_group.empty() ) {
+					m_parent->RemoveFromButtonGroup( GSE_CALL, m_group, this );
+				}
+				m_group = group;
+				if ( !m_group.empty() ) {
+					m_parent->AddToButtonGroup( GSE_CALL, m_group, this );
+				}
+			}
+		},
+		[ this ]( GSE_CALLABLE ) {
+			if ( !m_group.empty() ) {
+				m_parent->RemoveFromButtonGroup( GSE_CALL, m_group, this );
+				m_group = "";
+			}
+		}
+	);
 }
 
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	bool result = false;
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
-			AddModifier( GSE_CALL, CM_ACTIVE );
+			if ( m_group.empty() ) {
+				AddModifier( GSE_CALL, CM_ACTIVE );
+			}
+			else {
+				m_parent->SetButtonGroupActive( GSE_CALL, m_group, this );
+			}
 			if ( m_on_mousedown && m_on_mousedown( event ) ) {
 				break;
 			}
@@ -68,7 +96,9 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		}
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
-			RemoveModifier( GSE_CALL, CM_ACTIVE );
+			if ( m_group.empty() ) {
+				RemoveModifier( GSE_CALL, CM_ACTIVE );
+			}
 			if ( m_on_mouseup && m_on_mouseup( event ) ) {
 				break;
 			}
@@ -136,10 +166,33 @@ void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 			);
 			break;
 		}
+		case input::EV_ON:
+		case input::EV_OFF: {
+			// no data
+			break;
+		}
 		default: {
 			Panel::WrapEvent( GSE_CALL, e, obj );
 		}
 	}
+}
+
+void Button::GroupEnable( GSE_CALLABLE ) {
+	ASSERT( !m_is_group_enabled, "button already group-enabled" );
+	AddModifier( GSE_CALL, CM_ACTIVE );
+	m_is_group_enabled = true;
+	input::Event e;
+	e.SetType( input::EV_ON );
+	ProcessEvent( GSE_CALL, e );
+}
+
+void Button::GroupDisable( GSE_CALLABLE ) {
+	ASSERT( m_is_group_enabled, "button not group-enabled" );
+	RemoveModifier( GSE_CALL, CM_ACTIVE );
+	m_is_group_enabled = false;
+	input::Event e;
+	e.SetType( input::EV_OFF );
+	ProcessEvent( GSE_CALL, e );
 }
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_set>
+#include <unordered_map>
 #include <map>
 #include <vector>
 #include <functional>
@@ -18,6 +19,8 @@ namespace ui {
 class UI;
 
 namespace dom {
+
+class Button;
 
 #define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, m_factory_owner, p ); })
 
@@ -84,6 +87,18 @@ private:
 	bool m_processing_mouse_overs = false;
 
 	void SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords );
+
+	struct button_group_t {
+		Button* active_button;
+		std::unordered_set< Button* > buttons;
+	};
+	std::unordered_map< std::string, button_group_t > m_button_groups;
+
+private:
+	friend class Button;
+	void AddToButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button );
+	void RemoveFromButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button );
+	void SetButtonGroupActive( GSE_CALLABLE, const std::string& group, Button* const button );
 
 protected:
 	friend class Object;

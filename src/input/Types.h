@@ -59,6 +59,8 @@ enum event_type_t {
 	EV_KEY_PRESS,
 	EV_CLICK,
 	EV_DOUBLE_CLICK,
+	EV_ON,
+	EV_OFF,
 	EV_CHANGE,
 	EV_SELECT,
 	EV_INPUT,

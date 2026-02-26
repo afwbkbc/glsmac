@@ -826,4 +826,50 @@
 		text: 'test text',
 	});
 
+	// button groups
+	glsmac.ui.class('groupbtn').set({
+		width: 40,
+		height: 20,
+		background: 'rgb(70,70,70)',
+		border: '#666666,2',
+		font: ':16',
+		color: 'white',
+		top: 5,
+		_hover: {
+			background: 'rgb(120,120,120)',
+		},
+		_active: {
+			background: 'white',
+			color: 'black',
+		},
+		group: 'default',
+	});
+	const gp = root.panel({
+		left: 150,
+		top: 90,
+		width: 137,
+		height: 30,
+		background: 'rgba(125,255,255,100)',
+	});
+	let gpleft = 5;
+	const f_gp_btn_add = ( name ) => {
+		const btn = gp.button({
+			class: 'groupbtn',
+			left: gpleft,
+			text: name,
+		});
+		btn.on( 'on', ( e ) => {
+			#print( name + ' ENABLED' );
+			return true;
+		});
+		btn.on( 'off', ( e ) => {
+			#print( name + ' DISABLED' );
+			return true;
+		});
+		gpleft += 44;
+	};
+	f_gp_btn_add( 'BTN1' );
+	f_gp_btn_add( 'BTN2' );
+	f_gp_btn_add( 'BTN3' );
+
 });

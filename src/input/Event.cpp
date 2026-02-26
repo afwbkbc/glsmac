@@ -86,6 +86,14 @@ const std::unordered_map< event_type_t, std::string > g_type_str = {
 		"dblclick"
 	},
 	{
+		EV_ON,
+		"on",
+	},
+	{
+		EV_OFF,
+		"off",
+	},
+	{
 		EV_CHANGE,
 		"change"
 	},

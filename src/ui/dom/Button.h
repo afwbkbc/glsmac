@@ -7,6 +7,7 @@ namespace dom {
 
 class Text;
 class Sound;
+class Container;
 
 class Button : public Panel {
 public:
@@ -29,6 +30,14 @@ private:
 
 	bool m_is_ok = false;
 	bool m_is_cancel = false;
+
+	std::string m_group = "";
+	bool m_is_group_enabled = false;
+
+private:
+	friend class Container;
+	void GroupEnable( GSE_CALLABLE );
+	void GroupDisable( GSE_CALLABLE );
 
 };
 

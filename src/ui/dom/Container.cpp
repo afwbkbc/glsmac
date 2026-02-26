@@ -397,6 +397,52 @@ void Container::SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2<
 	}
 }
 
+void Container::AddToButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button ) {
+	auto it = m_button_groups.find( group );
+	if ( it == m_button_groups.end() ) {
+		it = m_button_groups.insert({ group, {
+			nullptr, {}
+		}}).first;
+	}
+	auto& g = it->second;
+	ASSERT( g.buttons.find( button ) == g.buttons.end(), "button already in group" );
+	g.buttons.insert( button );
+	if ( !g.active_button ) {
+		g.active_button = button;
+		button->GroupEnable( GSE_CALL );
+	}
+}
+
+void Container::RemoveFromButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button ) {
+	ASSERT( m_button_groups.find( group ) != m_button_groups.end(), "button group not found" );
+	auto& g = m_button_groups.at( group );
+	auto& b = g.buttons;
+	ASSERT( b.find( button ) != b.end(), "button not in group" );
+	b.erase( button );
+	if ( b.empty() ) {
+		m_button_groups.erase( group );
+	}
+	else if ( g.active_button == button ) {
+		button->GroupDisable( GSE_CALL );
+		// activate any other
+		for ( const auto& nb : g.buttons ) {
+			g.active_button = nb;
+			nb->GroupEnable( GSE_CALL );
+			break;
+		}
+	}
+}
+
+void Container::SetButtonGroupActive( GSE_CALLABLE, const std::string& group, Button* const button ) {
+	ASSERT( m_button_groups.find( group ) != m_button_groups.end(), "button group not found" );
+	auto& g = m_button_groups.at( group );
+	if ( g.active_button != button ) {
+		g.active_button->GroupDisable( GSE_CALL );
+		g.active_button = button;
+		g.active_button->GroupEnable( GSE_CALL );
+	}
+}
+
 void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
 	if ( m_on_before_add_child ) {
