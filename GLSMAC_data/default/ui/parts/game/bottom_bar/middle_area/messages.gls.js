@@ -1,7 +1,7 @@
 return {
 
 	process_message: (text) => {
-		this.lines.text({
+		this.page.text({
 			class: 'bottombar-messages-line',
 			text: text,
 		});
@@ -14,7 +14,7 @@ return {
 			font: 'arialnb.ttf:16',
 		});
 
-		this.lines = p.frame.listview({
+		this.page = p.frame.listview({
 			class: 'bottombar-frame-page',
 			itemsize: 17,
 			max_items: 50,
@@ -28,11 +28,7 @@ return {
 			top: 5,
 			right: 5,
 			text: 'M',
-
-			// TODO: button groups
-			border: 'rgb(120,164,212),2',
-			background: 'interface.pcx:crop(86, 587, 109, 610)',
-
+			group: 'pages',
 		});
 
 	},
