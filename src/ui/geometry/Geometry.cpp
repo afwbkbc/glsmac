@@ -173,7 +173,7 @@ void Geometry::SetZIndex( const coord_t zindex ) {
 void Geometry::SetOverflowMode( const overflow_mode_t mode ) {
 	if ( mode != m_overflow_mode ) {
 		m_overflow_mode = mode;
-		if ( m_overflow_mode == OM_RESIZE ) {
+		if ( m_overflow_mode == OM_SCROLLABLE ) {
 			m_stick_bits |= STICK_WIDTH | STICK_HEIGHT;
 			ResizeAreaFromChildren();
 		}
@@ -191,7 +191,7 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 }
 
 void Geometry::OnChildUpdate() {
-	if ( m_overflow_mode == OM_RESIZE ) {
+	if ( m_overflow_mode == OM_SCROLLABLE ) {
 		ResizeAreaFromChildren();
 		NeedUpdate();
 	}
@@ -273,9 +273,16 @@ void Geometry::Destroy() {
 void Geometry::Update( const bool is_update_from_parent ) {
 	UpdateArea();
 	for ( const auto& geometry : m_children ) {
-		geometry->Update( true );
+		if ( geometry->m_overflow_mode != OM_SCROLLABLE ) {
+			geometry->Update( true );
+		}
 	}
 	UpdateEffectiveArea( is_update_from_parent );
+	for ( const auto& geometry : m_children ) {
+		if ( geometry->m_overflow_mode == OM_SCROLLABLE ) {
+			geometry->Update( true );
+		}
+	}
 	UpdateImpl();
 	if ( m_parent ) {
 		if ( !m_is_destroying && ( m_stick_bits & ( STICK_LEFT | STICK_WIDTH | STICK_TOP | STICK_HEIGHT ) ) ) { // TODO: other variants
@@ -453,7 +460,7 @@ void Geometry::UpdateArea() {
 void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 	area_t effective_area = {};
 	if ( m_is_visible ) {
-		if ( m_overflow_mode == OM_RESIZE ) { // for scrollviews
+		if ( m_overflow_mode == OM_SCROLLABLE ) { // for scrollviews
 			ASSERT( m_parent, "overflow resize without parent" );
 			effective_area = m_parent->m_effective_area;
 		}
@@ -469,7 +476,7 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			FixArea( effective_area );
 		}
 		if ( effective_area != m_effective_area ) {
-			if ( m_overflow_mode != OM_RESIZE ) {
+			if ( m_overflow_mode != OM_SCROLLABLE ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 				const auto& g = g_engine->GetGraphics();
 				const auto maxx = g->GetViewportWidth() - 1;
@@ -482,7 +489,7 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			}
 			const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
 			if ( should_resize && m_on_resize ) {
-				if ( m_overflow_mode == OM_RESIZE ) {
+				if ( m_overflow_mode == OM_SCROLLABLE ) {
 					m_on_resize( m_boundaries.width, m_boundaries.height );
 				}
 				else {
@@ -599,7 +606,7 @@ void Geometry::RemoveBoundaries( Geometry* const g ) {
 
 void Geometry::ResizeAreaFromChildren() {
 	// resize area from children ( TODO: optimize? )
-	ASSERT( m_overflow_mode == OM_RESIZE, "overflow mode mismatch" );
+	ASSERT( m_overflow_mode == OM_SCROLLABLE, "overflow mode mismatch" );
 	m_area = {};
 	for ( const auto& child : m_children ) {
 		if ( child->m_is_visible ) {

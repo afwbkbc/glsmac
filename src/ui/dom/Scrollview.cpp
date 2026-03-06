@@ -25,7 +25,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 	{
 		auto* g = m_inner->GetGeometry();
 		g->SetParent( m_geometry );
-		g->SetOverflowMode( geometry::Geometry::OM_RESIZE );
+		g->SetOverflowMode( geometry::Geometry::OM_SCROLLABLE );
 		g->SetLeft( 0 );
 		g->SetTop( 0 );
 		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
@@ -88,11 +88,14 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 					if ( m_vscroll->m_is_visible ) {
 						m_vscroll->SetValue( GSE_CALL, std::fmax( m_vscroll->m_min, std::fmin( m_vscroll->m_max, m_drag.initial_offset_y - event.data.mouse.y ) ), true );
 					}
-					return true;
+					break;
 				}
 				case input::EV_MOUSE_UP: {
-					m_drag.is_dragging = false;
-					return false;
+					if ( m_drag.is_dragging ) {
+						m_drag.is_dragging = false;
+						return true;
+					}
+					break;
 				}
 				case input::EV_MOUSE_SCROLL: {
 					return true;

@@ -57,7 +57,7 @@ public:
 	enum overflow_mode_t {
 		OM_VISIBLE,
 		OM_HIDDEN,
-		OM_RESIZE,
+		OM_SCROLLABLE,
 	};
 
 	enum position_t {

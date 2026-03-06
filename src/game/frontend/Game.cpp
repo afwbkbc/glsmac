@@ -1913,8 +1913,10 @@ void Game::Initialize(
 		::ui_legacy::event::EV_MOUSE_UP, EH( this ) {
 			switch ( data->mouse.button ) {
 				case ::ui_legacy::event::M_MIDDLE: {
-					m_map_control.is_dragging = false;
-					return true;
+					if ( m_map_control.is_dragging ) {
+						m_map_control.is_dragging = false;
+						return true;
+					}
 				}
 			}
 			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
