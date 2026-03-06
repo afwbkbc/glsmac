@@ -490,10 +490,10 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			const bool should_resize = std::round( effective_area.width ) != std::round( m_effective_area.width ) || std::round( effective_area.height ) != std::round( m_effective_area.height );
 			if ( should_resize && m_on_resize ) {
 				if ( m_overflow_mode == OM_SCROLLABLE ) {
-					m_on_resize( m_boundaries.width, m_boundaries.height );
+					m_on_resize( m_boundaries.width, m_boundaries.height, is_update_from_parent );
 				}
 				else {
-					m_on_resize( effective_area.width, effective_area.height );
+					m_on_resize( effective_area.width, effective_area.height, is_update_from_parent );
 				}
 			}
 			m_effective_area = effective_area;
@@ -569,7 +569,7 @@ void Geometry::AddBoundaries( Geometry* const g ) {
 		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;
 		m_boundaries.height = m_boundaries.y.high.value - m_boundaries.y.low.value;
 		if ( m_on_resize ) {
-			m_on_resize( m_boundaries.width, m_boundaries.height );
+			m_on_resize( m_boundaries.width, m_boundaries.height, false );
 		}
 	}
 }
@@ -599,7 +599,7 @@ void Geometry::RemoveBoundaries( Geometry* const g ) {
 		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;
 		m_boundaries.height = m_boundaries.y.high.value - m_boundaries.y.low.value;
 		if ( m_on_resize ) {
-			m_on_resize( m_boundaries.width, m_boundaries.height );
+			m_on_resize( m_boundaries.width, m_boundaries.height, false );
 		}
 	}
 }

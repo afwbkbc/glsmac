@@ -1,37 +1,73 @@
 return {
 
-	add_panel: () => {
+	panels: [],
 
-		// TODO: fix `this` in object properties
-		const w = this.panel_width;
-		const l = this.panel_left;
+	refresh: (width) => {
 
-		this.page.panel({
+		const optimal_panel_size = 210;
+		const panel_padding = 3;
+
+		let panels_count = ( width + panel_padding ) / optimal_panel_size;
+		if ( panels_count < 1 ) {
+			panels_count = 1; // prevent division by zero
+		}
+		const panel_width = ( width + panel_padding ) / panels_count - panel_padding;
+
+		let current_panels_count = #sizeof(this.panels);
+
+		let left = 0;
+		for (let i = 0; i < panels_count; i++) {
+			if (i < current_panels_count) {
+				// resize existing panel
+				this.panels[i].width = panel_width;
+				this.panels[i].left = left;
+			}
+			else {
+				// add new panel
+				this.panels :+ this.add_panel(left, panel_width);
+			}
+			left += panel_width + panel_padding;
+		}
+		while ( current_panels_count > panels_count ) {
+			// remove excessive panels
+			current_panels_count--;
+			this.panels[ current_panels_count ].remove();
+			this.panels :~;
+		}
+
+	},
+
+	add_panel: (left, width) => {
+
+		const panel = this.page.panel({
 			class: 'bottombar-info-panel',
-			width: w,
-			left: l,
+			width: width,
+			left: left,
 		});
 
-		// this.panel_left += this.panel_width; // TODO: fix this
-		this.panel_left = this.panel_left + this.panel_width + 4;
+		// TODO: texts etc
+
+		return panel;
+
+	},
+
+	on_show: () => {
+		this.refresh(this.page.width); // TODO: make resize event trigger while hidden
 	},
 
 	init: (p) => {
 
 		this.panel_left = 1;
-		this.panel_width = 230;
 
-		const w = this.panel_width; // TODO: fix `this` in object properties
 		p.ui.class('bottombar-info-panel').set({
 			border: 'rgb(49, 78, 44),2',
-			width: w,
 			top: 0,
 			height: 95,
 		});
 
-		this.page = p.frame.scrollview({
+		this.page = p.frame.panel({
 			class: 'bottombar-frame-page-noborder',
-			has_hscroll: true,
+			overflow: 'hidden',
 		});
 
 		this.button = p.frame.button({
@@ -43,8 +79,10 @@ return {
 			group: 'pages',
 		});
 
-		this.add_panel();
-		this.add_panel();
+		this.page.on('resize', (e) => {
+			this.refresh(e.width);
+		});
+		this.refresh(this.page.width);
 
 	},
 

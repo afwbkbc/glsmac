@@ -18,6 +18,10 @@ namespace ui {
 
 class UI;
 
+namespace dom {
+class Area;
+}
+
 namespace geometry {
 
 class Rectangle;
@@ -146,9 +150,6 @@ public:
 
 	void Detach();
 
-	typedef std::function< void( const size_t, const size_t ) > f_on_resize_t;
-	f_on_resize_t m_on_resize = nullptr;
-
 	void Destroy();
 
 protected:
@@ -222,6 +223,11 @@ private:
 	void AddBoundaries( Geometry* const g );
 	void RemoveBoundaries( Geometry* const g );
 	void ResizeAreaFromChildren();
+
+private:
+	friend class ui::dom::Area;
+	typedef std::function< void( const size_t width, const size_t height, const bool is_update_from_parent ) > f_on_resize_t;
+	f_on_resize_t m_on_resize = nullptr;
 
 };
 

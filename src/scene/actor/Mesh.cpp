@@ -103,7 +103,7 @@ void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 }
 
 rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const types::Vec2< size_t > texture_dimensions ) {
-	Log( "Requesting capture-to-texture" );
+	//Log( "Requesting capture-to-texture" );
 	NEWV( request, rr::Capture );
 	request->camera = camera;
 	request->texture_width = texture_dimensions.x;
@@ -117,7 +117,7 @@ types::texture::Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t reque
 		types::texture::Texture* result = r->texture;
 		r->texture = nullptr; // to prevent deletion in destructor
 		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
-		Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
+		//Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
 		DELETE( r );
 		return result;
 	}

@@ -28,7 +28,7 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 		g->SetOverflowMode( geometry::Geometry::OM_SCROLLABLE );
 		g->SetLeft( 0 );
 		g->SetTop( 0 );
-		g->m_on_resize = [ this ]( const size_t width, const size_t height ) {
+		m_inner->m_on_resize = [ this ]( const size_t width, const size_t height ) {
 			if ( !m_is_updating ) {
 				m_is_updating = true;
 				UpdateScrollbars( width, height );

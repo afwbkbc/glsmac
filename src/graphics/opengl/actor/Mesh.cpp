@@ -252,7 +252,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 	else {
 
 		if ( mesh_actor->RR_HasRequests< rr::Capture >() ) {
-			Log( "Creating FBO for capture" );
+			//Log( "Creating FBO for capture" );
 
 			// process only one per Draw() because cameras may differ
 			// in vast majority of cases only one call will be here anyway
@@ -447,7 +447,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 			capture_request->texture = fbo->CaptureToTexture();
 			capture_request->SetProcessed();
 
-			Log( "Destroying FBO for capture" );
+			//Log( "Destroying FBO for capture" );
 			DELETE( fbo );
 
 			// this draw was captured into texture, draw for real now (or process next capture if there are more)

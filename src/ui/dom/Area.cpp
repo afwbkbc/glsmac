@@ -3,6 +3,7 @@
 #include "Container.h"
 #include "ui/geometry/Rectangle.h"
 #include "input/Event.h"
+#include "ui/UI.h"
 
 namespace ui {
 namespace dom {
@@ -41,6 +42,26 @@ Area::Area( DOM_ARGS_T )
 	GEOMPROP( "height", SetHeight );
 #undef GEOMPROP
 
+	m_geometry->m_on_resize = [ this ]( const size_t width, const size_t height, const bool is_update_from_parent ) {
+		m_ui->WithGSE( // TODO: optimize a bit
+			[ this, width, height, is_update_from_parent ]( GSE_CALLABLE ) {
+				auto* const w = VALUE( gse::value::Int, , width );
+				auto* const h = VALUE( gse::value::Int, , height );
+				UpdateProperty( "width", w );
+				UpdateProperty( "height", h );
+				if ( m_on_resize ) {
+					m_on_resize( width, height );
+				}
+				if ( is_update_from_parent ) {
+					gse::value::object_properties_t event_data = {
+						{ "width",  w },
+						{ "height", h },
+					};
+					Trigger( GSE_CALL, "resize", ARGS( event_data ) );
+				}
+			}
+		);
+	};
 }
 
 const bool Area::IsEventRelevant( const input::Event& event ) const {

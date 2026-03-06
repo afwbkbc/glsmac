@@ -63,6 +63,9 @@ return {
 			}
 			s.button.on('on', (e) => {
 				page.show();
+				if (#is_defined(s.on_show)) {
+					s.on_show();
+				}
 				return true;
 			});
 			s.button.on('off', (e) => {
