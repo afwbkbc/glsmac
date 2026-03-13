@@ -42,6 +42,8 @@ CLASS2( Mesh, Actor, common::RRAware )
 	void SetTintColor( const types::Color tint_color );
 	const types::Color& GetTintColor() const;
 
+	void SetAlpha( const types::Color::channel_t alpha );
+
 	void SetDataMesh( const types::mesh::Data* data_mesh );
 
 	// data mesh stuff

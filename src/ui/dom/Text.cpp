@@ -75,7 +75,7 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "font", gse::VT_STRING, VALUE( gse::value::String, , ":32" ), PF_NONE,
+		GSE_CALL, "font", gse::VT_STRING, VALUE( gse::value::String, , "" ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
 			if ( parts.size() != 2 ) {
@@ -90,7 +90,8 @@ Text::Text( DOM_ARGS )
 			UpdateFont();
 		},
 		[ this ]( GSE_CALLABLE ) {
-			m_fontname = 32;
+			m_fontname = "";
+			m_fontsize = 0;
 			UpdateFont();
 		}
 	);
@@ -130,13 +131,14 @@ void Text::SetTransform( const transform_t transform ) {
 }
 
 void Text::UpdateFont() {
-	ASSERT( m_fontsize, "font size is zero" );
-	types::Font* font;
-	if ( m_fontname.empty() ) {
-		font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
-	}
-	else {
-		font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
+	types::Font* font = nullptr;
+	if ( m_fontsize > 0 ) {
+		if ( m_fontname.empty() ) {
+			font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
+		}
+		else {
+			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
+		}
 	}
 	m_actor->SetFont( font );
 	m_geometry->SetWidth( m_actor->GetWidth() );

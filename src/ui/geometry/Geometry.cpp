@@ -476,6 +476,7 @@ void Geometry::UpdateEffectiveArea( const bool is_update_from_parent ) {
 			FixArea( effective_area );
 		}
 		if ( effective_area != m_effective_area ) {
+
 			if ( m_overflow_mode != OM_SCROLLABLE ) {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 				const auto& g = g_engine->GetGraphics();

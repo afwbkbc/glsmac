@@ -10,6 +10,7 @@
 #include "util/String.h"
 #include "types/texture/Filter.h"
 #include "ui/UI.h"
+#include "gse/value/Float.h"
 
 namespace ui {
 namespace dom {
@@ -23,6 +24,16 @@ Surface::Surface( DOM_ARGS_T )
 	m_actor = new scene::actor::Mesh( "UI::Surface", m_mesh );
 	Actor( m_actor );
 	g->AddActor( m_actor );
+
+	Property(
+		GSE_CALL, "opacity", gse::VT_FLOAT, VALUE( gse::value::Float, , 1.0f ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_actor->SetAlpha( ( (gse::value::Float*)v )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_actor->SetAlpha( 1.0f );
+		}
+	);
 
 	Property(
 		GSE_CALL, "background", gse::VT_STRING, nullptr, PF_NONE,

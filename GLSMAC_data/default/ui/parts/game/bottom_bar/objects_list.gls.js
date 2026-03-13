@@ -135,7 +135,7 @@ return {
 
 		p.ui.class('bottombar-objects-list-item').set({
 			width: width,
-			height: 52,
+			height: 46,
 			_hover: {
 				border: 'rgb(14,40,49),1',
 			},
@@ -149,23 +149,26 @@ return {
 
 		p.ui.class('bottombar-objects-list-item-preview').set({
 			width: width,
-			height: 43,
+			height: 40,
 		});
 
 		p.ui.class('bottombar-objects-list-item-text').set({
 			font: 'arialnb.ttf:12',
 			color: 'rgb(235,235,235)',
 			align: 'bottom center',
-			bottom: 3,
+			bottom: 4,
 		});
 
-		this.frame = p.el.panel({
+		const frame_outer = p.el.panel({
 			class: 'bottombar-frame',
 			align: 'bottom',
 			bottom: 7,
 			left: 245,
 			right: 258,
 			height: 58,
+		});
+		this.frame = frame_outer.panel({
+			class: 'bottombar-frame-inner',
 		});
 
 		p.map.on('unit_preview', (e) => {

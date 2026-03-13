@@ -25,7 +25,28 @@ return {
 			border: 'rgb(49, 78, 44),2',
 		});
 
-		const el = p.root.group({
+		p.ui.class('bottombar-frame-inner').set({
+			background: 'interface.pcx:crop(86, 548, 109, 571)',
+			border: 'rgb(35, 59, 34),2',
+			left: 3,
+			top: 3,
+			right: 3,
+			bottom: 3,
+		});
+
+		p.ui.class('bottombar-frame-button').set({
+			background: 'interface.pcx:crop(47, 587, 70, 610)',
+			border: 'black,2',
+			_hover: {
+				border: 'rgb(120,164,212),2',
+			},
+			_active: {
+				border: 'rgb(120,164,212),2',
+				background: 'interface.pcx:crop(86, 587, 109, 610)',
+			},
+		});
+
+		const el = p.root.area({
 			zindex: 0.8,
 			align: 'bottom',
 			height: 256,

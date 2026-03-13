@@ -26,7 +26,9 @@ const result = {
 
 	configure: (game) => {
 
-		game.rm.on('get_yield', (e) => {
+		const rm = game.get_rm();
+
+		rm.on('get_yield', (e) => {
 
 			if (e.resource == 'Nutrients') {
 				if (!e.tile.features.xenofungus) {

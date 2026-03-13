@@ -10,7 +10,7 @@ namespace ui {
 namespace dom {
 
 Button::Button( DOM_ARGS )
-	: Panel( DOM_ARGS_PASS, "button", false ) {
+	: Panel( DOM_ARGS_PASS, "button", true ) {
 
 	m_label = new Text( GSE_CALL, ui, this, {} );
 	m_label->GetGeometry()->SetAlign( geometry::Geometry::ALIGN_CENTER );

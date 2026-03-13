@@ -73,7 +73,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_b
 
 	if ( factories_allowed ) {
 		FACTORY( "surface", Surface );
-		FACTORY( "group", Group );
+		FACTORY( "area", Group );
 		FACTORY( "panel", Panel );
 		FACTORY( "text", Text );
 		FACTORY( "button", Button );

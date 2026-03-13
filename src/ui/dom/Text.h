@@ -34,7 +34,7 @@ private:
 	std::string m_text = "";
 	scene::actor::Text* m_actor = nullptr;
 	std::string m_fontname = "";
-	uint16_t m_fontsize = 32;
+	uint16_t m_fontsize = 0;
 
 	transform_t m_transform = T_NONE;
 

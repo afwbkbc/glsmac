@@ -135,7 +135,7 @@ return (m) => {
 
 			remove_active_menublock();
 
-			current_menublock = m.root.group({
+			current_menublock = m.root.area({
 				class: 'menublock-items',
 			});
 

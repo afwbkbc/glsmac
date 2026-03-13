@@ -455,6 +455,8 @@ private:
 	void InitComplete( GSE_CALLABLE );
 	void InitFailed( const std::string& error_text );
 
+	void SetTurnStatus( const backend::turn::turn_status_t status );
+
 private:
 	friend class map::tile::TileManager;
 	friend class resource::ResourceManager;

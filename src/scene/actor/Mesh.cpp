@@ -46,6 +46,23 @@ const types::Color& Mesh::GetTintColor() const {
 	return m_tint_color;
 }
 
+void Mesh::SetAlpha( const types::Color::channel_t alpha ) {
+	if ( alpha == 1.0f ) {
+		if ( ( m_render_flags & RF_USE_TINT ) || m_tint_color.value.alpha != alpha ) {
+			m_render_flags &= ~RF_USE_TINT;
+			m_tint_color.value.alpha = alpha;
+			UpdateCache();
+		}
+	}
+	else {
+		if ( !( m_render_flags & RF_USE_TINT ) || m_tint_color.value.alpha != alpha ) {
+			m_render_flags |= RF_USE_TINT;
+			m_tint_color.value.alpha = alpha;
+			UpdateCache();
+		}
+	}
+}
+
 const types::mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }

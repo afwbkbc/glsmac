@@ -34,11 +34,15 @@ const types::Color& Text::GetColor() const {
 }
 
 const size_t Text::GetWidth() const {
-	return m_font->GetTextWidth( m_text.c_str() );
+	return m_font
+		? m_font->GetTextWidth( m_text.c_str() )
+		: 0;
 }
 
 const size_t Text::GetHeight() const {
-	return m_font->GetTextHeight( m_text.c_str() );
+	return m_font
+		? m_font->GetTextHeight( m_text.c_str() )
+		: 0;
 }
 
 void Text::SetText( const std::string& text ) {

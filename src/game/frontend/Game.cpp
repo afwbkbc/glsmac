@@ -1154,7 +1154,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 						m_um->SelectNextUnitOrSwitchToTileSelection();
 					}
 					else {
-						DeselectTileOrUnit();
+						//DeselectTileOrUnit(); // TODO: why was it needed?
 						//GetTileAtCoords( backend::TQP_TILE_SELECT, m_selected_tile_data.tile_position ); // TODO ?
 					}
 				}

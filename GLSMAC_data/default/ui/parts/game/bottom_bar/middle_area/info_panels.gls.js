@@ -57,16 +57,14 @@ return {
 
 	init: (p) => {
 
-		this.panel_left = 1;
-
-		p.ui.class('bottombar-info-panel').set({
-			border: 'rgb(49, 78, 44),2',
+		p.ui.class('bottombar-info-panel').extend('bottombar-frame-inner').set({
 			top: 0,
-			height: 95,
+			bottom: 0,
+			//height: 97,
 		});
 
 		this.page = p.frame.panel({
-			class: 'bottombar-frame-page-noborder',
+			class: 'bottombar-frame-page',
 			overflow: 'hidden',
 		});
 

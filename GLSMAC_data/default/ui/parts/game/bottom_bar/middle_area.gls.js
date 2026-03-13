@@ -8,30 +8,18 @@ return {
 
 	init: (p) => {
 
-		p.ui.class('bottombar-frame-page-button').set({
+		p.ui.class('bottombar-frame-page-button').extend('bottombar-frame-button').set({
 			width: 21,
 			height: 21,
 			font: 'arialnb.ttf:17',
 			color: 'black',
-			background: 'interface.pcx:crop(47, 587, 70, 610)',
-			border: 'black,2',
-			_hover: {
-				border: 'rgb(120,164,212),2',
-			},
-			_active: {
-				border: 'rgb(120,164,212),2',
-				background: 'interface.pcx:crop(86, 587, 109, 610)',
-			},
 		});
 
-		p.ui.class('bottombar-frame-page-noborder').set({
+		p.ui.class('bottombar-frame-page').set({
 			left: 3,
 			top: 3,
 			bottom: 3,
 			right: 30,
-		});
-		p.ui.class('bottombar-frame-page').extend('bottombar-frame-page-noborder').set({
-			border: 'rgb(49, 78, 44),2',
 		});
 
 		this.pp = {

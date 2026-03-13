@@ -36,7 +36,7 @@ protected:
 	} m_background = {};
 
 	void CreateTexture();
-	
+
 private:
 	types::mesh::Rectangle* m_mesh = nullptr;
 	scene::actor::Mesh* m_actor = nullptr;

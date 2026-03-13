@@ -705,11 +705,10 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
-			"get_turn_id",
+			"get_year",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
-
-				return VALUE( gse::value::Int,, m_current_turn.GetId() );
+				return VALUE( gse::value::Int,, m_current_turn.GetId() + 2100 /* TODO: better way to define starting year? */ );
 			} )
 		},
 		{
@@ -788,10 +787,7 @@ WRAPIMPL_BEGIN( Game )
 
 				CheckRW( GSE_CALL );
 
-				N_EXPECT_ARGS( 1 );
-				N_GETVALUE( turn_id, 0, Int );
-
-				AdvanceTurn( turn_id );
+				AdvanceTurn( m_current_turn.GetId() + 1 );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -893,16 +889,22 @@ WRAPIMPL_BEGIN( Game )
 					;
 			} )
 		},
-		{
-			"get_um",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				return m_um
-					? m_um->Wrap( GSE_CALL, true )
-					: VALUE( gse::value::Undefined )
-					;
-			} )
+#define X( _x ) \
+		{ \
+			"get_" # _x, \
+			NATIVE_CALL( this ) { \
+				N_EXPECT_ARGS( 0 ); \
+				return m_##_x \
+					? m_##_x->Wrap( GSE_CALL, true ) \
+					: VALUE( gse::value::Undefined ) \
+					; \
+			} ) \
 		},
+		X( um )
+		X( bm )
+		X( rm )
+		X( tm )
+#undef X
 		{
 			"is_started",
 			NATIVE_CALL( this ) {
@@ -1380,9 +1382,8 @@ void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
 	player->CompleteTurn();
 
 	if ( slot_num == m_slot_num ) {
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = turn::TS_WAITING_FOR_PLAYERS;
-		AddFrontendRequest( fr );
+		// legacy ui
+		SetTurnStatus( turn::TS_WAITING_FOR_PLAYERS );
 	}
 }
 
@@ -1396,9 +1397,7 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 		m_is_turn_complete = false;
 		CheckTurnComplete();
 		if ( !m_is_turn_complete ) {
-			auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-			fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
-			AddFrontendRequest( fr );
+			SetTurnStatus( turn::TS_TURN_ACTIVE );
 		}
 	}
 }
@@ -1445,9 +1444,9 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		if ( m_state->IsMaster() ) {
 			m_state->TriggerObject( this, "turn", ARGS_F( this ) {
 				{
-					"game",
-					Wrap( GSE_CALL )
-				}
+					"year",
+					VALUE( gse::value::Int,, m_current_turn.GetId() + 2100 /* TODO: better way to define starting year? */ ),
+				},
 			}; } );
 		}
 	});
@@ -1461,9 +1460,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	m_is_turn_complete = false;
 	CheckTurnComplete();
 	if ( !m_is_turn_complete ) {
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
-		AddFrontendRequest( fr );
+		SetTurnStatus( turn::TS_TURN_ACTIVE );
 	}
 
 }
@@ -1626,6 +1623,33 @@ void Game::InitFailed( const std::string& error_text ) {
 		DELETE( m_map );
 		m_map = m_old_map; // restore old state // TODO: test
 	}
+}
+
+static const std::unordered_map< backend::turn::turn_status_t, std::string > s_turn_status_str = {
+	{ turn::TS_PLEASE_WAIT, "please_wait" },
+	{ turn::TS_TURN_ACTIVE, "active" },
+	{ turn::TS_TURN_COMPLETE, "turn_complete" },
+	{ turn::TS_WAITING_FOR_PLAYERS, "waiting_for_players" },
+};
+
+void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
+
+	// legacy ui
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+	fr.data.turn_status.status = status;
+	AddFrontendRequest( fr );
+
+	// new ui
+	ASSERT( s_turn_status_str.find( status ) != s_turn_status_str.end(), "unknown status: " + std::to_string( status ) );
+	m_state->WithGSE( this, [ this, status ]( GSE_CALLABLE ) {
+		m_state->TriggerObject( this, "turn_status", ARGS_F( &status ) {
+			{
+				"status",
+				VALUE( gse::value::String,, s_turn_status_str.at( status ) ),
+			},
+		}; } );
+	});
+
 }
 
 void Game::CheckRW( GSE_CALLABLE ) {
@@ -2100,11 +2124,10 @@ void Game::CheckTurnComplete() {
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
 		MTModule::Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = m_is_turn_complete
+		SetTurnStatus( m_is_turn_complete
 			? turn::TS_TURN_COMPLETE
-			: turn::TS_TURN_ACTIVE;
-		AddFrontendRequest( fr );
+			: turn::TS_TURN_ACTIVE
+		);
 	}
 
 }

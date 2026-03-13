@@ -15,7 +15,7 @@ return {
 		});
 
 		this.page = p.frame.listview({
-			class: 'bottombar-frame-page',
+			class: 'bottombar-frame-inner bottombar-frame-page',
 			itemsize: 17,
 			max_items: 50,
 			padding: 3,
