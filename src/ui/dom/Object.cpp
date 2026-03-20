@@ -344,10 +344,10 @@ void Object::ClearActors() {
 		auto* const scene = m_ui->GetScene();
 		for ( const auto& actor : m_actors ) {
 			scene->RemoveActor( actor );
-			if ( g ) {
-				( (geometry::Rectangle*)g )->Clear();
-			}
 			delete actor;
+		}
+		if ( g ) {
+			( (geometry::Rectangle*)g )->Clear();
 		}
 		m_actors.clear();
 	}

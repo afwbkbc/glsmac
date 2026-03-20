@@ -39,7 +39,6 @@ return {
 		p.ui.class('bottombar-frame-button').set({
 			background: 'interface.pcx:crop(47, 587, 70, 610)',
 			border: 'black,2',
-			sound: 'ok.wav',
 			_hover: {
 				border: 'rgb(120,164,212),2',
 			},

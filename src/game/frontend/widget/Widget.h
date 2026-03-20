@@ -68,6 +68,7 @@ protected:
 #define WITH_WIDGET( ... ) WithWidget( F_WITH_WIDGET( __VA_ARGS__ )
 
 	virtual void Register( ui::dom::Widget* const widget ) = 0;
+	virtual void Unregister( ui::dom::Widget* const widget );
 
 };
 

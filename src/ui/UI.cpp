@@ -16,8 +16,6 @@
 #include "gse/value/Bool.h"
 #include "geometry/Geometry.h"
 #include "scene/actor/Actor.h"
-#include "scene/actor/Mesh.h"
-#include "types/mesh/Mesh.h"
 
 namespace ui {
 
@@ -435,8 +433,13 @@ void UI::AttachWidget( dom::Widget* const widget, const widget_type_t type ) {
 	state.config->f_init( widget );
 }
 
-void UI::DetachWidget( dom::Widget* const widget ) {
+void UI::DetachWidget( dom::Widget* const widget, const widget_type_t type  ) {
 	std::lock_guard guard( m_widgets_mutex );
+	const auto& config_it = m_widget_configs.find( type );
+	if ( config_it != m_widget_configs.end() ) {
+		ASSERT( config_it->second.f_deinit, "widget deinit not defined" );
+		config_it->second.f_deinit( widget );
+	}
 	const auto& it = m_widget_types.find( widget );
 	ASSERT( it != m_widget_types.end(), "widget not attached" );
 	const auto& widgets = m_widgets.find( it->second );

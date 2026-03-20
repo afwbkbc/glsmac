@@ -1,7 +1,7 @@
 return {
 
-	sliding_rate: 20,
-	sliding_speed: 50,
+	sliding_fps: 15,
+	sliding_time: 150,
 
 	popups: {},
 
@@ -11,6 +11,7 @@ return {
 	popup_cb: null,
 
 	sliding_timer: null,
+	sliding_speed: null,
 	target_top: null,
 
 	bottombar_height: null,
@@ -113,6 +114,9 @@ return {
 			if (data != this.popup) {
 				#print('WARNING: popup mismatch');
 			}
+
+			this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_fps);
+
 			if (this.sliding_timer != null) {
 				// if canceled early - start from where it is
 				this.target_top = data.el.top;
@@ -121,7 +125,7 @@ return {
 
 			this.target_top = this.viewport_size.height;
 			this.sound_down.play();
-			this.sliding_timer = #async(this.sliding_rate, () => {
+			this.sliding_timer = #async(this.sliding_fps, () => {
 				const new_top = data.el.top + this.sliding_speed;
 				if (new_top >= this.target_top) {
 					data.el.top = this.target_top;
@@ -255,9 +259,10 @@ return {
 		this.popup_cb = cb;
 
 		this.target_top = p.el.top;
+		this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_fps);
 		p.el.top = this.viewport_size.height;
 		this.sound_up.play();
-		this.sliding_timer = #async(this.sliding_rate, () => {
+		this.sliding_timer = #async(this.sliding_fps, () => {
 			const new_top = p.el.top - this.sliding_speed;
 			if (new_top <= this.target_top) {
 				p.el.top = this.target_top;

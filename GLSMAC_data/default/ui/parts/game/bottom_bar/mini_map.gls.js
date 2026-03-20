@@ -22,7 +22,7 @@ return {
 			width: 236,
 		});
 
-		this.frame.widget({
+		const minimap = this.frame.widget({
 			type: 'minimap',
 			align: 'top left',
 			top: 36,
@@ -85,6 +85,9 @@ return {
 			text: 'button1',
 			group: 'minimap-mode',
 			left: 120,
+		}).on('click', (e) => {
+			minimap.show();
+			return true;
 		});
 
 		p.ui.class('bottombar-minimap-button-right').extend('bottombar-minimap-button').set({
@@ -101,6 +104,9 @@ return {
 			text: 'button2',
 			group: 'minimap-mode',
 			left: 175,
+		}).on('click', (e) => {
+			minimap.hide();
+			return true;
 		});
 
 		// 'turn complete' button

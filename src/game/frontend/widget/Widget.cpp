@@ -21,7 +21,8 @@ Widget::Widget( Game* const game, ui::UI* const ui, const ui::widget_type_t type
 		m_type, {
 			str,
 			data_config,
-			std::bind( &Widget::Register, this, std::placeholders::_1 )
+			std::bind( &Widget::Register, this, std::placeholders::_1 ),
+			std::bind( &Widget::Unregister, this, std::placeholders::_1 )
 		}
 	);
 }
@@ -61,6 +62,10 @@ void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, con
 
 void Widget::WithWidget( const ui::f_with_widget_t& f ) const {
 	m_ui->WithWidget( m_type, f );
+}
+
+void Widget::Unregister( ui::dom::Widget* const widget ) {
+	widget->Clear();
 }
 
 }

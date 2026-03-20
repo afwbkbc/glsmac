@@ -97,6 +97,7 @@ CLASS( UI, gse::GCWrappable )
 		std::string str;
 		widget_data_config_t data_config;
 		f_widget_func_t f_init;
+		f_widget_func_t f_deinit;
 	};
 
 	void RegisterWidget( const widget_type_t type, const widget_config_t& config );
@@ -104,7 +105,7 @@ CLASS( UI, gse::GCWrappable )
 
 	const widget_type_t GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const;
 	void AttachWidget( dom::Widget* const widget, const widget_type_t type );
-	void DetachWidget( dom::Widget* const widget );
+	void DetachWidget( dom::Widget* const widget, const widget_type_t type );
 	void ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data );
 	void SetWidgetData( dom::Widget* const widget, gse::value::Object* const data );
 

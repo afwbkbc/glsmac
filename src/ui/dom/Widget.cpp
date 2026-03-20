@@ -73,6 +73,7 @@ void Widget::Hide() {
 void Widget::Destroy( GSE_CALLABLE ) {
 	if ( m_global_handler_id ) {
 		m_ui->RemoveGlobalHandler( m_global_handler_id );
+		m_global_handler_id = 0;
 	}
 	if ( m_on_widget_remove ) {
 		m_on_widget_remove( this );
@@ -103,6 +104,12 @@ void Widget::SetActor( scene::actor::Actor* const actor, const size_t index ) {
 }
 
 void Widget::Clear() {
+	m_event_handlers.clear();
+	m_global_event_handlers.clear();
+	if ( m_global_handler_id ) {
+		m_ui->RemoveGlobalHandler( m_global_handler_id );
+		m_global_handler_id = 0;
+	}
 	m_geometry->AsRectangle()->Clear();
 	ClearActors();
 	m_actors.clear();
@@ -206,7 +213,7 @@ void Widget::Attach() {
 void Widget::Detach() {
 	if ( m_is_attached ) {
 		if ( m_is_visible ) {
-			m_ui->DetachWidget( this );
+			m_ui->DetachWidget( this, m_type );
 		}
 		m_is_attached = false;
 	}
