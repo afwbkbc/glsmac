@@ -1,5 +1,7 @@
 return {
 
+	height: 256,
+
 	pp: {},
 
 	message_fade_timer: null,
@@ -46,10 +48,11 @@ return {
 			},
 		});
 
+		const height = this.height; // TODO: fix this within objects
 		const el = p.root.area({
 			zindex: 0.8,
 			align: 'bottom',
-			height: 256,
+			height: height,
 			left: 0,
 			right: 0,
 		});
@@ -96,6 +99,7 @@ return {
 			ui: p.ui,
 			el: el,
 			sections: {},
+			modules: p.modules,
 			get_stats_str: (object) => {
 				switch (#classof(object)) {
 					case 'Unit': {

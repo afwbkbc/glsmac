@@ -3,12 +3,12 @@ return (m) => {
 	m.glsmac.on('configure_game', (e) => {
 		const game = e.game;
 
-		let ui = null;
+		let p = null;
 		let messages_buffer = [];
 
 		game.on('message', (e) => {
-			if (ui != null) {
-				ui.process_message(e.text);
+			if (p != null) {
+				p.process_message(e.text);
 			} else {
 				messages_buffer :+e.text;
 			}
@@ -18,13 +18,14 @@ return (m) => {
 
 			m.root.clear();
 
-			ui = {
+			p = {
 				game: game,
 				map: game.get_map(),
 				ui: m.ui,
 				root: m.root,
 				modules: {
 					bottom_bar: #include('bottom_bar/bottom_bar'),
+					popup: #include('popup/popup'),
 				},
 				process_message: (text) => {
 					for (module of this.modules) {
@@ -34,12 +35,12 @@ return (m) => {
 					}
 				},
 			};
-			for (module of ui.modules) {
-				module.init(ui);
+			for (module of p.modules) {
+				module.init(p);
 			}
 
 			for (m of messages_buffer) {
-				ui.process_message(m);
+				p.process_message(m);
 			}
 			messages_buffer = [];
 			// TODO

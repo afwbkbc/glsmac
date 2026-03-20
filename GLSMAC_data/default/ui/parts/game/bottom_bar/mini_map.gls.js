@@ -245,7 +245,12 @@ return {
 		btn_turn_complete.on('click', (e) => {
 			switch (turn_status) {
 				case 'active': {
-					#print('TODO: turn complete confirmation');
+					p.modules.popup.show('turn_confirmation', (result) => {
+						if (result) {
+							f_set_status('please_wait');
+							p.game.event('complete_turn', {});
+						}
+					});
 					break;
 				}
 				case 'turn_complete': {

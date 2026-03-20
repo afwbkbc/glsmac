@@ -112,6 +112,20 @@ WRAPIMPL_BEGIN( UI )
 				m_root->Wrap( GSE_CALL, true )
 			},
 			{
+				"get_width",
+				NATIVE_CALL() {
+					N_EXPECT_ARGS( 0 );
+					return VALUE( gse::value::Int,, g_engine->GetGraphics()->GetViewportWidth() );
+				} )
+			},
+			{
+				"get_height",
+				NATIVE_CALL() {
+					N_EXPECT_ARGS( 0 );
+					return VALUE( gse::value::Int,, g_engine->GetGraphics()->GetViewportHeight() );
+				} )
+			},
+			{
 				"class",
 				NATIVE_CALL( this ) {
 					N_EXPECT_ARGS_MIN_MAX( 1, 3 ); // .class(name) or .class(name, properties) or .class(name, parent) or .class(name, parent, properties)
@@ -186,6 +200,10 @@ WRAPIMPL_END_PTR()
 
 void UI::Resize() {
 	const auto& g = g_engine->GetGraphics();
+
+	const auto w = g->GetViewportWidth();
+	const auto h = g->GetViewportHeight();
+
 /*#ifdef DEBUG
 			for ( auto& it : m_debug_frames ) {
 				ResizeDebugFrame( it.first, &it.second );
@@ -194,16 +212,25 @@ void UI::Resize() {
 	m_clamp.x.SetSrcRange(
 		{
 			0.0,
-			(float)g->GetViewportWidth()
+			(float)w
 		}
 	);
 	m_clamp.y.SetSrcRange(
 		{
 			0.0,
-			(float)g->GetViewportHeight()
+			(float)h
 		}
 	);
 	m_root->Resize( g->GetViewportWidth(), g->GetViewportHeight() );
+	WithGSE(
+		[ this, w, h ]( GSE_CALLABLE ) {
+			gse::value::object_properties_t event_data = {
+				{ "width",  VALUE( gse::value::Int,, w ) },
+				{ "height", VALUE( gse::value::Int,, h ) },
+			};
+			Trigger( GSE_CALL, "resize", ARGS( event_data ) );
+		}
+	);
 }
 
 const types::mesh::coord_t UI::ClampX( const coord_t& x ) const {

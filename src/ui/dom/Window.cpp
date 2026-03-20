@@ -11,6 +11,12 @@
 namespace ui {
 namespace dom {
 
+static const std::unordered_set< std::string > s_blocked_blocker_events = {
+	"mousemove",
+	"mousedown",
+	"mouseup",
+};
+
 Window::Window( DOM_ARGS )
 	: Panel( DOM_ARGS_PASS, "window", false ) {
 
@@ -25,10 +31,13 @@ Window::Window( DOM_ARGS )
 		g->SetBottom( 0 );
 		g->SetLeft( 0 );
 		g->SetRight( 0 );
+
 		// block clickthroughs
-		m_blocker->On( GSE_CALL, "*", NATIVE_CALL( this ) {
-			return VALUE( gse::value::Bool,, true );
-		} ) );
+		for ( const auto& event : s_blocked_blocker_events ) {
+			m_blocker->On( GSE_CALL, event, NATIVE_CALL() {
+				return VALUE( gse::value::Bool,, true );
+			} ) );
+		}
 	}
 	{
 		m_body = new Container( GSE_CALL, ui, this, {}, "window_body", true, true );
@@ -59,7 +68,7 @@ Window::Window( DOM_ARGS )
 		}
 	}
 
-	SetHeaderHeight( 20 );
+	SetHeaderHeight( 0 );
 
 	Property(
 		GSE_CALL, "blocker", gse::VT_STRING, nullptr, PF_NONE,
