@@ -1,10 +1,26 @@
 return {
 
+	sliding_rate: 20,
+	sliding_speed: 50,
+
 	popups: {},
 
+	viewport_size: null,
+
+	popup: null,
 	popup_cb: null,
 
+	sliding_timer: null,
+	target_top: null,
+
+	bottombar_height: null,
+
+	sound_up: null,
+	sound_down: null,
+
 	init: (p) => {
+
+		this.bottombar_height = p.modules.bottom_bar.height - 40; // skip transparent area in the middle of bottombar
 
 		const header_height = 24;
 		const padding = 3;
@@ -48,6 +64,7 @@ return {
 			color: 'black',
 			background: 'interface.pcx:crop(47, 587, 70, 610)',
 			border: 'black,2',
+			sound: 'ok.wav',
 			_hover: {
 				border: 'rgb(120,164,212),2',
 			},
@@ -57,32 +74,66 @@ return {
 			},
 		});
 
+		this.sound_up = p.ui.root.sound({
+			sound: 'menu up.wav',
+			volume: 0.5,
+		});
+		this.sound_down = p.ui.root.sound({
+			sound: 'menu down.wav',
+			volume: 0.5,
+		});
 
-		let viewport_size = {
+		const that = this; // TODO
+
+		this.viewport_size = {
 			// we don't need to resize width because viewport width = root object width so align center works correctly
-			height: p.ui.get_height() - p.modules.bottom_bar.height,
+			height: p.ui.get_height() - that.bottombar_height,
 		};
 
 		const f_resize = (data) => {
-			data.el.top = (viewport_size.height - data.height) / 2;
+			data.el.top = (this.viewport_size.height - data.height) / 2;
 			data.el.bottom = 0;
 		};
 
 		p.ui.on('resize', (e) => {
-			viewport_size = {
-				height: e.height - p.modules.bottom_bar.height,
+			that.viewport_size = {
+				height: e.height - that.bottombar_height,
 			};
+			const is_hiding = this.popup != null && this.popup_cb == null;
+			that.sliding_stop();
+			if (is_hiding) {
+				this.hide();
+			}
 			for (data of this.popups) {
 				f_resize(data);
 			}
 		});
 
 		const f_hide = (data) => {
-			data.el.hide();
-			this.popup_cb = null;
-		};
+			if (data != this.popup) {
+				#print('WARNING: popup mismatch');
+			}
+			if (this.sliding_timer != null) {
+				// if canceled early - start from where it is
+				this.target_top = data.el.top;
+			}
+			this.sliding_stop();
 
-		const that = this; // TODO
+			this.target_top = this.viewport_size.height;
+			this.sound_down.play();
+			this.sliding_timer = #async(this.sliding_rate, () => {
+				const new_top = data.el.top + this.sliding_speed;
+				if (new_top >= this.target_top) {
+					data.el.top = this.target_top;
+					this.sliding_timer = null;
+					this.hide();
+					f_resize(data);
+					return false;
+				}
+				data.el.top = new_top;
+				return true;
+			});
+		};
 
 		const pp = {
 			create: (title, width, height, generator) => {
@@ -141,6 +192,7 @@ return {
 				const f_result = (result) => {
 					if (that.popup_cb != null) {
 						that.popup_cb(result);
+						that.popup_cb = null;
 					}
 					f_hide(data);
 				};
@@ -174,12 +226,48 @@ return {
 
 	},
 
+	sliding_stop: () => {
+		if (this.sliding_timer != null) {
+			this.sliding_timer.stop();
+			this.sliding_timer = null;
+			this.popup.el.top = this.target_top;
+		}
+	},
+
+	hide: () => {
+		if (this.popup != null) {
+			this.sliding_stop();
+			this.popup.el.hide();
+			this.popup = null;
+			this.popup_cb = null;
+		}
+	},
+
 	show: (popup, cb) => {
+		if (this.popup != null) {
+			this.hide();
+		}
 		const p = this.popups[popup];
 		if (!#is_defined(p)) {
 			throw Error('Unknown popup: ' + popup);
 		}
+		this.popup = p;
 		this.popup_cb = cb;
+
+		this.target_top = p.el.top;
+		p.el.top = this.viewport_size.height;
+		this.sound_up.play();
+		this.sliding_timer = #async(this.sliding_rate, () => {
+			const new_top = p.el.top - this.sliding_speed;
+			if (new_top <= this.target_top) {
+				p.el.top = this.target_top;
+				this.sliding_timer = null;
+				return false;
+			}
+			p.el.top = new_top;
+			return true;
+		});
+
 		p.el.show();
 	},
 
