@@ -361,9 +361,11 @@ void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	const auto& c = g_engine->GetConfig();
 	auto* r = g_engine->GetResourceManager();
-	if ( !m_state ) {
-		m_state = new game::backend::State( m_gc_space, m_ctx, this );
-		m_state->m_settings.global.Initialize();
+	if ( !m_state || r->GetDetectedSMACType() == config::ST_UNKNOWN ) {
+		if ( !m_state ) {
+			m_state = new game::backend::State( m_gc_space, m_ctx, this );
+			m_state->m_settings.global.Initialize();
+		}
 		try {
 			if ( path.has_value() ) {
 				r->Init( { path.value() }, config::ST_AUTO );
@@ -391,7 +393,6 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 		if ( path.has_value() ) {
 			c->SetSMACPath( path.value() );
 		}
-
 	}
 	Reset( GSE_CALL );
 }
