@@ -27,9 +27,13 @@ return {
 	sound_up: null,
 	sound_down: null,
 
+	menu: null,
+
 	init: (p) => {
 
 		this.bottombar_height = p.modules.bottom_bar.height - 40; // skip transparent area in the middle of bottombar
+
+		this.menu = p.modules.menu;
 
 		const header_height = 24;
 		const padding = 3;
@@ -263,6 +267,7 @@ return {
 	},
 
 	show: (popup, cb) => {
+		this.menu.close_all();
 		if (this.popup != null) {
 			this.hide();
 		}

@@ -4,7 +4,7 @@ return {
 
 	init: (p) => {
 
-		return p.create('SID MEIER\'S ALPHA CENTAURI', 670, 172, (body, cb) => {
+		return p.create('SID MEIER\'S ALPHA CENTAURI', 670, 171, (body, cb) => {
 
 			body.surface({
 				left: 3,
@@ -38,7 +38,7 @@ return {
 			body.button({
 				class: 'game-popup-button',
 				text: 'Yes, that\'s an order mister!',
-				top: 148,
+				top: 147,
 				is_ok: true,
 			}).on('click', (e) => {
 				cb(true);

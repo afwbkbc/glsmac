@@ -26,6 +26,7 @@ return (m) => {
 				modules: {
 					bottom_bar: #include('bottom_bar/bottom_bar'),
 					popup: #include('popup/popup'),
+					menu: #include('menu/menu'),
 				},
 				process_message: (text) => {
 					for (module of this.modules) {
@@ -34,6 +35,13 @@ return (m) => {
 						}
 					}
 				},
+				maybe_quit: () => {
+					p.modules.popup.show('please_dont_go', (result) => {
+						if (result) {
+							m.glsmac.exit();
+						}
+					});
+				},
 			};
 			for (module of p.modules) {
 				module.init(p);
@@ -41,11 +49,7 @@ return (m) => {
 
 			m.root.on('keydown', (e) => {
 				if (e.code == 'ESCAPE') {
-					p.modules.popup.show('please_dont_go', (result) => {
-						if (result) {
-							m.glsmac.exit();
-						}
-					});
+					p.maybe_quit();
 					return true;
 				}
 				return false;

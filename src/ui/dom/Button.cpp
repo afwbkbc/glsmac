@@ -75,6 +75,16 @@ Button::Button( DOM_ARGS )
 			}
 		}
 	);
+
+	Property(
+		GSE_CALL, "active", gse::VT_BOOL, VALUE( gse::value::Bool, , false ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetActive( GSE_CALL, ( (gse::value::Bool*)v )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			SetActive( GSE_CALL, false );
+		}
+	);
 }
 
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -82,7 +92,9 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
 			if ( m_group.empty() ) {
-				AddModifier( GSE_CALL, CM_ACTIVE );
+				if ( !m_is_active ) {
+					AddModifier( GSE_CALL, CM_ACTIVE );
+				}
 			}
 			else {
 				m_parent->SetButtonGroupActive( GSE_CALL, m_group, this );
@@ -97,7 +109,9 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
 			if ( m_group.empty() ) {
-				RemoveModifier( GSE_CALL, CM_ACTIVE );
+				if ( !m_is_active ) {
+					RemoveModifier( GSE_CALL, CM_ACTIVE );
+				}
 			}
 			if ( m_on_mouseup && m_on_mouseup( event ) ) {
 				break;
@@ -173,6 +187,18 @@ void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 		}
 		default: {
 			Panel::WrapEvent( GSE_CALL, e, obj );
+		}
+	}
+}
+
+void Button::SetActive( GSE_CALLABLE, const bool is_active ) {
+	if ( is_active != m_is_active ) {
+		m_is_active = is_active;
+		if ( m_is_active ) {
+			AddModifier( GSE_CALL, CM_ACTIVE );
+		}
+		else {
+			RemoveModifier( GSE_CALL, CM_ACTIVE );
 		}
 	}
 }

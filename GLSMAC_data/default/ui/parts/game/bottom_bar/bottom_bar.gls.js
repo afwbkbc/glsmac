@@ -48,6 +48,22 @@ return {
 			},
 		});
 
+		p.ui.class('bottombar-menu-button').set({
+			width: 106,
+			height: 14,
+			font: 'arialnb.ttf:16',
+			color: 'rgb(228, 104, 24)',
+			background: 'console_x2_a.pcx:crop(1, 217, 106, 230)',
+			_hover: {
+				color: 'black',
+				background: 'console_x2_a.pcx:crop(1, 232, 106, 245)',
+			},
+			_active: {
+				color: 'black',
+				background: 'console_x2_a.pcx:crop(1, 247, 106, 260)',
+			},
+		});
+
 		const height = this.height; // TODO: fix this within objects
 		const el = p.root.area({
 			zindex: 0.8,
@@ -91,6 +107,70 @@ return {
 			top: 10,
 			font: 'arialnb.ttf:18',
 			color: 'rgb(232,212,140)',
+		});
+
+		const btn_left_menu = el.button({
+			class: 'bottombar-menu-button',
+			align: 'top left',
+			left: 11,
+			top: 20,
+			sound: 'amenu2.wav',
+			volume: 0.4,
+			text: 'MENU',
+		});
+
+		const that = this;
+
+		btn_left_menu.on('click', (e) => {
+			if (!btn_left_menu.active) {
+				btn_left_menu.active = true;
+				p.modules.menu.open('left_menu', {
+					align: 'bottom left',
+					left: 0,
+					bottom: that.height,
+					height: 166, // tmp
+				});
+			} else {
+				p.modules.menu.close('left_menu');
+			}
+			return true;
+		});
+
+		const btn_right_menu = el.button({
+			class: 'bottombar-menu-button',
+			align: 'top right',
+			right: 11,
+			top: 22,
+			sound: 'mmenu.wav',
+			volume: 0.2,
+			text: 'COMMLINK',
+		});
+		btn_right_menu.on('click', (e) => {
+			if (!btn_right_menu.active) {
+				btn_right_menu.active = true;
+				p.modules.menu.open('right_menu', {
+					align: 'bottom right',
+					right: 0,
+					bottom: that.height,
+					height: 166, // tmp
+				});
+			} else {
+				p.modules.menu.close('right_menu');
+			}
+			return true;
+		});
+
+		p.modules.menu.on_close((menu_id) => {
+			switch (menu_id) {
+				case 'left_menu': {
+					btn_left_menu.active = false;
+					break;
+				}
+				case 'right_menu': {
+					btn_right_menu.active = false;
+					break;
+				}
+			}
 		});
 
 		this.pp = {

@@ -34,6 +34,10 @@ private:
 	std::string m_group = "";
 	bool m_is_group_enabled = false;
 
+	bool m_is_active = false;
+
+	void SetActive( GSE_CALLABLE, const bool is_active );
+
 private:
 	friend class Container;
 	void GroupEnable( GSE_CALLABLE );
