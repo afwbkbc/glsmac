@@ -1,14 +1,22 @@
 return {
 
-	sliding_fps: 15,
-	sliding_time: 150,
+	available_popups: [
+		'turn_confirmation',
+		'please_dont_go',
+	],
 
+	sliding_interval: 5,
+	sliding_time: 100,
+
+	popup_defs: {},
 	popups: {},
 
 	viewport_size: null,
 
 	popup: null,
+	popup_def: null,
 	popup_cb: null,
+	popup_result: null,
 
 	sliding_timer: null,
 	sliding_speed: null,
@@ -108,6 +116,9 @@ return {
 			for (data of this.popups) {
 				f_resize(data);
 			}
+			if (this.popup != null) {
+				this.sliding_speed = (this.viewport_size.height - this.popup.el.top) / (this.sliding_time / this.sliding_interval);
+			}
 		});
 
 		const f_hide = (data) => {
@@ -115,21 +126,28 @@ return {
 				#print('WARNING: popup mismatch');
 			}
 
-			this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_fps);
-
 			if (this.sliding_timer != null) {
 				// if canceled early - start from where it is
 				this.target_top = data.el.top;
 			}
 			this.sliding_stop();
 
+			if (#is_defined(this.popup_def.on_hide)) {
+				this.popup_def.on_hide();
+			}
+
 			this.target_top = this.viewport_size.height;
 			this.sound_down.play();
-			this.sliding_timer = #async(this.sliding_fps, () => {
+			this.sliding_timer = #async(this.sliding_interval, () => {
 				const new_top = data.el.top + this.sliding_speed;
 				if (new_top >= this.target_top) {
 					data.el.top = this.target_top;
 					this.sliding_timer = null;
+					if (that.popup_cb != null && that.popup_result != null) {
+						that.popup_cb(that.popup_result);
+						that.popup_cb = null;
+						that.popup_result = null;
+					}
 					this.hide();
 					f_resize(data);
 					return false;
@@ -194,10 +212,7 @@ return {
 				});
 
 				const f_result = (result) => {
-					if (that.popup_cb != null) {
-						that.popup_cb(result);
-						that.popup_cb = null;
-					}
+					that.popup_result = result;
 					f_hide(data);
 				};
 
@@ -222,10 +237,9 @@ return {
 			},
 		};
 
-		for (popup of [
-			'turn_confirmation',
-		]) {
-			this.popups[popup] = #include(popup).init(pp);
+		for (popup of this.available_popups) {
+			this.popup_defs[popup] = #include(popup);
+			this.popups[popup] = this.popup_defs[popup].init(pp);
 		}
 
 	},
@@ -243,6 +257,7 @@ return {
 			this.sliding_stop();
 			this.popup.el.hide();
 			this.popup = null;
+			this.popup_def = null;
 			this.popup_cb = null;
 		}
 	},
@@ -251,29 +266,33 @@ return {
 		if (this.popup != null) {
 			this.hide();
 		}
-		const p = this.popups[popup];
-		if (!#is_defined(p)) {
+		this.popup = this.popups[popup];
+		this.popup_def = this.popup_defs[popup];
+		if (!#is_defined(this.popup) || !#is_defined(this.popup_def)) {
 			throw Error('Unknown popup: ' + popup);
 		}
-		this.popup = p;
 		this.popup_cb = cb;
 
-		this.target_top = p.el.top;
-		this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_fps);
-		p.el.top = this.viewport_size.height;
+		if (#is_defined(this.popup_def.on_show)) {
+			this.popup_def.on_show();
+		}
+
+		this.target_top = this.popup.el.top;
+		this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_interval);
+		this.popup.el.top = this.viewport_size.height;
 		this.sound_up.play();
-		this.sliding_timer = #async(this.sliding_fps, () => {
-			const new_top = p.el.top - this.sliding_speed;
+		this.sliding_timer = #async(this.sliding_interval, () => {
+			const new_top = this.popup.el.top - this.sliding_speed;
 			if (new_top <= this.target_top) {
-				p.el.top = this.target_top;
+				this.popup.el.top = this.target_top;
 				this.sliding_timer = null;
 				return false;
 			}
-			p.el.top = new_top;
+			this.popup.el.top = new_top;
 			return true;
 		});
 
-		p.el.show();
+		this.popup.el.show();
 	},
 
 };

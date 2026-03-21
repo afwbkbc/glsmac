@@ -39,6 +39,18 @@ return (m) => {
 				module.init(p);
 			}
 
+			m.root.on('keydown', (e) => {
+				if (e.code == 'ESCAPE') {
+					p.modules.popup.show('please_dont_go', (result) => {
+						if (result) {
+							m.glsmac.exit();
+						}
+					});
+					return true;
+				}
+				return false;
+			});
+
 			for (m of messages_buffer) {
 				p.process_message(m);
 			}
