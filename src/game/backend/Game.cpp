@@ -70,7 +70,7 @@ common::mt_id_t Game::MT_Ping() {
 }
 
 common::mt_id_t Game::MT_Init( State* state ) {
-	MT_Request request = {};
+ 	MT_Request request = {};
 	request.op = OP_INIT;
 	return MT_CreateRequest( request );
 }
@@ -295,6 +295,7 @@ void Game::Iterate() {
 					ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
 					auto* player = slot.GetPlayer();
 					ASSERT( player, "slot player not set" );
+					ASSERT( player->GetFaction(), "slot player faction not set" );
 					slot_defines->push_back(
 						FrontendRequest::slot_define_t{
 							slot.GetIndex(),
@@ -637,7 +638,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 		std::lock_guard guard( m_event_handlers_mutex );
 		const auto& it = m_event_handlers.find( name );
 		if ( it == m_event_handlers.end() ) {
-			GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+			return;
 		}
 	}
 	AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
@@ -1616,6 +1617,8 @@ void Game::InitFailed( const std::string& error_text ) {
 	);
 
 	ResetGame();
+	m_state = nullptr;
+
 	m_initialization_error = error_text;
 
 	if ( m_old_map ) {
@@ -2106,7 +2109,6 @@ void Game::ResetGame() {
 			m_state->m_connection->Disconnect();
 			m_state->m_connection->ResetHandlers();
 		}
-		m_state = nullptr;
 	}
 }
 

@@ -88,10 +88,7 @@ Container::Container( DOM_ARGS_T, const bool factories_allowed, const bool has_b
 	}
 
 	Method( GSE_CALL, "clear", NATIVE_CALL( this ) {
-		const auto children = m_children;
-		for ( const auto& it : children ) {
-			RemoveChild( GSE_CALL,it.second );
-		}
+		Clear( GSE_CALL );
 		return nullptr;
 	} ) );
 
@@ -272,6 +269,15 @@ void Container::WrapSet( const std::string& key, gse::Value* const value, GSE_CA
 	}
 	else {
 		Object::WrapSet( key, value, GSE_CALL );
+	}
+}
+
+void Container::Clear( GSE_CALLABLE ) {
+	Trigger( GSE_CALL, "clear" );
+	ClearHandlers();
+	const auto children = m_children;
+	for ( const auto& it : children ) {
+		RemoveChild( GSE_CALL,it.second );
 	}
 }
 

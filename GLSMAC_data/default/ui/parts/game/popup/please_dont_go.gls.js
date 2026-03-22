@@ -1,8 +1,8 @@
 return {
 
-	sound: null,
-
 	init: (p) => {
+
+		this.sound = null;
 
 		return p.create('SID MEIER\'S ALPHA CENTAURI', 670, 171, (body, cb) => {
 

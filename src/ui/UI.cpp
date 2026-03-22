@@ -50,7 +50,11 @@ UI::UI( GSE_CALLABLE )
 
 	g_engine->GetGraphics()->AddScene( m_scene );
 
-	m_root = new dom::Root( GSE_CALL, this );
+	m_gc_space->Accumulate( this, [ this, GSE_CALL ] () {
+		auto ep2 = ep;
+		Clear( gc_space, ctx, si, ep2 );
+	});
+
 	Resize();
 
 	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
@@ -508,6 +512,19 @@ void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
 			}
 		}
 	}
+}
+
+void UI::Clear( GSE_CALLABLE ) {
+	ClearHandlers();
+
+	if ( !m_root ) {
+		m_root = new dom::Root( GSE_CALL, this );
+	}
+	else {
+		m_root->Clear( GSE_CALL );
+	}
+
+	m_classes.clear();
 }
 
 void UI::Defocus( dom::Focusable* const element ) {

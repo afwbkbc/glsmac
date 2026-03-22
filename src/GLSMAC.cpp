@@ -146,6 +146,15 @@ void GLSMAC::Iterate() {
 	if ( m_game ) {
 		m_game->Iterate();
 	}
+	if ( m_reset_needed ) {
+		m_reset_needed = false;
+		auto* game = g_engine->GetGame();
+		const auto mt_id = game->MT_Reset();
+		const auto& response = game->MT_WaitResponse( mt_id );
+		ASSERT( response.result == game::backend::R_SUCCESS, "failed to reset game thread" );
+		game->MT_DestroyResponse( response );
+		RunMain();
+	}
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
@@ -173,6 +182,13 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				g_engine->ShutDown();
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"mainmenu", NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				S_MainMenu( GSE_CALL );
 				return VALUE( gse::value::Undefined );
 			} )
 		},
@@ -399,24 +415,15 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 
 void GLSMAC::S_Reset( GSE_CALLABLE ) {
 	ClearHandlers();
-	m_ui->ClearHandlers();
+	m_ui->Clear( GSE_CALL );
 	auto* game = g_engine->GetGame();
 	game->ClearHandlers();
 	game->ClearEvents();
-	Reset( GSE_CALL );
-	RunMain();
+	m_reset_needed = true;
 }
 
 void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	TriggerObject( this, "intro", ARGS_F( this ) {
-		{
-			"mainmenu", NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				S_MainMenu( GSE_CALL );
-				return VALUE( gse::value::Undefined );
-			} )
-		}
-	}; } );
+	TriggerObject( this, "intro" );
 }
 
 void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
@@ -559,15 +566,21 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	auto* game = g_engine->GetGame();
 	ASSERT( game, "game not set" );
 
-	m_game = new ::game::frontend::Game( nullptr, this, real_state, m_ui, UH( this, ctx, si, ep ) {
-		//g_engine->GetScheduler()->RemoveTask( this );
-		m_gc_space->Accumulate( this, [ this ](){
-			TriggerObject( this, "start_game" );
-		});
-	}, UH( this, real_state ) {
-		//m_menu_object->MaybeClose();
-		//THROW( "TODO: cancel" );
-	} );
+	if ( m_game ) {
+		m_game->Stop();
+		delete m_game;
+	}
+	m_game = new ::game::frontend::Game(
+		nullptr, this, real_state, m_ui, UH( this, ctx, si, ep ) {
+			m_gc_space->Accumulate(
+				this, [ this ]() {
+					TriggerObject( this, "start_game" );
+				}
+			);
+		}, UH( this, real_state ) {
+			//THROW( "TODO: cancel" );
+		}
+	);
 
 	S_Game( GSE_CALL );
 

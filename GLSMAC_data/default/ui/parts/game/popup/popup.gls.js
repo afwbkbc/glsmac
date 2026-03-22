@@ -8,28 +8,28 @@ return {
 	sliding_interval: 5,
 	sliding_time: 100,
 
-	popup_defs: {},
-	popups: {},
-
-	viewport_size: null,
-
-	popup: null,
-	popup_def: null,
-	popup_cb: null,
-	popup_result: null,
-
-	sliding_timer: null,
-	sliding_speed: null,
-	target_top: null,
-
-	bottombar_height: null,
-
-	sound_up: null,
-	sound_down: null,
-
-	menu: null,
-
 	init: (p) => {
+
+		this.popup_defs = {};
+		this.popups = {};
+
+		this.viewport_size = null;
+
+		this.popup = null;
+		this.popup_def = null;
+		this.popup_cb = null;
+		this.popup_result = null;
+
+		this.sliding_timer = null;
+		this.sliding_speed = null;
+		this.target_top = null;
+
+		this.bottombar_height = null;
+
+		this.sound_up = null;
+		this.sound_down = null;
+
+		this.menu = null;
 
 		this.bottombar_height = p.modules.bottom_bar.height - 40; // skip transparent area in the middle of bottombar
 

@@ -2,10 +2,6 @@ return {
 
 	height: 256,
 
-	pp: {},
-
-	message_fade_timer: null,
-
 	process_message: (text) => {
 
 		if (this.message_fade_timer != null) {
@@ -21,6 +17,9 @@ return {
 	},
 
 	init: (p) => {
+
+		this.pp = {};
+		this.message_fade_timer = null;
 
 		p.ui.class('bottombar-frame').set({
 			background: 'interface.pcx:crop(86, 665, 109, 688)',
@@ -71,6 +70,14 @@ return {
 			height: height,
 			left: 0,
 			right: 0,
+		});
+
+		// TODO: make timer dom object
+		el.on('remove', (e) => {
+			if (this.message_fade_timer != null) {
+				this.message_fade_timer.stop();
+				this.message_fade_timer = null;
+			}
 		});
 
 		const background = {

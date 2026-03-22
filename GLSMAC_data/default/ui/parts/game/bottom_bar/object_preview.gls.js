@@ -1,10 +1,5 @@
 return {
 
-	preview: null,
-	last_object_class: null,
-
-	moralesets: {},
-
 	get_morale: (type, value) => {
 		if (!#is_defined(this.moralesets[type])) {
 			this.moralesets[type] = this.um.get_moraleset('NATIVE');
@@ -134,6 +129,10 @@ return {
 	},
 
 	init: (p) => {
+
+		this.preview = null;
+		this.last_object_class = null;
+		this.moralesets = {};
 
 		this.p = p;
 		this.um = p.game.get_um();

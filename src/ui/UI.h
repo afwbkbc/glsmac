@@ -111,6 +111,8 @@ CLASS( UI, gse::GCWrappable )
 
 	void WithWidget( const widget_type_t type, const f_with_widget_t& f );
 
+	void Clear( GSE_CALLABLE );
+
 private:
 	friend class dom::Object;
 	typedef std::function< void() > f_iterable_t;
@@ -121,7 +123,7 @@ private:
 
 private:
 
-	dom::Root* m_root;
+	dom::Root* m_root = nullptr;
 
 	struct {
 		util::Clamper< float > x;

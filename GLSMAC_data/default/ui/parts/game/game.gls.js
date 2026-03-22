@@ -1,6 +1,13 @@
 return (m) => {
 
+	const modules = [
+		'menu',
+		'popup',
+		'bottom_bar',
+	];
+
 	m.glsmac.on('configure_game', (e) => {
+
 		const game = e.game;
 
 		let p = null;
@@ -20,36 +27,45 @@ return (m) => {
 
 			p = {
 				game: game,
+				glsmac: m.glsmac,
 				map: game.get_map(),
 				ui: m.ui,
 				root: m.root,
-				modules: {
-					bottom_bar: #include('bottom_bar/bottom_bar'),
-					popup: #include('popup/popup'),
-					menu: #include('menu/menu'),
-				},
+				modules: {},
 				process_message: (text) => {
-					for (module of this.modules) {
+					for (m of modules) {
+						const module = p.modules[m];
 						if (#is_defined(module.process_message)) {
 							module.process_message(text);
 						}
 					}
 				},
-				maybe_quit: () => {
+				maybe_quit: (full_quit) => {
 					p.modules.popup.show('please_dont_go', (result) => {
 						if (result) {
-							m.glsmac.exit();
+							if (full_quit) {
+								m.glsmac.exit();
+							} else {
+								m.glsmac.reset();
+							}
 						}
 					});
 				},
 			};
-			for (module of p.modules) {
-				module.init(p);
+			for (m of modules) {
+				p.modules[m] = #include(m + '/' + m);
+			}
+			for (m of modules) {
+				p.modules[m].init(p);
 			}
 
 			m.root.on('keydown', (e) => {
-				if (e.code == 'ESCAPE') {
-					p.maybe_quit();
+				if (e.modifiers == {} && e.code == 'ESCAPE') {
+					p.maybe_quit(true);
+					return true;
+				}
+				if (e.modifiers == {ctrl: true, shift: true} && e.code == 'Q') {
+					p.maybe_quit(false);
 					return true;
 				}
 				return false;

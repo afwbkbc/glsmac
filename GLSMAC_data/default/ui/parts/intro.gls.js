@@ -14,7 +14,7 @@ return (m) => {
 		const next = () => {
 			m.root.off('keydown', escape_handler_id);
 			logo.remove();
-			e.mainmenu();
+			m.glsmac.mainmenu();
 		};
 		escape_handler_id = m.root.on('keydown', (e) => {
 			if (e.code == 'ESCAPE') {

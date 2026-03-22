@@ -195,6 +195,9 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 
 void Object::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_is_destroyed, "already destroyed" );
+
+	Trigger( GSE_CALL, "remove" );
+
 	if ( m_is_globalized ) {
 		Deglobalize( GSE_CALL );
 	}

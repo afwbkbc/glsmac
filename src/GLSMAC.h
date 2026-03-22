@@ -100,6 +100,8 @@ private:
 
 	game::frontend::Game* m_game = nullptr;
 
+	std::atomic< bool > m_reset_needed = false;
+
 private:
 	friend class task::main::Main;
 	void RunMain();

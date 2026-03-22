@@ -9,12 +9,12 @@ return {
 		'right_menu',
 	],
 
-	menu_defs: {},
-	menus: {},
-
-	on_close_handlers: [],
-
 	init: (p) => {
+
+		this.menu_defs = {};
+		this.menus = {};
+
+		this.on_close_handlers = [];
 
 		const that = this;
 
@@ -53,6 +53,8 @@ return {
 		});
 
 		const pp = {
+			glsmac: p.glsmac,
+			ui: p.ui,
 			menu: that,
 			menu_width: that.menu_width,
 			item_height: that.item_height,

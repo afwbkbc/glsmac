@@ -130,6 +130,7 @@ void SDL2::Iterate() {
 			case SDL_KEYDOWN: {
 				auto modifiers = SDL_GetModState();
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
+
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
 					ui_legacy::event::key_modifier_t key_modifiers = GetModifiers( modifiers );
@@ -325,87 +326,17 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 	//Log( "Scan code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 	switch ( code ) {
-		case SDL_SCANCODE_RIGHT: {
-			return K_RIGHT;
-		}
-		case SDL_SCANCODE_LEFT: {
-			return K_LEFT;
-		}
-		case SDL_SCANCODE_DOWN: {
-			return K_DOWN;
-		}
-		case SDL_SCANCODE_UP: {
-			return K_UP;
-		}
-		case SDL_SCANCODE_RETURN: {
-			return K_ENTER;
-		}
-		case SDL_SCANCODE_SPACE: {
-			return K_SPACE;
-		}
-		case SDL_SCANCODE_TAB: {
-			return K_TAB;
-		}
-		case SDL_SCANCODE_BACKSPACE: {
-			return K_BACKSPACE;
-		}
-		case SDL_SCANCODE_ESCAPE: {
-			return K_ESCAPE;
-		}
-		case SDL_SCANCODE_GRAVE: {
-			return K_GRAVE;
-		}
-		case SDL_SCANCODE_PAGEUP: {
-			return K_PAGEUP;
-		}
-		case SDL_SCANCODE_PAGEDOWN: {
-			return K_PAGEDOWN;
-		}
-		case SDL_SCANCODE_HOME: {
-			return K_HOME;
-		}
-		case SDL_SCANCODE_END: {
-			return K_END;
-		}
-		case SDL_SCANCODE_INSERT: {
-			return K_INSERT;
-		}
-		case SDL_SCANCODE_DELETE: {
-			return K_DELETE;
-		}
-		case SDL_SCANCODE_KP_4: {
-			return K_KP_LEFT;
-		}
-		case SDL_SCANCODE_KP_7: {
-			return K_KP_LEFT_UP;
-		}
-		case SDL_SCANCODE_KP_8: {
-			return K_KP_UP;
-		}
-		case SDL_SCANCODE_KP_9: {
-			return K_KP_RIGHT_UP;
-		}
-		case SDL_SCANCODE_KP_6: {
-			return K_KP_RIGHT;
-		}
-		case SDL_SCANCODE_KP_3: {
-			return K_KP_RIGHT_DOWN;
-		}
-		case SDL_SCANCODE_KP_2: {
-			return K_KP_DOWN;
-		}
-		case SDL_SCANCODE_KP_1: {
-			return K_KP_LEFT_DOWN;
-		}
-		case SDL_SCANCODE_LCTRL: // do we need to differentiate?
-		case SDL_SCANCODE_RCTRL: {
-			return K_CTRL;
-		}
+#define X_KEY_CODE_1( _x ) case SDL_SCANCODE_##_x: return K_##_x;
+#define X_KEY_CODE_2( _x, _sdl1 ) case SDL_SCANCODE_##_sdl1: return K_##_x;
+#define X_KEY_CODE_3( _x, _sdl1, _sdl2 ) case SDL_SCANCODE_##_sdl1: return K_##_x; case SDL_SCANCODE_##_sdl2: return K_##_x;
+		X_KEY_CODES
+#undef X_KEY_CODE_1
+#undef X_KEY_CODE_2
+#undef X_KEY_CODE_3
 		default: {
 			return K_NONE;
 		}
 	}
-	return K_NONE;
 }
 
 key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {

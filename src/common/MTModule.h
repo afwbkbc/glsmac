@@ -76,6 +76,41 @@ public:
 		DestroyResponse( response );
 	}
 
+	// be very careful with this
+	void MT_Wait( const mt_id_t mt_id ) {
+		while ( true ) {
+			{
+				std::lock_guard guard( m_mt_states_mutex );
+				RESPONSE_TYPE response = {};
+				auto it = m_mt_states.find( mt_id );
+				if ( it != m_mt_states.end() && it->second.is_executed ) {
+					//Log( "MT Request " + to_string( mt_id ) + " result returned" );
+					return;
+				}
+			}
+			std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+		}
+	}
+
+	// be very careful with this
+	const RESPONSE_TYPE MT_WaitResponse( const mt_id_t mt_id ) {
+		while ( true ) {
+			{
+				std::lock_guard guard( m_mt_states_mutex );
+				RESPONSE_TYPE response = {};
+				auto it = m_mt_states.find( mt_id );
+				if ( it != m_mt_states.end() && it->second.is_executed ) {
+					response = it->second.response;
+					DestroyRequest( it->second.request );
+					m_mt_states.erase( it );
+					//Log( "MT Request " + to_string( mt_id ) + " result returned" );
+					return response;
+				}
+			}
+			std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+		}
+	}
+
 	void MT_Cancel( const mt_id_t mt_id ) {
 		std::lock_guard guard( m_mt_states_mutex );
 		auto it = m_mt_states.find( mt_id );

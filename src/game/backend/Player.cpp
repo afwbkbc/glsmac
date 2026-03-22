@@ -61,7 +61,7 @@ void Player::SetFaction( faction::Faction* faction ) {
 }
 
 void Player::ClearFaction() {
-	m_faction = {};
+	m_faction = nullptr;
 }
 
 faction::Faction* Player::GetFaction() {

@@ -5,14 +5,13 @@ return {
 			{
 				label: 'Start New Game',
 				open: () => {
-					p.menu.close('left_menu');
-					#print('TODO: START NEW');
+					p.maybe_quit(false);
 				},
 			},
 			{
 				label: 'Quit',
 				open: () => {
-					p.maybe_quit();
+					p.maybe_quit(true);
 				},
 			},
 		]);

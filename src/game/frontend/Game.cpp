@@ -132,6 +132,10 @@ void Game::Start() {
 
 void Game::Stop() {
 
+	if ( !m_is_initialized ) {
+		return;
+	}
+
 	// cancel incoming requests
 	auto* const game = g_engine->GetGame();
 	ASSERT( game, "game not set" );

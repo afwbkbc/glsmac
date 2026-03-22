@@ -1,12 +1,12 @@
 return {
 
-	pp: {},
-
 	process_message: (text) => {
 		this.pp.pages.messages.process_message(text);
 	},
 
 	init: (p) => {
+
+		this.pp = {};
 
 		p.ui.class('bottombar-frame-page-button').extend('bottombar-frame-button').set({
 			width: 21,

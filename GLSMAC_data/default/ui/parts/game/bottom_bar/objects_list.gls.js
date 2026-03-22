@@ -1,13 +1,5 @@
 return {
 
-	selected_tile: null,
-
-	selected_object: null,
-
-	unit_items: {},
-	base_items: {},
-	active_item: null,
-
 	set_active_item: (item) => {
 		if (this.active_item != null) {
 			this.active_item.class = 'bottombar-objects-list-item';
@@ -127,6 +119,12 @@ return {
 
 	init: (p) => {
 
+		this.selected_tile = null;
+		this.selected_object = null;
+		this.unit_items = {};
+		this.base_items = {};
+		this.active_item = null;
+
 		this.p = p;
 
 		this.object_width = 57;
@@ -214,6 +212,14 @@ return {
 			}
 		});
 
+		// TODO: make event dom object
+		frame_outer.on('remove', (e) => {
+			if (#is_defined(p.map)) {
+				p.map.off('unit_preview');
+				p.map.off('base_preview');
+				p.map.off('tile_preview');
+			}
+		});
 	},
 
 };

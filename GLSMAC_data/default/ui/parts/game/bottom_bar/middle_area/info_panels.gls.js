@@ -1,7 +1,5 @@
 return {
 
-	panels: [],
-
 	refresh: (width) => {
 
 		const optimal_panel_size = 210;
@@ -56,6 +54,8 @@ return {
 	},
 
 	init: (p) => {
+
+		this.panels = [];
 
 		p.ui.class('bottombar-info-panel').extend('bottombar-frame-inner').set({
 			top: 0,
