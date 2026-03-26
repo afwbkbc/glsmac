@@ -299,7 +299,11 @@ const types::Vec3 UnitManager::GetCloserCoords( const types::Vec3& coords, const
 void UnitManager::AddSelectable( Unit* unit ) {
 	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
 	if ( it == m_selectable_units.end() ) {
+		const bool was_empty = m_selectable_units.empty();
 		m_selectable_units.push_back( unit );
+		if ( was_empty ) {
+			SelectNextUnitMaybe();
+		}
 	}
 }
 
