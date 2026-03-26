@@ -108,6 +108,9 @@ void Geometry::SetWidth( const coord_t px ) {
 	if ( m_width != px || !( m_stick_bits & STICK_WIDTH ) ) {
 		m_width = px;
 		m_stick_bits |= STICK_WIDTH;
+		if ( m_stick_bits & STICK_RIGHT ) {
+			m_stick_bits &= ~( STICK_RIGHT );
+		}
 		NeedUpdate();
 	}
 }
@@ -124,6 +127,9 @@ void Geometry::SetHeight( const coord_t px ) {
 	if ( m_height != px || !( m_stick_bits & STICK_HEIGHT ) ) {
 		m_height = px;
 		m_stick_bits |= STICK_HEIGHT;
+		if ( m_stick_bits & STICK_BOTTOM ) {
+			m_stick_bits &= ~( STICK_BOTTOM );
+		}
 		NeedUpdate();
 	}
 }

@@ -38,19 +38,11 @@ return {
 		const header_height = 24;
 		const padding = 3;
 
-		p.ui.class('game-popup').set({
+		p.ui.class('game-popup').extend('default-panel').set({
 			align: 'center',
-			background: 'interface.pcx:crop(86, 665, 109, 688)',
-			border: 'rgb(73, 108, 61),2',
 			blocker: 'rgba(0, 0, 0, 120)',
 		});
-		p.ui.class('game-popup-block').set({
-			background: 'interface.pcx:crop(86, 548, 109, 571)',
-			border: 'rgb(35, 59, 34),2',
-			left: padding,
-			right: padding,
-			top: padding,
-		});
+		p.ui.class('game-popup-block').extend('default-panel-inner');
 		p.ui.class('game-popup-header').extend('game-popup-block').set({
 			align: 'top center',
 			left: padding,

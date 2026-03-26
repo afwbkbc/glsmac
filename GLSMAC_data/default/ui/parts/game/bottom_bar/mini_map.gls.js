@@ -33,7 +33,7 @@ return {
 
 		// the block under minimap
 		const control_panel = this.frame.panel({
-			class: 'bottombar-frame',
+			class: 'bottombar-panel',
 			align: 'bottom',
 			bottom: 1,
 			left: 1,
@@ -43,7 +43,7 @@ return {
 
 		// info block
 		const info_block = control_panel.panel({
-			class: 'bottombar-frame-inner',
+			class: 'bottombar-panel-inner',
 			align: 'left',
 			left: 3,
 			top: 3,

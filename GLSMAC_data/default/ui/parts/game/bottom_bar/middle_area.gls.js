@@ -8,14 +8,14 @@ return {
 
 		this.pp = {};
 
-		p.ui.class('bottombar-frame-page-button').extend('bottombar-frame-button').set({
+		p.ui.class('bottombar-panel-page-button').extend('bottombar-panel-button').set({
 			width: 21,
 			height: 21,
 			font: 'arialnb.ttf:17',
 			color: 'black',
 		});
 
-		p.ui.class('bottombar-frame-page').set({
+		p.ui.class('bottombar-panel-page').set({
 			left: 3,
 			top: 3,
 			bottom: 3,
@@ -26,7 +26,7 @@ return {
 			ui: p.ui,
 			game: p.game,
 			frame: p.el.panel({
-				class: 'bottombar-frame',
+				class: 'bottombar-panel',
 				left: 263,
 				top: 69,
 				right: 263,

@@ -149,7 +149,7 @@ return {
 	init: (p) => {
 
 		const frame_outer = p.el.panel({
-			class: 'bottombar-frame',
+			class: 'bottombar-panel',
 			align: 'top left',
 			top: 59,
 			bottom: 7,
@@ -157,7 +157,7 @@ return {
 			width: 106,
 		});
 		this.frame = frame_outer.panel({
-			class: 'bottombar-frame-inner',
+			class: 'bottombar-panel-inner',
 		});
 
 		p.map.on('tile_preview', (e) => {

@@ -15,7 +15,7 @@ return {
 		});
 
 		this.page = p.frame.listview({
-			class: 'bottombar-frame-inner bottombar-frame-page',
+			class: 'bottombar-panel-inner bottombar-panel-page',
 			itemsize: 17,
 			max_items: 50,
 			padding: 3,
@@ -23,7 +23,7 @@ return {
 		});
 
 		this.button = p.frame.button({
-			class: 'bottombar-frame-page-button',
+			class: 'bottombar-panel-page-button',
 			align: 'top right',
 			top: 5,
 			right: 5,

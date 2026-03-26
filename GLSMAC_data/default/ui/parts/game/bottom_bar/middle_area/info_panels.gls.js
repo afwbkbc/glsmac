@@ -57,19 +57,19 @@ return {
 
 		this.panels = [];
 
-		p.ui.class('bottombar-info-panel').extend('bottombar-frame-inner').set({
+		p.ui.class('bottombar-info-panel').extend('bottombar-panel-inner').set({
 			top: 0,
 			bottom: 0,
 			//height: 97,
 		});
 
 		this.page = p.frame.panel({
-			class: 'bottombar-frame-page',
+			class: 'bottombar-panel-page',
 			overflow: 'hidden',
 		});
 
 		this.button = p.frame.button({
-			class: 'bottombar-frame-page-button',
+			class: 'bottombar-panel-page-button',
 			align: 'bottom right',
 			bottom: 5,
 			right: 5,

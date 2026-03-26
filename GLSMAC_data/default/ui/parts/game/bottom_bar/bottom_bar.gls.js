@@ -21,21 +21,10 @@ return {
 		this.pp = {};
 		this.message_fade_timer = null;
 
-		p.ui.class('bottombar-frame').set({
-			background: 'interface.pcx:crop(86, 665, 109, 688)',
-			border: 'rgb(49, 78, 44),2',
-		});
+		p.ui.class('bottombar-panel').extend('default-panel');
+		p.ui.class('bottombar-panel-inner').extend('default-panel-inner');
 
-		p.ui.class('bottombar-frame-inner').set({
-			background: 'interface.pcx:crop(86, 548, 109, 571)',
-			border: 'rgb(35, 59, 34),2',
-			left: 3,
-			top: 3,
-			right: 3,
-			bottom: 3,
-		});
-
-		p.ui.class('bottombar-frame-button').set({
+		p.ui.class('bottombar-panel-button').set({
 			background: 'interface.pcx:crop(47, 587, 70, 610)',
 			border: 'black,2',
 			_hover: {

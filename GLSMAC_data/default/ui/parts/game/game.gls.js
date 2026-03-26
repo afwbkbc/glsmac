@@ -6,6 +6,20 @@ return (m) => {
 		'bottom_bar',
 	];
 
+	m.ui.class('default-panel').set({
+		background: 'interface.pcx:crop(86, 665, 109, 688)',
+		border: 'rgb(49, 78, 44),2',
+	});
+
+	m.ui.class('default-panel-inner').set({
+		background: 'interface.pcx:crop(86, 548, 109, 571)',
+		border: 'rgb(35, 59, 34),2',
+		left: 3,
+		top: 3,
+		right: 3,
+		bottom: 3,
+	});
+
 	m.glsmac.on('configure_game', (e) => {
 
 		const game = e.game;

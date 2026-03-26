@@ -158,7 +158,7 @@ return {
 		});
 
 		const frame_outer = p.el.panel({
-			class: 'bottombar-frame',
+			class: 'bottombar-panel',
 			align: 'bottom',
 			bottom: 7,
 			left: 245,
@@ -166,7 +166,7 @@ return {
 			height: 58,
 		});
 		this.frame = frame_outer.panel({
-			class: 'bottombar-frame-inner',
+			class: 'bottombar-panel-inner',
 		});
 
 		p.map.on('unit_preview', (e) => {
