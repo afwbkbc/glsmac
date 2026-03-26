@@ -1217,11 +1217,26 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			AbortAnimation( request->data.animation_abort.running_animation_id );
 			break;
 		}
+		case FrontendRequest::FR_TILE_SELECT: {
+			auto* const tile = m_tm->GetTile( request->data.tile_select.x, request->data.tile_select.y );
+			ASSERT( tile, "tile not found" );
+			m_tile_at_query_purpose = backend::TQP_TILE_SELECT;
+			SelectTileOrUnit( tile, 0 );
+			break;
+		}
 		case FrontendRequest::FR_UNIT_SELECT: {
 			auto* const unit = m_um->GetUnitById( request->data.unit_select.unit_id );
 			if ( unit && unit->IsActive() ) {
 				m_um->SelectUnit( unit, true );
 				ScrollToTile( unit->GetTile(), true );
+			}
+			break;
+		}
+		case FrontendRequest::FR_BASE_SELECT: {
+			auto* const base = m_bm->GetBaseById( request->data.base_select.base_id );
+			if ( base ) {
+				m_bm->SelectBase( base );
+				ScrollToTile( base->GetTile(), true );
 			}
 			break;
 		}
@@ -1636,27 +1651,6 @@ void Game::Initialize(
 							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
 								CompleteTurn();
 								break;
-							}
-							auto* const unit = m_um->GetSelectedUnit();
-							if ( unit ) {
-								ASSERT( unit->IsActive(), "selected unit not active" );
-								auto* const base = unit->GetTile()->GetBase();
-								if ( base ) {
-									DeselectTileOrUnit();
-									OpenBasePopup( base );
-									break;
-								}
-							}
-							else {
-								auto* const tile = m_tm->GetSelectedTile();
-								if ( tile ) {
-									auto* const base = tile->GetBase();
-									if ( base ) {
-										DeselectTileOrUnit();
-										OpenBasePopup( base );
-										break;
-									}
-								}
 							}
 							break;
 						}
@@ -2191,6 +2185,16 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 		case backend::TQP_TILE_SELECT: {
 			m_um->DeselectUnit();
 			Log( "Selected tile at " + tile->GetCoords().ToString() + " ( " + tile->GetRenderData().selection_coords.center.ToString() + " )" );
+			const auto& c = tile->GetCoords();
+			auto* const t = m_game->GetMap()->GetTile( c.x, c.y );
+			Trigger(
+				m_game, "tile_select", ARGS_F( &t ) {
+					{
+						"tile",
+						t->Wrap( GSE_CALL )
+					},
+				}; }
+			);
 			ShowTileSelector();
 			if ( !m_glsmac ) {
 				// legacy ui

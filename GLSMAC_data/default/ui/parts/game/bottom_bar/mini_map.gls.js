@@ -273,6 +273,11 @@ return {
 			return true;
 		});
 
+		minimap.on('remove', (e) => {
+			p.game.off('turn');
+			p.game.off('turn_status');
+		});
+
 	},
 
 };

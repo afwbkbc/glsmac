@@ -3,6 +3,7 @@ return {
 	available_popups: [
 		'turn_confirmation',
 		'please_dont_go',
+		'base_screen',
 	],
 
 	sliding_interval: 5,
@@ -59,7 +60,6 @@ return {
 			border: 'rgb(35, 59, 34),2',
 			left: padding,
 			right: padding,
-			top: header_height + padding + padding,
 		});
 		p.ui.class('game-popup-button').set({
 			left: padding,
@@ -95,63 +95,22 @@ return {
 			height: p.ui.get_height() - that.bottombar_height,
 		};
 
-		const f_resize = (data) => {
-			data.el.top = (this.viewport_size.height - data.height) / 2;
-			data.el.bottom = 0;
-		};
-
 		p.ui.on('resize', (e) => {
 			that.viewport_size = {
 				height: e.height - that.bottombar_height,
 			};
-			const is_hiding = this.popup != null && this.popup_cb == null;
+			const is_hiding = this.popup != null && this.popup_result != null;
 			that.sliding_stop();
 			if (is_hiding) {
-				this.hide();
+				this.clear();
 			}
 			for (data of this.popups) {
-				f_resize(data);
+				this.resize(data);
 			}
 			if (this.popup != null) {
 				this.sliding_speed = (this.viewport_size.height - this.popup.el.top) / (this.sliding_time / this.sliding_interval);
 			}
 		});
-
-		const f_hide = (data) => {
-			if (data != this.popup) {
-				#print('WARNING: popup mismatch');
-			}
-
-			if (this.sliding_timer != null) {
-				// if canceled early - start from where it is
-				this.target_top = data.el.top;
-			}
-			this.sliding_stop();
-
-			if (#is_defined(this.popup_def.on_hide)) {
-				this.popup_def.on_hide();
-			}
-
-			this.target_top = this.viewport_size.height;
-			this.sound_down.play();
-			this.sliding_timer = #async(this.sliding_interval, () => {
-				const new_top = data.el.top + this.sliding_speed;
-				if (new_top >= this.target_top) {
-					data.el.top = this.target_top;
-					this.sliding_timer = null;
-					if (that.popup_cb != null && that.popup_result != null) {
-						that.popup_cb(that.popup_result);
-						that.popup_cb = null;
-						that.popup_result = null;
-					}
-					this.hide();
-					f_resize(data);
-					return false;
-				}
-				data.el.top = new_top;
-				return true;
-			});
-		};
 
 		const pp = {
 			create: (title, width, height, generator) => {
@@ -162,14 +121,19 @@ return {
 				});
 				popup.hide();
 
-				const header = popup.panel({
-					class: 'game-popup-header',
-				});
-				header.text({
-					class: 'game-popup-text',
-					align: 'center',
-					text: title,
-				});
+				let body_top = padding;
+
+				if (title != '') {
+					const header = popup.panel({
+						class: 'game-popup-header',
+					});
+					header.text({
+						class: 'game-popup-text',
+						align: 'center',
+						text: title,
+					});
+					body_top += header_height + padding;
+				}
 
 				// side borders
 				const borderheight = 529;
@@ -204,12 +168,13 @@ return {
 
 				const body = popup.panel({
 					class: 'game-popup-body',
+					top: body_top,
 					height: height,
 				});
 
 				const f_result = (result) => {
 					that.popup_result = result;
-					f_hide(data);
+					that.hide(data.id);
 				};
 
 				generator(body, f_result);
@@ -226,7 +191,7 @@ return {
 					return true;
 				});
 
-				f_resize(data);
+				that.resize(data);
 
 				return data;
 
@@ -236,6 +201,7 @@ return {
 		for (popup of this.available_popups) {
 			this.popup_defs[popup] = #include(popup);
 			this.popups[popup] = this.popup_defs[popup].init(pp);
+			this.popups[popup].id = popup;
 		}
 
 	},
@@ -248,7 +214,47 @@ return {
 		}
 	},
 
-	hide: () => {
+	hide: (popup) => {
+		const data = this.popups[popup];
+		if (!#is_defined(data)) {
+			throw Error('Unknown popup: ' + popup);
+		}
+		if (data != this.popup) {
+			return;
+		}
+
+		if (this.sliding_timer != null) {
+			// if canceled early - start from where it is
+			this.target_top = data.el.top;
+		}
+		this.sliding_stop();
+
+		if (#is_defined(this.popup_def.on_hide)) {
+			this.popup_def.on_hide();
+		}
+
+		this.target_top = this.viewport_size.height;
+		this.sound_down.play();
+		this.sliding_timer = #async(this.sliding_interval, () => {
+			const new_top = data.el.top + this.sliding_speed;
+			if (new_top >= this.target_top) {
+				data.el.top = this.target_top;
+				this.sliding_timer = null;
+				if (this.popup_cb != null && this.popup_result != null) {
+					this.popup_cb(this.popup_result);
+					this.popup_cb = null;
+					this.popup_result = null;
+				}
+				this.clear();
+				this.resize(data);
+				return false;
+			}
+			data.el.top = new_top;
+			return true;
+		});
+	},
+
+	clear: () => {
 		if (this.popup != null) {
 			this.sliding_stop();
 			this.popup.el.hide();
@@ -258,17 +264,39 @@ return {
 		}
 	},
 
+	resize: (data) => {
+		data.el.top = (this.viewport_size.height - data.height) / 2;
+		data.el.bottom = 0;
+	},
+
+	set: (popup, data) => {
+		const def = this.popup_defs[popup];
+		if (!#is_defined(def)) {
+			throw Error('Unknown popup: ' + popup);
+		}
+		if (#is_defined(def.set)) {
+			def.set(data);
+		}
+	},
+
 	show: (popup, cb) => {
+		if (this.popup != null && this.popup.id == popup) {
+			return; // already opened
+		}
 		this.menu.close_all();
 		if (this.popup != null) {
-			this.hide();
+			this.clear();
 		}
 		this.popup = this.popups[popup];
 		this.popup_def = this.popup_defs[popup];
 		if (!#is_defined(this.popup) || !#is_defined(this.popup_def)) {
 			throw Error('Unknown popup: ' + popup);
 		}
-		this.popup_cb = cb;
+		if (#is_defined(cb)) {
+			this.popup_cb = cb;
+		} else {
+			this.popup_cb = null;
+		}
 
 		if (#is_defined(this.popup_def.on_show)) {
 			this.popup_def.on_show();

@@ -203,6 +203,14 @@ void BaseManager::SelectBase( Base* base ) {
 			},
 		}; }
 	);
+	m_game->Trigger(
+		game, "base_select", ARGS_F( &b ) {
+			{
+				"base",
+				b->Wrap( GSE_CALL )
+			},
+		}; }
+	);
 	m_game->OpenBasePopup( base );
 }
 

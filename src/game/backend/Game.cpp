@@ -914,12 +914,35 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"select_tile",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
+				auto fr = FrontendRequest( FrontendRequest::FR_TILE_SELECT );
+				fr.data.tile_select.x = tile->coord.x;
+				fr.data.tile_select.y = tile->coord.y;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
 			"select_unit",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
 				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SELECT );
 				fr.data.unit_select.unit_id = unit->m_id;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"select_base",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( base, 0, base::Base );
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SELECT );
+				fr.data.base_select.base_id = base->m_id;
 				AddFrontendRequest( fr );
 				return VALUE( gse::value::Undefined );
 			} )

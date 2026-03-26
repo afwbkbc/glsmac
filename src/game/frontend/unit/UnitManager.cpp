@@ -148,11 +148,7 @@ void UnitManager::SpawnUnit(
 	m_game->RenderTile( tile, m_selected_unit );
 
 	if ( unit->IsActive() ) {
-		const bool was_selectables_empty = m_selectable_units.empty();
 		AddSelectable( unit );
-		if ( was_selectables_empty ) {
-			SelectNextUnitMaybe();
-		}
 	}
 }
 
@@ -249,6 +245,14 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 		auto* const u = game->GetUM()->GetUnit( id );
 		m_game->Trigger(
 			game->GetMap(), "unit_preview", ARGS_F( &u ) {
+				{
+					"unit",
+					u->Wrap( GSE_CALL )
+				},
+			}; }
+		);
+		m_game->Trigger(
+			game, "unit_select", ARGS_F( &u ) {
 				{
 					"unit",
 					u->Wrap( GSE_CALL )
@@ -398,18 +402,15 @@ const bool UnitManager::SelectNextUnitMaybe() {
 		return false;
 	}
 	auto* selected_unit = GetNextSelectable();
-	if ( selected_unit != m_selected_unit ) {
-		if ( selected_unit ) {
-			SelectUnit( selected_unit, true );
-			m_game->ScrollToTile( m_selected_unit->GetTile(), true );
-			return true;
-		}
-		else {
-			m_selected_unit = nullptr;
-			return false;
-		}
+	if ( selected_unit ) {
+		SelectUnit( selected_unit, true );
+		m_game->ScrollToTile( m_selected_unit->GetTile(), true );
+		return true;
 	}
-	return false;
+	else {
+		m_selected_unit = nullptr;
+		return false;
+	}
 }
 
 void UnitManager::SelectNextUnitOrSwitchToTileSelection() {
