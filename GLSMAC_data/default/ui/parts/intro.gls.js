@@ -9,14 +9,12 @@ return (m) => {
 			background: 'logo.pcx',
 		});
 
-		let escape_handler_id = 0;
 		let timer = null;
 		const next = () => {
-			m.root.off('keydown', escape_handler_id);
 			logo.remove();
 			m.glsmac.mainmenu();
 		};
-		escape_handler_id = m.root.on('keydown', (e) => {
+		logo.listen(m.root, 'keydown', (e) => {
 			if (e.code == 'ESCAPE') {
 				timer.stop();
 				next();

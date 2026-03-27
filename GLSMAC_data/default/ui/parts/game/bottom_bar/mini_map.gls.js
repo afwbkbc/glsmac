@@ -57,7 +57,7 @@ return {
 			left: 3,
 			text: 'Mission Year ' + #to_string(p.game.get_year()),
 		});
-		p.game.on('turn', (e) => {
+		minimap.listen(p.game, 'turn', (e) => {
 			info_year.text = 'Mission Year ' + #to_string(e.year);
 		});
 		const info_energy = info_block.text({
@@ -244,7 +244,7 @@ return {
 				}
 			}
 		};
-		p.game.on('turn_status', (e) => {
+		minimap.listen(p.game, 'turn_status', (e) => {
 			f_set_status(e.status);
 		});
 
@@ -271,11 +271,6 @@ return {
 				}
 			}
 			return true;
-		});
-
-		minimap.on('remove', (e) => {
-			p.game.off('turn');
-			p.game.off('turn_status');
 		});
 
 	},

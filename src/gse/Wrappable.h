@@ -20,7 +20,7 @@
 
 namespace gse {
 
-namespace value {
+namespace ui::dom {
 class Object;
 }
 
@@ -87,12 +87,17 @@ public:
 
 	virtual Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) = 0;
 
+	virtual void NotifyDependencyDestruction( const Wrappable* const dependency ) {}
+
 	void Link( value::Object* wrapobj );
 	void Unlink( value::Object* wrapobj );
 
+	void Depend( Wrappable* other );
+	void Undepend( Wrappable* other );
+
 	typedef uint16_t callback_id_t;
 	typedef std::function< void() > f_cleanup_t;
-	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, Value* const callback );
+	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, value::Callable* const callback );
 	virtual void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
 	virtual const bool HasHandlers( const std::string& event );
 	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< value_type_t > expected_return_type = {} );
@@ -117,6 +122,11 @@ protected:
 	std::mutex m_callbacks_mutex = {};
 
 	bool m_catchall = false;
+
+private:
+	std::mutex m_dependent_wrappables_mutex;
+	std::unordered_map< Wrappable*, size_t > m_dependent_wrappables = {};
+
 };
 
 }

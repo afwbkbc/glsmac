@@ -29,7 +29,7 @@ return (i) => {
 				}
 			};
 
-			i.glsmac.game.on('chat_message', (e) => {
+			body.listen(i.glsmac.game, 'chat_message', (e) => {
 				message(e.player.name + ': ' + e.text);
 			});
 
@@ -66,8 +66,9 @@ return (i) => {
 					i.popup.error(e.reason);
 				}
 			});
-			i.connection.on('game_state', (e) => {
-				i.connection.off('game_state'); // only initial state was needed
+			let state_listen_id = 0;
+			state_listen_id = body.listen(i.connection, 'game_state', (e) => {
+				body.unlisten(state_listen_id); // only initial state was needed
 				switch (e.state) {
 					case 'lobby': {
 						// nothing
@@ -90,10 +91,10 @@ return (i) => {
 					}
 				}
 			});
-			i.connection.on('player_join', (e) => {
+			body.listen(i.connection, 'player_join', (e) => {
 				message(e.player.name + ' joined the game.');
 			});
-			i.connection.on('player_leave', (e) => {
+			body.listen(i.connection, 'player_leave', (e) => {
 				message(e.player.name + ' left the game.');
 			});
 
@@ -163,7 +164,6 @@ return (i) => {
 			if (countdown_timer != null) {
 				countdown_timer.stop();
 			}
-			i.glsmac.game.off('chat_message');
 			for (cleanup of cleanups) {
 				cleanup();
 			}
@@ -172,10 +172,6 @@ return (i) => {
 					i.connection.close();
 					i.connection = #undefined;
 				}
-			} else {
-				// there will be different handlers
-				i.connection.off('player_join');
-				i.connection.off('player_leave');
 			}
 		},
 	});

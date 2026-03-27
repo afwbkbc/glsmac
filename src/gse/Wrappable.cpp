@@ -21,6 +21,12 @@ Wrappable::~Wrappable() {
 	for ( const auto& wrapobj : m_wrapobjs ) {
 		wrapobj->Unlink();
 	}
+	{
+		std::lock_guard guard( m_dependent_wrappables_mutex );
+		for ( const auto& wrappable : m_dependent_wrappables ) {
+			wrappable.first->NotifyDependencyDestruction( this );
+		}
+	}
 }
 
 void Wrappable::Link( value::Object* wrapobj ) {
@@ -33,12 +39,29 @@ void Wrappable::Unlink( value::Object* wrapobj ) {
 	m_wrapobjs.erase( wrapobj );
 }
 
-const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
+void Wrappable::Depend( Wrappable* other ) {
+	std::lock_guard guard( m_dependent_wrappables_mutex );
+	auto it = m_dependent_wrappables.find( other );
+	if ( it == m_dependent_wrappables.end() ) {
+		it = m_dependent_wrappables.insert( { other, 0 } ).first;
+	}
+	it->second++;
+}
+
+void Wrappable::Undepend( Wrappable* other ) {
+	std::lock_guard guard( m_dependent_wrappables_mutex );
+	const auto& it = m_dependent_wrappables.find( other );
+	ASSERT( it != m_dependent_wrappables.end(), "dependent wrappable not found" );
+	if ( !--it->second ) {
+		m_dependent_wrappables.erase( it );
+	}
+}
+
+const Wrappable::callback_id_t Wrappable::On( GSE_CALLABLE, const std::string& event, gse::value::Callable* const callback ) {
 	std::lock_guard guard( m_callbacks_mutex );
 	if ( event == "*" ) {
 		m_catchall = true;
 	}
-	ASSERT( callback->type == VT_CALLABLE, "callback not callable" );
 	auto it = m_callbacks.find( event );
 	if ( it == m_callbacks.end() ) {
 		it = m_callbacks.insert(

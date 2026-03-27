@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "Area.h"
+#include "Object.h"
 
 namespace types {
 class Sound;

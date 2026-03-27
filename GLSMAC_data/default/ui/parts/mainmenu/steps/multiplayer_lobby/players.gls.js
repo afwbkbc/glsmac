@@ -175,7 +175,7 @@ return (i) => {
 			remove_row(e.player);
 		});
 
-		game.on('player_update', (e) => {
+		body.listen(game, 'player_update', (e) => {
 			const id = #to_string(e.player.id);
 			if (e.player.is_ready() && !#is_defined(ready_players[id])) {
 				ready_players[id] = true;
@@ -211,9 +211,6 @@ return (i) => {
 			return true;
 		});
 
-	}, () => {
-		const game = i.glsmac.game;
-		game.off('player_update');
 	});
 
 };

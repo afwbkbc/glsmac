@@ -90,6 +90,23 @@ Object::Object( DOM_ARGS_T )
 		m_parent->RemoveChild( GSE_CALL, this );
 		return nullptr;
 	} ) );
+	Method( GSE_CALL, "listen", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 3 );
+		N_GET( object, 0, Object );
+		if ( !object->wrapobj ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Object not listenable: " + object->ToString() );
+		}
+		N_GETVALUE( event, 1, String );
+		N_GET_CALLABLE( callback, 2 );
+		const auto listen_id = AddListener( GSE_CALL, object->wrapobj, event, callback );
+		return VALUE( gse::value::Int,, listen_id );
+	} ) );
+	Method( GSE_CALL, "unlisten", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 );
+		N_GETVALUE( listen_id, 0, Int );
+		RemoveListener( GSE_CALL, listen_id );
+		return nullptr;
+	} ) );
 }
 
 Object::~Object() {
@@ -219,6 +236,17 @@ void Object::Destroy( GSE_CALLABLE ) {
 			scene->RemoveActor( actor );
 		}
 	}
+	{
+		std::lock_guard guard( m_listeners_mutex );
+		for ( const auto& l : m_listeners ) {
+			if ( l.second.object ) {
+				l.second.object->Off( GSE_CALL, l.second.event, l.second.handler_id );
+				l.second.object->Undepend( this );
+			}
+		}
+		m_listeners.clear();
+		m_object_listeners.clear();
+	}
 	m_is_destroyed = true;
 }
 
@@ -287,6 +315,17 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	GC_DEBUG_END();
 
 	GC_DEBUG_END();
+}
+
+void Object::NotifyDependencyDestruction( const Wrappable* const dependency ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto& it = m_object_listeners.find( dependency );
+	ASSERT( it != m_object_listeners.end(), "dependencies not found" );
+	for ( const auto& listen_id : it->second ) {
+		ASSERT( m_listeners.find( listen_id ) != m_listeners.end(), "listener not found" );
+		ASSERT( m_listeners.at( listen_id ).object, "listener object already unlinked" );
+		m_listeners.at( listen_id ).object = nullptr;
+	}
 }
 
 const bool Object::IsEventRelevant( const input::Event& event ) const {
@@ -568,6 +607,45 @@ void Object::Deglobalize( GSE_CALLABLE ) {
 		m_ui->RemoveGlobalSingleton( GSE_CALL, this );
 		m_is_globalized = false;
 	}
+}
+
+const gse::Wrappable::callback_id_t Object::AddListener( GSE_CALLABLE, gse::Wrappable* const object, const std::string& event, gse::value::Callable* const callback ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto listen_id = m_next_listener_id++;
+	object->Depend( this );
+	const auto handler_id = object->On( GSE_CALL, event, callback );
+	m_listeners.insert( { listen_id, {
+		object,
+		event,
+		handler_id
+	}});
+	auto it = m_object_listeners.find( object );
+	if ( it == m_object_listeners.end() ) {
+		it = m_object_listeners.insert({ object, {} } ).first;
+	}
+	it->second.insert( listen_id );
+	return listen_id;
+}
+
+void Object::RemoveListener( GSE_CALLABLE, const gse::Wrappable::callback_id_t listen_id ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto& it = m_listeners.find( listen_id );
+	if ( it == m_listeners.end() ) {
+		GSE_ERROR( gse::EC.INVALID_HANDLER, "Listener not found: " + std::to_string( listen_id ) );
+	}
+	auto* const object = it->second.object;
+	if ( object ) {
+		object->Off( GSE_CALL, it->second.event, it->second.handler_id );
+		object->Undepend( this );
+	}
+	const auto& it2 = m_object_listeners.find( object );
+	ASSERT( it2 != m_object_listeners.end(), "object listeners not found" );
+	ASSERT( it2->second.find( listen_id ) != it2->second.end(), "object listener not found" );
+	it2->second.erase( listen_id );
+	if ( it2->second.empty() ) {
+		m_object_listeners.erase( it2 );
+	}
+	m_listeners.erase( it );
 }
 
 void Object::InitAndValidate( GSE_CALLABLE ) {

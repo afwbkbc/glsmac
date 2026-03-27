@@ -10,7 +10,7 @@ GCWrappable::GCWrappable( gc::Space* const gc_space )
 
 GCWrappable::~GCWrappable() {}
 
-const GCWrappable::callback_id_t GCWrappable::On( GSE_CALLABLE, const std::string& event, gse::Value* const callback ) {
+const GCWrappable::callback_id_t GCWrappable::On( GSE_CALLABLE, const std::string& event, gse::value::Callable* const callback ) {
 	Persist( callback );
 	return Wrappable::On( GSE_CALL, event, callback );
 }

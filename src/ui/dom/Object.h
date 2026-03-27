@@ -2,6 +2,7 @@
 
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include <mutex>
 
 #include "env/Env.h"
@@ -92,6 +93,8 @@ public:
 	static Object* Unwrap( gse::Value* const value );
 	static const gse::value::Object::object_class_t WRAP_CLASS;
 
+	void NotifyDependencyDestruction( const Wrappable* const dependency ) override;
+
 protected:
 
 	virtual const bool IsEventRelevant( const input::Event& event ) const;
@@ -164,6 +167,18 @@ private:
 
 	bool m_is_iterable_set = false;
 	bool m_is_globalized = false;
+
+	std::mutex m_listeners_mutex;
+	gse::Wrappable::callback_id_t m_next_listener_id = 1;
+	struct listener_t {
+		gse::Wrappable* object;
+		std::string event;
+		gse::Wrappable::callback_id_t handler_id;
+	};
+	std::unordered_map< gse::Wrappable::callback_id_t, listener_t > m_listeners = {};
+	std::unordered_map< const gse::Wrappable*, std::unordered_set< gse::Wrappable::callback_id_t > > m_object_listeners = {};
+	const gse::Wrappable::callback_id_t AddListener( GSE_CALLABLE, gse::Wrappable* const object, const std::string& event, gse::value::Callable* const callback );
+	void RemoveListener( GSE_CALLABLE, const gse::Wrappable::callback_id_t listen_id );
 
 private:
 	friend class Container;

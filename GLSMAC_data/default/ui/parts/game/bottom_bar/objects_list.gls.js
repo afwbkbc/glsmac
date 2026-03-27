@@ -171,7 +171,7 @@ return {
 			class: 'bottombar-panel-inner',
 		});
 
-		p.map.on('unit_preview', (e) => {
+		this.frame.listen(p.map, 'unit_preview', (e) => {
 			if (e.unit != null) {
 				const tile = e.unit.get_tile();
 				if (tile != this.selected_tile) {
@@ -185,27 +185,27 @@ return {
 			}
 		});
 
-		p.map.on('base_preview', (e) => {
+		this.frame.listen(p.map, 'base_preview', (e) => {
 			const tile = e.base.get_tile();
 			if (tile != this.selected_tile) {
 				this.update_tile(tile);
 			}
 		});
 
-		p.map.on('tile_preview', (e) => {
+		this.frame.listen(p.map, 'tile_preview', (e) => {
 			if (e.tile != this.selected_tile) {
 				this.update_tile(e.tile);
 			}
 		});
 
-		p.game.on('unit_select', (e) => {
+		this.frame.listen(p.game, 'unit_select', (e) => {
 			this.p.modules.popup.hide('base_screen');
 			const key = #to_string(e.unit.id);
 			this.set_active_item(this.unit_items[key]);
 			this.selected_object = e.unit;
 		});
 
-		p.game.on('base_select', (e) => {
+		this.frame.listen(p.game, 'base_select', (e) => {
 			const key = #to_string(e.base.id);
 			this.set_active_item(this.base_items[key]);
 			const last_selected_object = this.selected_object;
@@ -229,32 +229,20 @@ return {
 			});
 		});
 
-		p.game.on('tile_select', (e) => {
+		this.frame.listen(p.game, 'tile_select', (e) => {
 			if (this.selected_object != null) {
 				this.selected_object = null;
 				this.set_active_item(null);
 			}
 		});
 
-		p.game.on('turn', (e) => {
+		this.frame.listen(p.game, 'turn', (e) => {
 			if (this.selected_object != null) {
 				this.selected_object = null;
 				this.set_active_item(null);
 			}
 		});
 
-		// TODO: make event dom object
-		frame_outer.on('remove', (e) => {
-			if (#is_defined(p.map)) {
-				p.map.off('unit_preview');
-				p.map.off('base_preview');
-				p.map.off('tile_preview');
-				p.game.off('unit_select');
-				p.game.off('base_select');
-				p.game.off('tile_select');
-				p.game.off('turn');
-			}
-		});
 	},
 
 };

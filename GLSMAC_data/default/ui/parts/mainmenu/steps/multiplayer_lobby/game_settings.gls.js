@@ -101,7 +101,7 @@ return (i) => {
 
 		const line_height = 28;
 
-		game.on('game_settings', (e) => {
+		body.listen(game, 'game_settings', (e) => {
 			for (s of e.settings) {
 				if (#is_defined(line_keys[s[0]])) {
 					// TODO: one line
@@ -143,9 +143,6 @@ return (i) => {
 			}
 			top += line_height;
 		}
-	}, () => {
-		const game = i.glsmac.game;
-		game.off('game_settings');
 	});
 
 };
