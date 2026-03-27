@@ -273,6 +273,9 @@ return {
 			return true;
 		});
 
+		this.frame.on('remove', (e) => { // TODO: dom async method
+			f_blink_stop();
+		});
 	},
 
 };

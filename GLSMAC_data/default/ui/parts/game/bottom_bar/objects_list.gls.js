@@ -47,7 +47,10 @@ return {
 		const key = #to_string(object.id);
 		switch (cls) {
 			case 'Unit': {
-				this.unit_items[key] = item;
+				this.units[key] = {
+					item: item,
+					object: object
+				};
 				const p = this.p; // TODO: make this work within object
 				item.text({
 					class: 'bottombar-objects-list-item-text',
@@ -62,7 +65,10 @@ return {
 				break;
 			}
 			case 'Base': {
-				this.base_items[key] = item;
+				this.bases[key] = {
+					item: item,
+					object: object
+				};
 				item.on('mousedown', (e) => {
 					this.set_active_item(null);
 					this.p.game.select_base(object);
@@ -89,8 +95,8 @@ return {
 		if (#is_defined(this.list)) {
 			this.list.remove();
 			this.set_active_item(null);
-			this.unit_items = {};
-			this.base_items = {};
+			this.units = {};
+			this.bases = {};
 		}
 		this.list = this.frame.scrollview({
 			left: 2,
@@ -123,9 +129,10 @@ return {
 
 		this.selected_tile = null;
 		this.selected_object = null;
-		this.unit_items = {};
-		this.base_items = {};
+		this.units = {};
+		this.bases = {};
 		this.active_item = null;
+		this.is_turn_active = true;
 
 		this.p = p;
 
@@ -178,7 +185,7 @@ return {
 					this.update_tile(tile);
 				}
 				const key = #to_string(e.unit.id);
-				if (!#is_defined(this.unit_items[key])) {
+				if (!#is_defined(this.units[key])) {
 					this.add_object(e.unit, this.list_width);
 					this.list_width = this.list_width + this.object_width;
 				}
@@ -201,13 +208,13 @@ return {
 		this.frame.listen(p.game, 'unit_select', (e) => {
 			this.p.modules.popup.hide('base_screen');
 			const key = #to_string(e.unit.id);
-			this.set_active_item(this.unit_items[key]);
+			this.set_active_item(this.units[key].item);
 			this.selected_object = e.unit;
 		});
 
 		this.frame.listen(p.game, 'base_select', (e) => {
 			const key = #to_string(e.base.id);
-			this.set_active_item(this.base_items[key]);
+			this.set_active_item(this.bases[key].item);
 			const last_selected_object = this.selected_object;
 			this.selected_object = e.base;
 			this.p.modules.popup.set('base_screen', {
@@ -241,6 +248,34 @@ return {
 				this.selected_object = null;
 				this.set_active_item(null);
 			}
+		});
+
+		this.frame.listen(p.game, 'turn_status', (e) => {
+			this.is_turn_active = e.status == 'active';
+		});
+
+		this.frame.on('keydown', (e) => {
+			if (
+				!this.p.modules.popup.is_shown() && // TODO: make universal key overrides in popups
+				this.is_turn_active && // TODO: override by turn complete button
+				e.modifiers == {} &&
+				e.code == 'ENTER'
+			) {
+				// open base screen if base is present
+				for (base of this.bases) {
+					this.p.game.select_base(base.object);
+					return true;
+				}
+				if (this.selected_object == null) {
+					// select first unit if nothing is selected
+					for (unit of this.units) {
+						this.p.game.select_unit(unit.object);
+						return true;
+					}
+				}
+				return true;
+			}
+			return false;
 		});
 
 	},

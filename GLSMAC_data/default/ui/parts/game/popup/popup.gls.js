@@ -320,4 +320,11 @@ return {
 		this.popup.el.show();
 	},
 
+	is_shown: () => {
+		if (this.popup != null) {
+			return true;
+		}
+		return false;
+	},
+
 };
