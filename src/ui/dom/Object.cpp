@@ -760,10 +760,6 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 		ASSERT( m_classes.empty(), "not initialized but classes not empty" );
 	}
 	m_classes.reserve( names.size() );
-	if ( !m_ui ) {
-		int a = 5;
-		a++;
-	}
 	ASSERT( m_ui, "ui detached" );
 	for ( const auto& name : names ) {
 		auto* c = m_ui->GetClass( name );
