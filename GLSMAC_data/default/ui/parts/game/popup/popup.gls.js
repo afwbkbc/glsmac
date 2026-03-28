@@ -115,6 +115,16 @@ return {
 		});
 
 		const pp = {
+
+			ui: p.ui,
+
+			hide: () => {
+				if (#is_defined(that.popup)) {
+					that.popup_result = false;
+					that.hide(that.popup.id);
+				}
+			},
+
 			create: (title, width, height, generator) => {
 
 				const popup = p.ui.root.window({
