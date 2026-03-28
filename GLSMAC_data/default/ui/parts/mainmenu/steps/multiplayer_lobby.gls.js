@@ -107,7 +107,7 @@ return (i) => {
 						if (countdown_timer == null) {
 							countdown_value = 3;
 							message('All players are ready. Starting game in ' + #to_string(countdown_value) + ' seconds...');
-							countdown_timer = #async(3 * 1000, () => {
+							countdown_timer = body.timer(3 * 1000, () => {
 								countdown_timer = null;
 
 								f_start_game();
@@ -161,9 +161,6 @@ return (i) => {
 			});
 		},
 		destructor: () => {
-			if (countdown_timer != null) {
-				countdown_timer.stop();
-			}
 			for (cleanup of cleanups) {
 				cleanup();
 			}

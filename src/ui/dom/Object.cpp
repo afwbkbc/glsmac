@@ -21,6 +21,9 @@
 #include "ui/geometry/Geometry.h"
 #include "ui/geometry/Rectangle.h"
 #include "types/mesh/Mesh.h"
+#include "gse/context/Context.h"
+#include "gse/GSE.h"
+#include "gse/Async.h"
 
 #include "Object.colormap.cpp"
 
@@ -106,6 +109,19 @@ Object::Object( DOM_ARGS_T )
 		N_GETVALUE( listen_id, 0, Int );
 		RemoveListener( GSE_CALL, listen_id );
 		return nullptr;
+	} ) );
+	Method( GSE_CALL, "timer", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( ms, 0, Int );
+		N_GET_CALLABLE( f, 1 );
+		gse::timer_id_t timer_id = 0;
+		auto* const timer = ctx->GetGSE()->GetAsync()->CreateTimer( ms, f, GSE_CALL_NOGC, &timer_id );
+		{
+			std::lock_guard guard( m_timer_ids_mutex );
+			ASSERT( m_timer_ids.find( timer_id ) == m_timer_ids.end(), "timer id collision" );
+			m_timer_ids.insert( timer_id );
+		}
+		return timer;
 	} ) );
 }
 
@@ -213,6 +229,15 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 void Object::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_is_destroyed, "already destroyed" );
 
+	{
+		std::lock_guard guard( m_timer_ids_mutex );
+		auto* const async = ctx->GetGSE()->GetAsync();
+		for ( const auto& timer_id : m_timer_ids ) {
+			async->StopTimer( timer_id );
+		}
+		m_timer_ids.clear();
+	}
+
 	Trigger( GSE_CALL, "remove" );
 
 	if ( m_is_globalized ) {
@@ -223,13 +248,11 @@ void Object::Destroy( GSE_CALLABLE ) {
 		g->Destroy();
 	}
 	Hide();
-	SetClasses( GSE_CALL, {} );
 	if ( m_ui ) {
+		SetClasses( GSE_CALL, {} );
 		if ( m_is_iterable_set ) {
 			m_ui->RemoveIterable( this );
 		}
-	}
-	{
 		auto* const scene = m_ui->GetScene();
 		std::lock_guard guard( m_actors_mutex );
 		for ( const auto& actor : m_actors ) {
@@ -737,6 +760,10 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 		ASSERT( m_classes.empty(), "not initialized but classes not empty" );
 	}
 	m_classes.reserve( names.size() );
+	if ( !m_ui ) {
+		int a = 5;
+		a++;
+	}
 	ASSERT( m_ui, "ui detached" );
 	for ( const auto& name : names ) {
 		auto* c = m_ui->GetClass( name );

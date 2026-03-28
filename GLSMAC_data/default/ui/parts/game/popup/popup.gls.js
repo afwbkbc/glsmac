@@ -11,6 +11,8 @@ return {
 
 	init: (p) => {
 
+		this.p = p;
+
 		this.popup_defs = {};
 		this.popups = {};
 
@@ -235,7 +237,7 @@ return {
 
 		this.target_top = this.viewport_size.height;
 		this.sound_down.play();
-		this.sliding_timer = #async(this.sliding_interval, () => {
+		this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
 			const new_top = data.el.top + this.sliding_speed;
 			if (new_top >= this.target_top) {
 				data.el.top = this.target_top;
@@ -306,7 +308,7 @@ return {
 		this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_interval);
 		this.popup.el.top = this.viewport_size.height;
 		this.sound_up.play();
-		this.sliding_timer = #async(this.sliding_interval, () => {
+		this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
 			const new_top = this.popup.el.top - this.sliding_speed;
 			if (new_top <= this.target_top) {
 				this.popup.el.top = this.target_top;

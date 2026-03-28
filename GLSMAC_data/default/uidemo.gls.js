@@ -558,10 +558,20 @@
 				header_background: 'navy',
 				align: 'center',
 			});
+			#print( 'Window opened' );
 			window.text({
 				align: 'center',
 				text: 'WINDOW',
 				class: 'balltext',
+			});
+			let window_seconds = 0;
+			window.timer( 1000, () => {
+				window_seconds++;
+				#print( 'Window is open for ' + #to_string( window_seconds ) + ' seconds' );
+				return true;
+			});
+			window.on('remove', () => {
+				#print( 'Window is closed' );
 			});
 			const closebtn = window.button({
 				class: 'button1 button2 button-active',
@@ -573,11 +583,11 @@
 				text: 'CLOSE',
 			});
 			closebtn.on('click', (e) => {
-					window.remove();
-					window = null;
-					return true;
-				})
-			;
+				window.remove();
+				window = null;
+				return true;
+			});
+
 			const blockbtn = window.button({
 				class: 'button1 button2',
 				align: 'bottom left',

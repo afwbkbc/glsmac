@@ -3,17 +3,11 @@ const manager = {
 	modules: {},
 	data_stack: [],
 
-	exit_timer: null,
-
 	register: (type, module) => {
 		this.modules[type] = module;
 	},
 
 	push: (type, data) => {
-		if (this.exit_timer != null) {
-			this.exit_timer.stop();
-			this.exit_timer = null;
-		}
 		this.data_stack :+ {
 			type: type,
 			data: data
@@ -37,14 +31,11 @@ const manager = {
 			}
 		}
 		else {
-			this.exit_timer = #async(0, () => {
-				this.exit_timer = null;
-				if (reset) {
-					m.glsmac.reset();
-				} else {
-					m.glsmac.exit();
-				}
-			});
+			if (reset) {
+				m.glsmac.reset();
+			} else {
+				m.glsmac.exit();
+			}
 		}
 	},
 

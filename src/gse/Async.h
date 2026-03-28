@@ -11,6 +11,10 @@
 
 namespace gse {
 
+namespace value {
+class Callable;
+}
+
 namespace context {
 class Context;
 }
@@ -19,13 +23,13 @@ CLASS( Async, gc::Object )
 
 	Async( gc::Space* const gc_space );
 
-	typedef size_t timer_id_t;
-
 	void Iterate( ExecutionPointer& ep );
 
-	const timer_id_t StartTimer( const size_t ms, gse::Value* const f, GSE_CALLABLE_NOGC );
+	const timer_id_t StartTimer( const size_t ms, gse::value::Callable* const f, GSE_CALLABLE_NOGC );
 	const bool StopTimer( const timer_id_t id );
 	void StopTimers();
+
+	gse::Value* const CreateTimer( const size_t ms, gse::value::Callable* const f, GSE_CALLABLE_NOGC, timer_id_t* const out_timer_id = nullptr );
 
 	void ProcessAndExit( ExecutionPointer& ep );
 
@@ -39,7 +43,7 @@ private:
 
 	struct timer_t {
 		size_t ms;
-		gse::Value* callable;
+		gse::value::Callable* callable;
 		gse::context::Context* ctx;
 		gse::si_t si;
 	};

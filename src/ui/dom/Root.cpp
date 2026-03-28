@@ -17,8 +17,9 @@ Root::Root( GSE_CALLABLE, UI* const ui )
 	Show();
 }
 
-Root::~Root() {
-	Container::DetachUI();
+void Root::Destroy( GSE_CALLABLE ) {
+	DetachUI();
+	Container::Destroy( GSE_CALL );
 }
 
 void Root::Resize( const uint16_t window_width, const uint16_t window_height ) {

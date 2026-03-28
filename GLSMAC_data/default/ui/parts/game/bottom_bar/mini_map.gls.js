@@ -178,7 +178,7 @@ return {
 		};
 		const f_blink_start = () => {
 			f_blink_stop();
-			blink_timer = #async(blink_rate, () => {
+			blink_timer = blinker.timer(blink_rate, () => {
 				if (blink_forward) {
 					blink_opacity += blink_speed;
 					if (blink_opacity >= 1.0) {
@@ -273,9 +273,6 @@ return {
 			return true;
 		});
 
-		this.frame.on('remove', (e) => { // TODO: dom async method
-			f_blink_stop();
-		});
 	},
 
 };

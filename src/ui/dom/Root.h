@@ -11,7 +11,8 @@ namespace dom {
 class Root : public Container {
 public:
 	Root( GSE_CALLABLE, UI* const ui );
-	virtual ~Root();
+
+	void Destroy( GSE_CALLABLE ) override;
 
 private:
 	friend class ui::UI;

@@ -69,7 +69,7 @@ return (m) => {
 
 	const slideout_and_cb = (cb) => {
 		if (menublock_animation == null) {
-			menublock_animation = #async(10, () => {
+			menublock_animation = current_menublock.timer(10, () => {
 				current_menublock.right = current_menublock.right - 60;
 				if (current_menublock.right > -414) {
 					return true;
@@ -213,7 +213,7 @@ return (m) => {
 			}
 
 			current_menublock.right = -354;
-			menublock_animation = #async(10, () => {
+			menublock_animation = current_menublock.timer(10, () => {
 				current_menublock.right = current_menublock.right + 60;
 				if (current_menublock.right < 0) {
 					return true;

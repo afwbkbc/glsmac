@@ -962,8 +962,8 @@ void Game::SetWidgetRelation( const ui::widget_type_t type, const size_t id, ui:
 				m_related_widgets.at( type ).find( it2->second ) != m_related_widgets.at( type ).end() &&
 				m_related_widgets.at( type ).at( it2->second ).find( widget ) != m_related_widgets.at( type ).at( it2->second ).end(),
 			"no related widgets entry or mismatch (on set)" );
-		it->second.erase( it2 );
 		m_related_widgets.at( type ).at( it2->second ).erase( widget );
+		it->second.erase( it2 );
 	}
 	it->second.insert_or_assign( widget, id );
 	auto it3 = m_related_widgets.find( type );

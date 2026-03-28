@@ -597,14 +597,21 @@ void Geometry::RemoveBoundaries( Geometry* const g ) {
         } \
         need_update = true; \
     }
-	X( x, <, low, c->GetLeft() );
-	X( x, >, high, c->GetLeft() + c->GetWidth() );
-	X( y, <, low, c->GetTop() );
-	X( y, >, high, c->GetTop() + c->GetHeight() );
+	X( x, <, low, c->m_effective_area.left );
+	X( x, >, high, c->m_effective_area.right );
+	X( y, <, low, c->m_effective_area.top );
+	X( y, >, high, c->m_effective_area.bottom );
+
 #undef X
 	if ( need_update ) {
 		m_boundaries.width = m_boundaries.x.high.value - m_boundaries.x.low.value;
 		m_boundaries.height = m_boundaries.y.high.value - m_boundaries.y.low.value;
+		if ( m_boundaries.width < 0 ) {
+			m_boundaries.width = 0;
+		}
+		if ( m_boundaries.height < 0 ) {
+			m_boundaries.height = 0;
+		}
 		if ( m_on_resize ) {
 			m_on_resize( m_boundaries.width, m_boundaries.height, false );
 		}

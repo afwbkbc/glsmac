@@ -207,7 +207,6 @@ void Container::Destroy( GSE_CALLABLE ) {
 	}
 	ASSERT( m_children.empty(), "destruction is requested but was unable to remove all children" );
 	ASSERT( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
-
 	Area::Destroy( GSE_CALL );
 }
 
@@ -491,7 +490,12 @@ void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
 	}
 	m_children.erase( obj->m_id );
 	if ( m_mouse_over_object == obj ) {
-		SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
+		if ( m_ui ) {
+			SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
+		}
+		else {
+			m_mouse_over_object = nullptr;
+		}
 	}
 	if ( !nodestroy ) {
 		obj->Destroy( GSE_CALL );

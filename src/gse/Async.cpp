@@ -10,6 +10,9 @@
 #include "Exception.h"
 #include "util/Time.h"
 #include "gc/Space.h"
+#include "gse/callable/Native.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/Object.h"
 
 namespace gse {
 
@@ -28,9 +31,9 @@ void Async::Iterate( ExecutionPointer& ep ) {
 	}
 }
 
-static Async::timer_id_t s_next_id = 0;
+static timer_id_t s_next_id = 0;
 
-const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_CALLABLE_NOGC ) {
+const timer_id_t Async::StartTimer( const size_t ms, gse::value::Callable* const f, GSE_CALLABLE_NOGC ) {
 	ASSERT( f->type == VT_CALLABLE, "invalid callable type: " + f->GetTypeString() );
 	if ( s_next_id == SIZE_MAX - 1 ) {
 		s_next_id = 0;
@@ -60,7 +63,7 @@ const Async::timer_id_t Async::StartTimer( const size_t ms, Value* const f, GSE_
 	return s_next_id;
 }
 
-const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
+const bool Async::StopTimer( const gse::timer_id_t id ) {
 	const auto& it = m_timers_ms.find( id );
 	if ( it == m_timers_ms.end() ) {
 		return false;
@@ -80,6 +83,29 @@ const bool Async::StopTimer( const gse::Async::timer_id_t id ) {
 void Async::StopTimers() {
 	m_timers.clear();
 	m_timers_ms.clear();
+}
+
+gse::Value* const Async::CreateTimer( const size_t ms, gse::value::Callable* const f, GSE_CALLABLE_NOGC, timer_id_t* const out_timer_id ) {
+	const auto timer_id = StartTimer( ms, f, GSE_CALL_NOGC );
+
+	auto* const gc_space = m_gc_space;
+	const gse::value::object_properties_t properties = {
+		{
+			"stop",
+			// recursive NATIVE_CALL doesn't work
+			NATIVE_CALL( this, timer_id ) {
+				N_EXPECT_ARGS( 0 );
+				StopTimer( timer_id );
+				return VALUE( gse::value::Undefined );
+			} ),
+		}
+	};
+
+	if ( out_timer_id ) {
+		*out_timer_id = timer_id;
+	}
+
+	return VALUEEXT( gse::value::Object, GSE_CALL, properties, "async" );
 }
 
 void Async::ProcessAndExit( ExecutionPointer& ep ) {
@@ -135,7 +161,9 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 
 	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
 
-	for ( const auto& it2 : it->second ) {
+	const auto timers = it->second;
+
+	for ( const auto& it2 : timers ) {
 		const auto& timer = it2.second;
 
 		auto* ctx = timer.ctx;
@@ -148,7 +176,7 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 			this,
 			[ this, &ctx, &ep, &si, &f, &timer, &repeat, &ms ]() {
 
-				const auto result = ( (value::Callable*)f )->Run( m_gc_space, GSE_CALL_NOGC, {} );
+				const auto result = f->Run( m_gc_space, GSE_CALL_NOGC, {} );
 
 				const auto& r = result;
 				if ( r ) {
@@ -189,7 +217,12 @@ void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer&
 				}
 			);
 		}
-		ASSERT( m_timers_ms.find( it2.first ) != m_timers_ms.end(), "related timers_ms entry not found" );
+
+		if ( m_timers_ms.find( it2.first ) == m_timers_ms.end() ) {
+			// timer was deleted in its own handler, should restart the whole cycle
+			return;
+		}
+
 		m_timers_ms.erase( it2.first );
 	}
 

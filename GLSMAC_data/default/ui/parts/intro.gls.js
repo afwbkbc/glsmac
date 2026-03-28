@@ -9,20 +9,18 @@ return (m) => {
 			background: 'logo.pcx',
 		});
 
-		let timer = null;
 		const next = () => {
 			logo.remove();
 			m.glsmac.mainmenu();
 		};
 		logo.listen(m.root, 'keydown', (e) => {
 			if (e.code == 'ESCAPE') {
-				timer.stop();
 				next();
 				return true;
 			}
 			return false;
 		});
-		timer = #async(1000, () => {
+		logo.timer(1000, () => {
 			next();
 			return false;
 		});

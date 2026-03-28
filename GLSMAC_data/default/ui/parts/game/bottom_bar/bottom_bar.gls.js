@@ -8,7 +8,7 @@ return {
 			this.message_fade_timer.stop();
 		}
 		this.message.text = text;
-		this.message_fade_timer = #async(5000, () => {
+		this.message_fade_timer = this.el.timer(5000, () => {
 			this.message_fade_timer = null;
 			this.message.text = '';
 		});
@@ -53,7 +53,7 @@ return {
 		});
 
 		const height = this.height; // TODO: fix this within objects
-		const el = p.root.area({
+		this.el = p.root.area({
 			zindex: 0.8,
 			align: 'bottom',
 			height: height,
@@ -61,16 +61,10 @@ return {
 			right: 0,
 		});
 
-		// TODO: make timer dom object
-		el.on('remove', (e) => {
-			if (this.message_fade_timer != null) {
-				this.message_fade_timer.stop();
-				this.message_fade_timer = null;
-			}
-		});
+		const that = this;
 
 		const background = {
-			under: el.surface({
+			under: that.el.surface({
 				zindex: 0.2,
 				left: 0,
 				right: 0,
@@ -78,19 +72,19 @@ return {
 				bottom: 0,
 				background: 'black',
 			}),
-			right: el.surface({
+			right: that.el.surface({
 				zindex: 0.3,
 				align: 'right',
 				width: 520,
 				background: 'console2_a.pcx:crop(504, 0, 1023, 256)',
 			}),
-			left: el.surface({
+			left: that.el.surface({
 				zindex: 0.4,
 				align: 'left',
 				width: 356,
 				background: 'console2_a.pcx:crop(0, 0, 356, 256)',
 			}),
-			middle: el.surface({
+			middle: that.el.surface({
 				zindex: 0.5,
 				left: 356,
 				right: 520,
@@ -98,14 +92,14 @@ return {
 			}),
 		};
 
-		this.message = el.text({
+		this.message = this.el.text({
 			left: 228,
 			top: 10,
 			font: 'arialnb.ttf:18',
 			color: 'rgb(232,212,140)',
 		});
 
-		const btn_left_menu = el.button({
+		const btn_left_menu = this.el.button({
 			class: 'bottombar-menu-button',
 			align: 'top left',
 			left: 11,
@@ -114,8 +108,6 @@ return {
 			volume: 0.4,
 			text: 'MENU',
 		});
-
-		const that = this;
 
 		btn_left_menu.on('click', (e) => {
 			if (!btn_left_menu.active) {
@@ -132,7 +124,7 @@ return {
 			return true;
 		});
 
-		const btn_right_menu = el.button({
+		const btn_right_menu = this.el.button({
 			class: 'bottombar-menu-button',
 			align: 'top right',
 			right: 11,
@@ -173,7 +165,7 @@ return {
 			game: p.game,
 			map: p.map,
 			ui: p.ui,
-			el: el,
+			el: that.el,
 			sections: {},
 			modules: p.modules,
 			get_stats_str: (object) => {

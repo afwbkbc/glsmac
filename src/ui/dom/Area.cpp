@@ -43,6 +43,9 @@ Area::Area( DOM_ARGS_T )
 #undef GEOMPROP
 
 	m_geometry->m_on_resize = [ this ]( const size_t width, const size_t height, const bool is_update_from_parent ) {
+		if ( !m_ui ) {
+			return;
+		}
 		m_ui->WithGSE( // TODO: optimize a bit
 			[ this, width, height, is_update_from_parent ]( GSE_CALLABLE ) {
 				auto* const w = VALUE( gse::value::Int, , width );

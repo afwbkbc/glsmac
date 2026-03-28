@@ -180,6 +180,9 @@ private:
 	const gse::Wrappable::callback_id_t AddListener( GSE_CALLABLE, gse::Wrappable* const object, const std::string& event, gse::value::Callable* const callback );
 	void RemoveListener( GSE_CALLABLE, const gse::Wrappable::callback_id_t listen_id );
 
+	std::mutex m_timer_ids_mutex;
+	std::unordered_set< gse::timer_id_t > m_timer_ids = {};
+
 private:
 	friend class Container;
 

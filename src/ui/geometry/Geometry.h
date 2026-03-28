@@ -20,6 +20,7 @@ class UI;
 
 namespace dom {
 class Area;
+class Object;
 }
 
 namespace geometry {
@@ -226,6 +227,7 @@ private:
 
 private:
 	friend class ui::dom::Area;
+	friend class ui::dom::Object;
 	typedef std::function< void( const size_t width, const size_t height, const bool is_update_from_parent ) > f_on_resize_t;
 	f_on_resize_t m_on_resize = nullptr;
 

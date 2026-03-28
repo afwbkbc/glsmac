@@ -16,22 +16,8 @@ void Async::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exec
 	ctx->CreateBuiltin( "async", NATIVE_CALL() {
 		N_EXPECT_ARGS( 2 );
 		N_GETVALUE( ms, 0, Int );
-
-		const auto timer_id = ctx->GetGSE()->GetAsync()->StartTimer( ms, arguments.at(1 ), GSE_CALL_NOGC );
-
-		const gse::value::object_properties_t properties = {
-			{
-				"stop",
-				// recursive NATIVE_CALL doesn't work
-				new gse::callable::Native( gc_space, ctx, [ timer_id ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) {
-					N_EXPECT_ARGS( 0 );
-					ctx->GetGSE()->GetAsync()->StopTimer( timer_id );
-					return VALUE( value::Undefined );
-				} ),
-			}
-		};
-
-		return VALUEEXT( value::Object, GSE_CALL, properties, "async" );
+		N_GET_CALLABLE( f, 1 );
+		return ctx->GetGSE()->GetAsync()->CreateTimer( ms, f, GSE_CALL_NOGC );
 	} ), ep );
 
 }

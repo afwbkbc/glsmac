@@ -75,7 +75,7 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "font", gse::VT_STRING, VALUE( gse::value::String, , "" ), PF_NONE,
+		GSE_CALL, "font", gse::VT_STRING, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
 			if ( parts.size() != 2 ) {

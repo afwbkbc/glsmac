@@ -48,4 +48,6 @@ enum value_type_t : uint8_t {
 	VT_LOOPCONTROL,
 };
 
+typedef size_t timer_id_t;
+
 }

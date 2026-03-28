@@ -72,7 +72,9 @@ void Widget::Hide() {
 
 void Widget::Destroy( GSE_CALLABLE ) {
 	if ( m_global_handler_id ) {
-		m_ui->RemoveGlobalHandler( m_global_handler_id );
+		if ( m_ui ) {
+			m_ui->RemoveGlobalHandler( m_global_handler_id );
+		}
 		m_global_handler_id = 0;
 	}
 	if ( m_on_widget_remove ) {
@@ -213,7 +215,9 @@ void Widget::Attach() {
 void Widget::Detach() {
 	if ( m_is_attached ) {
 		if ( m_is_visible ) {
-			m_ui->DetachWidget( this, m_type );
+			if ( m_ui ) {
+				m_ui->DetachWidget( this, m_type );
+			}
 		}
 		m_is_attached = false;
 	}
