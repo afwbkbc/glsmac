@@ -73,7 +73,11 @@ protected:
 private:
 	friend class Root;
 
-	std::map< object_id_t, Object* > m_children = {};
+	struct child_t {
+		Object* object;
+		bool is_embed;
+	};
+	std::map< object_id_t, child_t > m_children = {};
 	std::map< coord_t, std::set< object_id_t > > m_children_by_zindex = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::vector< Object* > m_lazy_embedded_objects = {};
@@ -108,7 +112,7 @@ private:
 protected:
 	friend class Object;
 	friend class Listview;
-	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible );
+	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, const bool is_embed = false );
 	void RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy = false );
 
 protected:

@@ -121,7 +121,7 @@ void Container::Embed( Object* object, const bool is_visible ) {
 Container::~Container() {
 	// detach from children in case they live longer
 	for ( const auto& object : m_children ) {
-		object.second->Detach();
+		object.second.object->Detach();
 	}
 	for ( const auto& object : m_embedded_objects ) {
 		object.first->Detach();
@@ -135,7 +135,7 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 		for ( auto it = m_children_by_zindex.rbegin() ; it != m_children_by_zindex.rend() ; it++ ) { // higher zindex has priority
 			for ( auto it2 = it->second.rbegin() ; it2 != it->second.rend() ; it2++ ) { // newer have priority
 				ASSERT( m_children.find( *it2 ) != m_children.end(), "child by zindex not found" );
-				auto* object = m_children.at( *it2 );
+				auto* object = m_children.at( *it2 ).object;
 				const auto* geometry = object->GetGeometry();
 				if ( object->m_is_visible && geometry && geometry->Contains( mouse_coords ) ) {
 					SetMouseOverChild( GSE_CALL, object, mouse_coords );
@@ -188,7 +188,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	for ( auto it = m_children_by_zindex.rbegin() ; it != m_children_by_zindex.rend() ; it++ ) { // higher zindex has priority
 		for ( auto it2 = it->second.rbegin() ; it2 != it->second.rend() ; it2++ ) { // newer have priority
 			ASSERT( m_children.find( *it2 ) != m_children.end(), "child by zindex not found" );
-			const auto& child = m_children.at( *it2 );
+			const auto& child = m_children.at( *it2 ).object;
 			if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
 				return true;
 			}
@@ -210,7 +210,7 @@ void Container::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_processing_mouse_overs, "destruction is requested but still processing mouseovers" );
 	const auto children = m_children;
 	for ( const auto& it : children ) {
-		RemoveChild( GSE_CALL,it.second );
+		RemoveChild( GSE_CALL, it.second.object );
 	}
 	ASSERT( m_children.empty(), "destruction is requested but was unable to remove all children" );
 	ASSERT( m_children_by_zindex.empty(), "destruction is requested but was unable to remove all children zindices" );
@@ -225,7 +225,7 @@ void Container::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 
 	GC_DEBUG_BEGIN( "children" );
 	for ( const auto& it : m_children ) {
-		GC_REACHABLE( it.second );
+		GC_REACHABLE( it.second.object );
 	}
 	GC_DEBUG_END();
 
@@ -284,7 +284,9 @@ void Container::Clear( GSE_CALLABLE ) {
 	ClearHandlers();
 	const auto children = m_children;
 	for ( const auto& it : children ) {
-		RemoveChild( GSE_CALL,it.second );
+		if ( !it.second.is_embed ) {
+			RemoveChild( GSE_CALL, it.second.object );
+		}
 	}
 }
 
@@ -344,7 +346,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			obj->Destroy( GSE_CALL );
 			throw e;
 		}
-		m_factory_owner->m_children.insert({ obj->m_id, obj });
+		m_factory_owner->m_children.insert({ obj->m_id, { obj, false } });
 		auto* const geometry = obj->GetGeometry();
 		if ( geometry ) {
 			m_factory_owner->UpdateChildZIndex( obj->m_id, {}, geometry->GetZIndex() );
@@ -363,7 +365,7 @@ void Container::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
 
 void Container::InitAndValidate( GSE_CALLABLE ) {
 	for ( const auto& it : m_embedded_objects ) {
-		AddChild( GSE_CALL, it.first, it.second );
+		AddChild( GSE_CALL, it.first, it.second, true );
 	}
 	m_embedded_objects.clear();
 	for ( const auto& p : m_initial_properties ) {
@@ -460,7 +462,7 @@ void Container::SetButtonGroupActive( GSE_CALLABLE, const std::string& group, Bu
 	}
 }
 
-void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
+void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, const bool is_embed ) {
 	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
 	if ( m_on_before_add_child ) {
 		m_on_before_add_child( false );
@@ -478,7 +480,7 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 		obj->Destroy( GSE_CALL );
 		throw e;
 	}
-	m_children.insert({ obj->m_id, obj } );
+	m_children.insert({ obj->m_id, { obj, is_embed } } );
 	ASSERT( m_mouse_over_object != obj, "unexpected child mouseover" );
 	const auto* geometry = obj->GetGeometry();
 	if ( geometry ) {
@@ -521,7 +523,7 @@ void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
 
 void Container::DetachUI() {
 	for ( const auto& it : m_children ) {
-		it.second->DetachUI();
+		it.second.object->DetachUI();
 	}
 	Object::DetachUI();
 }
