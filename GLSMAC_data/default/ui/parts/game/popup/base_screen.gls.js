@@ -49,7 +49,7 @@ return {
 			color: 'rgb(53,61,115)',
 		});
 		p.ui.class('base-screen-frame-text').set({
-			font: 'arialn.ttf:15',
+			font: 'arialn.ttf:14',
 			color: 'rgb(68,100,160)',
 		});
 
@@ -74,6 +74,9 @@ return {
 	set: (data) => {
 
 		#print('TODO: set base', data.base);
+
+		// dummy data for now
+		this.sections.nutrients.set_growth_cells(24, 4, 2);
 
 	},
 
