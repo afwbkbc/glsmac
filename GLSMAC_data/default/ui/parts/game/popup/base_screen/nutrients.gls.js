@@ -36,9 +36,9 @@ return {
 		});
 
 		this.growth_cells = body.area({
-			left: 8,
+			left: 10,
 			top: 4,
-			right: 8,
+			right: 10,
 			bottom: 34,
 		});
 
@@ -52,18 +52,22 @@ return {
 	set_growth_cells: (total, filled, pending) => {
 		this.growth_cells.clear();
 
+		const total_width = 112;
+		const total_height = 90;
+
 		const rows = 2; // is it always 2?
-		const columns = total / rows;
-		const height = 88 / rows - 1;
-		const width = 110 / columns - 1;
+		const columns = #floor(#to_float(total) / #to_float(rows));
+		const width = #floor(#to_float(total_width) / #to_float(columns));
+		const height = #floor(#to_float(total_height) / #to_float(rows));
 
 		this.p.ui.class('base-screen-growth-cell').set({
-			width: width,
-			height: height,
+			width: width - 2,
+			height: height - 2,
 		});
 
-		let left = 0;
-		let top = 0;
+		const offset_left = (total_width - (columns * width)) / 2;
+		let left = offset_left;
+		let top = (total_height - (rows * height)) / 2;
 
 		let i = 0;
 		let cls = '';
@@ -82,13 +86,13 @@ return {
 				i++;
 				this.growth_cells.panel({
 					class: 'base-screen-growth-cell-' + cls,
-					left: left,
-					top: top,
+					left: left + 1,
+					top: top + 1,
 				});
-				left += width + 2;
+				left += width;
 			}
-			top += height + 2;
-			left = 0;
+			top += height;
+			left = offset_left;
 		}
 
 		let growth_in = (total - filled) / pending;
