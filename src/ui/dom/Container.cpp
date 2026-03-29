@@ -132,13 +132,16 @@ void Container::UpdateMouseOver( GSE_CALLABLE ) {
 	const auto& mouse_coords = m_ui->GetLastMousePosition();
 	m_processing_mouse_overs = true;
 	if ( m_is_mouse_over ) {
-		for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // later children have priority
-			auto* object = it->second;
-			const auto* geometry = object->GetGeometry();
-			if ( object->m_is_visible && geometry && geometry->Contains( mouse_coords ) ) {
-				SetMouseOverChild( GSE_CALL, object, mouse_coords );
-				m_processing_mouse_overs = false;
-				return;
+		for ( auto it = m_children_by_zindex.rbegin() ; it != m_children_by_zindex.rend() ; it++ ) { // higher zindex has priority
+			for ( auto it2 = it->second.rbegin() ; it2 != it->second.rend() ; it2++ ) { // newer have priority
+				ASSERT( m_children.find( *it2 ) != m_children.end(), "child by zindex not found" );
+				auto* object = m_children.at( *it2 );
+				const auto* geometry = object->GetGeometry();
+				if ( object->m_is_visible && geometry && geometry->Contains( mouse_coords ) ) {
+					SetMouseOverChild( GSE_CALL, object, mouse_coords );
+					m_processing_mouse_overs = false;
+					return;
+				}
 			}
 		}
 		if (
@@ -181,10 +184,14 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 		}
 		default: {}
 	}
-	for ( auto it = m_children.rbegin() ; it != m_children.rend() ; it++ ) { // newer have priority
-		const auto& child = it->second;
-		if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
-			return true;
+	// todo zindex
+	for ( auto it = m_children_by_zindex.rbegin() ; it != m_children_by_zindex.rend() ; it++ ) { // higher zindex has priority
+		for ( auto it2 = it->second.rbegin() ; it2 != it->second.rend() ; it2++ ) { // newer have priority
+			ASSERT( m_children.find( *it2 ) != m_children.end(), "child by zindex not found" );
+			const auto& child = m_children.at( *it2 );
+			if ( child->IsEventRelevant( event ) && child->ProcessEvent( GSE_CALL, event ) ) {
+				return true;
+			}
 		}
 	}
 	auto result = Area::ProcessEvent( GSE_CALL, event );
@@ -206,6 +213,7 @@ void Container::Destroy( GSE_CALLABLE ) {
 		RemoveChild( GSE_CALL,it.second );
 	}
 	ASSERT( m_children.empty(), "destruction is requested but was unable to remove all children" );
+	ASSERT( m_children_by_zindex.empty(), "destruction is requested but was unable to remove all children zindices" );
 	ASSERT( !m_mouse_over_object, "destruction is requested but mouse over not empty" );
 	Area::Destroy( GSE_CALL );
 }
@@ -337,6 +345,10 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			throw e;
 		}
 		m_factory_owner->m_children.insert({ obj->m_id, obj });
+		auto* const geometry = obj->GetGeometry();
+		if ( geometry ) {
+			m_factory_owner->UpdateChildZIndex( obj->m_id, {}, geometry->GetZIndex() );
+		}
 		return obj->Wrap( GSE_CALL, true );
 	} ) );
 }
@@ -470,6 +482,7 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible ) {
 	ASSERT( m_mouse_over_object != obj, "unexpected child mouseover" );
 	const auto* geometry = obj->GetGeometry();
 	if ( geometry ) {
+		UpdateChildZIndex( obj->m_id, {}, geometry->GetZIndex() );
 		const auto& mousepos = m_ui->GetLastMousePosition();
 		if ( geometry->Contains( mousepos ) ) {
 			SetMouseOverChild( GSE_CALL, obj, mousepos );
@@ -489,6 +502,10 @@ void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
 		m_on_remove_child( obj );
 	}
 	m_children.erase( obj->m_id );
+	auto* const geometry = obj->GetGeometry();
+	if ( geometry ) {
+		UpdateChildZIndex( obj->m_id, geometry->GetZIndex(), {} );
+	}
 	if ( m_mouse_over_object == obj ) {
 		if ( m_ui ) {
 			SetMouseOverChild( GSE_CALL, nullptr, m_ui->GetLastMousePosition() );
@@ -509,7 +526,30 @@ void Container::DetachUI() {
 	Object::DetachUI();
 }
 
-
+void Container::UpdateChildZIndex( const object_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index ) {
+	if ( old_zindex.has_value() == new_index.has_value() && old_zindex.value() == new_index.value() ) {
+		// nothing to do
+		return;
+	}
+	if ( old_zindex.has_value() ) {
+		// clear old zindex
+		const auto& it = m_children_by_zindex.find( old_zindex.value() );
+		if ( it != m_children_by_zindex.end() ) {
+			it->second.erase( id );
+			if ( it->second.empty() ) {
+				m_children_by_zindex.erase( it );
+			}
+		}
+	}
+	if ( new_index.has_value() ) {
+		// insert new index
+		auto it = m_children_by_zindex.find( new_index.value() );
+		if ( it == m_children_by_zindex.end() ) {
+			it = m_children_by_zindex.insert({ new_index.value(), {} } ).first;
+		}
+		it->second.insert( id );
+	}
+}
 
 }
 }

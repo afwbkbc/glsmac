@@ -93,6 +93,8 @@ public:
 	void SetZIndex( const coord_t zindex );
 	void SetOverflowMode( const overflow_mode_t mode );
 
+	const coord_t GetZIndex() const;
+
 	void NeedUpdate();
 
 	struct area_t {

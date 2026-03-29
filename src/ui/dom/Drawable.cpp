@@ -52,8 +52,17 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 	GEOMPROP( "top", SetTop, Int );
 	GEOMPROP( "right", SetRight, Int );
 	GEOMPROP( "bottom", SetBottom, Int );
-	GEOMPROP( "zindex", SetZIndex, Float );
 #undef GEOMPROP
+
+	GEOMSETTER( "zindex", gse::VT_FLOAT ) {
+		const auto old_zindex = m_geometry->GetZIndex();
+		const auto new_zindex = ( (gse::value::Float*)v )->value;
+		m_geometry->SetZIndex( new_zindex );
+		if ( m_parent ) {
+			m_parent->UpdateMouseOver( GSE_CALL );
+			m_parent->UpdateChildZIndex( m_id, old_zindex, new_zindex );
+		}
+	} );
 
 	GEOMSETTER( "align", gse::VT_STRING ) {
 		const auto strs = util::String::Split( ( (gse::value::String*)v )->value, ' ' );

@@ -10,6 +10,7 @@ return {
 		'resources',
 		'energy_allocation',
 		'buttons',
+		'bottom_bar',
 	],
 
 	init: (p) => {
@@ -58,6 +59,7 @@ return {
 				body: body,
 				ui: p.ui,
 				hide: p.hide,
+				modules: p.modules,
 			};
 
 			for (s of this.available_sections) {
@@ -73,6 +75,14 @@ return {
 
 		#print('TODO: set base', data.base);
 
+	},
+
+	on_hide: () => {
+		this.sections.bottom_bar.frame.hide();
+	},
+
+	on_show: () => {
+		this.sections.bottom_bar.frame.show();
 	},
 
 };

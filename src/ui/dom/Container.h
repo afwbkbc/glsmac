@@ -2,9 +2,11 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <set>
 #include <map>
 #include <vector>
 #include <functional>
+#include <optional>
 
 #include "Area.h"
 
@@ -72,6 +74,7 @@ private:
 	friend class Root;
 
 	std::map< object_id_t, Object* > m_children = {};
+	std::map< coord_t, std::set< object_id_t > > m_children_by_zindex = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::vector< Object* > m_lazy_embedded_objects = {};
 	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};
@@ -111,6 +114,10 @@ protected:
 protected:
 	friend class ui::UI;
 	void DetachUI() override;
+
+private:
+	friend class Drawable;
+	void UpdateChildZIndex( const object_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index );
 
 };
 

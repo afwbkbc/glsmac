@@ -117,6 +117,7 @@ return {
 		const pp = {
 
 			ui: p.ui,
+			modules: p.modules,
 
 			hide: () => {
 				if (#is_defined(that.popup)) {
@@ -338,5 +339,5 @@ return {
 		}
 		return false;
 	},
-
+	
 };

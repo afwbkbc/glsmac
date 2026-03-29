@@ -187,6 +187,10 @@ void Geometry::SetOverflowMode( const overflow_mode_t mode ) {
 	}
 }
 
+const coord_t Geometry::GetZIndex() const {
+	return m_zindex;
+}
+
 void Geometry::NeedUpdate() {
 	// for now update immediately, later queue and execute it once after
 	Update( false );
