@@ -177,7 +177,9 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 			}
 			m_slider_drag.is_dragging = true;
 			if ( !m_slider_drag.drag_handler_id ) {
-				m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
+				if ( m_ui ) {
+					m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
+				}
 			}
 		}
 		return true;
@@ -186,7 +188,9 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		if ( event.data.mouse.button == input::MB_LEFT ) {
 			if ( m_slider_drag.is_dragging ) {
 				ASSERT( m_slider_drag.drag_handler_id, "drag handler id zero" );
-				m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+				if ( m_ui ) {
+					m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+				}
 				m_slider_drag.drag_handler_id = 0;
 				m_slider_drag.is_dragging = false;
 			}
@@ -198,7 +202,9 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 
 void Scrollbar::Destroy( GSE_CALLABLE ) {
 	if ( m_slider_drag.drag_handler_id ) {
-		m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+		if ( m_ui ) {
+			m_ui->RemoveGlobalHandler( m_slider_drag.drag_handler_id );
+		}
 		m_slider_drag.drag_handler_id = 0;
 	}
 	Panel::Destroy( GSE_CALL );
@@ -426,11 +432,13 @@ void Scrollbar::RealignSlider() {
 }
 
 void Scrollbar::Scroll( const float value ) {
-	m_ui->WithGSE(
-		[ this, value ]( GSE_CALLABLE ) {
-			SetValue( GSE_CALL, value, true );
-		}
-	);
+	if ( m_ui ) {
+		m_ui->WithGSE(
+			[ this, value ]( GSE_CALLABLE ) {
+				SetValue( GSE_CALL, value, true );
+			}
+		);
+	}
 }
 
 void Scrollbar::SetSliderSize( const size_t size ) {

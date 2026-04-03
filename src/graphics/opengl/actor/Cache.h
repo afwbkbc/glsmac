@@ -31,8 +31,6 @@ CLASS( Cache, Actor )
 	void RemoveCacheChild( Actor* cache_child );
 	void SetCacheChildZIndex( Actor* cache_child, const float zindex );
 
-	void UpdateCache();
-
 	void OnWindowResize() override;
 
 protected:
@@ -60,7 +58,7 @@ private:
 
 private:
 	friend class Actor;
-	void UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr, const bool force = false );
+	const bool UpdateCacheImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr, const bool force = false );
 
 };
 

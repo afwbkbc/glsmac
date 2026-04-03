@@ -37,7 +37,6 @@ void Cache::SetEffectiveArea( const types::Vec2< size_t >& top_left, const types
 		m_top_left = top_left;
 		m_bottom_right = bottom_right;
 		m_position.z = z;
-		Update();
 	}
 }
 

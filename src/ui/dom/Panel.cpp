@@ -48,7 +48,7 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 			if ( border_color != m_border_color || border_corners != m_border_corners ) {
 				m_border_color = border_color;
 				m_border_corners = border_corners;
-				UpdateBorderTexture();
+				UpdateBorderTexture( true );
 			}
 
 		},
@@ -58,41 +58,44 @@ Panel::Panel( DOM_ARGS_T, const bool factories_allowed )
 			m_border_surface->ClearTexture();
 		}
 	);
-	UpdateBorderTexture();
+	UpdateBorderTexture( false );
 	GeometryHandler(
 		GH_ON_AREA_UPDATE, [ this ]() {
-			UpdateBorderTexture();
+			UpdateBorderTexture( false );
 		}
 	);
 }
 
-void Panel::UpdateBorderTexture() {
+void Panel::UpdateBorderTexture( const bool force ) {
 	m_surface->GetGeometry()->SetPadding( std::ceil( m_border_corners / 2 ) );
 	auto* texture = m_border_surface->GetOwnedTexturePtr();
 	const auto& a = m_geometry->AsRectangle()->m_area;
-	texture->Resize( std::round( a.width ), std::round( a.height ) );
-	auto* bitmap = texture->GetBitmap();
-	if ( bitmap ) {
-		memset( bitmap, 0, texture->GetBitmapSize() );
-		if ( m_border_color != types::Color{} ) {
-			long int r = std::ceil( std::fmin( m_border_corners, std::min( a.width, a.height ) / 2 - 1 ) );
-			for ( auto x = r ; x < a.width - r ; x++ ) {
-				texture->SetPixel( x, 0, m_border_color );
-				texture->SetPixel( x, a.height - 1, m_border_color );
-			}
-			for ( auto y = r ; y < a.height - r ; y++ ) {
-				texture->SetPixel( 0, y, m_border_color );
-				texture->SetPixel( a.width - 1, y, m_border_color );
-			}
-			for ( auto i = 0 ; i < r ; i++ ) {
-				texture->SetPixel( i, r - i, m_border_color );
-				texture->SetPixel( r - i, i, m_border_color );
-				texture->SetPixel( a.width - 1 - i, r - i, m_border_color );
-				texture->SetPixel( a.width - 1 - ( r - i ), i, m_border_color );
-				texture->SetPixel( a.width - 1 - i, a.height - 1 - ( r - i ), m_border_color );
-				texture->SetPixel( a.width - 1 - ( r - i ), a.height - 1 - i, m_border_color );
-				texture->SetPixel( i, a.height - 1 - ( r - i ), m_border_color );
-				texture->SetPixel( r - i, a.height - 1 - i, m_border_color );
+	const auto w = std::round( a.width );
+	const auto h = std::round( a.height );
+	if ( texture->Resize( w, h ) || force ) {
+		auto* bitmap = texture->GetBitmap();
+		if ( bitmap ) {
+			memset( bitmap, 0, texture->GetBitmapSize() );
+			if ( m_border_color != types::Color{} ) {
+				long int r = std::fmax( std::ceil( std::fmin( m_border_corners, std::min( a.width, a.height ) / 2 - 1 ) ), 0 );
+				for ( auto x = r ; x < a.width - r ; x++ ) {
+					texture->SetPixel( x, 0, m_border_color );
+					texture->SetPixel( x, a.height - 1, m_border_color );
+				}
+				for ( auto y = r ; y < a.height - r ; y++ ) {
+					texture->SetPixel( 0, y, m_border_color );
+					texture->SetPixel( a.width - 1, y, m_border_color );
+				}
+				for ( auto i = 0 ; i < r ; i++ ) {
+					texture->SetPixel( i, r - i, m_border_color );
+					texture->SetPixel( r - i, i, m_border_color );
+					texture->SetPixel( a.width - 1 - i, r - i, m_border_color );
+					texture->SetPixel( a.width - 1 - ( r - i ), i, m_border_color );
+					texture->SetPixel( a.width - 1 - i, a.height - 1 - ( r - i ), m_border_color );
+					texture->SetPixel( a.width - 1 - ( r - i ), a.height - 1 - i, m_border_color );
+					texture->SetPixel( i, a.height - 1 - ( r - i ), m_border_color );
+					texture->SetPixel( r - i, a.height - 1 - i, m_border_color );
+				}
 			}
 		}
 		texture->FullUpdate(); // TODO: optimize?

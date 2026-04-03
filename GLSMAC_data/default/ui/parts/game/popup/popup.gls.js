@@ -6,8 +6,12 @@ return {
 		'base_screen',
 	],
 
-	sliding_interval: 5,
-	sliding_time: 100,
+	sliding_interval: 1,
+	sliding_time: 20,
+
+	calculate_sliding_speed: (top) => {
+		this.sliding_speed = (this.viewport_size.height - top) / (this.sliding_time / this.sliding_interval);
+	},
 
 	init: (p) => {
 
@@ -110,7 +114,7 @@ return {
 				this.resize(data);
 			}
 			if (this.popup != null) {
-				this.sliding_speed = (this.viewport_size.height - this.popup.el.top) / (this.sliding_time / this.sliding_interval);
+				this.calculate_sliding_speed(this.popup.el.top);
 			}
 		});
 
@@ -316,7 +320,7 @@ return {
 		}
 
 		this.target_top = this.popup.el.top;
-		this.sliding_speed = (this.viewport_size.height - this.target_top) / (this.sliding_time / this.sliding_interval);
+		this.calculate_sliding_speed(this.target_top);
 		this.popup.el.top = this.viewport_size.height;
 		this.sound_up.play();
 		this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
@@ -339,5 +343,5 @@ return {
 		}
 		return false;
 	},
-	
+
 };

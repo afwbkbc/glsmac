@@ -84,11 +84,15 @@ void Input::OnDefocus() {
 
 void Input::Show() {
 	Panel::Show();
-	m_ui->AddFocusable( this );
+	if ( m_ui ) {
+		m_ui->AddFocusable( this );
+	}
 }
 
 void Input::Hide() {
-	m_ui->RemoveFocusable( this );
+	if ( m_ui ) {
+		m_ui->RemoveFocusable( this );
+	}
 	Panel::Hide();
 }
 
@@ -129,7 +133,9 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		}
 		case input::EV_MOUSE_DOWN: {
 			if ( event.data.mouse.button == input::MB_LEFT && !m_is_focused ) {
-				m_ui->Focus( this );
+				if ( m_ui ) {
+					m_ui->Focus( this );
+				}
 				return true;
 			}
 			break;
