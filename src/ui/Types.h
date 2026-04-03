@@ -64,6 +64,6 @@ typedef std::function< void( ::ui::dom::Widget* const widget, gse::value::Object
 typedef std::function< void( ::ui::dom::Widget* const widget ) > f_widget_remove_t;
 #define F_WIDGET_REMOVE( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
 
-typedef uint64_t object_id_t;
+typedef uint64_t dom_id_t;
 
 }

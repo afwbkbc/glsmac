@@ -346,10 +346,10 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 			obj->Destroy( GSE_CALL );
 			throw e;
 		}
-		m_factory_owner->m_children.insert({ obj->m_id, { obj, false } });
+		m_factory_owner->m_children.insert({ obj->m_dom_id, { obj, false } });
 		auto* const geometry = obj->GetGeometry();
 		if ( geometry ) {
-			m_factory_owner->UpdateChildZIndex( obj->m_id, {}, geometry->GetZIndex() );
+			m_factory_owner->UpdateChildZIndex( obj->m_dom_id, {}, geometry->GetZIndex() );
 		}
 		return obj->Wrap( GSE_CALL, true );
 	} ) );
@@ -463,7 +463,7 @@ void Container::SetButtonGroupActive( GSE_CALLABLE, const std::string& group, Bu
 }
 
 void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, const bool is_embed ) {
-	ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already exists" );
+	ASSERT( m_children.find( obj->m_dom_id ) == m_children.end(), "child already exists" );
 	if ( m_on_before_add_child ) {
 		m_on_before_add_child( false );
 	}
@@ -480,11 +480,11 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, cons
 		obj->Destroy( GSE_CALL );
 		throw e;
 	}
-	m_children.insert({ obj->m_id, { obj, is_embed } } );
+	m_children.insert({ obj->m_dom_id, { obj, is_embed } } );
 	ASSERT( m_mouse_over_object != obj, "unexpected child mouseover" );
 	const auto* geometry = obj->GetGeometry();
 	if ( geometry ) {
-		UpdateChildZIndex( obj->m_id, {}, geometry->GetZIndex() );
+		UpdateChildZIndex( obj->m_dom_id, {}, geometry->GetZIndex() );
 		const auto& mousepos = m_ui->GetLastMousePosition();
 		if ( geometry->Contains( mousepos ) ) {
 			SetMouseOverChild( GSE_CALL, obj, mousepos );
@@ -496,17 +496,17 @@ void Container::AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, cons
 }
 
 void Container::RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy ) {
-	if ( m_children.find( obj->m_id ) == m_children.end() ) {
+	if ( m_children.find( obj->m_dom_id ) == m_children.end() ) {
 		// this can happen if globalized child deglobalizes during root object destruction
 		return;
 	}
 	if ( m_on_remove_child ) {
 		m_on_remove_child( obj );
 	}
-	m_children.erase( obj->m_id );
+	m_children.erase( obj->m_dom_id );
 	auto* const geometry = obj->GetGeometry();
 	if ( geometry ) {
-		UpdateChildZIndex( obj->m_id, geometry->GetZIndex(), {} );
+		UpdateChildZIndex( obj->m_dom_id, geometry->GetZIndex(), {} );
 	}
 	if ( m_mouse_over_object == obj ) {
 		if ( m_ui ) {
@@ -528,7 +528,7 @@ void Container::DetachUI() {
 	Object::DetachUI();
 }
 
-void Container::UpdateChildZIndex( const object_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index ) {
+void Container::UpdateChildZIndex( const dom_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index ) {
 	if ( old_zindex.has_value() == new_index.has_value() && old_zindex.value() == new_index.value() ) {
 		// nothing to do
 		return;

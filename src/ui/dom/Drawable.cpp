@@ -60,7 +60,7 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 		m_geometry->SetZIndex( new_zindex );
 		if ( m_parent ) {
 			m_parent->UpdateMouseOver( GSE_CALL );
-			m_parent->UpdateChildZIndex( m_id, old_zindex, new_zindex );
+			m_parent->UpdateChildZIndex( m_dom_id, old_zindex, new_zindex );
 		}
 	} );
 

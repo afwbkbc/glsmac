@@ -42,7 +42,7 @@ Class::~Class() {
 
 }
 
-const std::string& Class::GetName() const {
+const std::string& Class::GetDOMClassName() const {
 	return m_name;
 }
 

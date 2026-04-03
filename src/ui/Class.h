@@ -22,7 +22,7 @@ public:
 	Class( gc::Space* const gc_space, const UI* const ui, const std::string& name, const bool is_master = true );
 	~Class();
 
-	const std::string& GetName() const;
+	const std::string& GetDOMClassName() const;
 	const std::pair< gse::Value*, class_modifier_t > GetProperty( const std::string& key, const class_modifiers_t& modifiers ) const;
 	const properties_t& GetProperties() const;
 

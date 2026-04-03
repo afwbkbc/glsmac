@@ -64,7 +64,7 @@ Listview::Listview( DOM_ARGS_T )
 			on_add_child_orig( obj, is_from_factory );
 		}
 		if ( is_from_factory ) {
-			ASSERT( m_children.find( obj->m_id ) == m_children.end(), "child already added" );
+			ASSERT( m_children.find( obj->m_dom_id ) == m_children.end(), "child already added" );
 			if ( m_max_items ) {
 				ASSERT( m_children.size() <= m_max_items, "children size unexpectedly exceeded max_items" );
 				if ( m_children.size() == m_max_items ) {
@@ -74,7 +74,7 @@ Listview::Listview( DOM_ARGS_T )
 				}
 			}
 			const auto offset = m_children.size() * m_itemsize;
-			m_children.insert( { obj->m_id, obj } );
+			m_children.insert( { obj->m_dom_id, obj } );
 			auto* g = obj->GetGeometry();
 			switch ( m_scroll_type ) {
 				case ST_VERTICAL: {
@@ -94,7 +94,7 @@ Listview::Listview( DOM_ARGS_T )
 	};
 	const auto& on_remove_child_orig = m_factory_owner->m_on_remove_child;
 	m_factory_owner->m_on_remove_child = [ this, on_remove_child_orig ]( Object* const obj ) {
-		auto it = m_children.find( obj->m_id );
+		auto it = m_children.find( obj->m_dom_id );
 		if ( it != m_children.end() ) {
 			switch ( m_scroll_type ) {
 				case ST_VERTICAL: {
@@ -114,7 +114,7 @@ Listview::Listview( DOM_ARGS_T )
 				default:
 					ASSERT( false, "unknown scroll type: " + std::to_string( m_scroll_type ) );
 			}
-			m_children.erase( obj->m_id );
+			m_children.erase( obj->m_dom_id );
 			Realign();
 		}
 		if ( on_remove_child_orig ) {

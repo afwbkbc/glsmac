@@ -68,7 +68,8 @@ public:
 
 	const std::string m_tag;
 	Container* m_parent;
-	const object_id_t m_id;
+	std::string m_id = "";
+	const dom_id_t m_dom_id;
 
 	virtual geometry::Geometry* const GetGeometry() const;
 
@@ -94,6 +95,8 @@ public:
 	static const gse::value::Object::object_class_t WRAP_CLASS;
 
 	void NotifyDependencyDestruction( const Wrappable* const dependency ) override;
+
+	const std::string ToString() const;
 
 protected:
 

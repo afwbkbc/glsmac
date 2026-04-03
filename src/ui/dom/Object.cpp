@@ -30,7 +30,7 @@
 namespace ui {
 namespace dom {
 
-static std::atomic< object_id_t > s_next_id = 0;
+static std::atomic< dom_id_t > s_next_dom_id = 0;
 
 const gse::value::Object::object_class_t Object::WRAP_CLASS = "Object";
 
@@ -39,10 +39,17 @@ Object::Object( DOM_ARGS_T )
 	, m_ui( ui )
 	, m_gc_space( ui->GetGCSpace() )
 	, m_tag( "$" + tag )
-	, m_id( ++s_next_id )
+	, m_dom_id( ++s_next_dom_id )
 	, m_parent( parent )
 	, m_initial_properties( properties ) {
-	Property( GSE_CALL, "id", gse::VT_STRING );
+	Property( GSE_CALL, "id", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const value ) {
+			m_id = ((gse::value::String*)value)->value;
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_id = "";
+		}
+	);
 
 	Property(
 		GSE_CALL, "class", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const value ) {
@@ -349,6 +356,17 @@ void Object::NotifyDependencyDestruction( const Wrappable* const dependency ) {
 		ASSERT( m_listeners.at( listen_id ).object, "listener object already unlinked" );
 		m_listeners.at( listen_id ).object = nullptr;
 	}
+}
+
+const std::string Object::ToString() const {
+	std::string str = m_tag + "@" + std::to_string( m_dom_id );
+	if ( !m_id.empty() ) {
+		str += "#" + m_id;
+	}
+	for ( const auto& c : m_classes ) {
+		str += "." + c->GetDOMClassName();
+	}
+	return str;
 }
 
 const bool Object::IsEventRelevant( const input::Event& event ) const {

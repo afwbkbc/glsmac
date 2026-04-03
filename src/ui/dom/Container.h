@@ -77,8 +77,8 @@ private:
 		Object* object;
 		bool is_embed;
 	};
-	std::map< object_id_t, child_t > m_children = {};
-	std::map< coord_t, std::set< object_id_t > > m_children_by_zindex = {};
+	std::map< dom_id_t, child_t > m_children = {};
+	std::map< coord_t, std::set< dom_id_t > > m_children_by_zindex = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
 	std::vector< Object* > m_lazy_embedded_objects = {};
 	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};
@@ -121,7 +121,7 @@ protected:
 
 private:
 	friend class Drawable;
-	void UpdateChildZIndex( const object_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index );
+	void UpdateChildZIndex( const dom_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index );
 
 };
 
