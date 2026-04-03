@@ -61,6 +61,8 @@ public:
 	void SetTesting( const bool testing );
 	const bool IsTesting() const;
 	void TestBreakpoint(); // set gdb breakpoint inside
+	void SetTraceData( const std::string& data );
+	const std::string& GetTraceData() const;
 #endif
 
 protected:
@@ -74,6 +76,7 @@ private:
 
 #ifdef DEBUG
 	bool m_is_testing = false;
+	std::string m_trade_data = "";
 #endif
 
 };

@@ -172,5 +172,7 @@ extern debug_stats_t g_debug_stats;
 #define UNTEST_OBJECT( _obj ) (_obj)->SetTesting( false )
 #define TEST_BREAKPOINT( _obj ) (_obj)->TestBreakpoint()
 #define IS_TESTING( _obj ) (_obj)->IsTesting()
+#define SET_TRACE_DATA( _obj, _data ) (_obj)->SetTraceData( _data )
+#define GET_TRACE_DATA( _obj ) (_obj)->GetTraceData()
 
 #endif
