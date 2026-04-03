@@ -76,7 +76,7 @@ private:
 
 #ifdef DEBUG
 	bool m_is_testing = false;
-	std::string m_trade_data = "";
+	std::string m_trace_data = "";
 #endif
 
 };
