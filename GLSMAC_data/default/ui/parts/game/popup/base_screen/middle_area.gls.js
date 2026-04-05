@@ -6,8 +6,8 @@ return {
 			class: 'base-screen-frame',
 			align: 'top center',
 			top: 32,
-			width: 394,
-			height: 224,
+			width: 392,
+			height: 223,
 		});
 
 	},

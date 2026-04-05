@@ -10,6 +10,7 @@ void Builtins::AddToContext( gc::Space* const gc_space, context::Context* ctx, E
 	m_conversions.AddToContext( gc_space, ctx, ep );
 	m_math.AddToContext( gc_space, ctx, ep );
 	m_string.AddToContext( gc_space, ctx, ep );
+	m_object.AddToContext( gc_space, ctx, ep );
 	m_async.AddToContext( gc_space, ctx, ep );
 }
 

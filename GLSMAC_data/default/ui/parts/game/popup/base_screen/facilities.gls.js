@@ -18,10 +18,22 @@ return {
 			text: 'BASE FACILITIES',
 		});
 
-		this.frame.panel({
+		this.list = this.frame.listview({
 			class: 'base-screen-body',
+			itemsize: 17,
+			padding: 4,
 		});
 
+	},
+
+	set: (data) => {
+		this.list.clear();
+		for (f of data) {
+			this.list.text({
+				class: 'base-screen-frame-text',
+				text: f,
+			});
+		}
 	},
 
 };

@@ -107,7 +107,7 @@ void SDL2::AddActor( scene::actor::Sound* actor ) {
 		}
 	}
 
-	Log( "Adding sound actor " + actor->GetName() );
+	//Log( "Adding sound actor " + actor->GetName() );
 	ASSERT( m_actors.find( actor ) == m_actors.end(), "sound actor already added" );
 	NEWV( sound_actor, Sound, actor );
 	m_actors[ actor ] = sound_actor;
@@ -120,7 +120,7 @@ void SDL2::RemoveActor( scene::actor::Sound* actor ) {
 
 	std::lock_guard guard( m_actors_mutex );
 
-	Log( "Removing sound actor " + actor->GetName() );
+	//Log( "Removing sound actor " + actor->GetName() );
 	auto it = m_actors.find( actor );
 	ASSERT( it != m_actors.end(), "sound actor not found" );
 	DELETE( it->second );

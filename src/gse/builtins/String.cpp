@@ -51,6 +51,43 @@ void String::AddToContext( gc::Space* const gc_space, context::Context* ctx, gse
 		return VALUE( value::Array,, elements );
 	} ), ep );
 
+	ctx->CreateBuiltin( "pad", NATIVE_CALL() {
+		N_EXPECT_ARGS( 4 );
+		N_GETVALUE( text, 0, String );
+		N_GETVALUE( type, 1, String );
+		N_GETVALUE( length, 2, Int );
+		N_GETVALUE( with, 3, String );
+
+		bool is_left;
+		if ( type == "left" ) {
+			is_left = true;
+		}
+		else if ( type == "right" ) {
+			is_left = false;
+		}
+		else {
+			GSE_ERROR( EC.INVALID_CALL, "Unknown pad type: " + type + " (available: left right)" );
+		}
+
+		if ( with.length() != 1 ) {
+			GSE_ERROR( EC.INVALID_CALL, "For now padding is only possible with single character (got: " + with + ")" );
+		}
+
+		std::string result = "";
+		const auto repeats = text.length() > length ? 0 : length - text.length();
+		result.reserve( text.length() + repeats );
+		if ( !is_left ) {
+			result += text;
+		}
+		for ( auto i = 0 ; i < repeats ; i++ ) {
+			result += with;
+		}
+		if ( is_left ) {
+			result += text;
+		}
+		return VALUE( value::String,, result );
+	}), ep );
+
 }
 
 }

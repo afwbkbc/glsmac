@@ -15,6 +15,7 @@ public:
 	Scrollview( DOM_ARGS_TD( "scrollview" ), const bool factories_allowed = true );
 
 	void Destroy( GSE_CALLABLE ) override;
+	void Clear( GSE_CALLABLE ) override;
 
 protected:
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
@@ -32,7 +33,7 @@ protected:
 	bool m_autoscroll = false;
 
 private:
-	
+
 	Container* m_inner = nullptr;
 
 	bool m_has_vscroll = true;

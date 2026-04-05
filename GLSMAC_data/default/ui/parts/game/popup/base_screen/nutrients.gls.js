@@ -24,20 +24,20 @@ return {
 			class: 'base-screen-body',
 		});
 
-		p.ui.class('base-screen-growth-cell');
-		p.ui.class('base-screen-growth-cell-empty').extend('base-screen-growth-cell').set({
+		p.ui.class('base-screen-nutrients-cell');
+		p.ui.class('base-screen-nutrients-cell-empty').extend('base-screen-nutrients-cell').set({
 			background: 'interface.pcx:crop(397,22,416,41)',
 		});
-		p.ui.class('base-screen-growth-cell-pending').extend('base-screen-growth-cell-empty').set({
+		p.ui.class('base-screen-nutrients-cell-pending').extend('base-screen-nutrients-cell-empty').set({
 			border: 'rgb(212,208,116),0',
 		});
-		p.ui.class('base-screen-growth-cell-full').extend('base-screen-growth-cell').set({
+		p.ui.class('base-screen-nutrients-cell-full').extend('base-screen-nutrients-cell').set({
 			background: 'interface.pcx:crop(418,22,437,41)',
 		});
 
 		this.growth_cells = body.area({
 			left: 10,
-			top: 4,
+			top: 10,
 			right: 10,
 			bottom: 34,
 		});
@@ -49,7 +49,7 @@ return {
 		});
 	},
 
-	set_growth_cells: (total, filled, pending) => {
+	set: (total, filled, pending) => {
 		this.growth_cells.clear();
 
 		const total_width = 112;
@@ -60,9 +60,9 @@ return {
 		const width = #floor(#to_float(total_width) / #to_float(columns));
 		const height = #floor(#to_float(total_height) / #to_float(rows));
 
-		this.p.ui.class('base-screen-growth-cell').set({
-			width: width - 2,
-			height: height - 2,
+		this.p.ui.class('base-screen-nutrients-cell').set({
+			width: width - 1,
+			height: height - 1,
 		});
 
 		const offset_left = (total_width - (columns * width)) / 2;
@@ -85,7 +85,7 @@ return {
 				}
 				i++;
 				this.growth_cells.panel({
-					class: 'base-screen-growth-cell-' + cls,
+					class: 'base-screen-nutrients-cell-' + cls,
 					left: left + 1,
 					top: top + 1,
 				});
@@ -95,7 +95,7 @@ return {
 			left = offset_left;
 		}
 
-		let growth_in = (total - filled) / pending;
+		let growth_in = #ceil(#to_float(total - filled) / #to_float(pending));
 		let growth_text = 'Growth: ' + #to_string(growth_in);
 		if (growth_in == 1) {
 			growth_text += ' turn';

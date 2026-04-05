@@ -120,6 +120,7 @@ return {
 
 		const pp = {
 
+			game: p.game,
 			ui: p.ui,
 			modules: p.modules,
 

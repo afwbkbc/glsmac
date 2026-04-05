@@ -9,6 +9,7 @@
 #include "Conversions.h"
 #include "Math.h"
 #include "String.h"
+#include "Object.h"
 #include "Async.h"
 
 namespace gse {
@@ -33,6 +34,7 @@ private:
 	Conversions m_conversions = {};
 	Math m_math = {};
 	String m_string = {};
+	Object m_object = {};
 	Async m_async = {};
 
 };

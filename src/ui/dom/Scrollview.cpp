@@ -124,6 +124,11 @@ void Scrollview::Destroy( GSE_CALLABLE ) {
 	Panel::Destroy( GSE_CALL );
 }
 
+void Scrollview::Clear( GSE_CALLABLE ) {
+	m_inner->Clear( GSE_CALL );
+	Panel::Clear( GSE_CALL );
+}
+
 const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	if ( event.flags & input::EF_MOUSE && event.data.mouse.button == input::MB_MIDDLE ) {
 		switch ( event.type ) {

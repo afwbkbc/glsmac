@@ -45,7 +45,7 @@ public:
 
 	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
 
-	void Clear( GSE_CALLABLE );
+	virtual void Clear( GSE_CALLABLE );
 
 protected:
 	friend class Scrollview;

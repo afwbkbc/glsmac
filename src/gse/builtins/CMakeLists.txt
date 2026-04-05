@@ -7,6 +7,7 @@ SET( SRC ${SRC}
 	${PWD}/Conversions.cpp
 	${PWD}/Math.cpp
 	${PWD}/String.cpp
+	${PWD}/Object.cpp
 	${PWD}/Async.cpp
 
 	PARENT_SCOPE )
