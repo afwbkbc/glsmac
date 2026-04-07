@@ -6,6 +6,8 @@ return {
 		'base_screen',
 	],
 
+	no_sliding: true, // disable sliding until more optimizations
+
 	sliding_interval: 1,
 	sliding_time: 20,
 
@@ -253,23 +255,32 @@ return {
 
 		this.target_top = this.viewport_size.height;
 		this.sound_down.play();
-		this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
-			const new_top = data.el.top + this.sliding_speed;
-			if (new_top >= this.target_top) {
-				data.el.top = this.target_top;
-				this.sliding_timer = null;
-				if (this.popup_cb != null && this.popup_result != null) {
-					this.popup_cb(this.popup_result);
-					this.popup_cb = null;
-					this.popup_result = null;
-				}
-				this.clear();
-				this.resize(data);
-				return false;
+
+		const f_done = () => {
+			data.el.top = this.target_top;
+			this.sliding_timer = null;
+			if (this.popup_cb != null && this.popup_result != null) {
+				this.popup_cb(this.popup_result);
+				this.popup_cb = null;
+				this.popup_result = null;
 			}
-			data.el.top = new_top;
-			return true;
-		});
+			this.clear();
+			this.resize(data);
+		};
+
+		if (this.no_sliding) {
+			f_done();
+		} else {
+			this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
+				const new_top = data.el.top + this.sliding_speed;
+				if (new_top >= this.target_top) {
+					f_done();
+					return false;
+				}
+				data.el.top = new_top;
+				return true;
+			});
+		}
 	},
 
 	clear: () => {
@@ -324,16 +335,25 @@ return {
 		this.calculate_sliding_speed(this.target_top);
 		this.popup.el.top = this.viewport_size.height;
 		this.sound_up.play();
-		this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
-			const new_top = this.popup.el.top - this.sliding_speed;
-			if (new_top <= this.target_top) {
-				this.popup.el.top = this.target_top;
-				this.sliding_timer = null;
-				return false;
-			}
-			this.popup.el.top = new_top;
-			return true;
-		});
+
+		const f_done = () => {
+			this.popup.el.top = this.target_top;
+			this.sliding_timer = null;
+		};
+
+		if (this.no_sliding) {
+			f_done();
+		} else {
+			this.sliding_timer = this.p.ui.root.timer(this.sliding_interval, () => {
+				const new_top = this.popup.el.top - this.sliding_speed;
+				if (new_top <= this.target_top) {
+					f_done();
+					return false;
+				}
+				this.popup.el.top = new_top;
+				return true;
+			});
+		}
 
 		this.popup.el.show();
 	},
