@@ -100,7 +100,12 @@ return {
 
 		// dummy data for now
 
-		this.sections.nutrients.set(24, 4, 3);
+		this.sections.nutrients.set({
+			rows: 3,
+			columns: 14,
+			filled: 8,
+			pending: 3,
+		});
 
 		if (faction.is_progenitor) {
 			this.sections.economy.set_energy_grid({

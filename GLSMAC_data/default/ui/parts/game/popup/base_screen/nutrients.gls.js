@@ -49,35 +49,33 @@ return {
 		});
 	},
 
-	set: (total, filled, pending) => {
+	set: (data) => {
 		this.growth_cells.clear();
 
 		const total_width = 112;
 		const total_height = 90;
 
-		const rows = 2; // is it always 2?
-		const columns = #floor(#to_float(total) / #to_float(rows));
-		const width = #floor(#to_float(total_width) / #to_float(columns));
-		const height = #floor(#to_float(total_height) / #to_float(rows));
+		const width = #floor(#to_float(total_width) / #to_float(data.columns));
+		const height = #floor(#to_float(total_height) / #to_float(data.rows));
 
 		this.p.ui.class('base-screen-nutrients-cell').set({
 			width: width - 1,
 			height: height - 1,
 		});
 
-		const offset_left = (total_width - (columns * width)) / 2;
+		const offset_left = (total_width - (data.columns * width)) / 2;
 		let left = offset_left;
-		let top = (total_height - (rows * height)) / 2;
+		let top = (total_height - (data.rows * height)) / 2;
 
 		let i = 0;
 		let cls = '';
 
-		for (let y = 0; y < rows; y++) {
-			for (let x = 0; x < columns; x++) {
-				if (i < filled) {
+		for (let y = 0; y < data.rows; y++) {
+			for (let x = 0; x < data.columns; x++) {
+				if (i < data.filled) {
 					cls = 'full';
 				} else {
-					if (i < filled + pending) {
+					if (i < data.filled + data.pending) {
 						cls = 'pending';
 					} else {
 						cls = 'empty';
@@ -95,7 +93,7 @@ return {
 			left = offset_left;
 		}
 
-		let growth_in = #ceil(#to_float(total - filled) / #to_float(pending));
+		let growth_in = #ceil(#to_float(data.rows * data.columns - data.filled) / #to_float(data.pending));
 		let growth_text = 'Growth: ' + #to_string(growth_in);
 		if (growth_in == 1) {
 			growth_text += ' turn';
