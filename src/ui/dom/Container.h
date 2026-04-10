@@ -39,7 +39,8 @@ public:
 
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
-	void Destroy( GSE_CALLABLE ) override;
+	virtual void Show() override;
+	virtual void Destroy( GSE_CALLABLE ) override;
 
 	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 

@@ -78,7 +78,7 @@ void Sprite::LoadTexture() {
 	auto* texture = GetSpriteActor()->GetTexture();
 
 	if ( texture ) {
-		g_engine->GetGraphics()->LoadTexture( texture );
+		g_engine->GetGraphics()->LoadTexture( texture, true );
 	}
 }
 

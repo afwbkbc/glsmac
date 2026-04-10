@@ -206,6 +206,15 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 	return result;
 }
 
+void Container::Show() {
+	if ( !m_is_visible ) {
+		Area::Show();
+		if ( m_cache ) {
+			m_cache->Update();
+		}
+	}
+}
+
 void Container::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_processing_mouse_overs, "destruction is requested but still processing mouseovers" );
 	const auto children = m_children;

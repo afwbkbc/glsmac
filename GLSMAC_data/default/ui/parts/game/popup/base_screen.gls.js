@@ -50,8 +50,8 @@ return {
 			color: 'rgb(53,61,115)',
 		});
 		p.ui.class('base-screen-frame-text').set({
-			font: 'arialn.ttf:14', // TODO: investigate why non-bold fonts look bad (LOD settings?)
-			color: 'rgb(68,100,160)',
+			font: 'arialnb.ttf:14', // TODO: investigate why non-bold fonts look bad (LOD settings?)
+			color: 'rgb(59,111,128)',
 		});
 
 		p.ui.class('base-screen-frame-info-text').set({

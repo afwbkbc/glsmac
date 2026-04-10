@@ -121,7 +121,7 @@ void Mesh::LoadTexture() {
 	auto* texture = GetMeshActor()->GetTexture();
 
 	if ( texture ) {
-		g_engine->GetGraphics()->LoadTexture( texture );
+		g_engine->GetGraphics()->LoadTexture( texture, true );
 	}
 }
 
