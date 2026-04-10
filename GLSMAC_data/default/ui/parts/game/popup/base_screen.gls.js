@@ -74,6 +74,7 @@ return {
 			align: 'center',
 		});
 
+		const that = this; // TODO
 		return p.create('', 680, 442, (body, cb) => {
 
 			const pp = {
@@ -81,6 +82,9 @@ return {
 				ui: p.ui,
 				hide: p.hide,
 				modules: p.modules,
+				utils: {
+					set_cells: that.set_cells,
+				},
 			};
 
 			for (s of this.available_sections) {
@@ -170,6 +174,9 @@ return {
 			base: data.base,
 		});
 
+		this.sections.bottom_bar.set({
+			base: data.base,
+		});
 	},
 
 	on_hide: () => {
@@ -178,6 +185,55 @@ return {
 
 	on_show: () => {
 		this.sections.bottom_bar.frame.show();
+	},
+
+	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, label_prefix, label_postfix) => {
+		cells_el.clear();
+
+		const width = #floor(#to_float(total_width) / #to_float(columns));
+		const height = #floor(#to_float(total_height) / #to_float(rows));
+
+		this.p.ui.class(cell_baseclass).set({
+			width: width - 1,
+			height: height - 1,
+		});
+
+		const offset_left = (total_width - (columns * width)) / 2;
+		let left = offset_left;
+		let top = (total_height - (rows * height)) / 2;
+
+		let i = 0;
+		let cls = '';
+
+		for (let y = 0; y < rows; y++) {
+			for (let x = 0; x < columns; x++) {
+				if (i < filled) {
+					cls = 'full';
+				} else {
+					if (i < filled + pending) {
+						cls = 'pending';
+					} else {
+						cls = 'empty';
+					}
+				}
+				i++;
+				cells_el.panel({
+					class: cell_baseclass + '-' + cls,
+					left: left + 1,
+					top: top + 1,
+				});
+				left += width;
+			}
+			top += height;
+			left = offset_left;
+		}
+
+		let progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
+		let progress_text = label_prefix + ': ' + #to_string(progress_in);
+		if (#is_defined(label_postfix)) {
+			progress_text += ' ' + label_postfix;
+		}
+		label_el.text = progress_text;
 	},
 
 };

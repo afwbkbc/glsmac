@@ -50,57 +50,19 @@ return {
 	},
 
 	set: (data) => {
-		this.growth_cells.clear();
-
-		const total_width = 112;
-		const total_height = 90;
-
-		const width = #floor(#to_float(total_width) / #to_float(data.columns));
-		const height = #floor(#to_float(total_height) / #to_float(data.rows));
-
-		this.p.ui.class('base-screen-nutrients-cell').set({
-			width: width - 1,
-			height: height - 1,
-		});
-
-		const offset_left = (total_width - (data.columns * width)) / 2;
-		let left = offset_left;
-		let top = (total_height - (data.rows * height)) / 2;
-
-		let i = 0;
-		let cls = '';
-
-		for (let y = 0; y < data.rows; y++) {
-			for (let x = 0; x < data.columns; x++) {
-				if (i < data.filled) {
-					cls = 'full';
-				} else {
-					if (i < data.filled + data.pending) {
-						cls = 'pending';
-					} else {
-						cls = 'empty';
-					}
-				}
-				i++;
-				this.growth_cells.panel({
-					class: 'base-screen-nutrients-cell-' + cls,
-					left: left + 1,
-					top: top + 1,
-				});
-				left += width;
-			}
-			top += height;
-			left = offset_left;
-		}
-
-		let growth_in = #ceil(#to_float(data.rows * data.columns - data.filled) / #to_float(data.pending));
-		let growth_text = 'Growth: ' + #to_string(growth_in);
-		if (growth_in == 1) {
-			growth_text += ' turn';
-		} else {
-			growth_text += ' turns';
-		}
-		this.growth_label.text = growth_text;
+		this.p.utils.set_cells(
+			112,
+			90,
+			data.columns,
+			data.rows,
+			data.filled,
+			data.pending,
+			this.growth_cells,
+			'base-screen-nutrients-cell',
+			this.growth_label,
+			'Growth',
+			'turn(s)',
+		);
 	},
 
 };
