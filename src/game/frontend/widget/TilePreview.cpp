@@ -27,11 +27,13 @@ TilePreview::TilePreview( Game* const game, ui::UI* const ui )
 void TilePreview::Register( ui::dom::Widget* const widget ) {
 	widget->OnUpdate(
 		F_WIDGET_UPDATE( this ) {
-			const auto* const t = ::game::backend::map::tile::Tile::Unwrap( data->value.at( "tile" ) );
-			ASSERT( t, "invalid tile ptr" );
-			const auto* const tile = m_game->GetTM()->GetTile( t->coord.x, t->coord.y );
-			ASSERT( tile, "invalid tile" );
-			Update( widget, tile );
+			if ( data ) {
+				const auto* const t = ::game::backend::map::tile::Tile::Unwrap( data->value.at( "tile" ) );
+				ASSERT( t, "invalid tile ptr" );
+				const auto* const tile = m_game->GetTM()->GetTile( t->coord.x, t->coord.y );
+				ASSERT( tile, "invalid tile" );
+				Update( widget, tile );
+			}
 		}
 	);
 }

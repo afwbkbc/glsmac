@@ -14,7 +14,7 @@ return {
 			bottom: 2,
 		});
 
-		p.ui.class('base-screen-middle-button').extend('popup-button').set({
+		p.ui.class('base-screen-middle-button').extend('game-popup-button').set({
 			width: button_width,
 			align: 'bottom left',
 			bottom: button_padding,
@@ -34,10 +34,12 @@ return {
 		});
 
 		const pp = {
+			ui: p.ui,
 			area: inner,
 		};
 
 		let left = button_padding;
+		this.pages = {};
 		for (p of this.available_pages) {
 			const page = #include('middle_area/' + p);
 			page.init(pp);
@@ -58,8 +60,15 @@ return {
 				return true;
 			});
 			left += button_width + button_padding;
+			this.pages[p] = page;
 		}
 
+	},
+
+	set: (data) => {
+		this.pages.resource.set({
+			base: data.base,
+		});
 	},
 
 };

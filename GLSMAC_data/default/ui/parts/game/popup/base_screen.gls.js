@@ -166,6 +166,10 @@ return {
 		};
 		this.sections.energy.set(energy_data);
 
+		this.sections.middle_area.set({
+			base: data.base,
+		});
+
 	},
 
 	on_hide: () => {
