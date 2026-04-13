@@ -91,13 +91,8 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 	bool result = false;
 	switch ( event.type ) {
 		case input::EV_MOUSE_DOWN: {
-			if ( m_group.empty() ) {
-				if ( !m_is_active ) {
-					AddModifier( GSE_CALL, CM_ACTIVE );
-				}
-			}
-			else {
-				m_parent->SetButtonGroupActive( GSE_CALL, m_group, this );
+			if ( !m_is_active ) {
+				AddModifier( GSE_CALL, CM_ACTIVE );
 			}
 			if ( m_on_mousedown && m_on_mousedown( event ) ) {
 				break;
@@ -108,16 +103,20 @@ const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 		}
 		case input::EV_MOUSE_UP:
 		case input::EV_MOUSE_OUT: {
-			if ( m_group.empty() ) {
-				if ( !m_is_active ) {
-					RemoveModifier( GSE_CALL, CM_ACTIVE );
-				}
+			if ( ( m_group.empty() || !m_is_group_enabled ) && !m_is_active ) {
+				RemoveModifier( GSE_CALL, CM_ACTIVE );
 			}
 			if ( m_on_mouseup && m_on_mouseup( event ) ) {
 				break;
 			}
 			if ( event.type == input::EV_MOUSE_UP && m_last_button != input::MB_NONE ) {
+
 				// actual click happened
+
+				if ( !m_group.empty() ) {
+					m_parent->SetButtonGroupActive( GSE_CALL, m_group, this );
+				}
+
 				if ( m_on_click && m_on_click( event ) ) {
 					break;
 				}

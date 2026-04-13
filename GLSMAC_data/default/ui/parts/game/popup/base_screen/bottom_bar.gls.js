@@ -2,7 +2,7 @@ return {
 
 	available_parts: [
 		'production',
-		'build_queue',
+		'queue',
 		'middle_area',
 		'support',
 	],
@@ -43,6 +43,11 @@ return {
 			filled: 8,
 			pending: 4,
 		});
+
+		this.parts.queue.set([
+			'Mind Worms',
+			'Recreation Commons',
+		]);
 
 	},
 

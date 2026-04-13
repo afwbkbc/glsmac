@@ -118,7 +118,9 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 
 void Scrollview::Destroy( GSE_CALLABLE ) {
 	if ( m_drag.drag_handler_id ) {
-		m_ui->RemoveGlobalHandler( m_drag.drag_handler_id );
+		if ( m_ui ) {
+			m_ui->RemoveGlobalHandler( m_drag.drag_handler_id );
+		}
 		m_drag.drag_handler_id = 0;
 	}
 	Panel::Destroy( GSE_CALL );
