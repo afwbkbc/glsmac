@@ -20,6 +20,29 @@ return {
 		});
 		this.frame.hide();
 
+		// hide menus
+		p.ui.class('base-screen-bottombar-menu-hidebutton').set({
+			width: 106,
+			height: 14,
+			background: 'black',
+		});
+		this.frame.surface({
+			class: 'base-screen-bottombar-menu-hidebutton',
+			align: 'top left',
+			left: 11,
+			top: 20,
+		}).on('mousedown', (e) => {
+			return true;
+		});
+		this.frame.surface({
+			class: 'base-screen-bottombar-menu-hidebutton',
+			align: 'top right',
+			right: 11,
+			top: 22,
+		}).on('mousedown', (e) => {
+			return true;
+		});
+
 		const that = this;
 
 		const pp = {
@@ -48,6 +71,10 @@ return {
 			'Mind Worms',
 			'Recreation Commons',
 		]);
+
+		this.parts.middle_area.set({
+			basename: data.base.name,
+		});
 
 	},
 
