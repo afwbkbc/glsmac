@@ -70,8 +70,10 @@ return {
 					object: object
 				};
 				item.on('mousedown', (e) => {
-					this.set_active_item(null);
-					this.p.game.select_base(object);
+					if (this.selected_object != object) {
+						this.set_active_item(null);
+						this.p.game.select_base(object);
+					}
 					return true;
 				});
 				break;
@@ -221,7 +223,6 @@ return {
 				base: e.base,
 			});
 			this.p.modules.popup.show('base_screen', (result) => {
-				this.selected_object = null;
 				if (last_selected_object != null) {
 					switch (#classof(last_selected_object)) {
 						case 'Unit': {
