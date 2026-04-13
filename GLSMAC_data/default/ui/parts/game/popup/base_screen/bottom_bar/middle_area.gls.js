@@ -133,6 +133,7 @@ return {
 			}
 		}
 
+		this.pops.clear();
 		let left = 3;
 		let shift = 40;
 		for (pop of data.pops) {
