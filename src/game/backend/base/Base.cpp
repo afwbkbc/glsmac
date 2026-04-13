@@ -5,6 +5,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/value/Undefined.h"
+#include "gse/value/Array.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -156,7 +157,21 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 
 			return VALUE( gse::value::Undefined );
 		} )
-	}
+	},
+	{
+		"get_pops",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+
+			gse::value::array_elements_t elements = {};
+
+			for ( auto& pop : m_pops ) {
+				elements.push_back( pop.Wrap( GSE_CALL ) );
+			}
+
+			return VALUE( gse::value::Array,, elements );
+		} ),
+	},
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()

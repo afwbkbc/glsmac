@@ -119,7 +119,7 @@ return {
 				this.calculate_sliding_speed(this.popup.el.top);
 			}
 		});
-
+		
 		const pp = {
 
 			game: p.game,

@@ -2,8 +2,11 @@ return {
 
 	init: (p) => {
 
+		this.p = p;
+
 		this.frame = p.body.panel({
 			class: 'default-panel',
+			border: 'transparent',
 			left: 263,
 			top: 69,
 			right: 263,
@@ -13,9 +16,9 @@ return {
 		const header = this.frame.panel({
 			class: 'default-panel',
 			align: 'top',
-			top: 3,
-			left: 5,
-			right: 5,
+			top: 2,
+			left: 4,
+			right: 4,
 			height: 41,
 		});
 
@@ -71,10 +74,79 @@ return {
 			class: 'base-screen-bottombar-arrow-right',
 		});
 
+		p.ui.class('base-screen-bottombar-pop').set({
+			width: 38,
+			height: 48,
+			align: 'left',
+			top: 3,
+			bottom: 3,
+		});
+
+		this.pops = this.frame.panel({
+			class: 'default-panel',
+			align: 'bottom',
+			bottom: 2,
+			left: 4,
+			right: 60,
+			height: 54,
+		});
+
+		p.ui.class('base-screen-bottombar-nsbtn').set({
+			align: 'center',
+			width: 48,
+			height: 48,
+			sound: 'ok.wav',
+			background: 'interface.pcx:crop(332,1,379,48)',
+			_hover: {
+				background: 'interface.pcx:crop(332,50,379,97)',
+			},
+			_active: {
+				background: 'interface.pcx:crop(332,99,379,146)',
+			},
+		});
+		const nerve_stapling_btn = this.frame.panel({
+			class: 'default-panel',
+			width: 54,
+			height: 54,
+			align: 'bottom right',
+			bottom: 2,
+			right: 4,
+		}).button({
+			class: 'base-screen-bottombar-nsbtn',
+		});
+
 	},
 
 	set: (data) => {
-		this.basename.text = data.basename;
+
+		this.basename.text = data.name;
+
+		// prepare classes with population images
+		const renders = this.p.game.get_bm().get_pop_renders(data.owner);
+		for (id in renders) {
+			const variants = renders[id];
+			for (i in variants) {
+				const variant = variants[i];
+				this.p.ui.class('base-screen-bottombar-pop-' + id + '-' + #to_string(i)).extend('base-screen-bottombar-pop').set({
+					background: variants[i],
+				});
+			}
+		}
+
+		let left = 3;
+		let shift = 40;
+		for (pop of data.pops) {
+			let variant = pop.variant;
+			if (!#is_defined(renders[pop.type][variant])) {
+				variant = 0;
+			}
+			this.pops.surface({
+				class: 'base-screen-bottombar-pop-' + pop.type + '-' + #to_string(variant),
+				left: left,
+			});
+			left += shift;
+		}
+
 	},
 
 };

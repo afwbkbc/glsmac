@@ -318,6 +318,32 @@ WRAPIMPL_BEGIN( BaseManager )
 			} )
 		},
 		{
+			"get_pop_renders",
+			NATIVE_CALL( this ) {
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( player, 0, Player );
+
+				gse::value::object_properties_t defs = {};
+
+				const auto& faction = player->GetFaction();
+
+				for ( const auto& it : m_base_popdefs ) {
+					gse::value::array_elements_t variants = {};
+					const auto& renders = ( faction->m_flags & faction::Faction::FF_PROGENITOR )
+						? it.second->m_renders_progenitor
+						: it.second->m_renders_human
+					;
+					for ( const auto& render : renders ) {
+						variants.push_back( VALUE( gse::value::String,, render.file + ":crop(" + std::to_string( render.x ) + "," + std::to_string( render.y ) + "," + std::to_string( render.x + render.width - 1 ) + "," + std::to_string( render.y + render.height - 1 ) + ")" ) );
+					}
+					defs.insert({ it.first, VALUE( gse::value::Array,, variants ) } );
+				}
+
+				return VALUE( gse::value::Object,, GSE_CALL_NOGC, defs );
+			} )
+		},
+		{
 			"spawn_base",
 			NATIVE_CALL( this ) {
 

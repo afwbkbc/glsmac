@@ -80,6 +80,7 @@ return {
 			const pp = {
 				body: body,
 				ui: p.ui,
+				game: p.game,
 				hide: p.hide,
 				modules: p.modules,
 				utils: {

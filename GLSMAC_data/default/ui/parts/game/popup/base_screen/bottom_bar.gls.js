@@ -9,6 +9,8 @@ return {
 
 	init: (p) => {
 
+		this.p = p;
+
 		this.parts = {};
 
 		this.frame = p.ui.root.area({
@@ -47,6 +49,7 @@ return {
 
 		const pp = {
 			ui: p.ui,
+			game: p.game,
 			body: that.frame,
 			utils: p.utils,
 		};
@@ -73,7 +76,9 @@ return {
 		]);
 
 		this.parts.middle_area.set({
-			basename: data.base.name,
+			name: data.base.name,
+			owner: data.base.get_owner(),
+			pops: data.base.get_pops(),
 		});
 
 	},
