@@ -67,11 +67,8 @@ UI::UI( GSE_CALLABLE )
 					event.data.mouse.y
 				};
 			}
-			for ( const auto& it : m_global_handlers ) {
-				if ( it.second( GSE_CALL, event ) ) {
-					result = true;
-					break;
-				}
+			if ( RunGlobalHandlers( GSE_CALL, event, GH_BEFORE ) ) {
+				result = true;
 			}
 			if (
 				!result &&
@@ -85,6 +82,9 @@ UI::UI( GSE_CALLABLE )
 			}
 			if ( !result ) {
 				result = m_root->ProcessEvent( GSE_CALL, event );
+			}
+			if ( !result && RunGlobalHandlers( GSE_CALL, event, GH_AFTER ) ) {
+				result = true;
 			}
 		});
 		return result;
@@ -308,6 +308,19 @@ void UI::RemoveIterable( const dom::Object* const obj ) {
 	m_iterables.erase( obj );
 }
 
+const bool UI::RunGlobalHandlers( GSE_CALLABLE, const input::Event& event, const ui::UI::global_handler_type_t type ) {
+	const auto& handlers_it = m_global_handlers_by_type.find( type );
+	if ( handlers_it != m_global_handlers_by_type.end() ) {
+		for ( const auto& it : handlers_it->second ) {
+			ASSERT( m_global_handlers.find( it ) != m_global_handlers.end(), "global handler not found" );
+			if ( m_global_handlers.at( it ).second( GSE_CALL, event ) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 scene::Scene* const UI::GetScene() const {
 	ASSERT( m_scene, "ui scene not set" );
 	return m_scene;
@@ -381,15 +394,26 @@ void UI::FocusNext() {
 	}
 }
 
-const size_t UI::AddGlobalHandler( const global_handler_t& global_handler ) {
+const size_t UI::AddGlobalHandler( const global_handler_type_t type, const global_handler_t& global_handler ) {
 	const auto handler_id = m_next_global_handler_id++;
 	ASSERT( m_global_handlers.find( handler_id ) == m_global_handlers.end(), "global handler already set" );
-	m_global_handlers.insert({ handler_id, global_handler } );
+	m_global_handlers.insert({ handler_id, { type, global_handler } } );
+	auto it = m_global_handlers_by_type.find( type );
+	if ( it == m_global_handlers_by_type.end() ) {
+		it = m_global_handlers_by_type.insert({ type, {}} ).first;
+	}
+	it->second.insert( handler_id );
 	return handler_id;
 }
 
 void UI::RemoveGlobalHandler( const size_t handler_id ) {
 	ASSERT( m_global_handlers.find( handler_id ) != m_global_handlers.end(), "global handler not found" );
+	const auto h = m_global_handlers.at( handler_id );
+	const auto& ht = m_global_handlers_by_type.find( h.first );
+	ht->second.erase( handler_id );
+	if ( ht->second.empty() ) {
+		m_global_handlers_by_type.erase( ht );
+	}
 	m_global_handlers.erase( handler_id );
 }
 

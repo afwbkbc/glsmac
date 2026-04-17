@@ -105,7 +105,7 @@ protected:
 
 	virtual void ProcessEvent( const network::Event& event );
 
-	gc::Space* GetGCSpace() const;
+	gc::Space* const GetGCSpace() const;
 
 	bool m_is_connected = false;
 	bool m_is_canceled = false; // canceled by user

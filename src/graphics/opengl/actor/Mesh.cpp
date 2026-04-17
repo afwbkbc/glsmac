@@ -17,7 +17,6 @@
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
 #include "engine/Engine.h"
-#include "ui_legacy/UI.h"
 
 namespace graphics {
 namespace opengl {
@@ -225,6 +224,8 @@ void Mesh::OnWindowResize() {
 
 void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
+	ASSERT( shader_program, "shader program is null" );
+
 	l_draw_begin:
 
 	//Log( "Drawing" );
@@ -361,7 +362,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 										types::Matrix44 matrix;
 										ASSERT( !capture_request, "non-instanced captures not implemented" );
 										if ( ignore_camera ) {
-											matrix = g_engine->GetUI()->GetWorldUIMatrix();
+											matrix = {};
 										}
 										else {
 											matrix = m_actor->GetWorldMatrix();

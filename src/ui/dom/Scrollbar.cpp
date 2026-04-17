@@ -178,7 +178,7 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 			m_slider_drag.is_dragging = true;
 			if ( !m_slider_drag.drag_handler_id ) {
 				if ( m_ui ) {
-					m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( f_drag_handler );
+					m_slider_drag.drag_handler_id = m_ui->AddGlobalHandler( ui::UI::GH_BEFORE, f_drag_handler );
 				}
 			}
 		}

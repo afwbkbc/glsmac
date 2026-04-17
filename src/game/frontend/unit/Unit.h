@@ -117,12 +117,6 @@ public:
 	};
 	const render_data_t& GetRenderData() const;
 
-	void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const override;
-	void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const override;
-	void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const override;
-	void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const override;
-	const bool OnBottomBarListActivate( Game* game ) override;
-
 protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 

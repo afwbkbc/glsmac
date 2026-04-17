@@ -17,8 +17,6 @@
 
 #endif
 
-#include "logger/Console.h"
-
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 #include "logger/Stdout.h"
@@ -43,9 +41,6 @@
 #include "network/simpletcp/SimpleTCP.h"
 
 #include "scheduler/Simple.h"
-#include "ui_legacy/Default.h"
-
-#include "task/common/Common.h"
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
@@ -54,12 +49,7 @@
 
 #endif
 
-#include "task/console/Console.h"
-
 #include "task/main/Main.h"
-#include "task/intro/Intro.h"
-#include "task/mainmenu/MainMenu.h"
-#include "task/game/Game.h"
 
 #include "game/backend/Game.h"
 
@@ -93,7 +83,6 @@
 #ifdef DEBUG
 
 #include "debug/MemoryWatcher.h"
-#include "debug/DebugOverlay.h"
 
 #endif
 
@@ -171,7 +160,6 @@ int main( const int argc, const char* argv[] ) {
 #endif
 
 	network::simpletcp::SimpleTCP network;
-	ui_legacy::Default ui;
 	scheduler::Simple scheduler;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -207,7 +195,6 @@ int main( const int argc, const char* argv[] ) {
 			&graphics,
 			&audio,
 			&network,
-			&ui,
 			nullptr
 		);
 
@@ -265,7 +252,6 @@ int main( const int argc, const char* argv[] ) {
 			&graphics,
 			&audio,
 			&network,
-			&ui,
 			&game
 		);
 

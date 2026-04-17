@@ -14,6 +14,8 @@
 #include "types/Vec2.h"
 #include "types/mesh/Types.h"
 
+#define EH( ... ) [ __VA_ARGS__ ] ( GSE_CALLABLE, const input::Event& event )
+
 namespace types::texture {
 class Texture;
 }
@@ -88,7 +90,11 @@ CLASS( UI, gse::GCWrappable )
 	void FocusNext();
 
 	typedef std::function< const bool( GSE_CALLABLE, const input::Event& event ) > global_handler_t;
-	const size_t AddGlobalHandler( const global_handler_t& global_handler );
+	enum global_handler_type_t {
+		GH_BEFORE,
+		GH_AFTER,
+	};
+	const size_t AddGlobalHandler( const global_handler_type_t type, const global_handler_t& global_handler );
 	void RemoveGlobalHandler( const size_t handler_id );
 
 	typedef std::function< void( dom::Widget* const widget ) > f_widget_func_t;
@@ -146,7 +152,8 @@ private:
 	std::function< void() > m_f_global_singleton_on_deglobalize = nullptr;
 
 	size_t m_next_global_handler_id = 1;
-	std::map< size_t, global_handler_t > m_global_handlers = {};
+	std::map< size_t, std::pair< global_handler_type_t, global_handler_t > > m_global_handlers = {};
+	std::unordered_map< global_handler_type_t, std::set< size_t > > m_global_handlers_by_type = {};
 
 	struct widget_state_t {
 		const widget_config_t* config;
@@ -159,6 +166,8 @@ private:
 
 	std::unordered_map< widget_type_t, widget_config_t > m_widget_configs = {};
 	std::unordered_map< std::string, widget_type_t > m_widget_strs = {};
+
+	const bool RunGlobalHandlers( GSE_CALLABLE, const input::Event& event, const global_handler_type_t type );
 
 private:
 	friend class dom::Object;

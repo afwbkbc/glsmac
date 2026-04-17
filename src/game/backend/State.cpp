@@ -144,42 +144,6 @@ connection::Connection* State::GetConnection() {
 	return m_connection;
 }
 
-void State::InitBindings() {
-	ASSERT( !m_glsmac, "do not use state bindings with new ui" );
-	if ( !m_bindings ) {
-		ASSERT( !m_gc_space, "init bindings but gc space already set" );
-		Log( "Initializing bindings" );
-		m_bindings = new Bindings( this );
-		m_gc_space = m_bindings->GetGCSpace();
-		m_ctx = m_bindings->GetContext();
-		try {
-			m_bindings->RunMainScript();
-		}
-		catch ( gse::Exception& err ) {
-			if ( m_game ) {
-				m_game->OnGSEError( err );
-			}
-			else {
-				throw std::runtime_error( err.ToString() );
-			}
-		}
-	}
-}
-
-void State::Configure() {
-	ASSERT( m_bindings, "bindings not initialized" );
-
-	Log( "Configuring state" );
-
-	m_fm->Clear();
-
-	m_bindings->RunMain();
-
-	if ( m_fm->GetAll().empty() ) {
-		THROW( "no factions were defined" );
-	}
-}
-
 void State::Reset() {
 	{
 		//std::lock_guard guard( m_connection_mutex );
@@ -218,15 +182,9 @@ faction::FactionManager* State::GetFM() const {
 }
 
 gse::Value* const State::TriggerObject( gse::GCWrappable* object, const std::string& event, const gse::f_args_t& f_args ) {
+	ASSERT( m_glsmac, "glsmac not set" );
 	CHECKACCUM( m_gc_space );
-	if ( m_glsmac ) {
-		// new ui
-		return m_glsmac->TriggerObject( object, event, f_args );
-	}
-	else {
-		// legacy
-		return m_bindings->Trigger( object, event, f_args );
-	}
+	return m_glsmac->TriggerObject( object, event, f_args );
 }
 
 WRAPIMPL_BEGIN( State )

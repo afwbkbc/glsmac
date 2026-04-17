@@ -11,7 +11,6 @@
 
 #include "Types.h"
 #include "game/backend/map/Types.h"
-#include "game/backend/map_editor/Types.h"
 
 #include "types/Exception.h"
 #include "gse/Exception.h"
@@ -91,10 +90,6 @@ namespace map {
 class Map;
 }
 
-namespace map_editor {
-class MapEditor;
-}
-
 namespace slot {
 class Slot;
 }
@@ -111,8 +106,6 @@ enum op_t {
 	OP_GET_MAP_DATA,
 	OP_RESET,
 	OP_SAVE_MAP,
-	OP_EDIT_MAP,
-	OP_CHAT,
 	OP_GET_FRONTEND_REQUESTS,
 	OP_SEND_BACKEND_REQUESTS,
 	OP_ADD_EVENT,
@@ -164,13 +157,6 @@ struct MT_Request {
 			std::string* path;
 		} dump;
 #endif
-		struct {
-			size_t tile_x;
-			size_t tile_y;
-			map_editor::tool_type_t tool;
-			map_editor::brush_type_t brush;
-			map_editor::draw_mode_t draw_mode;
-		} edit_map;
 		struct {
 			std::string* serialized_event;
 		} add_event;
@@ -260,13 +246,6 @@ struct MT_Response {
 			std::string* path;
 		} save_map;
 		struct {
-			struct {
-				std::unordered_map< std::string, map::sprite_actor_t >* actors_to_add;
-				std::unordered_map< size_t, std::string >* instances_to_remove;
-				std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >* instances_to_add;
-			} sprites;
-		} edit_map;
-		struct {
 			std::vector< FrontendRequest >* requests;
 		} get_frontend_requests;
 	} data;
@@ -295,9 +274,6 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 
 	// saves current map into file
 	common::mt_id_t MT_SaveMap( const std::string& path );
-
-	// perform edit operation on map tile(s)
-	common::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
 
 	// get all pending frontend requests (will be cleared after)
 	common::mt_id_t MT_GetFrontendRequests();
@@ -419,7 +395,6 @@ private:
 
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
-	map_editor::MapEditor* m_map_editor = nullptr;
 
 	turn::Turn m_current_turn = {};
 

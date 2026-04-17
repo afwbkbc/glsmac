@@ -4,7 +4,6 @@
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
-#include "task/game/Game.h"
 #include "scheduler/Scheduler.h"
 #include "util/LogHelper.h"
 #include "gc/Space.h"
@@ -571,14 +570,14 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 		delete m_game;
 	}
 	m_game = new ::game::frontend::Game(
-		nullptr, this, real_state, m_ui, UH( this, ctx, si, ep ) {
+		this, real_state, m_ui, [ this, si, ep ] () {
 			m_gc_space->Accumulate(
 				this, [ this ]() {
 					TriggerObject( this, "start_game" );
 				}
 			);
-		}, UH( this, real_state ) {
-			//THROW( "TODO: cancel" );
+		}, [] () {
+			THROW( "TODO: cancel" );
 		}
 	);
 

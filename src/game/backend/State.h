@@ -70,8 +70,6 @@ CLASS( State, gse::GCWrappable )
 
 	void SetConnection( connection::Connection* connection );
 	connection::Connection* GetConnection();
-	void InitBindings();
-	void Configure();
 	void Reset();
 	void DetachConnection();
 
@@ -84,9 +82,8 @@ CLASS( State, gse::GCWrappable )
 	const types::Buffer Serialize() const;
 	void Deserialize( types::Buffer buf );
 
-	// not const yet because in legacy ui these will be set by bindings
-	gc::Space* m_gc_space = nullptr;
-	gse::context::Context* m_ctx = nullptr;
+	gc::Space* const m_gc_space = nullptr;
+	gse::context::Context* const m_ctx = nullptr;
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 

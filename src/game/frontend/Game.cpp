@@ -7,19 +7,15 @@
 #include "util/random/Random.h"
 #include "config/Config.h"
 #include "scheduler/Scheduler.h"
-#include "../../ui_legacy/UI.h" // TODO: fix path
 #include "game/backend/Game.h"
 #include "game/backend/unit/Def.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/animation/Def.h"
 #include "game/backend/connection/Connection.h"
-#include "task/mainmenu/MainMenu.h"
 #include "graphics/Graphics.h"
 #include "util/FS.h"
-#include "game/frontend/ui_legacy/popup/PleaseDontGo.h"
 #include "game/backend/State.h"
 #include "Types.h"
-#include "game/frontend/ui_legacy/bottom_bar/BottomBar.h"
 #include "game/frontend/tile/TileManager.h"
 #include "game/frontend/unit/UnitManager.h"
 #include "game/frontend/unit/Unit.h"
@@ -45,10 +41,7 @@
 #include "types/texture/Texture.h"
 #include "types/mesh/Render.h"
 #include "types/mesh/Data.h"
-#include "game/frontend/ui_legacy/style/Theme.h"
 #include "game/backend/map/Consts.h"
-#include "task/game/Game.h"
-#include "game/frontend/ui_legacy/popup/base_popup/BasePopup.h"
 #include "input/Types.h"
 #include "GLSMAC.h"
 #include "game/backend/unit/UnitManager.h"
@@ -64,6 +57,7 @@
 #include "widget/UnitPreview.h"
 #include "widget/BasePreview.h"
 #include "gse/value/Null.h"
+#include "input/Event.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -72,15 +66,15 @@ namespace frontend {
 
 const Game::consts_t Game::s_consts = {};
 
-Game::Game( task::game::Game* task, GLSMAC* glsmac, backend::State* state, ui::UI* const ui, ::ui_legacy::ui_handler_t on_start, ::ui_legacy::ui_handler_t on_cancel )
-	: m_task( task )
-	, m_glsmac( glsmac )
+Game::Game( GLSMAC* glsmac, backend::State* state, ui::UI* const ui, const std::function< void() > on_start, const std::function< void() > on_cancel )
+	: m_glsmac( glsmac )
 	, m_state( state )
 	, m_ui( ui )
 	, m_on_start( on_start )
-	, m_on_cancel( on_cancel )
-	, m_is_map_editing_allowed( state->GetConnection() == nullptr ) { // singleplayer only
-	ASSERT( m_ui, "UI not set" );
+	, m_on_cancel( on_cancel ) {
+	ASSERT( glsmac, "glsmac not set" );
+	ASSERT( state, "state not set" );
+	ASSERT( ui, "UI not set" );
 }
 
 Game::~Game() {
@@ -122,7 +116,7 @@ void Game::Start() {
 	RegisterWidgets();
 
 	ShowLoader(
-		"Starting game", LCH( this ) {
+		"Starting game", [ this ]() {
 			CancelGame();
 			return false;
 		}
@@ -206,9 +200,8 @@ void Game::Stop() {
 void Game::Iterate() {
 
 	auto* game = g_engine->GetGame();
-	auto* ui = g_engine->GetUI();
 
-	const auto f_handle_nonsuccess_init = [ this, ui ]( const backend::MT_Response& response ) -> void {
+	const auto f_handle_nonsuccess_init = [ this ]( const backend::MT_Response& response ) -> void {
 		switch ( response.result ) {
 			case backend::R_ABORTED:
 			case backend::R_ERROR: {
@@ -319,69 +312,19 @@ void Game::Iterate() {
 			CancelGame();
 		}
 	}
-	if ( m_is_map_editing_allowed ) {
-		if ( m_mt_ids.save_map ) {
-			auto response = game->MT_GetResponse( m_mt_ids.save_map );
-			if ( response.result != backend::R_NONE ) {
-				HideLoader();
-				m_mt_ids.save_map = 0;
-				if ( ui->HasPopup() ) {
-					ui->CloseLastPopup();
-				}
-				if ( response.result == backend::R_SUCCESS ) {
-					m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
-					m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
-					if ( !m_glsmac ) {
-						// legacy ui
-						m_ui_legacy.bottom_bar->UpdateMapFileName();
-					}
-				}
-				else {
-					ui->ShowError(
-						"Map saving failed.", UH( this ) {
-
-						}
-					);
-				}
-				game->MT_DestroyResponse( response );
+	if ( m_mt_ids.save_map ) {
+		auto response = game->MT_GetResponse( m_mt_ids.save_map );
+		if ( response.result != backend::R_NONE ) {
+			HideLoader();
+			m_mt_ids.save_map = 0;
+			if ( response.result == backend::R_SUCCESS ) {
+				m_map_data.last_directory = util::FS::GetDirName( *response.data.save_map.path );
+				m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
 			}
-		}
-		if ( m_mt_ids.edit_map ) {
-			auto response = game->MT_GetResponse( m_mt_ids.edit_map );
-			if ( response.result != backend::R_NONE ) {
-				m_mt_ids.edit_map = 0;
-
-				ASSERT( response.result == backend::R_SUCCESS, "edit map unsuccessful" );
-
-				// add missing things, remove unneeded things
-				if ( response.data.edit_map.sprites.actors_to_add ) {
-					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.actors_to_add->size() ) + " actors" );
-					for ( auto& a : *response.data.edit_map.sprites.actors_to_add ) {
-						GetTerrainInstancedSprite( a.second );
-					}
-				}
-
-				if ( response.data.edit_map.sprites.instances_to_remove ) {
-					Log( "Need to remove " + std::to_string( response.data.edit_map.sprites.instances_to_remove->size() ) + " instances" );
-					for ( auto& i : *response.data.edit_map.sprites.instances_to_remove ) {
-						auto* actor = m_ism->GetInstancedSpriteByKey( i.second )->actor;
-						ASSERT( actor, "sprite actor not found" );
-						ASSERT( actor->HasInstance( i.first ), "actor instance not found" );
-						actor->RemoveInstance( i.first );
-					}
-				}
-
-				if ( response.data.edit_map.sprites.instances_to_add ) {
-					Log( "Need to add " + std::to_string( response.data.edit_map.sprites.instances_to_add->size() ) + " instances" );
-					for ( auto& i : *response.data.edit_map.sprites.instances_to_add ) {
-						const auto& instance = i.second;
-						auto* actor = m_ism->GetInstancedSpriteByKey( instance.first )->actor;
-						ASSERT( actor, "sprite actor not found" );
-						ASSERT( !actor->HasInstance( i.first ), "actor instance already exists" );
-						actor->SetInstance( i.first, instance.second );
-					}
-				}
+			else {
+				THROW( "TODO: Map saving failed" );
 			}
+			game->MT_DestroyResponse( response );
 		}
 	}
 	if ( m_mt_ids.chat ) {
@@ -451,44 +394,22 @@ void Game::Iterate() {
 			m_pending_backend_requests.clear();
 		}
 
-		if ( m_is_map_editing_allowed && m_editing_draw_timer.HasTicked() ) {
-			if ( m_is_editing_mode && !IsTileAtRequestPending() ) {
-				SelectTileAtPoint( backend::TQP_TILE_SELECT, m_map_control.last_mouse_position.x, m_map_control.last_mouse_position.y ); // async
-			}
-		}
-
 		// response for clicked tile (if click happened)
 		const auto tile_at = GetTileAtScreenCoordsResult();
 		if ( tile_at.is_set ) {
 			ASSERT( m_tile_at_query_purpose != backend::TQP_NONE, "tile preferred mode not set" );
 			auto* tile = m_tm->GetTile( tile_at.tile_pos );
-			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
-				if ( !m_mt_ids.edit_map ) { // TODO: need to queue?
-					m_mt_ids.edit_map = game->MT_EditMap( tile->GetCoords(), m_editor_tool, m_editor_brush, m_editor_draw_mode );
-				}
-				ASSERT( m_tile_at_query_purpose == backend::TQP_TILE_SELECT, "only tile selections allowed in map editor" );
-				SelectTileOrUnit( tile );
-			}
-			else {
-				size_t selected_unit_id = 0;
-				bool need_scroll = true;
-				SelectTileOrUnit( tile, selected_unit_id );
-				if ( need_scroll ) {
-					ScrollToTile( tile, true );
-				}
+			size_t selected_unit_id = 0;
+			bool need_scroll = true;
+			SelectTileOrUnit( tile, selected_unit_id );
+			if ( need_scroll ) {
+				ScrollToTile( tile, true );
 			}
 		}
 
 		auto minimap_texture = GetMinimapTextureResult();
 		if ( minimap_texture ) {
-			if ( m_glsmac ) {
-				// new ui
-				m_widgets.Minimap->Update( nullptr, minimap_texture );
-			}
-			else {
-				// legacy ui
-				m_ui_legacy.bottom_bar->SetMinimapTexture( minimap_texture );
-			}
+			m_widgets.Minimap->Update( nullptr, minimap_texture );
 		}
 
 		bool is_camera_position_updated = false;
@@ -528,26 +449,6 @@ void Game::Iterate() {
 
 		m_um->Iterate();
 	}
-}
-
-const bool Game::IsMapEditingAllowed() const {
-	return m_is_map_editing_allowed;
-}
-
-const size_t Game::GetMapWidth() const {
-	return m_map_data.width;
-}
-
-const size_t Game::GetMapHeight() const {
-	return m_map_data.height;
-}
-
-const std::string& Game::GetMapFilename() const {
-	return m_map_data.filename;
-}
-
-const std::string& Game::GetMapLastDirectory() const {
-	return m_map_data.last_directory;
 }
 
 tile::TileManager* Game::GetTM() const {
@@ -650,14 +551,7 @@ void Game::UpdateViewport() {
 	m_viewport.window_height = graphics->GetViewportHeight();
 	m_viewport.window_aspect_ratio = graphics->GetAspectRatio();
 	m_viewport.max.x = std::max< ssize_t >( m_viewport.min.x, m_viewport.window_width );
-	size_t bh;
-	if ( !m_glsmac ) {
-		// legacy ui
-		bh = m_ui_legacy.bottom_bar->GetHeight();
-	}
-	else {
-		bh = 256; // TODO
-	}
+	size_t bh = 256; // TODO: determine bottombar height from scripts
 	m_viewport.max.y = std::max< ssize_t >( m_viewport.min.y, m_viewport.window_height - bh + m_viewport.bottom_bar_overlap );
 	m_viewport.ratio.x = (float)m_viewport.window_width / m_viewport.max.x;
 	m_viewport.ratio.y = (float)m_viewport.window_height / m_viewport.max.y;
@@ -712,16 +606,7 @@ void Game::UpdateCameraPosition() {
 		2.0f / ( (float)( m_map_data.width ) * m_camera_position.z * m_viewport.window_aspect_ratio ),
 		2.0f / ( (float)( m_map_data.height ) * m_camera_position.z * m_viewport.ratio.y * 0.707f ),
 	};
-	if ( !m_glsmac ) {
-		// legacy ui
-		if ( m_ui_legacy.bottom_bar ) {
-			m_ui_legacy.bottom_bar->SetMinimapSelection( percents, zoom );
-		}
-	}
-	else {
-		// new ui
-		m_widgets.Minimap->SetMinimapSelection( percents, zoom );
-	}
+	m_widgets.Minimap->SetMinimapSelection( percents, zoom );
 }
 
 void Game::UpdateCameraScale() {
@@ -822,17 +707,6 @@ void Game::UpdateUICamera() {
 	}*/
 }
 
-const size_t Game::GetBottomBarMiddleHeight() const {
-	if ( !m_glsmac ) {
-		// legacy ui
-		ASSERT( m_ui_legacy.bottom_bar, "bottom bar not initialized" );
-		return m_ui_legacy.bottom_bar->GetMiddleHeight();
-	}
-	else {
-		return 256 - 32 - 24; // TODO
-	}
-}
-
 const size_t Game::GetViewportHeight() const {
 	return m_viewport.height;
 }
@@ -842,7 +716,7 @@ void Game::LoadMap( const std::string& path ) {
 
 	auto* game = g_engine->GetGame();
 	ShowLoader(
-		"Loading map", LCH( this ) {
+		"Loading map", [ this ]() {
 			CancelRequests();
 			return false;
 		}
@@ -873,45 +747,8 @@ void Game::SaveMap( const std::string& path ) {
 	m_mt_ids.save_map = game->MT_SaveMap( path );
 }
 
-void Game::ConfirmExit( ::ui_legacy::ui_handler_t on_confirm ) {
-	if ( !m_glsmac ) {
-		// legacy ui
-		if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-			on_confirm();
-			return;
-		}
-		NEWV( popup, ui_legacy::popup::PleaseDontGo, this, on_confirm );
-		m_map_control.edge_scrolling.timer.Stop();
-		popup->Open();
-	}
-}
-
 types::texture::Texture* Game::GetTerrainTexture() const {
 	return m_textures.terrain;
-}
-
-void Game::SetEditorTool( backend::map_editor::tool_type_t editor_tool ) {
-	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
-	if ( m_editor_tool != editor_tool ) {
-		m_editor_tool = editor_tool;
-	}
-}
-
-const backend::map_editor::tool_type_t Game::GetEditorTool() const {
-	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
-	return m_editor_tool;
-}
-
-void Game::SetEditorBrush( backend::map_editor::brush_type_t editor_brush ) {
-	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
-	if ( m_editor_brush != editor_brush ) {
-		m_editor_brush = editor_brush;
-	}
-}
-
-const backend::map_editor::brush_type_t Game::GetEditorBrush() const {
-	ASSERT( m_is_map_editing_allowed, "map editing not allowed" );
-	return m_editor_brush;
 }
 
 const types::Vec3 Game::GetCloserCoords( const types::Vec3& coords, const types::Vec3& ref_coords ) const {
@@ -925,24 +762,6 @@ const types::Vec3 Game::GetCloserCoords( const types::Vec3& coords, const types:
 Slot* Game::GetSlot( const size_t index ) const {
 	ASSERT( m_slots.find( index ) != m_slots.end(), "slot not found" );
 	return m_slots.at( index );
-}
-
-void Game::HideBottomBar() {
-	if ( !m_glsmac ) {
-		// legacy ui
-		m_ui_legacy.bottom_bar->Hide();
-	}
-}
-
-void Game::ShowBottomBar() {
-	if ( !m_glsmac ) {
-		// legacy ui
-		m_ui_legacy.bottom_bar->Show();
-	}
-}
-
-const bool Game::IsInitialized() const {
-	return m_is_initialized;
 }
 
 void Game::SetWidgetRelation( const ui::widget_type_t type, const size_t id, ui::dom::Widget* const widget ) {
@@ -1076,7 +895,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					g_engine->ShutDown();
 				}
 				else {
-					ReturnToMainMenu( quit_reason );
+					THROW( "TODO: ReturnToMainMenu" );
 				}
 			}
 		);
@@ -1093,35 +912,18 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_ERROR: {
-			if ( !g_engine->GetUI()->HasErrorPopup() ) { // show first error only
-				const auto& errmsg = *request->data.error.what;
-				if ( request->data.error.stacktrace ) {
-					Log( *request->data.error.stacktrace );
-				}
-				else {
-					Log( errmsg );
-				}
-				if ( m_glsmac ) {
-					// new ui
-					m_glsmac->ShowError(
-						errmsg, UH( f_exit, errmsg ) {
-							f_exit( errmsg );
-						}
-					);
-				}
-				else {
-					// legacy ui
-					g_engine->GetUI()->ShowError(
-						errmsg, UH( f_exit, errmsg ) {
-							f_exit( errmsg );
-						}
-					);
-				}
+			const auto& errmsg = *request->data.error.what;
+			if ( request->data.error.stacktrace ) {
+				Log( *request->data.error.stacktrace );
 			}
-		}
-		case FrontendRequest::FR_GLOBAL_MESSAGE: {
-			AddMessage( *request->data.global_message.message );
-			break;
+			else {
+				Log( errmsg );
+			}
+			m_glsmac->ShowError(
+				errmsg, [ f_exit, errmsg ]() {
+					f_exit( errmsg );
+				}
+			);
 		}
 		case FrontendRequest::FR_UPDATE_TILES: {
 			const auto& tiles_data = *request->data.update_tiles.tile_updates;
@@ -1140,21 +942,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 		}
 		case FrontendRequest::FR_TURN_STATUS: {
 			m_turn_status = request->data.turn_status.status;
-			if ( !m_glsmac ) {
-				// legacy ui
-				ASSERT( m_ui_legacy.bottom_bar, "bottom bar not initialized" );
-				m_ui_legacy.bottom_bar->SetTurnStatus( m_turn_status );
-			}
 			bool is_turn_active = m_turn_status == backend::turn::TS_TURN_ACTIVE || m_turn_status == backend::turn::TS_TURN_COMPLETE;
 			if ( m_is_turn_active != is_turn_active ) {
 				m_is_turn_active = is_turn_active;
 				if ( m_is_initialized ) {
 					if ( m_is_turn_active ) {
 						/*const auto* previously_selected_unit = m_selected_unit;
-						m_selected_unit = nullptr;
-						if ( previously_selected_unit ) {
-							RenderTile( previously_selected_unit->GetTile() );
-						}*/ // ???????
+-                                               m_selected_unit = nullptr;
+-                                               if ( previously_selected_unit ) {
+-                                                       RenderTile( previously_selected_unit->GetTile() );
+-                                               }*/ // ???????
 						m_um->SelectNextUnitOrSwitchToTileSelection();
 					}
 					else {
@@ -1380,36 +1177,15 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			break;
 		}
 		case FrontendRequest::FR_LOADER_SHOW: {
-			if ( m_glsmac ) {
-				// new ui
-				m_glsmac->ShowLoader( *request->data.loader.text );
-			}
-			else {
-				// legacy ui
-				g_engine->GetUI()->ShowLoader( *request->data.loader.text );
-			}
+			m_glsmac->ShowLoader( *request->data.loader.text );
 			break;
 		}
 		case FrontendRequest::FR_LOADER_TEXT: {
-			if ( m_glsmac ) {
-				// new ui
-				m_glsmac->SetLoaderText( *request->data.loader.text );
-			}
-			else {
-				// legacy ui
-				g_engine->GetUI()->SetLoaderText( *request->data.loader.text );
-			}
+			m_glsmac->SetLoaderText( *request->data.loader.text );
 			break;
 		}
 		case FrontendRequest::FR_LOADER_HIDE: {
-			if ( m_glsmac ) {
-				// new ui
-				m_glsmac->HideLoader();
-			}
-			else {
-				// legacy ui
-				g_engine->GetUI()->HideLoader();
-			}
+			m_glsmac->HideLoader();
 			break;
 		}
 		default: {
@@ -1464,12 +1240,6 @@ void Game::Initialize(
 
 	m_game = g_engine->GetGame();
 	ASSERT( m_game, "game is null" );
-
-	auto* ui = g_engine->GetUI();
-
-	if ( ui->HasPopup() ) {
-		ui->CloseLastPopup( true );
-	}
 
 	Log( "Initializing game" );
 
@@ -1562,381 +1332,287 @@ void Game::Initialize(
 		}
 	}
 
-	if ( !m_glsmac ) {
-		// legacy UI
-		NEW( m_ui_legacy.theme, ui_legacy::style::Theme );
-		ui->AddTheme( m_ui_legacy.theme );
-		NEW( m_ui_legacy.bottom_bar, ui_legacy::BottomBar, this );
-		ui->AddObject( m_ui_legacy.bottom_bar );
-	}
-
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
-
-	// map event handlers
 
 	auto* game = g_engine->GetGame();
 
-	m_handlers.keydown_before = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_KEY_DOWN, EH( this, ui ) {
-			if (
-				ui->HasPopup() &&
-					!data->key.modifiers &&
-					data->key.code == input::K_ESCAPE
-				) {
-				ui->CloseLastPopup();
-				return true;
+	m_global_handlers.before = m_ui->AddGlobalHandler(
+		ui::UI::GH_BEFORE, EH( this, game ) {
+			switch ( event.type ) {
+				case input::EV_KEY_DOWN: {
+					if ( event.data.key.key == 'z' ) {
+						m_map_control.key_zooming = 1;
+						return true;
+					}
+					if ( event.data.key.key == 'x' ) {
+						m_map_control.key_zooming = -1;
+						return true;
+					}
+					break;
+				}
+				case input::EV_KEY_UP: {
+					if ( event.data.key.key == 'z' || event.data.key.key == 'x' ) {
+						if ( m_map_control.key_zooming ) {
+							m_map_control.key_zooming = 0;
+							m_scroller.Stop();
+						}
+					}
+					break;
+				}
+				case input::EV_MOUSE_DOWN: {
+					m_map_control.mouse_buttons_pressed++;
+					break;
+				}
+				case input::EV_MOUSE_UP: {
+					ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
+					m_map_control.mouse_buttons_pressed--;
+					switch ( event.data.mouse.button ) {
+						case input::MB_MIDDLE: {
+							if ( m_map_control.is_dragging ) {
+								m_map_control.is_dragging = false;
+								return true;
+							}
+						}
+						default: {
+						}
+					}
+					break;
+				}
+				case input::EV_MOUSE_MOVE: {
+					const auto& c = event.data.mouse;
+
+					m_map_control.last_mouse_position = {
+						GetFixedX( c.x ),
+						(float)c.y
+					};
+
+					if ( m_map_control.is_dragging ) {
+						types::Vec2< float > current_drag_position = {
+							m_clamp.x.Clamp( c.x ),
+							m_clamp.y.Clamp( c.y )
+						};
+						types::Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
+
+						m_camera_position.x += (float)drag.x;
+						m_camera_position.y += (float)drag.y;
+						UpdateCameraPosition();
+
+						m_map_control.last_drag_position = current_drag_position;
+					}
+					else {
+						if ( !m_map_control.mouse_buttons_pressed && g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable when not dragging and in fullscreen
+							const ssize_t edge_distance = m_viewport.is_fullscreen
+								? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
+								: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
+							if ( c.x < edge_distance ) {
+								m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
+							}
+							else if ( c.x >= m_viewport.window_width - edge_distance ) {
+								m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
+							}
+							else {
+								m_map_control.edge_scrolling.speed.x = 0;
+							}
+							if ( c.y <= edge_distance ) {
+								m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
+							}
+							else if ( c.y >= m_viewport.window_height - edge_distance ) {
+								m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
+							}
+							else {
+								m_map_control.edge_scrolling.speed.y = 0;
+							}
+						}
+						else {
+							m_map_control.edge_scrolling.speed = {
+								0.0f,
+								0.0f
+							};
+						}
+						if ( m_map_control.edge_scrolling.speed ) {
+							if ( !m_map_control.edge_scrolling.timer.IsRunning() ) {
+								//Log( "Edge scrolling started" );
+								m_map_control.edge_scrolling.timer.SetInterval( Game::s_consts.map_scroll.static_scrolling.scroll_step_ms );
+							}
+						}
+						else {
+							if ( m_map_control.edge_scrolling.timer.IsRunning() ) {
+								//Log( "Edge scrolling stopped" );
+								m_map_control.edge_scrolling.timer.Stop();
+							}
+						}
+					}
+					if ( m_map_control.is_dragging ) {
+						return true;
+					}
+					break;
+				}
+				default: {
+				}
 			}
+
 			return false;
-		}, ::ui_legacy::UI::GH_BEFORE
+		}
 	);
 
-	m_handlers.keydown_after = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_KEY_DOWN, EH( this, ui, game ) {
+	m_global_handlers.after = m_ui->AddGlobalHandler(
+		ui::UI::GH_AFTER, EH( this, game ) {
 
-			if ( ui->HasPopup() ) {
-				return false;
-			}
+			switch ( event.type ) {
+				case input::EV_KEY_DOWN: {
+					if ( !event.data.key.modifiers ) {
+						auto* selected_tile = m_tm->GetSelectedTile();
+						if ( selected_tile ) {
 
-			if ( !m_glsmac ) {
-				// legacy ui
-				m_ui_legacy.bottom_bar->CloseMenus();
-			}
+							bool is_tile_selected = false;
+							backend::map::tile::direction_t td = backend::map::tile::D_NONE;
 
-			if ( !data->key.modifiers ) {
-				auto* selected_tile = m_tm->GetSelectedTile();
-				if ( selected_tile ) {
-
-					bool is_tile_selected = false;
-					backend::map::tile::direction_t td = backend::map::tile::D_NONE;
-
-					switch ( data->key.code ) {
+							switch ( event.data.key.code ) {
 #define X( _key, _altkey, _direction ) \
-                        case ::ui_legacy::event::_key: \
-                        case ::ui_legacy::event::_altkey: { \
+                        case ::input::_key: \
+                        case ::input::_altkey: { \
                             td = backend::map::tile::_direction; \
                             is_tile_selected = true; \
                             m_tile_at_query_purpose = backend::TQP_TILE_SELECT; \
                             break; \
                         }
-						X( K_LEFT, K_KP_LEFT, D_W )
-						X( K_UP, K_KP_UP, D_N )
-						X( K_RIGHT, K_KP_RIGHT, D_E )
-						X( K_DOWN, K_KP_DOWN, D_S )
-						X( K_HOME, K_KP_LEFT_UP, D_NW )
-						X( K_END, K_KP_LEFT_DOWN, D_SW )
-						X( K_PAGEUP, K_KP_RIGHT_UP, D_NE )
-						X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
+								X( K_LEFT, K_KP_LEFT, D_W )
+								X( K_UP, K_KP_UP, D_N )
+								X( K_RIGHT, K_KP_RIGHT, D_E )
+								X( K_DOWN, K_KP_DOWN, D_S )
+								X( K_HOME, K_KP_LEFT_UP, D_NW )
+								X( K_END, K_KP_LEFT_DOWN, D_SW )
+								X( K_PAGEUP, K_KP_RIGHT_UP, D_NE )
+								X( K_PAGEDOWN, K_KP_RIGHT_DOWN, D_SE )
 #undef X
-						case input::K_TAB: {
-							m_um->SelectNextUnitMaybe();
-							break;
-						}
-						case input::K_SPACE: {
-							auto* unit = m_um->GetSelectedUnit();
-							if ( unit ) {
-								m_glsmac->WithGSE(
-									[ &game, &unit ]( GSE_CALLABLE ) {
-										auto* u = game->GetUM()->GetUnit( unit->GetId() );
-										game->Event(
-											GSE_CALL, "unit_skip_turn", {
-												{ "unit", u->Wrap( GSE_CALL, true ) },
+								case input::K_TAB: {
+									m_um->SelectNextUnitMaybe();
+									break;
+								}
+								case input::K_SPACE: {
+									auto* unit = m_um->GetSelectedUnit();
+									if ( unit ) {
+										m_glsmac->WithGSE(
+											[ &game, &unit ]( GSE_CALLABLE ) {
+												auto* u = game->GetUM()->GetUnit( unit->GetId() );
+												game->Event(
+													GSE_CALL, "unit_skip_turn", {
+														{ "unit", u->Wrap( GSE_CALL, true ) },
+													}
+												);
 											}
 										);
 									}
-								);
+									break;
+								}
+								case input::K_ENTER: {
+									if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
+										CompleteTurn();
+										break;
+									}
+									break;
+								}
+								default: {
+									// nothing
+								}
 							}
+
+							if ( is_tile_selected ) {
+								auto* tile = selected_tile->GetNeighbour( td );
+								auto* selected_unit = m_um->GetSelectedUnit();
+
+								if ( !selected_unit ) {
+									SelectTileOrUnit( tile );
+									ScrollToTile( tile, false );
+									return true;
+								}
+								else {
+									// try moving unit to tile
+									const auto& dst_tile = selected_unit->GetTile()->GetNeighbour( td );
+									std::unordered_map< size_t, unit::Unit* > foreign_units = {};
+									for ( const auto& it : dst_tile->GetUnits() ) {
+										const auto& unit = it.second;
+										if ( !unit->IsOwned() ) { // TODO: pacts
+											// TODO: skip units of treaty/truce faction?
+											foreign_units.insert( it );
+										}
+									}
+									m_glsmac->WithGSE(
+										[ &game, &selected_unit, &tile, &foreign_units ]( GSE_CALLABLE ) {
+											const auto* um = game->GetUM();
+											if ( foreign_units.empty() ) {
+												// move
+												auto* unit = um->GetUnit( selected_unit->GetId() );
+												const auto& c = tile->GetCoords();
+												auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
+												ASSERT( unit, "unit not found" );
+												game->Event(
+													GSE_CALL, "move_unit", {
+														{ "unit", unit->Wrap( GSE_CALL, true ) },
+														{ "tile", dst_tile->Wrap( GSE_CALL, true ) },
+													}
+												);
+											}
+											else {
+												// attack
+												auto* attacker = um->GetUnit( selected_unit->GetId() );
+												ASSERT( attacker, "attacker unit not found" );
+												auto* defender = um->GetUnit( foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() )->GetId() );
+												ASSERT( attacker, "defender unit not found" );
+												game->Event(
+													GSE_CALL, "attack_unit", {
+														{ "attacker", attacker->Wrap( GSE_CALL, true ) },
+														{ "defender", defender->Wrap( GSE_CALL, true ) },
+													}
+												);
+											}
+										}
+									);
+
+									return true;
+								}
+							}
+						}
+					}
+					break;
+				}
+				case input::EV_MOUSE_DOWN: {
+
+					const auto& c = event.data.mouse;
+
+					switch ( event.data.mouse.button ) {
+						case input::MB_LEFT: {
+							SelectTileAtPoint(
+								backend::TQP_OBJECT_SELECT,
+								c.x,
+								c.y
+							); // async
 							break;
 						}
-						case input::K_ENTER: {
-							if ( m_turn_status == backend::turn::TS_TURN_COMPLETE ) {
-								CompleteTurn();
-								break;
-							}
+						case input::MB_MIDDLE: {
+							m_scroller.Stop();
+							m_map_control.is_dragging = true;
+							m_map_control.last_drag_position = {
+								m_clamp.x.Clamp( c.x ),
+								m_clamp.y.Clamp( c.y )
+							};
 							break;
 						}
 						default: {
-							// nothing
 						}
 					}
-
-					if ( is_tile_selected ) {
-						auto* tile = selected_tile->GetNeighbour( td );
-						auto* selected_unit = m_um->GetSelectedUnit();
-
-						if ( !selected_unit ) {
-							SelectTileOrUnit( tile );
-							ScrollToTile( tile, false );
-							return true;
-						}
-						else {
-							// try moving unit to tile
-							const auto& dst_tile = selected_unit->GetTile()->GetNeighbour( td );
-							std::unordered_map< size_t, unit::Unit* > foreign_units = {};
-							for ( const auto& it : dst_tile->GetUnits() ) {
-								const auto& unit = it.second;
-								if ( !unit->IsOwned() ) { // TODO: pacts
-									// TODO: skip units of treaty/truce faction?
-									foreign_units.insert( it );
-								}
-							}
-							m_glsmac->WithGSE(
-								[ &game, &selected_unit, &tile, &foreign_units ]( GSE_CALLABLE ) {
-									const auto* um = game->GetUM();
-									if ( foreign_units.empty() ) {
-										// move
-										auto* unit = um->GetUnit( selected_unit->GetId() );
-										const auto& c = tile->GetCoords();
-										auto* dst_tile = game->GetMap()->GetTile( c.x, c.y );
-										ASSERT( unit, "unit not found" );
-										game->Event(
-											GSE_CALL, "move_unit", {
-												{ "unit", unit->Wrap( GSE_CALL, true ) },
-												{ "tile", dst_tile->Wrap( GSE_CALL, true ) },
-											}
-										);
-									}
-									else {
-										// attack
-										auto* attacker = um->GetUnit( selected_unit->GetId() );
-										ASSERT( attacker, "attacker unit not found" );
-										auto* defender = um->GetUnit( foreign_units.at( tile::Tile::GetUnitsOrder( foreign_units ).front() )->GetId() );
-										ASSERT( attacker, "defender unit not found" );
-										game->Event(
-											GSE_CALL, "attack_unit", {
-												{ "attacker", attacker->Wrap( GSE_CALL, true ) },
-												{ "defender", defender->Wrap( GSE_CALL, true ) },
-											}
-										);
-									}
-								}
-							);
-
-							return true;
-						}
-					}
+					break;
 				}
-
-				if ( data->key.key == 'z' ) {
-					m_map_control.key_zooming = 1;
-					return true;
+				case input::EV_MOUSE_SCROLL: {
+					SmoothScroll( m_map_control.last_mouse_position, event.data.mouse.scroll_y );
+					break;
 				}
-				if ( data->key.key == 'x' ) {
-					m_map_control.key_zooming = -1;
-					return true;
+				default: {
 				}
-
-				if ( data->key.code == input::K_ESCAPE ) {
-					if ( !g_engine->GetUI()->HasPopup() ) { // close all other popups first (including same one)
-						ConfirmExit(
-							UH( this ) {
-								ExitGame(
-									[]() -> void {
-										g_engine->ShutDown();
-									}
-								);
-							}
-						);
-					}
-					return true;
-				}
-			}
-			else if ( m_is_map_editing_allowed && data->key.code == input::K_CTRL ) {
-				m_is_editing_mode = true;
-			}
-
-			return false;
-		}, ::ui_legacy::UI::GH_AFTER
-	);
-
-	m_handlers.keyup = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_KEY_UP, EH( this ) {
-			if ( data->key.key == 'z' || data->key.key == 'x' ) {
-				if ( m_map_control.key_zooming ) {
-					m_map_control.key_zooming = 0;
-					m_scroller.Stop();
-				}
-			}
-			else if ( m_is_map_editing_allowed && data->key.code == input::K_CTRL ) {
-				m_is_editing_mode = false;
-				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = backend::map_editor::DM_NONE;
-			}
-			return false;
-		}, ::ui_legacy::UI::GH_BEFORE
-	);
-
-	// track pressed mouse buttons
-	m_handlers.mousedown_before = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
-			m_map_control.mouse_buttons_pressed++;
-			return false;
-		}, ::ui_legacy::UI::GH_BEFORE
-	);
-	m_handlers.mouseup_before = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_MOUSE_UP, EH( this, ui ) {
-			ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
-			m_map_control.mouse_buttons_pressed--;
-			return false;
-		}, ::ui_legacy::UI::GH_BEFORE
-	);
-
-	m_handlers.mousedown_after = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_MOUSE_DOWN, EH( this, ui ) {
-
-			const auto& c = data->mouse.absolute;
-
-			if ( ui->HasPopup() ) {
-				return false;
-			}
-
-			if ( !m_glsmac ) {
-				// legacy ui
-				m_ui_legacy.bottom_bar->CloseMenus();
-			}
-
-			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
-				switch ( data->mouse.button ) {
-					case ::ui_legacy::event::M_LEFT: {
-						m_editor_draw_mode = backend::map_editor::DM_INC;
-						break;
-					}
-					case ::ui_legacy::event::M_RIGHT: {
-						m_editor_draw_mode = backend::map_editor::DM_DEC;
-						break;
-					}
-					default: {
-						m_editor_draw_mode = backend::map_editor::DM_NONE;
-					}
-
-				}
-				SelectTileAtPoint( backend::TQP_TILE_SELECT, c.x, c.y ); // async
-				m_editing_draw_timer.SetInterval( Game::s_consts.map_editing.draw_frequency_ms ); // keep drawing until mouseup
-			}
-			else {
-				switch ( data->mouse.button ) {
-					case ::ui_legacy::event::M_LEFT: {
-						SelectTileAtPoint(
-							backend::TQP_OBJECT_SELECT,
-							c.x,
-							c.y
-						); // async
-						break;
-					}
-					case ::ui_legacy::event::M_MIDDLE: {
-						m_scroller.Stop();
-						m_map_control.is_dragging = true;
-						m_map_control.last_drag_position = {
-							m_clamp.x.Clamp( c.x ),
-							m_clamp.y.Clamp( c.y )
-						};
-						break;
-					}
-				}
-			}
-			return true;
-		}, ::ui_legacy::UI::GH_AFTER
-	);
-
-	m_handlers.mousemove_before = ui->AddGlobalEventHandler( // TODO: stop using legacy UI
-		::ui_legacy::event::EV_MOUSE_MOVE, EH( this, ui ) {
-
-			const auto& c = data->mouse.absolute;
-
-			m_map_control.last_mouse_position = {
-				GetFixedX( c.x ),
-				(float)c.y
 			};
-
-			if ( m_map_control.is_dragging ) {
-				types::Vec2< float > current_drag_position = {
-					m_clamp.x.Clamp( c.x ),
-					m_clamp.y.Clamp( c.y )
-				};
-				types::Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
-
-				m_camera_position.x += (float)drag.x;
-				m_camera_position.y += (float)drag.y;
-				UpdateCameraPosition();
-
-				m_map_control.last_drag_position = current_drag_position;
-			}
-			else {
-				if ( !m_map_control.mouse_buttons_pressed && g_engine->GetGraphics()->IsFullscreen() ) { // edge scrolling only usable when not dragging and in fullscreen
-					const ssize_t edge_distance = m_viewport.is_fullscreen
-						? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
-						: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
-					if ( c.x < edge_distance ) {
-						m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
-					}
-					else if ( c.x >= m_viewport.window_width - edge_distance ) {
-						m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
-					}
-					else {
-						m_map_control.edge_scrolling.speed.x = 0;
-					}
-					if ( c.y <= edge_distance ) {
-						m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
-					}
-					else if ( c.y >= m_viewport.window_height - edge_distance ) {
-						m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
-					}
-					else {
-						m_map_control.edge_scrolling.speed.y = 0;
-					}
-				}
-				else {
-					m_map_control.edge_scrolling.speed = {
-						0.0f,
-						0.0f
-					};
-				}
-				if ( m_map_control.edge_scrolling.speed ) {
-					if ( !m_map_control.edge_scrolling.timer.IsRunning() ) {
-						//Log( "Edge scrolling started" );
-						m_map_control.edge_scrolling.timer.SetInterval( Game::s_consts.map_scroll.static_scrolling.scroll_step_ms );
-					}
-				}
-				else {
-					if ( m_map_control.edge_scrolling.timer.IsRunning() ) {
-						//Log( "Edge scrolling stopped" );
-						m_map_control.edge_scrolling.timer.Stop();
-					}
-				}
-			}
-			return m_map_control.is_dragging;
-		}, ::ui_legacy::UI::GH_BEFORE
-	);
-
-	m_handlers.mouseup_after = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_MOUSE_UP, EH( this ) {
-			switch ( data->mouse.button ) {
-				case ::ui_legacy::event::M_MIDDLE: {
-					if ( m_map_control.is_dragging ) {
-						m_map_control.is_dragging = false;
-						return true;
-					}
-				}
-			}
-			if ( m_is_map_editing_allowed && m_is_editing_mode ) {
-				m_editing_draw_timer.Stop();
-				m_editor_draw_mode = backend::map_editor::DM_NONE;
-			}
 			return false;
-		}, ::ui_legacy::UI::GH_BEFORE
+		}
 	);
-
-	m_handlers.mousescroll = ui->AddGlobalEventHandler(
-		::ui_legacy::event::EV_MOUSE_SCROLL, EH( this, ui ) {
-			if ( ui->HasPopup() ) {
-				return false;
-			}
-
-			SmoothScroll( m_map_control.last_mouse_position, data->mouse.scroll_y );
-			return true;
-		}, ::ui_legacy::UI::GH_AFTER
-	);
-
-	// other stuff
 
 	m_clamp.x.SetDstRange(
 		{
@@ -1996,40 +1672,21 @@ void Game::Deinitialize() {
 
 	m_is_initialized = false;
 
-	CloseMenus();
 	DeselectTileOrUnit();
-
-	auto* ui = g_engine->GetUI();
-
-	if ( !m_glsmac && m_ui_legacy.bottom_bar ) {
-		ui->RemoveObject( m_ui_legacy.bottom_bar );
-		ui->RemoveTheme( m_ui_legacy.theme );
-		m_ui_legacy.bottom_bar = nullptr;
-		DELETE( m_ui_legacy.theme );
-		m_ui_legacy.theme = nullptr;
-	}
 
 	if ( m_is_resize_handler_set ) {
 		g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
 		m_is_resize_handler_set = false;
 	}
 
-#define x( _k ) \
-    if ( m_handlers._k ) { \
-        ui->RemoveGlobalEventHandler( m_handlers._k ); \
-        m_handlers._k = nullptr; \
+#define X( _x ) \
+    if ( m_global_handlers._x ) { \
+        m_ui->RemoveGlobalHandler( m_global_handlers._x ); \
+        m_global_handlers._x = 0; \
     }
-	x( keydown_before );
-	x( keydown_after );
-	x( keyup );
-	x( mousedown_before );
-	x( mousedown_after );
-	x( mousemove_before );
-	x( mousemove_after );
-	x( mouseup_before );
-	x( mouseup_after );
-	x( mousescroll );
-#undef x
+	X( before );
+	X( after );
+#undef X
 
 	if ( m_tile_at_request_id ) {
 		ASSERT( m_actors.terrain, "tileat request pending but terrain actor not set" );
@@ -2087,20 +1744,6 @@ void Game::Deinitialize() {
 	m_textures.terrain = nullptr;
 
 	m_game = nullptr;
-}
-
-void Game::AddMessage( const std::string& text ) {
-	if ( !m_glsmac ) {
-		// legacy ui
-		if ( m_ui_legacy.bottom_bar ) {
-			m_ui_legacy.bottom_bar->AddMessage( text );
-		}
-	}
-}
-
-void Game::SendChatMessage( const std::string& text ) {
-	ASSERT( !m_mt_ids.chat, "previous chat request still pending" );
-	m_mt_ids.chat = g_engine->GetGame()->MT_Chat( text );
 }
 
 void Game::CompleteTurn() {
@@ -2196,17 +1839,10 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 				}; }
 			);
 			ShowTileSelector();
-			if ( !m_glsmac ) {
-				// legacy ui
-				m_ui_legacy.bottom_bar->PreviewTile( tile, selected_unit_id );
-			}
-			else {
-				// new ui
-				const auto* const selected_unit = selected_unit_id
-					? this->m_um->GetUnitById( selected_unit_id )
-					: nullptr;
-				UpdatePreviews( tile, selected_unit );
-			}
+			const auto* const selected_unit = selected_unit_id
+				? this->m_um->GetUnitById( selected_unit_id )
+				: nullptr;
+			UpdatePreviews( tile, selected_unit );
 			break;
 		}
 		case backend::TQP_UNIT_SELECT: {
@@ -2225,49 +1861,17 @@ void Game::SelectTileOrUnit( tile::Tile* tile, const size_t selected_unit_id ) {
 }
 
 void Game::DeselectTileOrUnit() {
-
 	HideTileSelector();
 	m_um->DeselectUnit();
 	m_tm->DeselectTile();
-
-	if ( !m_glsmac ) {
-		// legacy ui
-		m_ui_legacy.bottom_bar->HideTilePreview();
-	}
 }
 
-void Game::OpenBasePopup( base::Base* base ) {
-	if ( !m_glsmac ) {
-		// legacy ui
-		if ( !m_base_popup ) {
-			m_tile_selected_before_base_popup = m_tm->GetPreviouslyDeselectedTile();
-			m_unit_selected_before_base_popup = m_um->GetPreviouslyDeselectedUnit();
-			NEW( m_base_popup, ui_legacy::popup::base_popup::BasePopup, this, base );
-			m_base_popup->Open();
-		}
-	}
-}
-
-void Game::ShowLoader( const std::string& text, const ::ui_legacy::loader_cancel_handler_t on_cancel ) {
-	if ( m_glsmac ) {
-		// new ui
-		m_glsmac->ShowLoader( text ); // TODO: on_cancel
-	}
-	else {
-		// legacy ui
-		g_engine->GetUI()->ShowLoader( text, on_cancel );
-	}
+void Game::ShowLoader( const std::string& text, const std::function< void() > on_cancel ) {
+	m_glsmac->ShowLoader( text ); // TODO: on_cancel
 }
 
 void Game::HideLoader() {
-	if ( m_glsmac ) {
-		// new ui
-		m_glsmac->HideLoader();
-	}
-	else {
-		// legacy ui
-		g_engine->GetUI()->HideLoader();
-	}
+	m_glsmac->HideLoader();
 }
 
 void Game::AddActor( actor::Actor* actor ) {
@@ -2542,15 +2146,6 @@ util::random::Random* Game::GetRandom() const {
 	return m_random;
 }
 
-void Game::CloseMenus() {
-	if ( !m_glsmac ) {
-		// legacy ui
-		if ( m_ui_legacy.bottom_bar ) {
-			m_ui_legacy.bottom_bar->CloseMenus();
-		}
-	}
-}
-
 void Game::ExitGame( const f_exit_game on_game_exit ) {
 	auto* game = g_engine->GetGame();
 	ShowLoader( "Exiting game" );
@@ -2604,22 +2199,8 @@ void Game::CancelGame() {
 				m_on_cancel();
 				m_on_cancel = nullptr;
 			}
-			if ( m_task ) {
-				g_engine->GetScheduler()->RemoveTask( m_task );
-			}
 		}
 	);
-}
-
-void Game::ReturnToMainMenu( const std::string reason ) {
-	if ( m_task ) { // legacy ui
-		NEWV( task, task::mainmenu::MainMenu );
-		if ( !reason.empty() ) {
-			task->ShowErrorOnStart( reason );
-		}
-		g_engine->GetScheduler()->RemoveTask( m_task );
-		g_engine->GetScheduler()->AddTask( task );
-	}
 }
 
 const float Game::GetFixedX( const float x ) const {
@@ -2835,36 +2416,14 @@ void Game::UpdatePreviews( tile::Tile* const tile, const unit::Unit* const unit 
 void Game::RefreshSelectedTile( unit::Unit* selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile ) {
-		if ( !m_glsmac ) {
-			// legacy ui
-			m_ui_legacy.bottom_bar->PreviewTile(
-				selected_tile, selected_unit
-					? selected_unit->GetId()
-					: 0
-			);
-		}
-		else {
-			// new ui
-			UpdatePreviews( selected_tile, selected_unit );
-		}
+		UpdatePreviews( selected_tile, selected_unit );
 	}
 }
 
 void Game::RefreshSelectedTileIf( tile::Tile* if_tile, const unit::Unit* const selected_unit ) {
 	auto* selected_tile = m_tm->GetSelectedTile();
 	if ( selected_tile && selected_tile == if_tile ) {
-		if ( !m_glsmac ) {
-			// legacy ui
-			m_ui_legacy.bottom_bar->PreviewTile(
-				selected_tile, selected_unit
-					? selected_unit->GetId()
-					: 0
-			);
-		}
-		else {
-			// new ui
-			UpdatePreviews( selected_tile, selected_unit );
-		}
+		UpdatePreviews( selected_tile, selected_unit );
 	}
 }
 
@@ -2903,30 +2462,6 @@ Game::map_data_t::map_data_t()
 	: filename( backend::map::s_consts.fs.default_map_filename + backend::map::s_consts.fs.default_map_extension )
 	, last_directory( util::FS::GetCurrentDirectory() + util::FS::PATH_SEPARATOR + backend::map::s_consts.fs.default_map_directory ) {
 	//
-}
-
-void Game::OnBasePopupClose() {
-	ASSERT( m_base_popup, "base popup not open" );
-	if ( m_unit_selected_before_base_popup ) {
-		m_um->SelectUnit( m_unit_selected_before_base_popup, true );
-		//ScrollToTile( m_unit_selected_before_base_popup->GetTile(), true );
-	}
-	else if ( m_tile_selected_before_base_popup ) {
-		m_tile_at_query_purpose = backend::TQP_TILE_SELECT;
-		SelectTileOrUnit( m_tile_selected_before_base_popup );
-		//ScrollToTile( m_tile_selected_before_base_popup, true );
-	}
-	m_base_popup = nullptr;
-	m_unit_selected_before_base_popup = nullptr;
-}
-
-void Game::SetBasePopupSelectedUnit( unit::Unit* unit ) {
-	m_unit_selected_before_base_popup = unit;
-}
-
-void Game::SelectBase( base::Base* base ) {
-	DeselectTileOrUnit();
-	m_bm->SelectBase( base );
 }
 
 }

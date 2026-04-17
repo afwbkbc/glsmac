@@ -5,7 +5,6 @@
 #include "game/backend/map/Consts.h"
 #include "game/backend/map/tile/Tiles.h"
 #include "engine/Engine.h"
-#include "ui_legacy/UI.h"
 #include "util/Clamper.h"
 #include "util/random/Random.h"
 

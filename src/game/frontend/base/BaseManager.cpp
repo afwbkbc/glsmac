@@ -211,7 +211,6 @@ void BaseManager::SelectBase( Base* base ) {
 			},
 		}; }
 	);
-	m_game->OpenBasePopup( base );
 }
 
 Base* BaseManager::GetBaseBefore( Base* base ) const {

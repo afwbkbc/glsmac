@@ -8,8 +8,6 @@
 
 #include "input/Input.h"
 
-#include "ui_legacy/event/Types.h"
-
 #include "types/Vec2.h"
 
 namespace input {

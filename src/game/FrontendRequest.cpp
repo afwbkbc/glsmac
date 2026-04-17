@@ -28,10 +28,6 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			}
 			break;
 		}
-		case FR_GLOBAL_MESSAGE: {
-			NEW( data.global_message.message, std::string, *other.data.global_message.message );
-			break;
-		}
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
 			break;
@@ -110,10 +106,6 @@ FrontendRequest::~FrontendRequest() {
 			if ( data.error.stacktrace ) {
 				DELETE( data.error.stacktrace );
 			}
-			break;
-		}
-		case FR_GLOBAL_MESSAGE: {
-			DELETE( data.global_message.message );
 			break;
 		}
 		case FR_UPDATE_TILES: {

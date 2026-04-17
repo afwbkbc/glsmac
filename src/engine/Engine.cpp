@@ -16,7 +16,6 @@
 #include "graphics/Graphics.h"
 #include "audio/Audio.h"
 #include "network/Network.h"
-#include "ui_legacy/UI.h"
 #include "game/backend/Game.h"
 #include "gc/GC.h"
 
@@ -42,7 +41,6 @@ Engine::Engine(
 	graphics::Graphics* graphics,
 	audio::Audio* audio,
 	network::Network* network,
-	ui_legacy::UI* ui,
 	game::backend::Game* game
 )
 	:
@@ -59,7 +57,6 @@ Engine::Engine(
 	, m_graphics( graphics )
 	, m_audio( audio )
 	, m_network( network )
-	, m_ui( ui )
 	, m_game( game ) {
 	ASSERT( g_engine == nullptr, "duplicate engine initialization" );
 
@@ -89,7 +86,6 @@ Engine::Engine(
 	t_main->AddModule( m_input );
 	t_main->AddModule( m_graphics );
 	t_main->AddModule( m_audio );
-	t_main->AddModule( m_ui );
 	t_main->AddModule( m_scheduler );
 	m_threads.push_back( t_main );
 

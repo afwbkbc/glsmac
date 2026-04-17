@@ -26,7 +26,6 @@ public:
 		FR_NONE,
 		FR_QUIT,
 		FR_ERROR,
-		FR_GLOBAL_MESSAGE,
 		FR_UPDATE_TILES,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
@@ -86,9 +85,6 @@ public:
 			const std::string* what;
 			const std::string* stacktrace;
 		} error;
-		struct {
-			const std::string* message;
-		} global_message;
 		struct {
 			const tile_updates_t* tile_updates;
 		} update_tiles;

@@ -1,4 +1,3 @@
-SUBDIR( ui_legacy )
 SUBDIR( actor )
 SUBDIR( faction )
 SUBDIR( tile )

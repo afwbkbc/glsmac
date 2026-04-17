@@ -6,8 +6,6 @@
 
 #include "loader/Loader.h"
 
-#include "ui_legacy/theme/Types.h"
-
 #include "types/Color.h"
 #include "types/texture/Types.h"
 
@@ -34,7 +32,7 @@ CLASS( TextureLoader, Loader )
 	types::texture::Texture* LoadCustomTexture( const std::string& filename, const types::texture::texture_flag_t flags = types::texture::TF_NONE );
 
 	// load part of texture
-	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = ui_legacy::LT_NONE, const float value = 1.0, const types::texture::texture_flag_t texture_flags = types::texture::TF_NONE );
+	types::texture::Texture* LoadTexture( const resource::resource_t res, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags = types::texture::LT_NONE, const float value = 1.0, const types::texture::texture_flag_t texture_flags = types::texture::TF_NONE );
 
 	// create texture of solid color
 	types::texture::Texture* GetColorTexture( const types::Color& color );

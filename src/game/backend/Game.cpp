@@ -10,7 +10,6 @@
 #include "State.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
-#include "map_editor/MapEditor.h"
 #include "Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
@@ -24,7 +23,6 @@
 #include "gse/value/Int.h"
 #include "gse/value/Undefined.h"
 #include "gse/value/Array.h"
-#include "ui_legacy/UI.h"
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
@@ -75,13 +73,6 @@ common::mt_id_t Game::MT_Init( State* state ) {
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_Chat( const std::string& message ) {
-	MT_Request request = {};
-	request.op = OP_CHAT;
-	NEW( request.data.save_map.path, std::string, message );
-	return MT_CreateRequest( request );
-}
-
 common::mt_id_t Game::MT_GetMapData() {
 	MT_Request request = {};
 	request.op = OP_GET_MAP_DATA;
@@ -101,17 +92,6 @@ common::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	request.op = OP_SAVE_MAP;
 	NEW( request.data.save_map.path, std::string );
 	*request.data.save_map.path = path;
-	return MT_CreateRequest( request );
-}
-
-common::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
-	MT_Request request = {};
-	request.op = OP_EDIT_MAP;
-	request.data.edit_map.tile_x = tile_coords.x;
-	request.data.edit_map.tile_y = tile_coords.y;
-	request.data.edit_map.tool = tool;
-	request.data.edit_map.brush = brush;
-	request.data.edit_map.draw_mode = draw_mode;
 	return MT_CreateRequest( request );
 }
 
@@ -174,11 +154,6 @@ void Game::Stop() {
 	}
 
 	ResetGame();
-
-	if ( m_map_editor ) {
-		DELETE( m_map_editor );
-		m_map_editor = nullptr;
-	}
 
 	m_tm = nullptr;
 	m_rm = nullptr;
@@ -1145,70 +1120,6 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			}
 			break;
 		}
-		case OP_EDIT_MAP: {
-			//MTModule::Log( "got edit map request" );
-
-			m_map_editor->SelectTool( request.data.edit_map.tool );
-			m_map_editor->SelectBrush( request.data.edit_map.brush );
-			const auto tiles_to_reload = m_map_editor->Draw( m_map->GetTile( request.data.edit_map.tile_x, request.data.edit_map.tile_y ), request.data.edit_map.draw_mode );
-
-			if ( !tiles_to_reload.empty() ) {
-				auto* graphics = g_engine->GetGraphics();
-
-				m_map->m_sprite_actors_to_add.clear();
-				m_map->m_sprite_instances_to_remove.clear();
-				m_map->m_sprite_instances_to_add.clear();
-
-				graphics->Lock(); // needed to avoid tearing artifacts
-				m_map->LoadTiles( tiles_to_reload, MT_C );
-				m_map->FixNormals( tiles_to_reload, MT_C );
-				graphics->Unlock();
-
-				typedef std::unordered_map< std::string, map::sprite_actor_t > t1; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.actors_to_add, t1 );
-				*response.data.edit_map.sprites.actors_to_add = m_map->m_sprite_actors_to_add;
-
-				typedef std::unordered_map< size_t, std::string > t2; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.instances_to_remove, t2 );
-				*response.data.edit_map.sprites.instances_to_remove = m_map->m_sprite_instances_to_remove;
-
-				typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > t3; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
-				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
-
-				// TODO: remove invalid units and terraforming
-
-				auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
-				NEWV( tile_updates, FrontendRequest::tile_updates_t );
-				tile_updates->reserve( tiles_to_reload.size() );
-				for ( const auto& tile : tiles_to_reload ) {
-					tile_updates->push_back(
-						{
-							tile,
-							m_map->GetTileState( tile )
-						}
-					);
-				}
-				fr.data.update_tiles.tile_updates = tile_updates;
-				AddFrontendRequest( fr );
-			}
-
-			response.result = R_SUCCESS;
-			break;
-		}
-		case OP_CHAT: {
-			MTModule::Log( "got chat message request: " + *request.data.chat.message );
-
-			if ( m_state->m_connection ) {
-				m_state->m_connection->SendMessage( *request.data.chat.message );
-			}
-			else {
-				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
-			}
-
-			response.result = R_SUCCESS;
-			break;
-		}
 		case OP_GET_FRONTEND_REQUESTS: {
 			//MTModule::Log( "got events request" );
 			if ( !m_pending_frontend_requests->empty() ) {
@@ -1285,12 +1196,6 @@ void Game::DestroyRequest( const MT_Request& request ) {
 			}
 			break;
 		}
-		case OP_CHAT: {
-			if ( request.data.chat.message ) {
-				DELETE( request.data.chat.message );
-			}
-			break;
-		}
 		case OP_ADD_EVENT: {
 			DELETE( request.data.add_event.serialized_event );
 			break;
@@ -1321,18 +1226,6 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				}
 				break;
 			}
-			case OP_EDIT_MAP: {
-				if ( response.data.edit_map.sprites.actors_to_add ) {
-					DELETE( response.data.edit_map.sprites.actors_to_add );
-				}
-				if ( response.data.edit_map.sprites.instances_to_remove ) {
-					DELETE( response.data.edit_map.sprites.instances_to_remove );
-				}
-				if ( response.data.edit_map.sprites.instances_to_add ) {
-					DELETE( response.data.edit_map.sprites.instances_to_add );
-				}
-				break;
-			}
 			case OP_GET_FRONTEND_REQUESTS: {
 				if ( response.data.get_frontend_requests.requests ) {
 					DELETE( response.data.get_frontend_requests.requests );
@@ -1347,12 +1240,6 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::Message( const std::string& text ) {
-	// legacy ui
-	auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
-	NEW( fr.data.global_message.message, std::string, text );
-	AddFrontendRequest( fr );
-
-	// new ui
 	m_state->WithGSE( this, [ this, text ]( GSE_CALLABLE ){
 		m_state->TriggerObject(
 			this, "message", ARGS_F( text ) {
@@ -1404,11 +1291,7 @@ void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
 	auto* player = slot.GetPlayer();
 	ASSERT( player, "slot player not set" );
 	player->CompleteTurn();
-
-	if ( slot_num == m_slot_num ) {
-		// legacy ui
-		SetTurnStatus( turn::TS_WAITING_FOR_PLAYERS );
-	}
+	SetTurnStatus( turn::TS_WAITING_FOR_PLAYERS );
 }
 
 void Game::UncompleteTurn( const size_t slot_num ) {
@@ -1659,13 +1542,9 @@ static const std::unordered_map< backend::turn::turn_status_t, std::string > s_t
 };
 
 void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
-
-	// legacy ui
 	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
 	fr.data.turn_status.status = status;
 	AddFrontendRequest( fr );
-
-	// new ui
 	ASSERT( s_turn_status_str.find( status ) != s_turn_status_str.end(), "unknown status: " + std::to_string( status ) );
 	m_state->WithGSE( this, [ this, status ]( GSE_CALLABLE ) {
 		m_state->TriggerObject( this, "turn_status", ARGS_F( &status ) {
@@ -1675,7 +1554,6 @@ void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
 			},
 		}; } );
 	});
-
 }
 
 void Game::CheckRW( GSE_CALLABLE ) {
@@ -1705,9 +1583,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	MTModule::Log( "Initializing game" );
 
 	auto* gc_space = GetGCSpace();
-
-	// init map editor
-	NEW( m_map_editor, map_editor::MapEditor, this );
 
 	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		ASSERT( !m_tm, "tm not null" );
@@ -1916,8 +1791,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_player = m_state->m_slots->GetSlot( m_slot_num ).GetPlayer();
 	m_slot = m_player->GetSlot();
 
-	auto* ui = g_engine->GetUI();
-
 	if ( m_state->IsMaster() ) {
 		// generate map
 
@@ -1983,12 +1856,12 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	}
 	else {
 		connection->IfClient(
-			[ this, &response, ui ]( connection::Client* connection ) -> void {
+			[ this, &response ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
 				SetLoaderText( "Waiting for server" );
 
-				const auto f_download_map = [ this, ui, connection ] {
+				const auto f_download_map = [ this, connection ] {
 
 					SetLoaderText( "Downloading world snapshot" );
 

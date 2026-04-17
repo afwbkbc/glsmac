@@ -151,6 +151,7 @@ void Widget::SetGlobalEventHandler( const input::event_type_t type, const f_on_e
 	m_global_event_handlers.insert_or_assign( type, f );
 	if ( !m_global_handler_id ) {
 		m_global_handler_id = m_ui->AddGlobalHandler(
+			ui::UI::GH_BEFORE,
 			[ this ]( GSE_CALLABLE, const input::Event& event ) {
 				const auto& it = m_global_event_handlers.find( event.type );
 				if ( it != m_global_event_handlers.end() ) {

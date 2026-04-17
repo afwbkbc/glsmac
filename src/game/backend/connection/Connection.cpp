@@ -3,7 +3,6 @@
 #include "game/backend/State.h"
 #include "engine/Engine.h"
 #include "network/Network.h"
-#include "ui_legacy/UI.h"
 #include "game/backend/event/Event.h"
 
 namespace game {
@@ -358,7 +357,7 @@ void Connection::ProcessEvent( const network::Event& event ) {
 	ASSERT( m_state, "connection state not set" );
 }
 
-gc::Space* Connection::GetGCSpace() const {
+gc::Space* const Connection::GetGCSpace() const {
 	ASSERT( m_state, "state not set" );
 	ASSERT( m_state->m_gc_space, "state gc space not set" );
 	return m_state->m_gc_space;

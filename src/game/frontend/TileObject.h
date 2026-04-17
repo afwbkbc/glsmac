@@ -13,11 +13,6 @@ namespace tile {
 class Tile;
 }
 
-namespace ui_legacy {
-class ObjectsListItem;
-class ObjectPreview;
-}
-
 class TileObject {
 public:
 	enum tile_object_type_t {
@@ -30,12 +25,6 @@ public:
 	void UpdateFromTile();
 
 	const tile_object_type_t GetType() const;
-
-	virtual void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const = 0;
-	virtual void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const = 0;
-	virtual void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const = 0;
-	virtual void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const = 0;
-	virtual const bool OnBottomBarListActivate( Game* game ) = 0;
 
 protected:
 

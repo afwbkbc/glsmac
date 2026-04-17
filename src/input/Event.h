@@ -38,8 +38,6 @@ public:
 		} value;
 	} event_data_t;
 
-	const event_type_t& type = m_type;
-	const event_flag_t& flags = m_flags;
 	event_data_t data = {};
 
 	void SetType( const event_type_t type );
@@ -51,6 +49,11 @@ public:
 private:
 	event_type_t m_type = EV_NONE;
 	event_flag_t m_flags = EF_NONE;
+
+public:
+	const event_type_t& type = m_type;
+	const event_flag_t& flags = m_flags;
+
 };
 
 }
