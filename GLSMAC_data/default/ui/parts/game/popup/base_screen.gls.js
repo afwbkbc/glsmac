@@ -38,10 +38,10 @@ return {
 		});
 
 		p.ui.class('base-screen-side-frame').extend('base-screen-frame').set({
-			width: 138,
+			width: 132,
 		});
 		p.ui.class('base-screen-side-middle-frame').extend('base-screen-frame').set({
-			width: 534,
+			width: 539,
 		});
 
 		p.ui.class('base-screen-frame-title').set({

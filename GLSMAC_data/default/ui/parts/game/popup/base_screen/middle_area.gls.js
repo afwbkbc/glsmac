@@ -4,7 +4,7 @@ return {
 
 	init: (p) => {
 
-		const button_width = 128;
+		const button_width = 132;
 		const button_padding = 2;
 
 		p.ui.class('base-screen-middle-area').set({
@@ -26,8 +26,8 @@ return {
 			class: 'base-screen-frame',
 			align: 'top center',
 			top: 32,
-			width: 392,
-			height: 223,
+			width: 404,
+			height: 225,
 		});
 		const inner = this.area.area({
 			bottom: 22,

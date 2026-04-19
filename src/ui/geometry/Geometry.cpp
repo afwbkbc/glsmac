@@ -201,6 +201,9 @@ const Geometry::area_t& Geometry::GetEffectiveArea() const {
 }
 
 void Geometry::OnChildUpdate() {
+	if ( m_is_destroying ) {
+		return;
+	}
 	if ( m_overflow_mode == OM_SCROLLABLE ) {
 		ResizeAreaFromChildren();
 		NeedUpdate();
@@ -262,7 +265,9 @@ void Geometry::Show() {
 void Geometry::Hide() {
 	if ( m_is_visible ) {
 		m_is_visible = false;
-		NeedUpdate();
+		if ( !m_is_destroying ) {
+			NeedUpdate();
+		}
 	}
 }
 
@@ -281,6 +286,9 @@ void Geometry::Destroy() {
 }
 
 void Geometry::Update( const bool is_update_from_parent ) {
+	if ( m_is_destroying ) {
+		return;
+	}
 	UpdateArea();
 	for ( const auto& geometry : m_children ) {
 		if ( geometry->m_overflow_mode != OM_SCROLLABLE ) {

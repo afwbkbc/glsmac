@@ -7,7 +7,7 @@ return {
 			align: 'top right',
 			top: 32,
 			right: 3,
-			height: 224,
+			height: 225,
 		});
 
 		const header = this.frame.panel({

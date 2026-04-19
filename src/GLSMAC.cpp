@@ -106,7 +106,7 @@ GLSMAC::~GLSMAC() {
 	m_gc_space->Accumulate( this, [ this ](){
 		gse::ExecutionPointer ep;
 		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
-	});
+	}, nullptr, true);
 
 	DELETE( m_gse );
 

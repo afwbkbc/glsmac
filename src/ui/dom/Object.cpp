@@ -133,11 +133,11 @@ Object::Object( DOM_ARGS_T )
 }
 
 Object::~Object() {
-	ASSERT( m_is_destroyed, "object was not destroyed properly!" );
+#ifdef DEBUG
 	if ( !m_is_destroyed ) {
 		util::LogHelper::Println( "WARNING: object was not destroyed properly!" );
 	}
-	ClearActors();
+#endif
 };
 
 gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
@@ -276,6 +276,10 @@ void Object::Destroy( GSE_CALLABLE ) {
 		}
 		m_listeners.clear();
 		m_object_listeners.clear();
+	}
+	ClearActors();
+	if ( g && g->m_type == geometry::Geometry::GT_RECTANGLE ) {
+		( (geometry::Rectangle*)g )->Clear();
 	}
 	m_is_destroyed = true;
 }
@@ -429,11 +433,8 @@ void Object::ClearActors() {
 			scene->RemoveActor( actor );
 			delete actor;
 		}
-		if ( g ) {
-			( (geometry::Rectangle*)g )->Clear();
-		}
-		m_actors.clear();
 	}
+	m_actors.clear();
 }
 
 void Object::Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {

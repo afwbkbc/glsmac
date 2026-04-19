@@ -78,7 +78,7 @@ return {
 		const body = this.frame.panel({
 			class: 'base-screen-body',
 			align: 'bottom right',
-			width: 355,
+			width: 360,
 			height: 62,
 		}).area({
 			align: 'center',

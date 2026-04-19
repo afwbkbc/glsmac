@@ -8,7 +8,7 @@ return {
 		this.frame = p.body.panel({
 			class: 'base-screen-side-middle-frame',
 			align: 'top right',
-			top: 258,
+			top: 259,
 			right: 3,
 			height: 89,
 		});

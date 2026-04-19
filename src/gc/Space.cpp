@@ -76,10 +76,16 @@ void Space::Add( Object* object ) {
 	m_accumulated_objects.insert( object );
 }
 
-void Space::Accumulate( gc::Object* const owner, const f_accum_t& f, const f_accum_t& f_cleanup ) {
+void Space::Accumulate( gc::Object* const owner, const f_accum_t& f, const f_accum_t& f_cleanup, const bool need_now ) {
 	ASSERT( m_thread_id.has_value(), "gc space thread id not set" );
+	if ( need_now ) {
+		ASSERT( m_thread_id == std::this_thread::get_id(), "accumulate needed now but thread is different" );
+	}
 	if ( m_thread_id == std::this_thread::get_id() ) {
 		AccumulateImpl( f );
+		if ( f_cleanup ) {
+			f_cleanup();
+		}
 	}
 	else {
 		std::lock_guard guard( m_pending_accumulations_mutex );

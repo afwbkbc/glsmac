@@ -544,6 +544,7 @@ Random* Game::GetRandom() const {
 }
 
 map::Map* Game::GetMap() const {
+	ASSERT( m_map, "backend game map is null" );
 	return m_map;
 }
 
