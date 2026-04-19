@@ -166,7 +166,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 			bool need_clear = false;
 			while ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
 				result = EvaluateScope( ctx, ep, c->body, returnflag );
-				CheckBreakCondition( result, &need_break, &need_clear );
+				CheckBreakCondition( result, &need_break, &need_clear, returnflag );
 				if ( need_clear ) {
 					result = nullptr;
 				}
@@ -188,7 +188,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					EvaluateExpression( ctx, ep, condition->init, returnflag );
 					while ( EvaluateBool( ctx, ep, condition->check ) ) {
 						result = EvaluateScope( ctx, ep, c->body );
-						CheckBreakCondition( result, &need_break, &need_clear );
+						CheckBreakCondition( result, &need_break, &need_clear, returnflag );
 						if ( need_break || ( returnflag && *returnflag ) ) {
 							if ( need_clear ) {
 								result = nullptr;
@@ -214,7 +214,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 												subctx->CreateConst( condition->variable->name, VALUE( Int, , i ), condition->m_si, ep );
 												result = EvaluateScope( subctx, ep, c->body, returnflag );
 												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
-												CheckBreakCondition( result, &need_break, &need_clear );
+												CheckBreakCondition( result, &need_break, &need_clear, returnflag );
 												if ( need_break || ( returnflag && *returnflag ) ) {
 													if ( need_clear ) {
 														result = nullptr;
@@ -229,7 +229,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 												subctx->CreateConst( condition->variable->name, v, condition->m_si, ep );
 												result = EvaluateScope( subctx, ep, c->body, returnflag );
 												subctx->DestroyVariable( condition->variable->name, condition->m_si, ep );
-												CheckBreakCondition( result, &need_break, &need_clear );
+												CheckBreakCondition( result, &need_break, &need_clear, returnflag );
 												if ( need_break || ( returnflag && *returnflag ) ) {
 													if ( need_clear ) {
 														result = nullptr;
@@ -350,7 +350,7 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 					bool brk = false;
 					result = EvaluateScope( ctx, ep, c->body, &brk );
 					if ( brk ) {
-						CheckBreakCondition( result, &need_break, &need_clear );
+						CheckBreakCondition( result, &need_break, &need_clear, returnflag );
 						if ( need_clear ) {
 							result = nullptr;
 						}
@@ -1182,7 +1182,7 @@ void Interpreter::ValidateRange( context::Context* ctx, const si_t& si, Executio
 	}
 }
 
-void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear ) {
+void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear, bool* returnflag ) {
 	if ( !result ) {
 		*need_break = false;
 		*need_clear = false;
@@ -1191,6 +1191,9 @@ void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_brea
 	switch ( result->type ) {
 		case gse::VT_LOOPCONTROL: {
 			*need_clear = true;
+			if ( returnflag ) {
+				*returnflag = false;
+			}
 			const auto type = ( (value::LoopControl*)result )->value;
 			switch ( type ) {
 				case program::LCT_BREAK: {
@@ -1205,10 +1208,11 @@ void Interpreter::CheckBreakCondition( gse::Value* const result, bool* need_brea
 					THROW( "unexpected loop control type: " + std::to_string( type ) );
 			}
 		}
-		default:
+		default: {
 			// got something to return
 			*need_break = true;
 			*need_clear = false;
+		}
 	}
 }
 

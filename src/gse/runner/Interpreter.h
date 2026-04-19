@@ -71,7 +71,7 @@ private:
 	Value* const Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, Value* const value );
 	void WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, Value* const ref, Value* const value );
 	void ValidateRange( context::Context* ctx, const si_t& si, ExecutionPointer& ep, const value::Array* array, const std::optional< size_t > from, const std::optional< size_t > to );
-	void CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear );
+	void CheckBreakCondition( gse::Value* const result, bool* need_break, bool* need_clear, bool* returnflag );
 
 };
 
