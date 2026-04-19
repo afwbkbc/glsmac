@@ -298,6 +298,11 @@ Config::Config( const std::string& path )
 			m_mainscript = value;
 		}
 	);
+	m_manager->AddRule(
+		"worldscript", "SCRIPT_NAME", "Specify alternate world generator script to run (default: default)", AH( this ) {
+			m_worldscript = value;
+		}
+	);
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	m_manager->AddRule(
@@ -489,6 +494,10 @@ const std::string& Config::GetJoinAddress() const {
 
 const std::string& Config::GetMainScript() const {
 	return m_mainscript;
+}
+
+const std::string& Config::GetWorldScript() const {
+	return m_worldscript;
 }
 
 const uint16_t Config::GetMaxIPS() const {

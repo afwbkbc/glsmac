@@ -98,6 +98,7 @@ CLASS2( Config, common::Module, gse::Wrappable )
 	const std::vector< std::string >& GetModPaths() const;
 	const std::string& GetJoinAddress() const;
 	const std::string& GetMainScript() const;
+	const std::string& GetWorldScript() const;
 	const uint16_t GetMaxIPS() const;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -144,7 +145,7 @@ private:
 	std::vector< std::string > m_mod_paths = {};
 	std::string m_join_address = "";
 	std::string m_mainscript = "main";
-	uint16_t m_maxfps = 500;
+	std::string m_worldscript = "default";
 	uint16_t m_maxips = 500;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

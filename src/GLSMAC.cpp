@@ -577,7 +577,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 				}
 			);
 		}, [] () {
-			THROW( "TODO: cancel" );
+			// THROW( "TODO: cancel" );
 		}
 	);
 
