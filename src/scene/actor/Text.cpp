@@ -72,8 +72,7 @@ void Text::UpdatePosition() {
 }
 
 void Text::Redraw() {
-	if ( m_graphics_object ) {
-		ASSERT( !m_graphics_object->Removed(), "textactor graphics object removed" );
+	if ( m_graphics_object && !m_graphics_object->Removed() ) {
 		auto* gl_actor = m_graphics_object->GetDstObject< graphics::opengl::Text >();
 		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}

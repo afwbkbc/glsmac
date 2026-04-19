@@ -87,7 +87,7 @@ return (m) => {
 
 		},
 
-		error: (text) => {
+		error: (text, cb) => {
 			const that = this;
 			this.show({
 				title: 'ERROR',
@@ -109,14 +109,18 @@ return (m) => {
 							is_cancel: true,
 						},
 						onclick: (e) => {
-							if (
-								#is_defined(m.glsmac.config.quickstart) ||
-								#is_defined(m.glsmac.config.host) ||
-								#is_defined(m.glsmac.config.join)
-							) {
-								m.glsmac.exit();
+							if (#is_defined(cb)) {
+								cb();
 							} else {
-								that.back();
+								if (
+									#is_defined(m.glsmac.config.quickstart) ||
+									#is_defined(m.glsmac.config.host) ||
+									#is_defined(m.glsmac.config.join)
+								) {
+									m.glsmac.exit();
+								} else {
+									that.back();
+								}
 							}
 							return true;
 						},

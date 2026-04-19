@@ -39,8 +39,9 @@ return (i) => {
 				if (#is_defined(i.connection)) {
 					i.connection.close();
 					i.connection = #undefined;
-					i.popup.back();
-					i.popup.error(e.message);
+					i.popup.error(e.message, () => {
+						i.popup.back();
+					});
 				}
 			};
 
@@ -50,13 +51,12 @@ return (i) => {
 				i.glsmac.start_game();
 			};
 
-			i.connection.on('error', f_error);
-
-			i.connection.on('connect', (e) => {
+			body.listen(i.connection, 'error', f_error);
+			body.listen(i.connection, 'connect', (e) => {
 				//#print('CONNECTED');
 				//#print(e);
 			});
-			i.connection.on('disconnect', (e) => {
+			body.listen(i.connection, 'disconnect', (e) => {
 				if (#is_defined(i.connection)) {
 					i.connection = #undefined;
 					i.popup.back();

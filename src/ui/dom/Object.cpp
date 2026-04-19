@@ -237,6 +237,17 @@ void Object::Destroy( GSE_CALLABLE ) {
 	ASSERT( !m_is_destroyed, "already destroyed" );
 
 	{
+		std::lock_guard guard( m_listeners_mutex );
+		for ( const auto& l : m_listeners ) {
+			if ( l.second.object ) {
+				l.second.object->Off( GSE_CALL, l.second.event, l.second.handler_id );
+				l.second.object->Undepend( this );
+			}
+		}
+		m_listeners.clear();
+		m_object_listeners.clear();
+	}
+	{
 		std::lock_guard guard( m_timer_ids_mutex );
 		auto* const async = ctx->GetGSE()->GetAsync();
 		for ( const auto& timer_id : m_timer_ids ) {
@@ -265,17 +276,6 @@ void Object::Destroy( GSE_CALLABLE ) {
 		for ( const auto& actor : m_actors ) {
 			scene->RemoveActor( actor );
 		}
-	}
-	{
-		std::lock_guard guard( m_listeners_mutex );
-		for ( const auto& l : m_listeners ) {
-			if ( l.second.object ) {
-				l.second.object->Off( GSE_CALL, l.second.event, l.second.handler_id );
-				l.second.object->Undepend( this );
-			}
-		}
-		m_listeners.clear();
-		m_object_listeners.clear();
 	}
 	ClearActors();
 	if ( g && g->m_type == geometry::Geometry::GT_RECTANGLE ) {

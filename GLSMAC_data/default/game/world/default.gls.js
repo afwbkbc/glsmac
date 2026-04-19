@@ -72,7 +72,6 @@ return (game) => {
 		game.event('spawn_base', {
 			owner: player,
 			tile: tile,
-			// name: 'base name',
 		});
 		tiles_with_bases :+tile;
 

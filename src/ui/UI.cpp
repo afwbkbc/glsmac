@@ -568,6 +568,7 @@ void UI::Clear( GSE_CALLABLE ) {
 		m_root->Clear( GSE_CALL );
 	}
 
+	Log( "Clearing UI classes" );
 	m_classes.clear();
 }
 
