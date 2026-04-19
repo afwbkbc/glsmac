@@ -222,7 +222,7 @@ WRAPIMPL_BEGIN( Tile )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE_UNWRAP( other, 0, Tile );
 				return VALUE( gse::value::Bool,, IsAdjactentTo( other ) );
-			})
+			} )
 		},
 		{
 			"get_surrounding_tiles",
@@ -233,7 +233,7 @@ WRAPIMPL_BEGIN( Tile )
 					result.push_back( n->Wrap( GSE_CALL ) );
 				}
 				return VALUE( gse::value::Array,, result );
-			})
+			} )
 		},
 		{ "features", GetFeatures( GSE_CALL ) },
 		{ "resources", GetResources( GSE_CALL ) },

@@ -92,6 +92,7 @@ public:
 	void Clear();
 
 	const bool IsAdjactentTo( const Tile* other ) const;
+	const size_t GetDistanceTo( const Tile* other ) const;
 
 	const types::Buffer Serialize() const;
 	void Deserialize( types::Buffer data );

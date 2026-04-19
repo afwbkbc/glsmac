@@ -17,7 +17,9 @@ return {
 				}
 			}
 			if (everybody_completed_turn) {
-				e.game.event('advance_turn', {});
+				e.game.event('advance_turn', {
+					turn_id: e.game.get_turn() + 1
+				});
 			}
 		}
 

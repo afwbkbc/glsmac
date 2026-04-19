@@ -309,7 +309,7 @@ void Game::Iterate() {
 						return;
 					}
 					if ( m_game_state == GS_RUNNING ) {
-						GlobalAdvanceTurn( GSE_CALL );
+						FirstTurn( GSE_CALL );
 					}
 				}
 				else {
@@ -682,6 +682,13 @@ WRAPIMPL_BEGIN( Game )
 			} )
 		},
 		{
+			"get_turn",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::Int,, m_current_turn.GetId() );
+			} )
+		},
+		{
 			"get_year",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -764,7 +771,10 @@ WRAPIMPL_BEGIN( Game )
 
 				CheckRW( GSE_CALL );
 
-				AdvanceTurn( m_current_turn.GetId() + 1 );
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( turn_id, 0, Int );
+
+				AdvanceTurn( turn_id );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -1381,19 +1391,18 @@ void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 	//AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
 }
 
-static size_t s_turn_id = 0;
-void Game::GlobalAdvanceTurn( GSE_CALLABLE ) {
+void Game::FirstTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 
 	// reset some states
-	s_turn_id++;
+	m_current_turn.AdvanceTurn( 1 );
 	m_verified_turn_checksum_slots.clear();
 	m_turn_checksum = 0;
 
-	MTModule::Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
+	MTModule::Log( "Advancing turn ( id = " + std::to_string( m_current_turn.GetId() ) + " )" );
 	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ){
 		Event( GSE_CALL, "advance_turn", {
-			{ "turn_id", VALUE( gse::value::Int,, s_turn_id ) }
+			{ "turn_id", VALUE( gse::value::Int,, m_current_turn.GetId() ) }
 		} );
 	});
 }
@@ -1711,8 +1720,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 
 					// send turn info
-					MTModule::Log( "Sending turn ID: " + std::to_string( s_turn_id ) );
-					buf.WriteInt( s_turn_id );
+					MTModule::Log( "Sending turn ID: " + std::to_string( m_current_turn.GetId() ) );
+					buf.WriteInt( m_current_turn.GetId() );
 
 					return buf.ToString();
 				};

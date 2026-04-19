@@ -8,7 +8,6 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/value/Array.h"
 #include "gse/ExecutionPointer.h"
 
 namespace game {
@@ -184,6 +183,15 @@ WRAPIMPL_BEGIN( TileManager )
 				return m->GetTile( x, y )->Wrap( GSE_CALL, gc_space );
 			} )
 		},
+		{
+			"get_distance",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE_UNWRAP( tile, 0, Tile );
+				N_GETVALUE_UNWRAP( other, 1, Tile );
+				return VALUE( gse::value::Int,, GetDistance( tile, other ) );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR()
 
@@ -204,7 +212,17 @@ const std::string TileManager::TilesToString( const tiles_t& tiles, std::string 
 	return result;
 }
 
-
+const size_t TileManager::GetDistance( const Tile* const tile, const Tile* const other ) const {
+	const auto* m = m_game->GetMap();
+	const auto yd = abs(int( tile->coord.y - other->coord.y ) );
+	return std::min(
+		( abs(int( tile->coord.x - other->coord.x ) ) + yd ) / 2, // no wrap
+		std::min(
+			( abs(int( tile->coord.x - m->GetWidth() - other->coord.x ) ) + yd ) / 2, // left wrap
+			( abs(int( tile->coord.x + m->GetWidth() - other->coord.x ) ) + yd ) / 2 // right wrap
+		)
+	);
+}
 
 }
 }

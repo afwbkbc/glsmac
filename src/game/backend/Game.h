@@ -263,9 +263,6 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	// initialize map and other things
 	common::mt_id_t MT_Init( State* state );
 
-	// send chat message
-	common::mt_id_t MT_Chat( const std::string& message );
-
 	// get map data for display
 	common::mt_id_t MT_GetMapData();
 
@@ -335,7 +332,7 @@ public:
 	void AdvanceTurn( const size_t turn_id );
 
 	void GlobalFinalizeTurn( GSE_CALLABLE );
-	void GlobalAdvanceTurn( GSE_CALLABLE );
+	void FirstTurn( GSE_CALLABLE );
 
 	faction::Faction* GetFaction( const std::string& id ) const;
 

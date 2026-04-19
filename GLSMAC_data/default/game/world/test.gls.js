@@ -8,6 +8,44 @@ return (game) => {
 	const players = game.get_players();
 	const players_sz = #sizeof(players);
 
+	const um = game.get_um();
+	const bm = game.get_bm();
+
+	// will be populated on start
+	const pop_types = [
+		'Worker',
+		'Talent',
+		'Doctor',
+		'Librarian',
+	];
+
+	let add_pops = (game, base, count) => {
+		for (let i = 0; i < count; i++) {
+			game.event('add_base_pop', {
+				base: base,
+				type: pop_types[(game.random.get_int(0, #sizeof(pop_types) - 1))],
+			})
+		}
+	};
+
+	um.on('unit_spawn', (e) => {
+		//
+	});
+
+	um.on('unit_despawn', (e) => {
+		//
+	});
+
+	bm.on('base_spawn', (e) => {
+		add_pops(game, e.base, game.random.get_int(1, 7));
+	});
+
+	game.on('turn', (e) => {
+		for (base of bm.get_bases()) {
+			add_pops(game, base, 1);
+		}
+	});
+
 	let random_player = () => {
 		return players[(game.random.get_int(0, players_sz - 1))];
 	};

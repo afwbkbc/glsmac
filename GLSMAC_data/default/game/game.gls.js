@@ -1,9 +1,16 @@
 return (glsmac) => {
 
+	// TODO: refactor these into modules
 	const factions = #include('../factions');
 	const resources = #include('../resources');
 	const units = #include('../units');
 	const bases = #include('../bases');
+
+	const modules = ['bases'];
+	let m = {};
+	for (module of modules) {
+		m[module] = #include(module);
+	}
 
 	glsmac.on('configure_state', (e) => {
 		factions.configure(e.fm);
@@ -15,27 +22,13 @@ return (glsmac) => {
 
 		const game = e.game;
 
-		// will be populated on start
-		const pop_types = [
-			'Worker',
-			'Talent',
-			'Doctor',
-			'Librarian',
-		];
-
-		let add_pops = (game, base, count) => {
-			for (let i = 0; i < count; i++) {
-				game.event('add_base_pop', {
-					base: base,
-					type: pop_types[(game.random.get_int(0, #sizeof(pop_types) - 1))],
-				})
-			}
-		};
-
 		game.on('configure', (e) => {
 
+			for (module of m) {
+				module(game);
+			}
+
 			const um = game.get_um();
-			const bm = game.get_bm();
 
 			um.on('unit_spawn', (e) => {
 				//
@@ -43,10 +36,6 @@ return (glsmac) => {
 
 			um.on('unit_despawn', (e) => {
 				//
-			});
-
-			bm.on('base_spawn', (e) => {
-				add_pops(game, e.base, game.random.get_int(1, 7));
 			});
 
 			units.configure(game);
@@ -77,12 +66,6 @@ return (glsmac) => {
 						glsmac.reset();
 					}
 				});
-			});
-
-			game.on('turn', (e) => {
-				for (base of bm.get_bases()) {
-					add_pops(game, base, 1);
-				}
 			});
 
 		});

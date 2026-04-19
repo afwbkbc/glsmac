@@ -54,6 +54,9 @@ private:
 	std::vector< std::pair< tiles_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
 
 	const std::string TilesToString( const tiles_t& tiles, std::string prefx = "" );
+
+	const size_t GetDistance( const Tile* const tile, const Tile* const other ) const;
+
 };
 
 }
