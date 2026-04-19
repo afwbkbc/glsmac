@@ -62,14 +62,30 @@ UI::UI( GSE_CALLABLE )
 		m_gc_space->Accumulate( this, [ this, &ctx, &gc_space, &si, &event, &result ] () {
 			gse::ExecutionPointer ep;
 			if ( event.type == input::EV_MOUSE_MOVE ) {
+				// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
 				m_last_mouse_position = {
 					event.data.mouse.x,
 					event.data.mouse.y
 				};
 			}
+
+			// custom early handlers
 			if ( RunGlobalHandlers( GSE_CALL, event, GH_BEFORE ) ) {
 				result = true;
 			}
+
+			// toggle fullscreen
+			if (
+				!result &&
+				event.type == input::EV_KEY_DOWN &&
+				( event.data.key.modifiers & input::KM_ALT ) &&
+				event.data.key.code == input::K_ENTER
+			) {
+				g_engine->GetGraphics()->ToggleFullscreen();
+				result = true;
+			}
+
+			// process by DOM element focus logic
 			if (
 				!result &&
 				event.type == input::EV_KEY_DOWN &&
@@ -80,9 +96,13 @@ UI::UI( GSE_CALLABLE )
 				FocusNext();
 				result = true;
 			}
+
+			// process by DOM
 			if ( !result ) {
 				result = m_root->ProcessEvent( GSE_CALL, event );
 			}
+
+			// custom late handlers
 			if ( !result && RunGlobalHandlers( GSE_CALL, event, GH_AFTER ) ) {
 				result = true;
 			}
