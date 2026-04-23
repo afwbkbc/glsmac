@@ -56,6 +56,14 @@ Some things are still hardcoded in C++ for now, but in the end everything will b
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics). See "GLSMAC v2.x+ features" section below.
 
+### AI policy
+
+I myself don't and won't use AI-generated code.
+
+Pull requests with AI code will be reviewed the same way as pure human code (no discrimination towards AI but also no 'cutting some slack' for AI)
+
+Any increases of dependency versions after 2025/10/20 will happen only after I manually review changes in them. This means versions will be changed less often and really only if it's actually needed for something (to fix specific bug or to bring specific functionality). This will not affect manual builds without -DVENDORED_DEPENDENCIES=YES (prebuilt releases for windows and ubuntu always use vendored dependencies).
+
 ### Current Version:
 
 # v0.3+
