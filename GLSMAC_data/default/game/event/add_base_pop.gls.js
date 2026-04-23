@@ -7,10 +7,19 @@ return {
 	},
 
 	apply: (e) => {
+
+		const base = e.data.base;
+
+		// reset nutrients
+		e.game.get('f_base_reset_nutrients')(base);
+
+		// spawn population
+		const pop_id = base.create_pop({
+			type: e.data.type,
+		});
+
 		return {
-			pop_id: e.data.base.create_pop({
-				type: e.data.type,
-			}),
+			pop_id: pop_id,
 		};
 	},
 

@@ -64,7 +64,9 @@ return {
 			this.production_cells,
 			'base-screen-bottombar-production-cell',
 			this.production_label,
-			'TURNS'
+			(progress_in) => {
+				return #to_string(progress_in) + ' TURNS';
+			},
 		);
 
 	},

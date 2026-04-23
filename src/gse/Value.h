@@ -86,6 +86,31 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
     WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     const gse::value::object_properties_t properties = {
 #define WRAPIMPL_PROPS gse::value::object_properties_t properties = {
+#define WRAPIMPL_CUSTOM_SETTERS \
+    { \
+        "set", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS( 2 ); \
+            N_GETVALUE( key, 0, String ); \
+            auto* const value = arguments[ 1 ]; \
+            CustomSet( key, value ); \
+            return VALUE( gse::value::Undefined ); \
+        } ) \
+    }, \
+    { \
+        "get", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS( 1 ); \
+            N_GETVALUE( key, 0, String );\
+            auto* const value = CustomGet( key ); \
+            if ( value ) { \
+                return value; \
+            } \
+            else { \
+                return VALUE( gse::value::Undefined ); \
+            } \
+        } ) \
+    },
 #define WRAPIMPL_TRIGGERS \
     { \
         "on", \

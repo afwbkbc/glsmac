@@ -36,9 +36,9 @@ return {
 		});
 
 		this.growth_cells = body.area({
-			left: 10,
+			left: 6,
 			top: 10,
-			right: 10,
+			right: 6,
 			bottom: 34,
 		});
 
@@ -60,8 +60,24 @@ return {
 			this.growth_cells,
 			'base-screen-nutrients-cell',
 			this.growth_label,
-			'Growth',
-			'turn(s)',
+			(progress_in) => {
+				let progress_text = '';
+				if (data.pending > 0) {
+					progress_text = 'Growth: ' + #to_string(progress_in);
+					if (progress_in == 1) {
+						progress_text += ' turn';
+					} else {
+						progress_text += ' turns';
+					}
+				} else {
+					if (data.pending < 0) {
+						progress_text = 'Hunger!';
+					} else {
+						progress_text = 'Growth: -stagnant-';
+					}
+				}
+				return progress_text;
+			},
 		);
 	},
 

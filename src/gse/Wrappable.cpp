@@ -193,7 +193,37 @@ void Wrappable::GetReachableObjects( std::unordered_set< gc::Object* >& reachabl
 	}
 	GC_DEBUG_END();
 
+	GC_DEBUG_BEGIN( "globals" );
+	{
+		std::lock_guard guard( m_globals_mutex );
+		for ( const auto& it : m_globals ) {
+			GC_REACHABLE( it.second );
+		}
+	}
 	GC_DEBUG_END();
+
+	GC_DEBUG_END();
+}
+
+void Wrappable::CustomSet( const std::string& key, gse::Value* const value ) {
+	std::lock_guard guard( m_globals_mutex );
+	if ( value->type != gse::VT_UNDEFINED ) {
+		m_globals.insert_or_assign( key, value );
+	}
+	else {
+		m_globals.erase( key );
+	}
+}
+
+Value* const Wrappable::CustomGet( const std::string& key ) {
+	std::lock_guard guard( m_globals_mutex );
+	const auto& it = m_globals.find( key );
+	if ( it != m_globals.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
 }
 
 }

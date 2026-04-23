@@ -438,6 +438,7 @@ private:
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	const bool IsRunning() const;
+	const bool IsMapReady() const;
 
 private:
 	friend class event::Event;

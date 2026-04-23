@@ -174,7 +174,7 @@ const std::string Value::ToStringImpl( std::unordered_set< const Value* >& stack
 			return str;
 		}
 		case VT_CALLABLE:
-			return "()";
+			return "<callable>";
 		case VT_ARRAYREF: {
 			const auto* that = (value::ArrayRef*)this;
 			return that->array->Get( that->index )->ToString();

@@ -123,9 +123,15 @@ protected:
 
 	bool m_catchall = false;
 
+	void CustomSet( const std::string& key, Value* const value );
+	Value* const CustomGet( const std::string& key );
+
 private:
 	std::mutex m_dependent_wrappables_mutex;
 	std::unordered_map< Wrappable*, size_t > m_dependent_wrappables = {};
+
+	std::mutex m_globals_mutex;
+	std::unordered_map< std::string, gse::Value* > m_globals = {};
 
 };
 

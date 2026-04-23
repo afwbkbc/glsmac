@@ -117,6 +117,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_GET_CUSTOM( "name", String, m_name )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
+	WRAPIMPL_CUSTOM_SETTERS
 	{
 		"create_pop",
 		NATIVE_CALL( this ) {
@@ -170,6 +171,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			}
 
 			return VALUE( gse::value::Array,, elements );
+		} ),
+	},
+	{
+		"get_size",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Int,, m_pops.size() );
 		} ),
 	},
 WRAPIMPL_DYNAMIC_SETTERS( Base )

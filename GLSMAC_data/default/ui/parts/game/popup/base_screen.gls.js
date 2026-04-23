@@ -100,16 +100,17 @@ return {
 	set: (data) => {
 
 		const game = this.p.game;
-		const owner = data.base.get_owner();
+		const base = data.base;
+		const owner = base.get_owner();
 		const faction = owner.get_faction();
 
 		// dummy data for now
 
 		this.sections.nutrients.set({
-			rows: 3,
-			columns: 14,
-			filled: 8,
-			pending: 3,
+			rows: base.get_size() + 1,
+			columns: game.get('map_growth_base'),
+			filled: base.get('accumulated_nutrients'),
+			pending: game.get('f_base_get_nutrients_per_turn')(base),
 		});
 
 		if (faction.is_progenitor) {
@@ -172,11 +173,11 @@ return {
 		this.sections.energy.set(energy_data);
 
 		this.sections.middle_area.set({
-			base: data.base,
+			base: base,
 		});
 
 		this.sections.bottom_bar.set({
-			base: data.base,
+			base: base,
 		});
 	},
 
@@ -188,7 +189,7 @@ return {
 		this.sections.bottom_bar.frame.show();
 	},
 
-	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, label_prefix, label_postfix) => {
+	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, f_label) => {
 		cells_el.clear();
 
 		const width = #floor(#to_float(total_width) / #to_float(columns));
@@ -229,12 +230,11 @@ return {
 			left = offset_left;
 		}
 
-		let progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
-		let progress_text = label_prefix + ': ' + #to_string(progress_in);
-		if (#is_defined(label_postfix)) {
-			progress_text += ' ' + label_postfix;
+		let progress_in = 0;
+		if (pending > 0) {
+			progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
 		}
-		label_el.text = progress_text;
+		label_el.text = f_label(progress_in);
 	},
 
 };

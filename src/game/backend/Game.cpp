@@ -623,6 +623,7 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
+	WRAPIMPL_CUSTOM_SETTERS
 		{
 			"is_master",
 			NATIVE_CALL( this ) {
@@ -2042,6 +2043,10 @@ void Game::CheckTurnComplete() {
 
 const bool Game::IsRunning() const {
 	return m_game_state == GS_RUNNING;
+}
+
+const bool Game::IsMapReady() const {
+	return m_game_state > GS_PREPARING_MAP;
 }
 
 const std::string Game::GenerateEventId() {

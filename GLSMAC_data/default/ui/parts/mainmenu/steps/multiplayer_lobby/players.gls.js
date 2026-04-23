@@ -161,11 +161,11 @@ return (i) => {
 			add_row(player);
 		}
 
-		i.connection.on('player_join', (e) => {
+		body.listen(i.connection, 'player_join', (e) => {
 			players_count++;
 			add_row(e.player);
 		});
-		i.connection.on('player_leave', (e) => {
+		body.listen(i.connection, 'player_leave', (e) => {
 			players_count--;
 			const id = #to_string(e.player.id);
 			if (#is_defined(ready_players[id])) {
@@ -174,7 +174,6 @@ return (i) => {
 			}
 			remove_row(e.player);
 		});
-
 		body.listen(game, 'player_update', (e) => {
 			const id = #to_string(e.player.id);
 			if (e.player.is_ready() && !#is_defined(ready_players[id])) {

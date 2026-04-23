@@ -145,14 +145,14 @@ WRAPIMPL_BEGIN( TileManager )
 		{
 			"get_map_width",
 			NATIVE_CALL( this ) {
-				const auto* m = m_game->GetMap();
+				const auto* m = GetMap( GSE_CALL );
 				return VALUE( gse::value::Int,, m->GetWidth() );
 			} )
 		},
 		{
 			"get_map_height",
 			NATIVE_CALL( this ) {
-				const auto* m = m_game->GetMap();
+				const auto* m = GetMap( GSE_CALL );
 				return VALUE( gse::value::Int,, m->GetHeight() );
 			})
 		},
@@ -162,7 +162,7 @@ WRAPIMPL_BEGIN( TileManager )
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( x, 0, Int );
 				N_GETVALUE( y, 1, Int );
-				const auto* m = m_game->GetMap();
+				const auto* m = GetMap( GSE_CALL );
 				const auto w = m->GetWidth();
 				const auto h = m->GetHeight();
 				if ( x >= w ) {
@@ -189,7 +189,8 @@ WRAPIMPL_BEGIN( TileManager )
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE_UNWRAP( tile, 0, Tile );
 				N_GETVALUE_UNWRAP( other, 1, Tile );
-				return VALUE( gse::value::Int,, GetDistance( tile, other ) );
+				const auto* m = GetMap( GSE_CALL );
+				return VALUE( gse::value::Int,, GetDistance( tile, other, m->GetWidth() ) );
 			} )
 		},
 	};
@@ -212,16 +213,23 @@ const std::string TileManager::TilesToString( const tiles_t& tiles, std::string 
 	return result;
 }
 
-const size_t TileManager::GetDistance( const Tile* const tile, const Tile* const other ) const {
-	const auto* m = m_game->GetMap();
+const size_t TileManager::GetDistance( const Tile* const tile, const Tile* const other, const size_t map_width ) const {
 	const auto yd = abs(int( tile->coord.y - other->coord.y ) );
 	return std::min(
 		( abs(int( tile->coord.x - other->coord.x ) ) + yd ) / 2, // no wrap
 		std::min(
-			( abs(int( tile->coord.x - m->GetWidth() - other->coord.x ) ) + yd ) / 2, // left wrap
-			( abs(int( tile->coord.x + m->GetWidth() - other->coord.x ) ) + yd ) / 2 // right wrap
+			( abs(int( tile->coord.x - map_width - other->coord.x ) ) + yd ) / 2, // left wrap
+			( abs(int( tile->coord.x + map_width - other->coord.x ) ) + yd ) / 2 // right wrap
 		)
 	);
+}
+
+Map* TileManager::GetMap( GSE_CALLABLE ) const {
+	ASSERT( m_game, "game is null" );
+	if ( !m_game->IsMapReady() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Map is not ready." );
+	}
+	return m_game->GetMap();
 }
 
 }

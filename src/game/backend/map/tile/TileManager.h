@@ -15,6 +15,9 @@ namespace backend {
 class Game;
 
 namespace map {
+
+class Map;
+
 namespace tile {
 
 class Tile;
@@ -55,7 +58,9 @@ private:
 
 	const std::string TilesToString( const tiles_t& tiles, std::string prefx = "" );
 
-	const size_t GetDistance( const Tile* const tile, const Tile* const other ) const;
+	const size_t GetDistance( const Tile* const tile, const Tile* const other, const size_t map_width ) const;
+
+	Map* GetMap( GSE_CALLABLE ) const;
 
 };
 

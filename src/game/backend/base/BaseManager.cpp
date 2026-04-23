@@ -469,6 +469,20 @@ void BaseManager::RefreshBase( const base::Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
+void BaseManager::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "BaseManager" );
+
+	GC_DEBUG_BEGIN( "bases" );
+	for ( const auto& it : m_bases ) {
+		it.second->GetReachableObjects( reachable_objects );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_END();
+}
+
 void BaseManager::QueueBaseUpdate( const Base* base, const base_update_op_t op ) {
 	auto it = m_base_updates.find( base->m_id );
 	if ( it == m_base_updates.end() ) {

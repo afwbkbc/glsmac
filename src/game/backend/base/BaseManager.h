@@ -53,6 +53,8 @@ public:
 
 	void RefreshBase( const base::Base* base );
 
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
+
 private:
 	Game* m_game = nullptr;
 
