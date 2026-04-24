@@ -88,7 +88,6 @@ return (m) => {
 		},
 
 		error: (text, cb) => {
-			const that = this;
 			this.show({
 				title: 'ERROR',
 				width: 400,
@@ -118,7 +117,7 @@ return (m) => {
 							) {
 								m.glsmac.exit();
 							} else {
-								that.back();
+								parent.back();
 							}
 							return true;
 						},

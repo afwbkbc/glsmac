@@ -24,8 +24,6 @@ return {
 
 		this.el.clear();
 
-		const that = this; // TODO
-
 		// tile previews
 
 		const c_left = #round(#to_float(this.tile_width) * 1.5);
@@ -43,8 +41,8 @@ return {
 				data: {
 					tile: tile,
 				},
-				left: c_left + #round(#to_float(that.tile_width) * cx),
-				top: c_top + #round(#to_float(that.tile_height) * cy),
+				left: c_left + #round(#to_float(parent.tile_width) * cx),
+				top: c_top + #round(#to_float(parent.tile_height) * cy),
 			});
 			return tile;
 		};
@@ -78,8 +76,8 @@ return {
 			data: {
 				base: data.base,
 			},
-			width: that.tile_width,
-			height: that.tile_height + 20,
+			width: parent.tile_width,
+			height: parent.tile_height + 20,
 			left: c_left,
 			top: c_top - 20,
 		});

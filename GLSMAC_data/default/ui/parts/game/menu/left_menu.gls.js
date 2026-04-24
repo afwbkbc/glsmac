@@ -7,8 +7,8 @@ return {
 				open: () => {
 					p.menu.open('left_menu_game', {
 						align: 'bottom',
-						left: p.menu_width,
-						bottom: 256 + 166 - p.item_height * 2, // TODO: get from parent item
+						left: p.menu.menu_width,
+						bottom: 256 + 166 - p.menu.item_height * 2, // TODO: get from parent item
 					});
 				},
 				close: () => {

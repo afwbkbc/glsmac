@@ -5,9 +5,14 @@
 #include "gse/Exception.h"
 #include "common/Common.h"
 #include "gse/value/Callable.h"
-#include "gse/value/Undefined.h"
+#include "gse/value/ValueRef.h"
 #include "gc/Space.h"
 #include "util/LogHelper.h"
+
+static const std::unordered_set< std::string > s_variable_reserved_words = {
+	"this",
+	"parent",
+};
 
 namespace gse {
 namespace context {
@@ -40,6 +45,12 @@ const bool Context::HasVariable( const std::string& name ) {
 
 Value* const Context::GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep ) {
 	CHECKACCUM( m_gse->GetGCSpace() );
+	if ( name == "this" && m_this ) {
+		return m_this;
+	}
+	else if ( name == "parent" && m_parent ) {
+		return m_parent;
+	}
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		return it->second.value;
@@ -53,13 +64,9 @@ Value* const Context::GetVariable( const std::string& name, const si_t& si, gse:
 	throw Exception( EC.REFERENCE_ERROR, "Variable '" + name + "' is not defined", CONTEXT_GSE_CALL );
 }
 
-void Context::SetVariable( const std::string& name, const var_info_t& var_info ) {
-	THROW( "TODO: SetVariable" );
-	m_variables.insert_or_assign( name, var_info );
-}
-
 void Context::CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	ASSERT( value, "value is null" );
+	CheckVariableName( name, CONTEXT_GSE_CALL );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
@@ -73,6 +80,7 @@ void Context::CreateVariable( const std::string& name, Value* const value, CONTE
 
 void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	ASSERT( value, "value is null" );
+	CheckVariableName( name, CONTEXT_GSE_CALL );
 	if ( m_variables.find( name ) != m_variables.end() ) {
 		throw Exception( EC.INVALID_ASSIGNMENT, "Variable '" + name + "' already exists", CONTEXT_GSE_CALL );
 	}
@@ -86,6 +94,7 @@ void Context::CreateConst( const std::string& name, Value* const value, CONTEXT_
 
 void Context::UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE ) {
 	ASSERT( value, "value is null" );
+	CheckVariableName( name, CONTEXT_GSE_CALL );
 	const auto it = m_variables.find( name );
 	if ( it != m_variables.end() ) {
 		if ( it->second.is_const ) {
@@ -115,6 +124,14 @@ void Context::CreateBuiltin( const std::string& name, Value* const value, gse::E
 	CreateConst( "#" + name, value, {}, ep );
 }
 
+value::ValueRef* const Context::GetThis() const {
+	return m_this;
+}
+
+value::ValueRef* const Context::GetParent() const {
+	return m_parent;
+}
+
 void Context::Execute( const std::function< void() >& f ) {
 	f();
 }
@@ -132,6 +149,12 @@ ChildContext* const Context::ForkAndExecute(
 	}
 	for ( auto& it : m_variables ) {
 		result->m_ref_contexts.insert_or_assign( it.first, this );
+	}
+	if ( m_this ) {
+		result->m_this = m_this;
+	}
+	if ( m_parent ) {
+		result->m_parent = m_parent;
 	}
 	f( result );
 	return result;
@@ -179,8 +202,26 @@ void Context::GetReachableObjects( std::unordered_set< Object* >& reachable_obje
 	}
 	GC_DEBUG_END();*/
 
+	if ( m_this ) {
+		GC_DEBUG_BEGIN( "this" );
+		GC_REACHABLE( m_this );
+		GC_DEBUG_END();
+	}
+
+	if ( m_parent ) {
+		GC_DEBUG_BEGIN( "parent" );
+		GC_REACHABLE( m_parent );
+		GC_DEBUG_END();
+	}
+
 	GC_DEBUG_END();
 
+}
+
+void Context::CheckVariableName( const std::string& name, GSE_CALLABLE_NOGC ) {
+	if ( s_variable_reserved_words.find( name ) != s_variable_reserved_words.end() ) {
+		throw Exception( EC.INVALID_ASSIGNMENT, "'" + name + "' is reserved word", CONTEXT_GSE_CALL );
+	}
 }
 
 void Context::AddChildContext( ChildContext* const child ) {
@@ -193,6 +234,13 @@ void Context::RemoveChildContext( ChildContext* const child ) {
 		ASSERT( m_child_contexts.find( child ) != m_child_contexts.end(), "child context not found" );
 		m_child_contexts.erase( child );
 	}
+}
+
+void Context::SetThis( value::ValueRef* const _this ) {
+	if ( m_this ) {
+		m_parent = m_this;
+	}
+	m_this = _this;
 }
 
 }

@@ -531,3 +531,42 @@ test.assert(testswitch('y') == 0); // default
 ;
 ;
 ;
+
+const parent_object = {
+	property: 'value1',
+	child_object: {
+		property: 'value2',
+		child_child_object: {
+			property: 'value3',
+			f: () => {
+
+				test.assert(#is_defined(this));
+				test.assert(#is_defined(this.this.this.this));
+				test.assert(#is_defined(parent));
+				test.assert(#is_defined(parent.parent));
+				test.assert(!#is_defined(parent.parent.parent));
+
+				test.assert(this.this.this == this);
+				test.assert(this.this == this.this.this.this.this);
+				test.assert(parent == this.parent);
+				test.assert(parent.parent.child_object == parent);
+				test.assert(parent.parent.child_object.child_child_object == this);
+
+				this.newprop = 'newvalue';
+				test.assert(this == this.parent.child_child_object);
+				test.assert(this.parent.parent.child_object.child_child_object.newprop == 'newvalue');
+				parent.child_child_object.newprop2 = 'newvalue2';
+				test.assert(this.newprop2 == 'newvalue2');
+				parent.parent.child_object.parent.child_object.child_child_object.parent.parent.child_object.newprop3 = 'newvalue3';
+				test.assert(parent.newprop3 == 'newvalue3');
+				parent.parent.newprop4 = 'newvalue4';
+			},
+		},
+	},
+};
+parent_object.child_object.child_child_object.f();
+test.assert(parent_object.newprop4 == 'newvalue4');
+test.assert(parent_object.child_object.newprop3 == 'newvalue3');
+test.assert(parent_object.child_object.child_child_object.newprop2 == 'newvalue2');
+test.assert(parent_object.child_object.child_child_object.newprop == 'newvalue');
+

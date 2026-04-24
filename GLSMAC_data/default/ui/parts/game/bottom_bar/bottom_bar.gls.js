@@ -61,10 +61,8 @@ return {
 			right: 0,
 		});
 
-		const that = this;
-
 		const background = {
-			under: that.el.surface({
+			under: parent.el.surface({
 				zindex: 0.2,
 				left: 0,
 				right: 0,
@@ -72,19 +70,19 @@ return {
 				bottom: 0,
 				background: 'black',
 			}),
-			right: that.el.surface({
+			right: parent.el.surface({
 				zindex: 0.3,
 				align: 'right',
 				width: 520,
 				background: 'console2_a.pcx:crop(504, 0, 1023, 256)',
 			}),
-			left: that.el.surface({
+			left: parent.el.surface({
 				zindex: 0.4,
 				align: 'left',
 				width: 356,
 				background: 'console2_a.pcx:crop(0, 0, 356, 256)',
 			}),
-			middle: that.el.surface({
+			middle: parent.el.surface({
 				zindex: 0.5,
 				left: 356,
 				right: 520,
@@ -115,7 +113,7 @@ return {
 				p.modules.menu.open('left_menu', {
 					align: 'bottom left',
 					left: 0,
-					bottom: that.height,
+					bottom: parent.height,
 					height: 166, // tmp
 				});
 			} else {
@@ -139,7 +137,7 @@ return {
 				p.modules.menu.open('right_menu', {
 					align: 'bottom right',
 					right: 0,
-					bottom: that.height,
+					bottom: parent.height,
 					height: 166, // tmp
 				});
 			} else {
@@ -165,7 +163,7 @@ return {
 			game: p.game,
 			map: p.map,
 			ui: p.ui,
-			el: that.el,
+			el: parent.el,
 			sections: {},
 			modules: p.modules,
 			get_stats_str: (object) => {

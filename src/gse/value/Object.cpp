@@ -25,8 +25,7 @@ Object::Object( GSE_CALLABLE, object_properties_t initial_value, const object_cl
 	ctx->ForkAndExecute(
 		GSE_CALL, false, [ this, &gc_space, &si, &ep, &wrapobj ]( context::ChildContext* const subctx ) {
 			m_ctx = subctx;
-			m_this = VALUE( value::ValueRef, , this );
-			m_ctx->CreateConst( "this", m_this, si, ep );
+			m_ctx->SetThis( VALUE( value::ValueRef, , this ) );
 			if ( wrapobj ) {
 				wrapobj->Link( this );
 			}
@@ -96,6 +95,18 @@ void Object::ValidatePrimitivity( GSE_CALLABLE, const std::string& prefix ) cons
 
 Value* const Object::GetRef( const object_key_t& key ) {
 	CHECKACCUM( m_gc_space );
+	if ( key == "this" ) {
+		auto* const v = m_ctx->GetThis();
+		if ( v ) {
+			return v;
+		}
+	}
+	if ( key == "parent" ) {
+		auto* const v = m_ctx->GetParent();
+		if ( v ) {
+			return v;
+		}
+	}
 	return VALUEEXT( ObjectRef, m_gc_space, this, key );
 }
 
@@ -114,9 +125,6 @@ void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_o
 	GC_DEBUG_BEGIN( "internal_context" );
 	GC_REACHABLE( m_ctx );
 	GC_DEBUG_END();
-
-	ASSERT( m_this, "this not set" );
-	GC_REACHABLE( m_this );
 
 	GC_DEBUG_BEGIN( "properties" );
 	for ( const auto& v : m_value ) {

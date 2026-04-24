@@ -16,10 +16,8 @@ return {
 
 		this.on_close_handlers = [];
 
-		const that = this;
-
 		p.ui.class('game-menu').set({
-			width: that.menu_width,
+			width: parent.menu_width,
 			background: 'interface.pcx:crop(439, 64, 458, 83)',
 		});
 		p.ui.class('game-menu-top-border').set({
@@ -55,9 +53,7 @@ return {
 		const pp = {
 			glsmac: p.glsmac,
 			ui: p.ui,
-			menu: that,
-			menu_width: that.menu_width,
-			item_height: that.item_height,
+			menu: parent,
 			maybe_quit: p.maybe_quit,
 			create: (entries) => {
 
@@ -65,7 +61,7 @@ return {
 
 				const menu = p.ui.root.panel({
 					class: 'game-menu',
-					height: #sizeof(entries) * that.item_height,
+					height: #sizeof(entries) * parent.menu.item_height,
 				});
 				menu.hide();
 				menu.surface({
@@ -101,7 +97,7 @@ return {
 						return true;
 					});
 
-					top += that.item_height;
+					top += parent.item_height;
 				}
 
 				return {

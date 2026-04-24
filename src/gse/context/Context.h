@@ -24,6 +24,7 @@ class GSE;
 
 namespace value {
 class Object;
+class ValueRef;
 }
 
 namespace context {
@@ -50,12 +51,14 @@ public:
 
 	const bool HasVariable( const std::string& name );
 	Value* const GetVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
-	void SetVariable( const std::string& name, const var_info_t& var_info );
 	void CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
 	void CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
 	void UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
 	void DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
 	void CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep );
+
+	value::ValueRef* const GetThis() const;
+	value::ValueRef* const GetParent() const;
 
 	void Execute( const std::function< void() >& f );
 
@@ -89,10 +92,19 @@ private:
 	std::unordered_set< ChildContext* > m_child_contexts = {};
 	std::unordered_set< Value* > m_child_objects = {};
 
+	value::ValueRef* m_this = nullptr;
+	value::ValueRef* m_parent = nullptr;
+
+	void CheckVariableName( const std::string& name, GSE_CALLABLE_NOGC );
+
 private:
 	friend class ChildContext;
 	void AddChildContext( ChildContext* const child );
 	void RemoveChildContext( ChildContext* const child );
+
+private:
+	friend class value::Object;
+	void SetThis( value::ValueRef* const _this );
 
 };
 

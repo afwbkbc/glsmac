@@ -686,8 +686,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 					return ( (value::Object*)obj )->Get( childname );
 				}
 				case Operand::OT_EXPRESSION: {
-					const auto objv = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
-					const auto* obj = objv;
+					const auto* obj = Deref( ctx, expression->a->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)expression->a ) );
 					if ( obj->type != gse::VT_OBJECT ) {
 						throw not_an_object( obj->ToString(), expression->a->m_si );
 					}
@@ -975,17 +974,32 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 		case Operand::OT_OBJECT: {
 			const auto* obj = (program::Object*)operand;
 			for ( const auto& it : obj->ordered_properties ) {
-				if ( it.first == "this" ) {
-					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'this' can't be overwritten", ctx, it.second->m_si, ep );
+				if ( it.first == "this" || it.first == "parent" ) {
+					throw gse::Exception( EC.INVALID_ASSIGNMENT, "'" + it.first + "' can't be overwritten", ctx, it.second->m_si, ep );
 				}
 			}
 			auto* result = VALUE( value::Object, , ctx, obj->m_si, ep, object_properties_t{} );
 			auto* o = ( (value::Object*)result );
 			auto& properties = o->value;
 			for ( const auto& it : obj->ordered_properties ) {
-				auto* const r = EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second );
+				auto* r = EvaluateExpression( ( (value::Object*)result )->GetContext(), ep, it.second );
 				ASSERT( r, "EvaluateExpression returned nullptr" );
-				o->Assign( it.first, r->Clone() );
+				bool need_clone = true;
+				if ( r->type == VT_CALLABLE ) {
+					need_clone = false; // callables are immutable
+				}
+				else if ( r->type == VT_OBJECT ) {
+					auto* const v = (value::Object*)r;
+					if ( v->GetContext()->GetParentContext() == o->GetContext() ) {
+						need_clone = false; // it's subobject of current object
+					}
+				}
+				// TODO: references?
+				o->Assign(
+					it.first, need_clone
+						? r->Clone()
+						: r
+				);
 			}
 			return result;
 		}
@@ -1094,29 +1108,46 @@ const std::string Interpreter::EvaluateVarName( context::Context* ctx, Execution
 
 gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const value ) {
 	CHECKACCUM( m_gc_space );
+	gse::Value* v = nullptr;
 	if ( value ) {
 		switch ( value->type ) {
 			case gse::VT_ARRAYREF: {
 				const auto* ref = (ArrayRef*)value;
-				return ref->array->Get( ref->index );
+				v = ref->array->Get( ref->index );
+				break;
 			}
 			case gse::VT_ARRAYRANGEREF: {
 				const auto* ref = (ArrayRangeRef*)value;
 				ValidateRange( ctx, si, ep, ref->array, ref->from, ref->to );
-				return ref->array->GetSubArray( ref->from, ref->to );
+				v = ref->array->GetSubArray( ref->from, ref->to );
+				break;
 			}
 			case gse::VT_OBJECTREF: {
 				const auto* ref = (ObjectRef*)value;
-				return ref->object->Get( ref->key );
+				v = ref->object->Get( ref->key );
+				break;
 			}
 			case gse::VT_VALUEREF: {
-				return ( (ValueRef*)value )->target;
+				v = ( (ValueRef*)value )->target;
+				break;
+			}
+			default: {
+				v = value;
+			}
+		}
+		ASSERT( v, "deref v is null" );
+		switch ( v->type ) {
+			case VT_ARRAYREF:
+			case VT_ARRAYRANGEREF:
+			case VT_OBJECTREF:
+			case VT_VALUEREF: {
+				return Deref( ctx, si, ep, v );
 			}
 			default: {
 			}
 		}
 	}
-	return value;
+	return v;
 }
 
 void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPointer& ep, gse::Value* const ref, gse::Value* const value ) {
@@ -1139,7 +1170,8 @@ void Interpreter::WriteByRef( context::Context* ctx, const si_t& si, ExecutionPo
 			break;
 		}
 		case gse::VT_VALUEREF: {
-			THROW( "TODO: VT_VALUEREF" );
+			// TODO: any cases where this should be allowed?
+			throw gse::Exception( EC.INVALID_ASSIGNMENT, (std::string)"This value is read-only", ctx, si, ep );
 		}
 		default:
 			THROW( "reference expected, found " + ref->ToString() );

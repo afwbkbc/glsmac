@@ -74,7 +74,6 @@ return {
 			align: 'center',
 		});
 
-		const that = this; // TODO
 		return p.create('', 680, 442, (body, cb) => {
 
 			const pp = {
@@ -84,7 +83,7 @@ return {
 				hide: p.hide,
 				modules: p.modules,
 				utils: {
-					set_cells: that.set_cells,
+					set_cells: parent.parent.set_cells,
 				},
 			};
 

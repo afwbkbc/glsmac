@@ -45,12 +45,10 @@ return {
 			return true;
 		});
 
-		const that = this;
-
 		const pp = {
 			ui: p.ui,
 			game: p.game,
-			body: that.frame,
+			body: parent.frame,
 			utils: p.utils,
 		};
 

@@ -96,19 +96,17 @@ return {
 			volume: 0.5,
 		});
 
-		const that = this; // TODO
-
 		this.viewport_size = {
 			// we don't need to resize width because viewport width = root object width so align center works correctly
-			height: p.ui.get_height() - that.bottombar_height,
+			height: p.ui.get_height() - parent.bottombar_height,
 		};
 
 		p.ui.on('resize', (e) => {
-			that.viewport_size = {
-				height: e.height - that.bottombar_height,
+			this.viewport_size = {
+				height: e.height - parent.bottombar_height,
 			};
 			const is_hiding = this.popup != null && this.popup_result != null;
-			that.sliding_stop();
+			this.sliding_stop();
 			if (is_hiding) {
 				this.clear();
 			}
@@ -119,7 +117,7 @@ return {
 				this.calculate_sliding_speed(this.popup.el.top);
 			}
 		});
-		
+
 		const pp = {
 
 			game: p.game,
@@ -127,9 +125,9 @@ return {
 			modules: p.modules,
 
 			hide: () => {
-				if (#is_defined(that.popup)) {
-					that.popup_result = false;
-					that.hide(that.popup.id);
+				if (#is_defined(parent.popup)) {
+					parent.popup_result = false;
+					parent.hide(parent.popup.id);
 				}
 			},
 
@@ -193,8 +191,8 @@ return {
 				});
 
 				const f_result = (result) => {
-					that.popup_result = result;
-					that.hide(data.id);
+					parent.popup_result = result;
+					parent.hide(data.id);
 				};
 
 				generator(body, f_result);
@@ -211,7 +209,7 @@ return {
 					return true;
 				});
 
-				that.resize(data);
+				parent.resize(data);
 
 				return data;
 

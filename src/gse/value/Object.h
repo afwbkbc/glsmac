@@ -60,8 +60,6 @@ public:
 	const gse::ExecutionPointer m_ep = {};
 
 private:
-	Value* m_this = nullptr;
-
 	object_properties_t m_value = {};
 
 };
