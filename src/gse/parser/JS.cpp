@@ -1012,7 +1012,9 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 const program::Operator* JS::GetOperator( const Operator* element ) {
 	EL( "GetOperator" )
 	const auto it = OPERATOR_NAMES.find( element->m_op );
-	ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
+	if ( it == OPERATOR_NAMES.end() ) {
+		ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
+	}
 	return new program::Operator( element->m_si, it->second );
 }
 

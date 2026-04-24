@@ -1,5 +1,4 @@
 // test script
-
 let a = 5;
 a++;
 const a_const = 6;
@@ -47,6 +46,7 @@ let testarr2 = [3, 'TEST', {
 	key1: 'value1',
 	key2: 'value2',
 }];
+
 testarr1 [] = 'first';
 testarr1 [] = 'second';
 testarr1 [] = 1 + 2 + 3;
@@ -55,9 +55,9 @@ testarr1 [] = testarr2;
 let testarr3 = #clone(testarr1);
 testarr3[1] = 'SECOND';
 testarr3[testmethod2(a, b, c) + 61] = 'FIRST';
-testarr3[2:5] = testarr1[0:1] + testarr2[0:1];
-let testarr4 = testarr3[:3];
-testarr4[ c + 1 - 100 : c - 100 + 2 ] = ['new first', 'new second'];
+testarr3[2::5] = testarr1[0::1] + testarr2[0::1];
+let testarr4 = testarr3[::3];
+testarr4[ c + 1 - 100 :: c - 100 + 2 ] = ['new first', 'new second'];
 
 let testobj1 = {};
 let testobj2 = {
@@ -156,11 +156,11 @@ test.assert(testarr4[1] == 'new first');
 test.assert(testarr4[2] == 'new second');
 test.assert(testarr4[3] == 'second');
 
-test.assert(testarr1[0:1] == ['first', 'second']);
+test.assert(testarr1[0::1] == ['first', 'second']);
 
-test.assert(testarr1[5:] == [testarr1[5], testarr1[6]]);
-test.assert(testarr1[:3] == [testarr1[0], testarr1[1]] + testarr1[2:3] );
-test.assert(testarr1[4:5] + testarr1[2:3] == [testarr1[4], testarr1[5], testarr1[2], testarr1[3]]);
+test.assert(testarr1[5::] == [testarr1[5], testarr1[6]]);
+test.assert(testarr1[::3] == [testarr1[0], testarr1[1]] + testarr1[2::3] );
+test.assert(testarr1[4::5] + testarr1[2::3] == [testarr1[4], testarr1[5], testarr1[2], testarr1[3]]);
 test.assert(testobj3.child1.child2.value == 'CHILD VALUE');
 test.assert(testobj1.propertyInt == 272 + c);
 test.assert(testobj1 == {propertyInt: 372});
@@ -388,7 +388,7 @@ test.assert(#typeof(123.) == 'Float');
 test.assert(#typeof(0.123) == 'Float');
 test.assert(#typeof('string') == 'String');
 test.assert(#typeof([]) == 'Array');
-test.assert(#typeof(2:3) == 'Range');
+test.assert(#typeof(2::3) == 'Range');
 test.assert(#typeof({}) == 'Object');
 test.assert(#typeof(() => {}) == 'Callable');
 

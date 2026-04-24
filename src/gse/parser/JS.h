@@ -349,7 +349,7 @@ private:
 			program::OT_ERASE,
 		},
 		{
-			":",
+			"::",
 			program::OT_RANGE
 		},
 	};

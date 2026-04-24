@@ -126,28 +126,16 @@ testcatch('GSEInvalidDereference', () => {
 	[1, [3, 4], 3][1][2][1]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4]['asd'
-:
-	2
-]
+	[1, 2, 3, 4]['asd'::2]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][0
-:
-	'qwe'
-]
+	[1, 2, 3, 4][0::'qwe']
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][-1
-:
-	1
-]
+	[1, 2, 3, 4][-1::1]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][2
-:
-	1
-]
+	[1, 2, 3, 4][2::1]
 });
 testcatch('GSEInvalidDereference', () => {
 	[1, 2, 3].property
