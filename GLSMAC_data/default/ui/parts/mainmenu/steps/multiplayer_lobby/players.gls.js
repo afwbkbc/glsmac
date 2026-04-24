@@ -55,12 +55,8 @@ return (i) => {
 
 				const faction = player.get_faction();
 
-				let faction_id = 'RANDOM';
-				let faction_color = 'white';
-				if (#is_defined(faction)) {
-					faction_id = faction.id;
-					faction_color = faction.text_color;
-				}
+				const faction_id = #is_defined(faction) ? faction.id : 'RANDOM';
+				const faction_color = #is_defined(faction) ? faction.text_color : 'white';
 				const faction_select = row_el.select({
 					class: 'lobby-player-faction',
 					items: faction_choices,
@@ -111,13 +107,8 @@ return (i) => {
 				const is_me = player.id == me.id;
 				const faction = player.get_faction();
 
-				let color = 'white';
-				if (#is_defined(faction)) {
-					row.faction.value = faction.id;
-					color = faction.text_color;
-				} else {
-					row.faction.value = 'RANDOM';
-				}
+				const color = #is_defined(faction) ? faction.text_color : 'white';
+				row.faction.value = #is_defined(faction) ? faction.id : 'RANDOM';
 				row.name.color = color;
 				row.faction.color = color;
 				row.difficulty.color = color;

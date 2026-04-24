@@ -58,7 +58,7 @@ private:
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
 	const std::string CHARS_NAMES_C = CHARS_LETTERS + CHARS_NUMBERS + "_";
-	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%~";
+	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%~?";
 	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
 
@@ -342,15 +342,23 @@ private:
 		},
 		{
 			":~",
-			program::OT_POP,
+			program::OT_POP
 		},
 		{
 			":-",
-			program::OT_ERASE,
+			program::OT_ERASE
 		},
 		{
 			"::",
 			program::OT_RANGE
+		},
+		{
+			"?",
+			program::OT_TERNARY_IF
+		},
+		{
+			":",
+			program::OT_TERNARY_ELSE
 		},
 	};
 
@@ -453,14 +461,14 @@ private:
 		{
 			program::OT_AND,
 			{
-				4,
+				6,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_OR,
 			{
-				3,
+				6,
 				OL_BOTH
 			}
 		},
@@ -551,45 +559,59 @@ private:
 		{
 			program::OT_CHILD,
 			{
-				17,
+				18,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_AT,
 			{
-				18,
+				19,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_PUSH,
 			{
-				3,
+				5,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_POP,
 			{
-				3,
+				5,
 				OL_LEFT,
 			}
 		},
 		{
 			program::OT_ERASE,
 			{
-				3,
+				5,
 				OL_BOTH,
 			}
 		},
 		{
 			program::OT_RANGE,
 			{
-				3,
+				5,
 				OL_ANY_OR_BOTH
 			}
-		}
+		},
+		{
+			program::OT_TERNARY_IF,
+			{
+				3,
+				OL_BOTH
+			}
+		},
+		{
+			program::OT_TERNARY_ELSE,
+			{
+				4,
+				OL_BOTH
+			}
+		},
 	};
 
 	const source_elements_t::const_iterator GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;

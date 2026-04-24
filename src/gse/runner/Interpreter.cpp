@@ -946,6 +946,29 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 
 			return VALUE( Range, , from, to );
 		}
+		case OT_TERNARY_IF: {
+			auto* const check = EvaluateOperand( ctx, ep, expression->a );
+			auto* const body = (Expression*)expression->b;
+			if (
+				expression->b->type != program::Operand::OT_EXPRESSION ||
+					!body->op ||
+					( (Operator*)( body->op ) )->op != OT_TERNARY_ELSE
+				) {
+				throw gse::Exception( EC.INVALID_CALL, "Invalid ternary syntax (expected: <condition> ? <if_true> : <if_false>", ctx, expression->a->m_si, ep );
+			}
+			if ( check->type != VT_BOOL ) {
+				throw gse::Exception( EC.INVALID_CALL, "Expected bool, found: " + check->ToString(), ctx, expression->a->m_si, ep );
+			}
+			return EvaluateOperand(
+				ctx, ep, ( (Bool*)check )->value
+					? body->a
+					: body->b
+			);
+			break;
+		}
+		case OT_TERNARY_ELSE: {
+			throw gse::Exception( EC.INVALID_CALL, "Unexpected :", ctx, expression->a->m_si, ep );
+		}
 		default: {
 			THROW( "operator " + expression->op->Dump() + " not implemented" );
 		}

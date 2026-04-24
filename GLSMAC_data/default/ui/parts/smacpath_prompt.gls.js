@@ -2,17 +2,12 @@ return (m) => {
 
 	m.glsmac.on('smacpath_prompt', (e) => {
 
-		let promptvalue = '';
-		if (#is_defined(e.last_failed_path)) {
-			promptvalue = e.last_failed_path;
-		}
-
 		let prompt = null;
 		prompt = m.utils.system_popup.prompt(m.glsmac.ui, {
 			text: 'Unable to find SMAC installation. Enter SMAC path:',
 			oktext: 'OK',
 			canceltext: 'Cancel',
-			value: promptvalue,
+			value: #is_defined(e.last_failed_path) ? e.last_failed_path : '',
 			on_ok: (value) => {
 				e.set_smacpath(value);
 				prompt.remove();

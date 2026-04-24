@@ -138,6 +138,14 @@ static const std::unordered_map< operator_type_t, std::string > s_op_labels = {
 		OT_RANGE,
 		"["
 	},
+	{
+		OT_TERNARY_IF,
+		"?"
+	},
+	{
+		OT_TERNARY_ELSE,
+		":"
+	},
 };
 
 Operator::Operator( const si_t& si, const operator_type_t op )

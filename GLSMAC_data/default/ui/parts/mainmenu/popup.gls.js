@@ -50,7 +50,6 @@ return (m) => {
 			});
 
 			let body_class = 'popup-body popup-body-noheader';
-
 			if (!#is_defined(data.buttons)) {
 				body_class += ' popup-body-nofooter';
 			}

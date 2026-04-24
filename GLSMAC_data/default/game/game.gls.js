@@ -45,10 +45,7 @@ return (glsmac) => {
 			units.define(game);
 			bases.define(game);
 
-			let worldscript = 'default';
-			if (#is_defined(glsmac.config.worldscript)) {
-				worldscript = glsmac.config.worldscript;
-			}
+			const worldscript = #is_defined(glsmac.config.worldscript) ? glsmac.config.worldscript : 'default';
 			game.on('create_world', (e) => {
 				const generator = #include('world/' + worldscript);
 				generator(e.game);

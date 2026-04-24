@@ -570,3 +570,23 @@ test.assert(parent_object.child_object.newprop3 == 'newvalue3');
 test.assert(parent_object.child_object.child_child_object.newprop2 == 'newvalue2');
 test.assert(parent_object.child_object.child_child_object.newprop == 'newvalue');
 
+test.assert((true ? 1 : 2) == 1);
+test.assert((false ? 1 : 2) == 2);
+const big_ternary =
+	(
+		true
+			? (
+				true
+					? false
+					: true
+			)
+			: (
+				true
+					? true
+					: false
+			)
+	)
+		? false
+		: true
+;
+test.assert(big_ternary == true);

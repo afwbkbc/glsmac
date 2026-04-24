@@ -600,78 +600,78 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 					)
 				),
 				new Statement(
-					SI( 42, 1, 42, 46 ),
+					SI( 42, 1, 42, 49 ),
 					new Expression(
-						SI( 42, 1, 42, 46 ),
+						SI( 42, 1, 42, 49 ),
 						new Expression(
-							SI( 42, 1, 42, 14 ),
+							SI( 42, 1, 42, 15 ),
 							new Variable( SI( 42, 1, 42, 9 ), "testarr3" ),
-							new Operator( SI( 42, 9, 42, 14 ), OT_AT ),
+							new Operator( SI( 42, 9, 42, 15 ), OT_AT ),
 							new Expression(
-								SI( 42, 10, 42, 13 ),
+								SI( 42, 10, 42, 14 ),
 								new program::Value( SI( 42, 10, 42, 11 ), VALUE( value::Int, , 2 ) ),
-								new Operator( SI( 42, 11, 42, 12 ), OT_RANGE ),
-								new program::Value( SI( 42, 12, 42, 13 ), VALUE( value::Int, , 5 ) )
+								new Operator( SI( 42, 11, 42, 13 ), OT_RANGE ),
+								new program::Value( SI( 42, 13, 42, 14 ), VALUE( value::Int, , 5 ) )
 							)
 						),
-						new Operator( SI( 42, 15, 42, 16 ), OT_ASSIGN ),
+						new Operator( SI( 42, 16, 42, 17 ), OT_ASSIGN ),
 						new Expression(
-							SI( 42, 17, 42, 46 ),
+							SI( 42, 18, 42, 49 ),
 							new Expression(
-								SI( 42, 17, 42, 30 ),
-								new Variable( SI( 42, 17, 42, 25 ), "testarr1" ),
-								new Operator( SI( 42, 25, 42, 30 ), OT_AT ),
+								SI( 42, 18, 42, 32 ),
+								new Variable( SI( 42, 18, 42, 26 ), "testarr1" ),
+								new Operator( SI( 42, 26, 42, 32 ), OT_AT ),
 								new Expression(
-									SI( 42, 26, 42, 29 ),
-									new program::Value( SI( 42, 26, 42, 27 ), VALUE( value::Int, , 0 ) ),
-									new Operator( SI( 42, 27, 42, 28 ), OT_RANGE ),
-									new program::Value( SI( 42, 28, 42, 29 ), VALUE( value::Int, , 1 ) )
+									SI( 42, 27, 42, 31 ),
+									new program::Value( SI( 42, 27, 42, 28 ), VALUE( value::Int, , 0 ) ),
+									new Operator( SI( 42, 28, 42, 30 ), OT_RANGE ),
+									new program::Value( SI( 42, 30, 42, 31 ), VALUE( value::Int, , 1 ) )
 								)
 							),
-							new Operator( SI( 42, 31, 42, 32 ), OT_ADD ),
+							new Operator( SI( 42, 33, 42, 34 ), OT_ADD ),
 							new Expression(
-								SI( 42, 33, 42, 46 ),
-								new Variable( SI( 42, 33, 42, 41 ), "testarr2" ),
-								new Operator( SI( 42, 41, 42, 46 ), OT_AT ),
+								SI( 42, 35, 42, 49 ),
+								new Variable( SI( 42, 35, 42, 43 ), "testarr2" ),
+								new Operator( SI( 42, 43, 42, 49 ), OT_AT ),
 								new Expression(
-									SI( 42, 42, 42, 45 ),
-									new program::Value( SI( 42, 42, 42, 43 ), VALUE( value::Int, , 0 ) ),
-									new Operator( SI( 42, 43, 42, 44 ), OT_RANGE ),
-									new program::Value( SI( 42, 44, 42, 45 ), VALUE( value::Int, , 1 ) )
+									SI( 42, 44, 42, 48 ),
+									new program::Value( SI( 42, 44, 42, 45 ), VALUE( value::Int, , 0 ) ),
+									new Operator( SI( 42, 45, 42, 47 ), OT_RANGE ),
+									new program::Value( SI( 42, 47, 42, 48 ), VALUE( value::Int, , 1 ) )
 								)
 							)
 						)
 					)
 				),
 				new Statement(
-					SI( 43, 1, 43, 28 ),
+					SI( 43, 1, 43, 29 ),
 					new Expression(
-						SI( 43, 5, 43, 28 ),
+						SI( 43, 5, 43, 29 ),
 						new Variable( SI( 43, 5, 43, 13 ), "testarr4", VH_CREATE_VAR ),
 						new Operator( SI( 43, 14, 43, 15 ), OT_ASSIGN ),
 						new Expression(
-							SI( 43, 16, 43, 28 ),
+							SI( 43, 16, 43, 29 ),
 							new Variable( SI( 43, 16, 43, 24 ), "testarr3" ),
-							new Operator( SI( 43, 24, 43, 28 ), OT_AT ),
+							new Operator( SI( 43, 24, 43, 29 ), OT_AT ),
 							new Expression(
-								SI( 43, 25, 43, 27 ),
+								SI( 43, 25, 43, 28 ),
 								nullptr,
-								new Operator( SI( 43, 25, 43, 26 ), OT_RANGE ),
-								new program::Value( SI( 43, 26, 43, 27 ), VALUE( value::Int, , 3 ) )
+								new Operator( SI( 43, 25, 43, 27 ), OT_RANGE ),
+								new program::Value( SI( 43, 27, 43, 28 ), VALUE( value::Int, , 3 ) )
 							)
 						)
 					)
 				),
 				new Statement(
-					SI( 44, 1, 44, 70 ),
+					SI( 44, 1, 44, 71 ),
 					new Expression(
-						SI( 44, 1, 44, 70 ),
+						SI( 44, 1, 44, 71 ),
 						new Expression(
-							SI( 44, 1, 44, 38 ),
+							SI( 44, 1, 44, 39 ),
 							new Variable( SI( 44, 1, 44, 9 ), "testarr4" ),
-							new Operator( SI( 44, 9, 44, 38 ), OT_AT ),
+							new Operator( SI( 44, 9, 44, 39 ), OT_AT ),
 							new Expression(
-								SI( 44, 11, 44, 36 ),
+								SI( 44, 11, 44, 37 ),
 								new Expression(
 									SI( 44, 11, 44, 22 ),
 									new Expression(
@@ -683,31 +683,31 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 									new Operator( SI( 44, 17, 44, 18 ), OT_SUB ),
 									new program::Value( SI( 44, 19, 44, 22 ), VALUE( value::Int, , 100 ) )
 								),
-								new Operator( SI( 44, 23, 44, 24 ), OT_RANGE ),
+								new Operator( SI( 44, 23, 44, 25 ), OT_RANGE ),
 								new Expression(
-									SI( 44, 25, 44, 36 ),
+									SI( 44, 26, 44, 37 ),
 									new Expression(
-										SI( 44, 25, 44, 32 ),
-										new Variable( SI( 44, 25, 44, 26 ), "c" ),
-										new Operator( SI( 44, 27, 44, 28 ), OT_SUB ),
-										new program::Value( SI( 44, 29, 44, 32 ), VALUE( value::Int, , 100 ) )
+										SI( 44, 26, 44, 33 ),
+										new Variable( SI( 44, 26, 44, 27 ), "c" ),
+										new Operator( SI( 44, 28, 44, 29 ), OT_SUB ),
+										new program::Value( SI( 44, 30, 44, 33 ), VALUE( value::Int, , 100 ) )
 									),
-									new Operator( SI( 44, 33, 44, 34 ), OT_ADD ),
-									new program::Value( SI( 44, 35, 44, 36 ), VALUE( value::Int, , 2 ) )
+									new Operator( SI( 44, 34, 44, 35 ), OT_ADD ),
+									new program::Value( SI( 44, 36, 44, 37 ), VALUE( value::Int, , 2 ) )
 								)
 							)
 						),
-						new Operator( SI( 44, 39, 44, 40 ), OT_ASSIGN ),
+						new Operator( SI( 44, 40, 44, 41 ), OT_ASSIGN ),
 						new Array(
-							SI( 44, 41, 44, 70 ),
+							SI( 44, 42, 44, 71 ),
 							{
 								new Expression(
-									SI( 44, 43, 44, 54 ),
-									new program::Value( SI( 44, 43, 44, 54 ), VALUE( value::String, , "new first" ) )
+									SI( 44, 44, 44, 55 ),
+									new program::Value( SI( 44, 44, 44, 55 ), VALUE( value::String, , "new first" ) )
 								),
 								new Expression(
-									SI( 44, 56, 44, 68 ),
-									new program::Value( SI( 44, 56, 44, 68 ), VALUE( value::String, , "new second" ) )
+									SI( 44, 57, 44, 69 ),
+									new program::Value( SI( 44, 57, 44, 69 ), VALUE( value::String, , "new second" ) )
 								)
 							}
 						)
@@ -1343,14 +1343,14 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 					78, 62,
 					{
 						new Expression(
-							SI( 78, 70, 78, 83 ),
+							SI( 78, 70, 78, 84 ),
 							new Variable( SI( 78, 70, 78, 78 ), "testarr1" ),
-							new Operator( SI( 78, 78, 78, 83 ), OT_AT ),
+							new Operator( SI( 78, 78, 78, 84 ), OT_AT ),
 							new Expression(
-								SI( 78, 79, 78, 82 ),
+								SI( 78, 79, 78, 83 ),
 								new program::Value( SI( 78, 79, 78, 80 ), VALUE( value::Int, , 0 ) ),
-								new Operator( SI( 78, 80, 78, 81 ), OT_RANGE ),
-								new program::Value( SI( 78, 81, 78, 82 ), VALUE( value::Int, , 1 ) )
+								new Operator( SI( 78, 80, 78, 82 ), OT_RANGE ),
+								new program::Value( SI( 78, 82, 78, 83 ), VALUE( value::Int, , 1 ) )
 							)
 						)
 					}
@@ -1359,30 +1359,30 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 					79, 6,
 					{
 						new Expression(
-							SI( 79, 14, 79, 26 ),
+							SI( 79, 14, 79, 27 ),
 							new Variable( SI( 79, 14, 79, 22 ), "testarr1" ),
-							new Operator( SI( 79, 22, 79, 26 ), OT_AT ),
+							new Operator( SI( 79, 22, 79, 27 ), OT_AT ),
 							new Expression(
-								SI( 79, 23, 79, 25 ),
+								SI( 79, 23, 79, 26 ),
 								new program::Value( SI( 79, 23, 79, 24 ), VALUE( value::Int, , 5 ) ),
-								new Operator( SI( 79, 24, 79, 25 ), OT_RANGE ),
+								new Operator( SI( 79, 24, 79, 26 ), OT_RANGE ),
 								nullptr
 							)
 						)
 					}
 				),
 				print(
-					79, 35,
+					79, 36,
 					{
 						new Expression(
-							SI( 79, 43, 79, 55 ),
-							new Variable( SI( 79, 43, 79, 51 ), "testarr1" ),
-							new Operator( SI( 79, 51, 79, 55 ), OT_AT ),
+							SI( 79, 44, 79, 57 ),
+							new Variable( SI( 79, 44, 79, 52 ), "testarr1" ),
+							new Operator( SI( 79, 52, 79, 57 ), OT_AT ),
 							new Expression(
-								SI( 79, 52, 79, 54 ),
+								SI( 79, 53, 79, 56 ),
 								nullptr,
-								new Operator( SI( 79, 52, 79, 53 ), OT_RANGE ),
-								new program::Value( SI( 79, 53, 79, 54 ), VALUE( value::Int, , 3 ) )
+								new Operator( SI( 79, 53, 79, 55 ), OT_RANGE ),
+								new program::Value( SI( 79, 55, 79, 56 ), VALUE( value::Int, , 3 ) )
 							)
 						)
 					}
@@ -1391,28 +1391,28 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 					80, 6,
 					{
 						new Expression(
-							SI( 80, 14, 80, 43 ),
+							SI( 80, 14, 80, 45 ),
 							new Expression(
-								SI( 80, 14, 80, 27 ),
+								SI( 80, 14, 80, 28 ),
 								new Variable( SI( 80, 14, 80, 22 ), "testarr1" ),
-								new Operator( SI( 80, 22, 80, 27 ), OT_AT ),
+								new Operator( SI( 80, 22, 80, 28 ), OT_AT ),
 								new Expression(
-									SI( 80, 23, 80, 26 ),
+									SI( 80, 23, 80, 27 ),
 									new program::Value( SI( 80, 23, 80, 24 ), VALUE( value::Int, , 4 ) ),
-									new Operator( SI( 80, 24, 80, 25 ), OT_RANGE ),
-									new program::Value( SI( 80, 25, 80, 26 ), VALUE( value::Int, , 5 ) )
+									new Operator( SI( 80, 24, 80, 26 ), OT_RANGE ),
+									new program::Value( SI( 80, 26, 80, 27 ), VALUE( value::Int, , 5 ) )
 								)
 							),
-							new Operator( SI( 80, 28, 80, 29 ), OT_ADD ),
+							new Operator( SI( 80, 29, 80, 30 ), OT_ADD ),
 							new Expression(
-								SI( 80, 30, 80, 43 ),
-								new Variable( SI( 80, 30, 80, 38 ), "testarr1" ),
-								new Operator( SI( 80, 38, 80, 43 ), OT_AT ),
+								SI( 80, 31, 80, 45 ),
+								new Variable( SI( 80, 31, 80, 39 ), "testarr1" ),
+								new Operator( SI( 80, 39, 80, 45 ), OT_AT ),
 								new Expression(
-									SI( 80, 39, 80, 42 ),
-									new program::Value( SI( 80, 39, 80, 40 ), VALUE( value::Int, , 2 ) ),
-									new Operator( SI( 80, 40, 80, 41 ), OT_RANGE ),
-									new program::Value( SI( 80, 41, 80, 42 ), VALUE( value::Int, , 3 ) )
+									SI( 80, 40, 80, 44 ),
+									new program::Value( SI( 80, 40, 80, 41 ), VALUE( value::Int, , 2 ) ),
+									new Operator( SI( 80, 41, 80, 43 ), OT_RANGE ),
+									new program::Value( SI( 80, 43, 80, 44 ), VALUE( value::Int, , 3 ) )
 								)
 							)
 						)

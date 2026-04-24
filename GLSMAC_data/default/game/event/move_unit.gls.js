@@ -14,8 +14,9 @@ const get_movement_cost = (unit, src_tile, dst_tile) => {
 		if (is_native) {
 			if (dst_tile.is_water) {
 				return 1.0;
+			} else {
+				return 1.0 / 3.0;
 			}
-			return 1.0 / 3.0;
 		}
 		return 3.0;
 	}

@@ -217,11 +217,7 @@
 	let visible = false;
 	#async(1000, () => {
 		visible = !visible;
-		if (visible) {
-			textcls1.color = '#ffff00ff';
-		} else {
-			textcls1.color = '#00000000';
-		}
+		textcls1.color = visible ? '#ffff00ff' : '#00000000';
 		return true;
 	});
 
