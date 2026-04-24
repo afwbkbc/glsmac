@@ -9,13 +9,10 @@ return {
 			class: 'base-screen-middle-area',
 		});
 
-		const w = this.tile_width; // TODO: fix 'this'
-		const h = this.tile_height;
-
 		p.ui.class('base-screen-middle-area-tile').set({
 			type: 'tile-preview',
-			width: w,
-			height: h,
+			width: parent.tile_width,
+			height: parent.tile_height,
 		});
 
 	},

@@ -566,7 +566,7 @@ private:
 		{
 			program::OT_AT,
 			{
-				19,
+				18,
 				OL_BOTH
 			}
 		},

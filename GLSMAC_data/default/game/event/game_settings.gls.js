@@ -29,7 +29,7 @@ return {
 			}
 		}
 		for (c of changes) {
-			const oldv = settings[c[0]]; // TODO: fix deref
+			const oldv = settings[c[0]];
 			if (#is_defined(oldv)) { // TODO: support all fields
 				old_settings :+[c[0], oldv];
 				settings[c[0]] = c[1]; // TODO: ro/rw permissions on settings in all places

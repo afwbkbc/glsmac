@@ -104,9 +104,7 @@ return (i) => {
 		body.listen(game, 'game_settings', (e) => {
 			for (s of e.settings) {
 				if (#is_defined(line_keys[s[0]])) {
-					// TODO: one line
-					const el = lines[line_keys[s[0]]].select;
-					el.value = #to_string(s[1]);
+					lines[line_keys[s[0]]].select.value = #to_string(s[1]);
 				}
 			}
 		});

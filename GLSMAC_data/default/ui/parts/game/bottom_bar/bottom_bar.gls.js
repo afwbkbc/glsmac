@@ -52,11 +52,10 @@ return {
 			},
 		});
 
-		const height = this.height; // TODO: fix this within objects
 		this.el = p.root.area({
 			zindex: 0.8,
 			align: 'bottom',
-			height: height,
+			height: parent.height,
 			left: 0,
 			right: 0,
 		});

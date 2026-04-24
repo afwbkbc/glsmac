@@ -5,8 +5,6 @@
 
 #include "gc/Space.h"
 
-#include "gse/value/Int.h"
-#include "gse/value/Float.h"
 #include "gse/value/String.h"
 
 #include "gse/Exception.h"
@@ -631,10 +629,10 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				if ( has_a && has_b ) {
 					throw Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
 				}
-				case OL_ANY_OR_BOTH:
-					if ( !has_a && !has_b ) {
-						throw Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
-					}
+			case OL_ANY_OR_BOTH:
+				if ( !has_a && !has_b ) {
+					throw Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
+				}
 				return new program::Expression(
 					si,
 					has_a
@@ -681,16 +679,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					}
 					it_tmp++;
 				}
-				if ( it_tmp == it + 1 || it_tmp == end ) {
-					// no child dereferences, treat as single operand
-					elements.push_back( GetOperand( ( Identifier * )( *it ), &next_var_hints ) );
-				}
-				else {
-					// child dereference, group it into expression
-					ASSERT( next_var_hints == VH_NONE, "variable modifier can't be used with properties" );
-					elements.push_back( GetExpressionOrOperand( it, it_tmp ) );
-					it = it_tmp - 1;
-				}
+				elements.push_back( GetOperand( ( Identifier * )( *it ), &next_var_hints ) );
 				break;
 			}
 			case SourceElement::ET_OPERATOR: {

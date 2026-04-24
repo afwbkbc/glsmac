@@ -133,7 +133,7 @@ return (i) => {
 		const remove_row = (player) => {
 			const id = #to_string(player.id);
 			if (#is_defined(rows[id])) {
-				(rows[id].row).remove(); // TODO: remove ( )
+				rows[id].row.remove();
 				rows[id] = #undefined;
 			}
 		};

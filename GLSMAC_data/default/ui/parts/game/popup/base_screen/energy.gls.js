@@ -100,10 +100,10 @@ return {
 			});
 		}
 
-		const f = this.frame; // TODO: fix 'this' inside objects
+		const frame = this.frame;
 		this.labels = {
 			economy: {
-				percentage: f.panel({
+				percentage: frame.panel({
 					class: 'base-screen-energy-percentage-header',
 					top: top_economy + header_height,
 				}).text({
@@ -130,7 +130,7 @@ return {
 				}),
 			},
 			labs: {
-				percentage: f.panel({
+				percentage: frame.panel({
 					class: 'base-screen-energy-percentage-header',
 					top: top_labs + header_height,
 				}).text({
@@ -157,7 +157,7 @@ return {
 				}),
 			},
 			psych: {
-				percentage: f.panel({
+				percentage: frame.panel({
 					class: 'base-screen-energy-percentage-header',
 					top: top_psych + header_height,
 				}).text({

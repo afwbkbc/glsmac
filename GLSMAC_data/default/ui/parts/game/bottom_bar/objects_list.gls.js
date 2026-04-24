@@ -51,10 +51,9 @@ return {
 					item: item,
 					object: object
 				};
-				const p = this.p; // TODO: make this work within object
 				item.text({
 					class: 'bottombar-objects-list-item-text',
-					text: p.get_stats_str(object),
+					text: parent.p.get_stats_str(object),
 				});
 				item.on('mousedown', (e) => {
 					this.p.modules.popup.hide('base_screen');
@@ -140,10 +139,8 @@ return {
 
 		this.object_width = 57;
 
-		const width = this.object_width; // TODO: fix so that this works inside properties
-
 		p.ui.class('bottombar-objects-list-item').set({
-			width: width,
+			width: parent.object_width,
 			height: 46,
 			_hover: {
 				border: 'rgb(14,40,49),1',
@@ -157,7 +154,7 @@ return {
 		});
 
 		p.ui.class('bottombar-objects-list-item-preview').set({
-			width: width,
+			width: parent.object_width,
 			height: 40,
 		});
 
