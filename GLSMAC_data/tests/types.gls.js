@@ -191,13 +191,16 @@ if (false) {
 if (false) {
 	test.assert(false);
 }
-elseif(false)
+else if(false)
 {
 	test.assert(false);
 }
-elseif(true)
+else if(true)
 {
 	yes_or_no = true;
+}
+else if (true) {
+	test.assert(false);
 }
 else
 {
@@ -323,7 +326,7 @@ while (i > 0) {
 			if ( ii == 'a' || ii == 'c' ) {
 				continue;
 			}
-			elseif (ii == 'e') {
+			else if (ii == 'e') {
 				break;
 			}
 			arr :+ ii;
@@ -364,9 +367,9 @@ test.assert(arr == [
 	'failfunc',
 	'failfunc2',
 	'CAUGHT TestError : something happened',
-	'\tat ' + test.get_script_path() + ':343: throw TestError(\'something happened\');',
-	'\tat ' + test.get_script_path() + ':348: realfailfunc();',
-	'\tat ' + test.get_script_path() + ':350: failfunc();'
+	'\tat ' + test.get_script_path() + ':346: throw TestError(\'something happened\');',
+	'\tat ' + test.get_script_path() + ':351: realfailfunc();',
+	'\tat ' + test.get_script_path() + ':353: failfunc();'
 ]);
 
 test.assert(#to_string(2 + 3) + ' (five)' == '5 (five)');

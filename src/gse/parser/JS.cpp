@@ -22,7 +22,6 @@
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
 #include "gse/program/If.h"
-#include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
 #include "gse/program/For.h"
@@ -223,7 +222,6 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 									(
 										( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL || (
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSE &&
-											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSEIF &&
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH &&
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CASE &&
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_DEFAULTCASE
@@ -407,11 +405,17 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 		);
 	}
 	else if (
+		( *it )->m_type == SourceElement::ET_CONDITIONAL &&
+		( ( Conditional * )( *it ) )->m_conditional_type == Conditional::CT_IF
+	) {
+		return GetConditional( it, end, processed_end );
+	}
+	else if (
 		( *it )->m_type != SourceElement::ET_BLOCK ||
 		( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
 		( ( Block * )( *it ) )->m_block_type != BLOCK_CURLY_BRACKETS ) {
 		throw Exception(
-			EC.PARSE_ERROR, "Expected {, got: " + ( *it )->ToString(), nullptr, ( *begin )->m_si, *m_ep
+			EC.PARSE_ERROR, "Expected { or if, got: " + ( *it )->ToString(), nullptr, ( *begin )->m_si, *m_ep
 		);
 	}
 
@@ -427,7 +431,6 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 
 	switch ( conditional->m_conditional_type ) {
 		case Conditional::CT_IF:
-		case Conditional::CT_ELSEIF:
 		case Conditional::CT_CASE:
 		case Conditional::CT_DEFAULTCASE: {
 			const program::Conditional* els = nullptr;
@@ -454,20 +457,12 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 			switch ( conditional->m_conditional_type ) {
 				case Conditional::CT_IF:
 					return new program::If( si, (SimpleCondition*)condition, body, els );
-				case Conditional::CT_ELSEIF:
-					return new program::ElseIf( si, (SimpleCondition*)condition, body, els );
 				case Conditional::CT_CASE:
 					return new program::Case( si, (SimpleCondition*)condition, body );
 				case Conditional::CT_DEFAULTCASE:
 					return new program::Case( si, nullptr, body );
 				default:
 					THROW( "conditional type not handled: " + std::to_string( conditional->m_conditional_type ) );
-			}
-			if ( conditional->m_conditional_type == Conditional::CT_IF ) {
-				return new program::If( si, (SimpleCondition*)condition, body, els );
-			}
-			else {
-				return new program::ElseIf( si, (SimpleCondition*)condition, body, els );
 			}
 		}
 		case Conditional::CT_ELSE:

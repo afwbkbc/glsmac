@@ -127,7 +127,6 @@ protected:
 	public:
 		enum conditional_type_t {
 			CT_IF,
-			CT_ELSEIF,
 			CT_ELSE,
 			CT_WHILE,
 			CT_FOR,
@@ -142,7 +141,6 @@ protected:
 			, m_conditional_type( conditional_type )
 			, has_condition(
 				conditional_type == CT_IF ||
-					conditional_type == CT_ELSEIF ||
 					conditional_type == CT_WHILE ||
 					conditional_type == CT_FOR ||
 					conditional_type == CT_SWITCH ||
@@ -156,8 +154,6 @@ protected:
 			switch ( m_conditional_type ) {
 				case CT_IF:
 					return "if";
-				case CT_ELSEIF:
-					return "elseif";
 				case CT_ELSE:
 					return "else";
 				case CT_WHILE:

@@ -211,12 +211,10 @@ return {
 			for (let x = 0; x < columns; x++) {
 				if (i < filled) {
 					cls = 'full';
+				} else if (i < filled + pending) {
+					cls = 'pending';
 				} else {
-					if (i < filled + pending) {
-						cls = 'pending';
-					} else {
-						cls = 'empty';
-					}
+					cls = 'empty';
 				}
 				i++;
 				cells_el.panel({

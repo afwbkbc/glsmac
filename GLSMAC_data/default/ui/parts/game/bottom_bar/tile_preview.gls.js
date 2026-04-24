@@ -107,12 +107,10 @@ return {
 		if (tile.is_water) {
 			if (tile.elevation < this.TRENCH_LEVEL) {
 				f_line('Ocean Trench');
+			} else if (tile.elevation < this.OCEAN_LEVEL) {
+				f_line('Ocean');
 			} else {
-				if (tile.elevation < this.OCEAN_LEVEL) {
-					f_line('Ocean');
-				} else {
-					f_line('Ocean Shelf');
-				}
+				f_line('Ocean Shelf');
 			}
 			f_line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation));
 		} else {

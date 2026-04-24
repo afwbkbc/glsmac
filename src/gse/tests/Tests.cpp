@@ -16,7 +16,6 @@
 #include "gse/program/Call.h"
 #include "gse/program/Array.h"
 #include "gse/program/If.h"
-#include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
 #include "gse/program/Try.h"
@@ -157,9 +156,9 @@ const std::string& GetTestSource() {
 									  "if ( false ) {      #print( 'FALSE' ); };\n"
 									  "if ( false ) {\n"
 									  "       #print('FAIL');\n"
-									  "} elseif ( false ) {\n"
+									  "} else if ( false ) {\n"
 									  "       #print( 'FAIL' );\n"
-									  "} elseif ( true ) {\n"
+									  "} else if ( true ) {\n"
 									  "       #print( 'OK' );\n"
 									  "} else {\n"
 									  "       #print( 'FAIL' );\n"
@@ -1607,7 +1606,7 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 							)
 						}
 					),
-					new ElseIf(
+					new If(
 						SI( 99, 3, 101, 2 ),
 						new SimpleCondition(
 							SI( 99, 3, 101, 2 ),
@@ -1630,7 +1629,7 @@ const Program* GetTestProgram( gc::Space* const gc_space ) {
 								)
 							}
 						),
-						new ElseIf(
+						new If(
 							SI( 101, 3, 103, 2 ),
 							new SimpleCondition(
 								SI( 101, 3, 103, 2 ),

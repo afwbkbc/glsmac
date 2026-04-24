@@ -9,7 +9,6 @@ class Conditional : public Control {
 public:
 	enum conditional_type_t {
 		CT_IF,
-		CT_ELSEIF,
 		CT_ELSE,
 		CT_WHILE,
 		CT_FOR,

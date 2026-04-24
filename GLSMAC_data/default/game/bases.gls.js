@@ -47,25 +47,16 @@ const calculate_growth_base = (game) => {
 	let map_growth_base = 0;
 	if (map_size > 5500) {
 		map_growth_base = 15; // standard map
-	} else { // TODO: else if
-		if (map_size > 4000) {
-			map_growth_base = 14; // between standard and small map, SMAC skips it but makes sense imo
-		} else {
-			if (map_size > 3000) {
-				map_growth_base = 13; // small map
-			} else {
-				if (map_size > 1800) {
-					map_growth_base = 12; // tiny map
-				} else {
-					// below tiny (SMAC doesn't have it but let's do)
-					if (map_size > 1000) {
-						map_growth_base = 11;
-					} else {
-						map_growth_base = 10;
-					}
-				}
-			}
-		}
+	} else if (map_size > 4000) {
+		map_growth_base = 14; // between standard and small map, SMAC skips it but makes sense imo
+	} else if (map_size > 3000) {
+		map_growth_base = 13; // small map
+	} else if (map_size > 1800) {
+		map_growth_base = 12; // tiny map
+	} else if (map_size > 1000) {
+		map_growth_base = 11; // below tiny (SMAC doesn't have it but let's do)
+	} else {
+		map_growth_base = 10; // below tiny (SMAC doesn't have it but let's do)
 	}
 	globals.map_growth_base = map_growth_base;
 	game.set('map_growth_base', map_growth_base);

@@ -114,10 +114,6 @@ private:
 			Parser::Conditional::CT_IF
 		},
 		{
-			"elseif",
-			Parser::Conditional::CT_ELSEIF
-		},
-		{
 			"else",
 			Parser::Conditional::CT_ELSE
 		},

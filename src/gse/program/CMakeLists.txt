@@ -13,7 +13,6 @@ SET( SRC ${SRC}
 	${PWD}/Control.cpp
 	${PWD}/Element.cpp
 	${PWD}/Else.cpp
-	${PWD}/ElseIf.cpp
 	${PWD}/Expression.cpp
 	${PWD}/Function.cpp
 	${PWD}/If.cpp

@@ -69,12 +69,10 @@ return {
 					} else {
 						progress_text += ' turns';
 					}
+				} else if (data.pending < 0) {
+					progress_text = 'Hunger!';
 				} else {
-					if (data.pending < 0) {
-						progress_text = 'Hunger!';
-					} else {
-						progress_text = 'Growth: -stagnant-';
-					}
+					progress_text = 'Growth: -stagnant-';
 				}
 				return progress_text;
 			},

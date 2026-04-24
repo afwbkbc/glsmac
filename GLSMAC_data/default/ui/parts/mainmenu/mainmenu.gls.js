@@ -84,7 +84,7 @@ return (m) => {
 			i.settings.local.network_role = 'server';
 			m.glsmac.init();
 			i.steps.multiplayer_lobby(i);
-		} elseif (#is_defined(c.join)) {
+		} else if (#is_defined(c.join)) {
 			if (!#is_defined(c.playername)) {
 				throw Error( '--join requires --playername argument' );
 			}

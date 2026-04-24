@@ -111,16 +111,14 @@ return (m) => {
 						onclick: (e) => {
 							if (#is_defined(cb)) {
 								cb();
+							} else if (
+								#is_defined(m.glsmac.config.quickstart) ||
+								#is_defined(m.glsmac.config.host) ||
+								#is_defined(m.glsmac.config.join)
+							) {
+								m.glsmac.exit();
 							} else {
-								if (
-									#is_defined(m.glsmac.config.quickstart) ||
-									#is_defined(m.glsmac.config.host) ||
-									#is_defined(m.glsmac.config.join)
-								) {
-									m.glsmac.exit();
-								} else {
-									that.back();
-								}
+								that.back();
 							}
 							return true;
 						},

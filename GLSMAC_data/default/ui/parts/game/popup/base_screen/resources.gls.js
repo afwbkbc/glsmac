@@ -201,9 +201,7 @@ return {
 				let cls = 'base-screen-resources-cell-' + type;
 				if (i < d.loss) {
 					cls += '-loss';
-				}
-				// TODO: else if
-				if (i >= this.total_cells - total) {
+				} else if (i >= this.total_cells - total) {
 					cls += '-profit';
 				}
 				this.cells.surface({
@@ -218,12 +216,10 @@ return {
 			l.left.text = this._pad(d.profit) + ' - ' + this._pad(d.loss);
 			if (d.profit == d.loss) {
 				l.right.text = this._pad(0);
+			} else if (d.profit > d.loss) {
+				l.right.text = '+' + this._pad(d.profit - d.loss);
 			} else {
-				if (d.profit > d.loss) {
-					l.right.text = '+' + this._pad(d.profit - d.loss);
-				} else {
-					l.right.text = '-' + this._pad(d.loss - d.profit);
-				}
+				l.right.text = '-' + this._pad(d.loss - d.profit);
 			}
 		}
 	},

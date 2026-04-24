@@ -18,7 +18,6 @@
 #include "gse/program/Array.h"
 #include "gse/program/If.h"
 #include "gse/program/Statement.h"
-#include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
 #include "gse/program/For.h"
@@ -125,22 +124,6 @@ gse::Value* const Interpreter::EvaluateConditional( context::Context* ctx, Execu
 	switch ( conditional->conditional_type ) {
 		case Conditional::CT_IF: {
 			const auto* c = (If*)conditional;
-			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
-				return EvaluateScope( ctx, ep, c->body, returnflag );
-			}
-			else if ( c->els ) {
-				return EvaluateConditional( ctx, ep, c->els, true, returnflag );
-			}
-			else {
-				return nullptr;
-			}
-		}
-		case Conditional::CT_ELSEIF: {
-			if ( !is_nested ) {
-				// TODO: move check to parser
-				throw gse::Exception( EC.PARSE_ERROR, "Unexpected elseif without if", ctx, conditional->m_si, ep );
-			}
-			const auto* c = (ElseIf*)conditional;
 			if ( EvaluateBool( ctx, ep, c->condition->expression ) ) {
 				return EvaluateScope( ctx, ep, c->body, returnflag );
 			}

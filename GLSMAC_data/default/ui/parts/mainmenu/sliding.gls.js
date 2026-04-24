@@ -149,28 +149,28 @@ return (m) => {
 				if (!#is_empty(e.modifiers)) {
 					return false;
 				}
-				// TODO: switch
-				if (e.code == 'ESCAPE') {
-					slideout_and_cb(this.back);
-					return true;
-				}
-				// TODO: else if
-				if (e.code == 'DOWN') {
-					if (active_entry_index < #sizeof(current_entries) - 1) {
-						this.select(active_entry_index + 1);
+				switch (e.code) {
+					case 'ESCAPE': {
+						slideout_and_cb(this.back);
+						return true;
 					}
-					return true;
-				}
-				if (e.code == 'UP') {
-					if (active_entry_index > 0) {
-						this.select(active_entry_index - 1);
+					case 'DOWN': {
+						if (active_entry_index < #sizeof(current_entries) - 1) {
+							this.select(active_entry_index + 1);
+						}
+						return true;
 					}
-					return true;
-				}
-				if (e.code == 'ENTER') {
-					this.manager.select(active_entry_index);
-					slideout_and_cb(get_active_cb());
-					return true;
+					case 'UP': {
+						if (active_entry_index > 0) {
+							this.select(active_entry_index - 1);
+						}
+						return true;
+					}
+					case 'ENTER': {
+						this.manager.select(active_entry_index);
+						slideout_and_cb(get_active_cb());
+						return true;
+					}
 				}
 				return false;
 			});
