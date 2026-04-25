@@ -27,6 +27,10 @@
 #include "input/Null.h"
 #include "audio/Null.h"
 
+#else
+
+#include "logger/Logger.h"
+
 #endif
 
 #include "resource/ResourceManager.h"
@@ -86,10 +90,28 @@
 
 #endif
 
+#ifdef _WIN32
+int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hpInstance, LPSTR nCmdLine, int iCmdShow ) {
+#endif
+
+#ifdef DEBUG
+	debug::MemoryWatcher memory_watcher;
+#endif
+
+#ifdef _WIN32
+	int argc = 0;
+	const LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
+	char* argv[ argc ];
+	for ( int i = 0; i < argc; i++ ) {
+		const int sz = wcslen( argw[ i ] );
+		argv[ i ] = (char*)malloc( sz + 1 );
+		wcstombs( argv[ i ], argw[ i ], sz + 1 );
+	}
+#else
 int main( const int argc, const char* argv[] ) {
+#endif
 
 	config::Config config( argv[ 0 ] );
-
 	config.Init( argc, argv );
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -125,7 +147,12 @@ int main( const int argc, const char* argv[] ) {
 #endif
 	}
 #ifdef DEBUG
-	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
+	if ( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
+		memory_watcher.EnableMemoryDebug();
+	}
+	if ( config.HasDebugFlag( config::Config::DF_QUIET ) ) {
+		memory_watcher.EnableQuiet();
+	}
 #endif
 #endif
 

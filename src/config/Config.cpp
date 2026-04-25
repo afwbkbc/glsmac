@@ -388,7 +388,7 @@ Config::~Config() {
 	delete m_manager;
 }
 
-void Config::Init( const int argc, const char* argv[] ) {
+void Config::Init( const int argc, char* const argv[] ) {
 	ASSERT( m_manager, "parser not set" );
 	try {
 		m_manager->ParseArgs( argc, argv );

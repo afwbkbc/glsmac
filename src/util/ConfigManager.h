@@ -35,7 +35,7 @@ CLASS( ConfigManager, Util )
 	const std::string GetUnknownArgumentNote() const;
 
 	void ParseFile( const std::string& path = "" );
-	void ParseArgs( const int argc, const char* argv[] );
+	void ParseArgs( const int argc, char* const argv[] );
 
 	void UpdateSetting( const std::string& key, const std::string& value );
 

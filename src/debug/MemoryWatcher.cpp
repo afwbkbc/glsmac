@@ -117,9 +117,7 @@ namespace debug {
 
 MemoryWatcher* g_memory_watcher = nullptr;
 
-MemoryWatcher::MemoryWatcher( const bool memory_debug, const bool is_quiet )
-	: m_memory_debug( memory_debug )
-	, m_is_quiet( is_quiet ) {
+MemoryWatcher::MemoryWatcher() {
 	ASSERT( !g_memory_watcher, "duplicate MemoryWatcher instantiation" );
 	g_memory_watcher = this;
 }
@@ -1097,6 +1095,14 @@ void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const
 
 	DEBUG_STAT_INC( opengl_draw_calls );
 	glDrawArrays_real( mode, first, count );
+}
+
+void MemoryWatcher::EnableMemoryDebug() {
+	m_memory_debug = true;
+}
+
+void MemoryWatcher::EnableQuiet() {
+	m_is_quiet = true;
 }
 
 struct sort_method {
