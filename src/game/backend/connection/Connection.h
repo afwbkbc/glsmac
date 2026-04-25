@@ -58,8 +58,8 @@ public:
 	std::function< void() > m_on_connect = nullptr;
 
 	// return true if connection should be destroyed afterwards
-	std::function< bool() > m_on_cancel = nullptr;
-	std::function< bool() > m_on_disconnect = nullptr;
+	std::function< void() > m_on_cancel = nullptr;
+	std::function< void() > m_on_disconnect = nullptr;
 	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
@@ -154,6 +154,8 @@ private:
 	gc::Space* const m_gc_space;
 
 	std::unordered_set< network::cid_t > m_ignored_cids = {};
+
+	bool m_is_destroying = false;
 
 };
 

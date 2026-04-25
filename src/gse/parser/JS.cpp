@@ -2,6 +2,7 @@
 
 #include <stack>
 #include <functional>
+#include <memory>
 
 #include "gc/Space.h"
 
@@ -284,7 +285,7 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 	ASSERT( ( *begin )->m_type == SourceElement::ET_CONDITIONAL, "conditional expected here" );
 	Conditional* conditional = (Conditional*)( *begin );
 	source_elements_t::const_iterator it = begin + 1, it_end;
-	const program::Condition* condition = nullptr;
+	std::unique_ptr< const program::Condition > condition = {};
 	if ( conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
 		// default:
 		it++; // skip colon
@@ -357,11 +358,12 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				it_second != it_end &&
 				it_second + 1 != it_end
 			) {
-				condition = new program::ForConditionExpressions(
+				condition.reset( new program::ForConditionExpressions(
 					( *it )->m_si,
 					GetExpression( it, it_first ),
 					GetExpression( it_first + 1, it_second ),
-					GetExpression( it_second + 1, it_end ) );
+					GetExpression( it_second + 1, it_end ) )
+				);
 			}
 			else {
 				// in-of loop
@@ -383,16 +385,16 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				else {
 					throw Exception( EC.PARSE_ERROR, "Expected iteration condition, got: " + in_or_of->ToString(), nullptr, ( *begin )->m_si, *m_ep );
 				}
-				condition = new program::ForConditionInOf(
+				condition.reset( new program::ForConditionInOf(
 					( *it )->m_si,
 					new Variable( variable->m_si, variable->m_name ),
 					type,
 					GetExpression( it, it_end )
-				);
+				) );
 			}
 		}
 		else {
-			condition = new program::SimpleCondition( ( *it )->m_si, GetExpression( it + 1, it_end ) );
+			condition.reset( new program::SimpleCondition( ( *it )->m_si, GetExpression( it + 1, it_end ) ) );
 		}
 		ASSERT( it_end != end, "expected {, got EOF" );
 		it = it_end + 1;
@@ -454,9 +456,9 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 			it++;
 			switch ( conditional->m_conditional_type ) {
 				case Conditional::CT_IF:
-					return new program::If( si, (SimpleCondition*)condition, body, els );
+					return new program::If( si, (SimpleCondition*)condition.release(), body, els );
 				case Conditional::CT_CASE:
-					return new program::Case( si, (SimpleCondition*)condition, body );
+					return new program::Case( si, (SimpleCondition*)condition.release(), body );
 				case Conditional::CT_DEFAULTCASE:
 					return new program::Case( si, nullptr, body );
 				default:
@@ -466,9 +468,9 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 		case Conditional::CT_ELSE:
 			return new program::Else( GetSI( begin, end ), body );
 		case Conditional::CT_WHILE:
-			return new program::While( GetSI( begin, end ), (SimpleCondition*)condition, body );
+			return new program::While( GetSI( begin, end ), (SimpleCondition*)condition.release(), body );
 		case Conditional::CT_FOR: {
-			return new program::For( GetSI( begin, end ), (ForCondition*)condition, body );
+			return new program::For( GetSI( begin, end ), (ForCondition*)condition.release(), body );
 		}
 		case Conditional::CT_TRY: {
 			if (
@@ -501,7 +503,7 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				ASSERT( ((program::Conditional*)c)->conditional_type == program::Conditional::CT_CASE, "conditional type not case" );
 				cases.push_back( (program::Case*)c );
 			}
-			return new program::Switch( GetSI( begin, end ), (SimpleCondition*)condition, cases );
+			return new program::Switch( GetSI( begin, end ), (SimpleCondition*)condition.release(), cases );
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->ToString() );

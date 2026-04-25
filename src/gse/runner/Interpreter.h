@@ -62,7 +62,6 @@ private:
 	Value* const EvaluateConditional( context::Context* ctx, ExecutionPointer& ep, const program::Conditional* conditional, bool is_nested, bool* returnflag = nullptr );
 	Value* const EvaluateExpression( context::Context* ctx, ExecutionPointer& ep, const program::Expression* expression, bool* returnflag = nullptr );
 	Value* const EvaluateOperand( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand );
-	const std::string EvaluateString( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand );
 	Value* const EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand, const bool only_index = false );
 	const bool EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand );
 	const program::Variable* EvaluateVariable( context::Context* ctx, ExecutionPointer& ep, const program::Operand* operand );

@@ -701,7 +701,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			ASSERT( expression->a, "parent array expected" );
 			std::optional< size_t > index, from, to;
 			std::optional< std::string > key;
-			const auto val = EvaluateRange( ctx, ep, expression->b );
+			const auto* val = EvaluateRange( ctx, ep, expression->b );
 			switch ( val->type ) {
 				case gse::VT_INT: {
 					index = ( (Int*)val )->value;
@@ -763,26 +763,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 				}
 				case Operand::OT_ARRAY: {
 					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
-					/*const auto arr = EvaluateOperand( ctx, ep, expression->a );
-					check_indexable( arr, expression->a->m_si, gse::VT_ARRAY );
-					if ( index.has_value() ) {
-						return ( (value::Array*)arr )->Get( index.value() );
-					}
-					else {
-						ValidateRange( ctx, expression->b->m_si, ep, (value::Array*)arr, from, to );
-						return ( (value::Array*)arr )->GetSubArray( from, to );
-					}*/
 				}
 				case Operand::OT_OBJECT: {
 					return process_indexable( EvaluateOperand( ctx, ep, expression->a ) );
-					/*const auto obj = EvaluateOperand( ctx, ep, expression->a );
-					check_indexable( obj, expression->a->m_si, gse::VT_OBJECT );
-					if ( key.has_value() ) {
-						return ( (value::Object*)obj )->Get( key.value() );
-					}
-					else {
-						throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected object key", ctx, expression->a->m_si, ep );
-					}*/
 				}
 				case Operand::OT_EXPRESSION: {
 					const auto refv = EvaluateExpression( ctx, ep, (Expression*)expression->a );
@@ -802,21 +785,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						}
 						case gse::VT_ARRAY: {
 							return process_indexable( ref );
-							/*if ( index.has_value() ) {
-								return ( (value::Array*)ref )->Get( index.value() );
-							}
-							else {
-								return ( (value::Array*)ref )->GetRangeRef( from, to );
-							}*/
 						}
 						case gse::VT_OBJECT: {
 							return process_indexable( ref );
-							/*if ( key.has_value() ) {
-								return ( (value::Object*)ref )->Get( key.value() );
-							}
-							else {
-								throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected object key", ctx, expression->a->m_si, ep );
-							}*/
 						}
 						case gse::VT_ARRAYREF: {
 							const auto* r = (ArrayRef*)ref;
@@ -930,14 +901,14 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			std::optional< size_t > to = std::nullopt;
 
 			if ( expression->a ) {
-				const auto fromr = EvaluateRange( ctx, ep, expression->a, true );
+				const auto* fromr = EvaluateRange( ctx, ep, expression->a, true );
 				if ( fromr->type != gse::VT_INT ) {
 					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + fromr->ToString(), ctx, expression->a->m_si, ep );
 				}
 				from = ( (Int*)fromr )->value;
 			}
 			if ( expression->b ) {
-				const auto tor = EvaluateRange( ctx, ep, expression->b, true );
+				const auto* tor = EvaluateRange( ctx, ep, expression->b, true );
 				if ( tor->type != gse::VT_INT ) {
 					throw gse::Exception( EC.INVALID_DEREFERENCE, "Expected int, got: " + tor->ToString(), ctx, expression->b->m_si, ep );
 				}
@@ -1066,19 +1037,11 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 	}
 }
 
-const std::string Interpreter::EvaluateString( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
-	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
-	if ( result->type != gse::VT_STRING ) {
-		throw gse::Exception( EC.TYPE_ERROR, "Expected string, found: " + operand->ToString(), ctx, operand->m_si, ep );
-	}
-	return ( (String*)result )->value;
-}
-
 gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const Operand* operand, const bool only_index ) {
 	CHECKACCUM( m_gc_space );
 	auto* gc_space = m_gc_space;
 	ASSERT( operand, "index operand missing" );
-	const auto& get_index = [ &ctx, &ep, &operand, this, &only_index, &gc_space ]( gse::Value* const value ) -> gse::Value* {
+	const auto& get_index = [ &ctx, &ep, &operand, only_index, &gc_space ]( gse::Value* const value ) -> gse::Value* {
 		switch ( value->type ) {
 			case gse::VT_INT:
 			case gse::VT_STRING:

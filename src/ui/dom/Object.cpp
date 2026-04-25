@@ -424,10 +424,6 @@ void Object::Actor( scene::actor::Actor* actor ) {
 
 void Object::ClearActors() {
 	std::lock_guard guard( m_actors_mutex );
-	auto* g = GetGeometry();
-	if ( g ) {
-		g = g->AsRectangle();
-	}
 	if ( m_ui ) {
 		auto* const scene = m_ui->GetScene();
 		for ( const auto& actor : m_actors ) {
@@ -551,7 +547,7 @@ void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value*
 	const auto& def = m_property_defs.find( key );
 	ASSERT( def != m_property_defs.end(), "property def not found" );
 	const auto t1 = def->second.type;
-	if ( t1 != gse::VT_NOTHING ) {
+	if ( value && t1 != gse::VT_NOTHING ) {
 		const auto t2 = value->type;
 		if ( t1 != t2 ) {
 			GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );

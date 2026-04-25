@@ -285,8 +285,6 @@ void Game::Iterate() {
 
 			HideLoader();
 
-			auto* gc_space = m_state->m_gc_space;
-
 			m_game_state = GS_STARTING;
 
 			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
@@ -1173,10 +1171,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_ADD_EVENT: {
-			const std::string* errmsg = nullptr;
-			event::Event* event = nullptr;
-			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			THROW( "TODO: OP_ADD_EVENT" );
+			THROW( "deprecated: OP_ADD_EVENT" );
 			/*m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
 				event = event::Event::Deserialize( GSE_CALL, buf );
 				errmsg = event->Validate( GSE_CALL, this );
@@ -1592,8 +1587,6 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	ASSERT( m_game_state == GS_NONE, "game still initializing" );
 
 	MTModule::Log( "Initializing game" );
-
-	auto* gc_space = GetGCSpace();
 
 	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
 		ASSERT( !m_tm, "tm not null" );
