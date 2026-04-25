@@ -5,6 +5,7 @@
 #include "loader/sound/SoundLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
+#include "types/texture/Texture.h"
 
 namespace game {
 namespace frontend {
@@ -16,11 +17,11 @@ AnimationDef::AnimationDef( sprite::InstancedSpriteManager* ism, const backend::
 	, m_duration_ms( def->m_duration_ms )
 	, m_sound_file( def->m_sound_file ) {
 
-	ASSERT_NOLOG( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
+	ASSERT( def->m_type == backend::animation::animation_type_t::AT_FRAMES_ROW, "only frames row animations are supported for now" );
 
 	const auto* d = (backend::animation::FramesRow*)def;
 	m_render = d->m_render;
-	ASSERT_NOLOG( m_render.frames_count > 0, "animation has no frames defined" );
+	ASSERT( m_render.frames_count > 0, "animation has no frames defined" );
 }
 
 AnimationDef::~AnimationDef() {
@@ -29,7 +30,7 @@ AnimationDef::~AnimationDef() {
 
 const instanced_sprites_t& AnimationDef::GetSprites() {
 	if ( m_sprites.empty() ) {
-		auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file );
+		auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.file, types::texture::TF_MIPMAPS );
 		const uint32_t w = m_render.frame_width;
 		const uint32_t h = m_render.frame_height;
 		const uint32_t p = m_render.frame_padding;

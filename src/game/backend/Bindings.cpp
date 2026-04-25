@@ -8,14 +8,15 @@
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/Exception.h"
-#include "gse/type/String.h"
-#include "gse/type/Callable.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/String.h"
+#include "gse/value/Callable.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "game/backend/State.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace game {
 namespace backend {
@@ -34,65 +35,84 @@ Bindings::Bindings( State* state )
 	NEW( m_gse, gse::GSE );
 	m_gse->AddBindings( this );
 	m_gse_context = m_gse->CreateGlobalContext();
-	m_gse_context->IncRefs();
 
 }
 
 Bindings::~Bindings() {
-	m_gse_context->DecRefs();
 	DELETE( m_gse );
 }
 
-void Bindings::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
+void Bindings::AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( "main", NATIVE_CALL(this) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
-		N_CHECKARG( main.Get(), 0, Callable );
+		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ), ep );
 }
 
 void Bindings::RunMainScript() {
-	gse::ExecutionPointer ep;
-	m_gse->RunScript( m_gse_context, m_si_internal, ep, m_entry_script );
-	for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-		m_gse->RunScript( m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
-	}
+	auto* gc_space = m_gse->GetGCSpace();
+	gc_space->Accumulate( nullptr, [ this ]( ) {
+		gse::ExecutionPointer ep;
+		m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, m_entry_script );
+		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+			m_gse->RunScript( m_gse->GetGCSpace(), m_gse_context, m_si_internal, ep, util::FS::GeneratePath( { mod_path, "main" } ) );
+		}
+	});
 }
 
 void Bindings::RunMain() {
-	for ( const auto& main : m_main_callables ) {
-		ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
-		auto gm = m_state->Wrap();
+	auto* gc_space = m_gse->GetGCSpace();
+	gc_space->Accumulate( nullptr, [ this, &gc_space ]( ) {
+		auto si = m_si_internal;
+		auto* ctx = m_gse_context;
 		gse::ExecutionPointer ep;
-		((gse::type::Callable*)main.Get())->Run( m_gse_context, m_si_internal, ep, { gm });
-	}
+		ASSERT( gc_space, "gc space is null" );
+		for ( const auto& main : m_main_callables ) {
+			ASSERT( main->type == gse::VT_CALLABLE, "main not callable" );
+			auto gm = m_state->Wrap( GSE_CALL, gc_space );
+			( (gse::value::Callable*)main )->Run( gc_space, m_gse_context, m_si_internal, ep, { gm } );
+		}
+	});
 }
 
-const gse::Value Bindings::Trigger( gse::Wrappable* object, const std::string& event, const gse::type::object_properties_t& args ) {
-	auto result = VALUE( gse::type::Undefined );
+gc::Space* const Bindings::GetGCSpace() const {
+	ASSERT( m_gse, "gse not set" );
+	return m_gse->GetGCSpace();
+}
+
+gse::context::Context* const Bindings::GetContext() const {
+	ASSERT( m_gse_context, "gse context not set" );
+	return m_gse_context;
+}
+
+gse::Value* const Bindings::Trigger( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
+	CHECKACCUM( m_gse->GetGCSpace() );
+	auto* gc_space = m_gse->GetGCSpace();
+	gse::Value* result = nullptr;
 	try {
 		{
 			gse::ExecutionPointer ep;
-			result = object->Trigger( m_gse_context, m_si_internal, ep, event, args );
+			result = object->Trigger( gc_space, m_gse_context, m_si_internal, ep, event, f_args );
 		}
 		auto* game = m_state->GetGame();
 		if ( game ) {
 			game->GetUM()->PushUpdates();
 			game->GetBM()->PushUpdates();
 		}
-		if ( result.Get()->type == gse::type::Type::T_NOTHING ) {
+		if ( !result ) {
 			// return undefined by default
-			return VALUE( gse::type::Undefined );
+			return VALUEEXT( gse::value::Undefined, gc_space );
 		}
 	}
-	catch ( gse::Exception& e ) {
+	catch ( const gse::Exception& e ) {
 		if ( m_state->m_on_gse_error ) {
 			m_state->m_on_gse_error( e );
 		}
 		else {
-			throw std::runtime_error( e.ToString() );
+			throw;
 		}
 	}
 	return result;

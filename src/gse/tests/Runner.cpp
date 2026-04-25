@@ -7,7 +7,8 @@
 #include "gse/context/GlobalContext.h"
 #include "gse/runner/Interpreter.h"
 #include "gse/ExecutionPointer.h"
-
+#include "gse/program/Program.h"
+#include "gc/Space.h"
 #include "mocks/Mocks.h"
 
 #include "util/String.h"
@@ -15,10 +16,8 @@
 namespace gse {
 namespace tests {
 
-extern const program::Program* g_test_program;
-
 void AddRunnerTests( task::gsetests::GSETests* task ) {
-
+	
 	const std::string expected_output = GetExpectedResult();
 
 #define VALIDATE() { \
@@ -27,30 +26,43 @@ void AddRunnerTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test if interpreter executes programs correctly",
 		GT( expected_output ) {
-
-			runner::Interpreter interpreter;
-
-			context::GlobalContext* context = gse->CreateGlobalContext();
-			context->IncRefs();
-			context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
-			mocks::AddMocks( context, {} );
-
-			gse->LogCaptureStart();
-			{
-				ExecutionPointer ep;
-				interpreter.Execute( context, ep, g_test_program );
-			}
+			auto* gc_space = gse->GetGCSpace();
+			
+			gc_space->Accumulate(
+				nullptr,
+				[ &gse, &gc_space ]() {
+					
+					NEWV( interpreter, runner::Interpreter, gc_space );
+					
+					context::GlobalContext* context = gse->CreateGlobalContext();
+					context->AddSourceLines( util::String::Split( GetTestSource(), '\n' ) );
+					mocks::AddMocks( gc_space, context, {} );
+					
+					gse->LogCaptureStart();
+					const auto* test_program = gse::tests::GetTestProgram( gse->GetGCSpace() );
+					ASSERT( test_program, "test program is null" );
+					try {
+						ExecutionPointer ep;
+						interpreter->Execute( context, ep, test_program );
+					}
+					catch ( const std::runtime_error& e ) {
+						delete test_program;
+						context->Clear();
+						throw;
+					}
+					delete test_program;
+					context->Clear();
+					
+				}
+			);
 			const auto actual_output = gse->LogCaptureStopGet();
-
+			
 			VALIDATE();
-
-			context->Clear();
-			context->DecRefs();
-
+			
 			GT_OK();
 		}
 	);
-
+	
 }
 
 }

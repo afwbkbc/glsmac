@@ -9,10 +9,10 @@
 
 #include "common/Common.h"
 #include "gse/Bindings.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 
 #include "gse/GSE.h"
-#include "gse/type/Object.h"
+#include "gse/value/Object.h"
 
 #include "util/Timer.h"
 
@@ -29,10 +29,13 @@ class Game;
 }
 
 namespace game::backend {
+namespace faction {
+class Faction;
+}
 class State;
 }
 
-CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
+CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	GLSMAC();
 	~GLSMAC();
 
@@ -44,11 +47,23 @@ CLASS3( GLSMAC, common::Class, gse::Bindings, gse::Wrappable )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
+	void ShowError( const std::string& text, const std::function< void() >& on_close );
+
+	typedef std::function< void( GSE_CALLABLE, gse::value::object_properties_t& args ) > f_args_t;
+	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
+
+	void WithGSE( const std::function< void( GSE_CALLABLE ) >& f );
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
 private:
 	gse::GSE* m_gse = nullptr;
 	gse::context::GlobalContext* m_ctx = nullptr;
+	gc::Space* m_gc_space = nullptr;
 
-	std::vector< gse::Value > m_main_callables = {};
+	gse::Value* m_wrapobj = nullptr;
+
+	std::vector< gse::Value* > m_main_callables = {};
 
 	ui::UI* m_ui = nullptr;
 
@@ -64,23 +79,28 @@ private:
 
 	// steps
 	void S_Init( GSE_CALLABLE, const std::optional< std::string >& path );
+	void S_Reset( GSE_CALLABLE );
 	void S_Intro( GSE_CALLABLE );
 	void S_MainMenu( GSE_CALLABLE );
 	void S_Game( GSE_CALLABLE );
 
 	void UpdateLoaderText();
 
+	void Reset( GSE_CALLABLE );
+
 	game::backend::State* m_state = nullptr;
 	bool m_is_game_running = false;
 
 	void DeinitGameState( GSE_CALLABLE );
-	void InitGameState( GSE_CALLABLE, const f_t& on_complete );
+	void InitGameState( GSE_CALLABLE );
 	void RandomizeSettings( GSE_CALLABLE );
 
-	void AddSinglePlayerSlot();
+	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );
 	void StartGame( GSE_CALLABLE );
 
 	game::frontend::Game* m_game = nullptr;
+
+	std::atomic< bool > m_reset_needed = false;
 
 private:
 	friend class task::main::Main;
@@ -88,6 +108,6 @@ private:
 
 private:
 	friend class gse::GSE;
-	void AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) override;
 
 };

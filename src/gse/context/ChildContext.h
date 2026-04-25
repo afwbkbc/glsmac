@@ -22,10 +22,14 @@ public:
 	const si_t& GetSI() const override;
 	const script_info_t& GetScriptInfo() const override;
 
-	void JoinContext() const;
+	void Detach();
+
+	void JoinContext();
+
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
-	Context* m_parent_context; // scope parent
+	Context* m_parent_context = nullptr; // scope parent
 
 	const si_t m_si = {};
 	const bool m_is_traceable;

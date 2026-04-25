@@ -1,9 +1,10 @@
 #pragma once
 
-#include "common/Common.h"
+#include <unordered_set>
 
-#include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/GCWrappable.h"
+
+#include "gse/value/Object.h"
 
 #include "Types.h"
 #include "TileLock.h"
@@ -14,9 +15,14 @@ namespace backend {
 class Game;
 
 namespace map {
+
+class Map;
+
 namespace tile {
 
-CLASS2( TileManager, common::Class, gse::Wrappable )
+class Tile;
+
+CLASS( TileManager, gse::GCWrappable )
 public:
 	TileManager( Game* game );
 	~TileManager();
@@ -25,13 +31,11 @@ public:
 
 	void Clear();
 
-	void SendTileLockRequest( const map::tile::positions_t& tile_positions, const cb_oncomplete& on_complete );
-	void RequestTileLocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void LockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
+	typedef std::unordered_set< map::tile::Tile* > tiles_t;
 
-	void SendTileUnlockRequest( const map::tile::positions_t& tile_positions );
-	void RequestTileUnlocks( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
-	void UnlockTiles( const size_t initiator_slot, const map::tile::positions_t& tile_positions );
+	const Tile* FindLockedTile( const tiles_t& tiles );
+	void LockTiles( const size_t initiator_slot, const tiles_t& tiles );
+	void UnlockTiles( const size_t initiator_slot, const tiles_t& tiles );
 
 	void ProcessTileLockRequests();
 	void ReleaseTileLocks( const size_t initiator_slot );
@@ -45,14 +49,18 @@ private:
 	struct tile_lock_request_t {
 		const bool is_lock; // lock or unlock
 		const size_t initiator_slot;
-		const map::tile::positions_t tile_positions;
+		const tiles_t tile_positions;
 	};
 	typedef std::vector< tile_lock_request_t > tile_lock_requests_t;  // requests fifo
 	tile_lock_requests_t m_tile_lock_requests = {};
 	std::unordered_map< size_t, std::vector< TileLock > > m_tile_locks = {}; // slot id, locks
-	std::vector< std::pair< map::tile::positions_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
+	std::vector< std::pair< tiles_t, cb_oncomplete > > m_tile_lock_callbacks = {}; // tile positions (for matching), callback
 
-	void AddTileLockRequest( const bool is_lock, const size_t initiator_slot, const map::tile::positions_t& tile_positions );
+	const std::string TilesToString( const tiles_t& tiles, std::string prefx = "" );
+
+	const size_t GetDistance( const Tile* const tile, const Tile* const other, const size_t map_width ) const;
+
+	Map* GetMap( GSE_CALLABLE ) const;
 
 };
 

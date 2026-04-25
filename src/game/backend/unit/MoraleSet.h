@@ -21,7 +21,7 @@ public:
 	const std::string ToString( const std::string& prefix ) const;
 
 	static const types::Buffer Serialize( const MoraleSet* moraleset );
-	static MoraleSet* Unserialize( types::Buffer& buf );
+	static MoraleSet* Deserialize( types::Buffer& buf );
 
 };
 

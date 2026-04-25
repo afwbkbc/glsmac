@@ -1,0 +1,74 @@
+return {
+
+	available_pages: ['resource', 'support', 'psych'],
+
+	init: (p) => {
+
+		const button_width = 132;
+		const button_padding = 2;
+
+		p.ui.class('base-screen-middle-area').set({
+			left: 2,
+			top: 2,
+			right: 2,
+			bottom: 2,
+		});
+
+		p.ui.class('base-screen-middle-button').extend('game-popup-button').set({
+			width: button_width,
+			align: 'bottom left',
+			bottom: button_padding,
+			height: 20,
+			group: 'base-screen-middle-area-buttons',
+		});
+
+		this.area = p.body.panel({
+			class: 'base-screen-frame',
+			align: 'top center',
+			top: 32,
+			width: 404,
+			height: 225,
+		});
+		const inner = this.area.area({
+			bottom: 22,
+		});
+
+		const pp = {
+			ui: p.ui,
+			area: inner,
+		};
+
+		let left = button_padding;
+		this.pages = {};
+		for (p of this.available_pages) {
+			const page = #include('middle_area/' + p);
+			page.init(pp);
+			if (left > button_padding) {
+				page.el.hide();
+			}
+			const btn = this.area.button({
+				class: 'base-screen-middle-button',
+				left: left,
+				text: #uppercase(p),
+			});
+			btn.on('on', (e) => {
+				page.el.show();
+				return true;
+			});
+			btn.on('off', (e) => {
+				page.el.hide();
+				return true;
+			});
+			left += button_width + button_padding;
+			this.pages[p] = page;
+		}
+
+	},
+
+	set: (data) => {
+		this.pages.resource.set({
+			base: data.base,
+		});
+	},
+
+};

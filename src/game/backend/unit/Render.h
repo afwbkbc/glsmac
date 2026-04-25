@@ -34,7 +34,7 @@ private:
 	friend class StaticDef;
 
 	static void Serialize( types::Buffer& buf, const Render* render );
-	static Render* Unserialize( types::Buffer& buf );
+	static Render* Deserialize( types::Buffer& buf );
 
 };
 

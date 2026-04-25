@@ -4,8 +4,8 @@
 
 #include "MoraleSet.h"
 
-#include "gse/type/Object.h"
-#include "gse/type/String.h"
+#include "gse/value/Object.h"
+#include "gse/value/String.h"
 
 namespace game {
 namespace backend {
@@ -22,7 +22,7 @@ Def::Def( const std::string& id, const MoraleSet* moraleset, const def_type_t ty
 const types::Buffer Def::Serialize( const Def* def ) {
 	types::Buffer buf;
 	buf.WriteString( def->m_id );
-	buf.WriteString( MoraleSet::Serialize( def->m_moraleset ).ToString() );
+	buf.WriteString( def->m_moraleset->m_id );
 	buf.WriteString( def->m_name );
 	buf.WriteInt( def->m_type );
 	switch ( def->m_type ) {
@@ -36,15 +36,14 @@ const types::Buffer Def::Serialize( const Def* def ) {
 	return buf;
 }
 
-Def* Def::Unserialize( types::Buffer& buf ) {
+Def* Def::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
-	auto moralesetbuf = types::Buffer( buf.ReadString() );
-	const auto* moraleset = MoraleSet::Unserialize( moralesetbuf );
+	const auto moraleset = buf.ReadString();
 	const auto name = buf.ReadString();
 	const auto type = (def_type_t)buf.ReadInt();
 	switch ( type ) {
 		case DT_STATIC:
-			return StaticDef::Unserialize( buf, id, moraleset, name );
+			return StaticDef::Deserialize( buf, id, moraleset, name );
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}
@@ -52,15 +51,19 @@ Def* Def::Unserialize( types::Buffer& buf ) {
 
 WRAPIMPL_BEGIN( Def )
 	WRAPIMPL_PROPS
-		{
-			"name",
-			VALUE( gse::type::String, m_name )
-		},
-		{
-			"type",
-			VALUE( gse::type::String, "static" ) // TODO
-		},
-	};
+			{
+				"id",
+				VALUE( gse::value::String, , m_id )
+			},
+			{
+				"name",
+				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"type",
+				VALUE( gse::value::String, , "static" ) // TODO
+			},
+		};
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Def )

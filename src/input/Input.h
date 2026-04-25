@@ -11,7 +11,7 @@ namespace input {
 
 CLASS( Input, common::Module )
 
-	typedef std::function< void( const Event& ) > input_handler_t;
+	typedef std::function< const bool( const Event& ) > input_handler_t;
 
 	void AddHandler( const void* const owner, const input_handler_t& handler );
 	void RemoveHandler( const void* const owner );
@@ -19,7 +19,7 @@ CLASS( Input, common::Module )
 	virtual const std::string GetClipboardText() const = 0;
 
 protected:
-	void ProcessEvent( const Event& event );
+	const bool ProcessEvent( const Event& event );
 
 private:
 	std::unordered_map< const void*, input_handler_t > m_input_handlers = {};

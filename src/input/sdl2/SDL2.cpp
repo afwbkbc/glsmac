@@ -2,14 +2,6 @@
 
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
-#include "ui_legacy/UI.h"
-
-#include "ui_legacy/event/MouseMove.h"
-#include "ui_legacy/event/MouseDown.h"
-#include "ui_legacy/event/MouseUp.h"
-#include "ui_legacy/event/MouseScroll.h"
-#include "ui_legacy/event/KeyDown.h"
-#include "ui_legacy/event/KeyUp.h"
 
 #if ( !SDL_VERSION_ATLEAST( 2, 0, 18 ) )
 #define KMOD_SCROLL 0x8000 // workaround for ancient systems
@@ -41,6 +33,7 @@ void SDL2::Iterate() {
 	SDL_Event event;
 
 	input::Event e = {};
+	input::Event e_mouse_move = {}; // send only once per iteration
 
 	while ( SDL_PollEvent( &event ) ) {
 		e.SetType( EV_NONE );
@@ -60,14 +53,9 @@ void SDL2::Iterate() {
 					event.motion.x,
 					event.motion.y
 				};
-				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseMove, event.motion.x, event.motion.y );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
-				// new ui
-				e.SetType( EV_MOUSE_MOVE );
-				e.data.mouse.x = event.motion.x;
-				e.data.mouse.y = event.motion.y;
+				e_mouse_move.SetType( EV_MOUSE_MOVE );
+				e_mouse_move.data.mouse.x = event.motion.x;
+				e_mouse_move.data.mouse.y = event.motion.y;
 				break;
 			}
 			case SDL_MOUSEBUTTONDOWN: {
@@ -84,11 +72,6 @@ void SDL2::Iterate() {
 					event.motion.x,
 					event.motion.y
 				};
-				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseDown, event.motion.x, event.motion.y, button );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
-				// new ui
 				e.SetType( EV_MOUSE_DOWN );
 				e.data.mouse.x = event.motion.x;
 				e.data.mouse.y = event.motion.y;
@@ -100,19 +83,8 @@ void SDL2::Iterate() {
 				auto it = m_active_mousedowns.find( event.button.button );
 				if ( it != m_active_mousedowns.end() ) { // sometimes touchscreen sends mouseup without or before mousedown, just ignore it
 					auto& mousedown_data = m_active_mousedowns.at( event.button.button );
-					if ( mousedown_data.x == event.motion.x && mousedown_data.y == event.motion.y ) {
-						// mousedown + mouseup at same pixel = mouseclick
-						/*NEWV( ui_event_2, ui_legacy::event::MouseClick, event.motion.x, event.motion.y, GetMouseButton( event.button.button ) );
-						g_engine->GetUI()->ProcessEvent( ui_event_2 );
-						DELETE( ui_event_2 );*/ // TODO: conflicts with Button OnClick logic
-					}
 					m_active_mousedowns.erase( event.button.button );
 				}
-				// legacy
-				NEWV( ui_event, ui_legacy::event::MouseUp, event.motion.x, event.motion.y, button );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
-				// new ui
 				e.SetType( EV_MOUSE_UP );
 				e.data.mouse.x = event.motion.x;
 				e.data.mouse.y = event.motion.y;
@@ -120,28 +92,23 @@ void SDL2::Iterate() {
 				break;
 			}
 			case SDL_MOUSEWHEEL: {
-				NEWV( ui_event, ui_legacy::event::MouseScroll, m_last_mouse_position.x, m_last_mouse_position.y, event.wheel.y );
-				g_engine->GetUI()->ProcessEvent( ui_event );
-				DELETE( ui_event );
+				e.SetType( EV_MOUSE_SCROLL );
+				e.data.mouse.x = m_last_mouse_position.x;
+				e.data.mouse.y = m_last_mouse_position.y;
+				e.data.mouse.scroll_y = event.wheel.y;
 				break;
 			}
 			case SDL_KEYDOWN: {
 				auto modifiers = SDL_GetModState();
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
+
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
-					// legacy ui
-					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyDown, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
-					g_engine->GetUI()->ProcessEvent( ui_event );
-					DELETE( ui_event );
-
-					// new ui
 					e.SetType( EV_KEY_DOWN );
 					e.data.key.key = keycode;
 					e.data.key.code = scancode;
 					e.data.key.is_printable = keycode > 0;
-					e.data.key.modifiers = modifiers;
+					e.data.key.modifiers = GetModifiers( modifiers );
 				}
 				break;
 			}
@@ -150,20 +117,24 @@ void SDL2::Iterate() {
 				auto scancode = GetScanCode( event.key.keysym.scancode, modifiers );
 				char keycode = GetKeyCode( event.key.keysym.sym, modifiers );
 				if ( scancode || keycode ) {
-					ui_legacy::event::key_modifier_t keymodifiers = GetModifiers( modifiers );
-					NEWV( ui_event, ui_legacy::event::KeyUp, (ui_legacy::event::key_code_t)scancode, keycode, keymodifiers );
-					g_engine->GetUI()->ProcessEvent( ui_event );
-					DELETE( ui_event );
+					e.SetType( EV_KEY_UP );
+					e.data.key.key = keycode;
+					e.data.key.code = scancode;
+					e.data.key.is_printable = keycode > 0;
+					e.data.key.modifiers = GetModifiers( modifiers );
 				}
 				break;
 			}
 				// TODO: keypress?
 		}
+
 		if ( e.type != EV_NONE ) {
 			ProcessEvent( e );
 		}
 	}
-
+	if ( e_mouse_move.type != EV_NONE ) {
+		ProcessEvent( e_mouse_move );
+	}
 }
 
 const std::string SDL2::GetClipboardText() const {
@@ -283,102 +254,32 @@ char SDL2::GetKeyCode( SDL_Keycode code, SDL_Keymod modifiers ) const {
 key_code_t SDL2::GetScanCode( SDL_Scancode code, SDL_Keymod modifiers ) const {
 	//Log( "Scan code: " + std::to_string( code ) + " (modifiers: " + std::to_string( modifiers ) + ")" );
 	switch ( code ) {
-		case SDL_SCANCODE_RIGHT: {
-			return K_RIGHT;
-		}
-		case SDL_SCANCODE_LEFT: {
-			return K_LEFT;
-		}
-		case SDL_SCANCODE_DOWN: {
-			return K_DOWN;
-		}
-		case SDL_SCANCODE_UP: {
-			return K_UP;
-		}
-		case SDL_SCANCODE_RETURN: {
-			return K_ENTER;
-		}
-		case SDL_SCANCODE_SPACE: {
-			return K_SPACE;
-		}
-		case SDL_SCANCODE_TAB: {
-			return K_TAB;
-		}
-		case SDL_SCANCODE_BACKSPACE: {
-			return K_BACKSPACE;
-		}
-		case SDL_SCANCODE_ESCAPE: {
-			return K_ESCAPE;
-		}
-		case SDL_SCANCODE_GRAVE: {
-			return K_GRAVE;
-		}
-		case SDL_SCANCODE_PAGEUP: {
-			return K_PAGEUP;
-		}
-		case SDL_SCANCODE_PAGEDOWN: {
-			return K_PAGEDOWN;
-		}
-		case SDL_SCANCODE_HOME: {
-			return K_HOME;
-		}
-		case SDL_SCANCODE_END: {
-			return K_END;
-		}
-		case SDL_SCANCODE_INSERT: {
-			return K_INSERT;
-		}
-		case SDL_SCANCODE_DELETE: {
-			return K_DELETE;
-		}
-		case SDL_SCANCODE_KP_4: {
-			return K_KP_LEFT;
-		}
-		case SDL_SCANCODE_KP_7: {
-			return K_KP_LEFT_UP;
-		}
-		case SDL_SCANCODE_KP_8: {
-			return K_KP_UP;
-		}
-		case SDL_SCANCODE_KP_9: {
-			return K_KP_RIGHT_UP;
-		}
-		case SDL_SCANCODE_KP_6: {
-			return K_KP_RIGHT;
-		}
-		case SDL_SCANCODE_KP_3: {
-			return K_KP_RIGHT_DOWN;
-		}
-		case SDL_SCANCODE_KP_2: {
-			return K_KP_DOWN;
-		}
-		case SDL_SCANCODE_KP_1: {
-			return K_KP_LEFT_DOWN;
-		}
-		case SDL_SCANCODE_LCTRL: // do we need to differentiate?
-		case SDL_SCANCODE_RCTRL: {
-			return K_CTRL;
-		}
+#define X_KEY_CODE_1( _x ) case SDL_SCANCODE_##_x: return K_##_x;
+#define X_KEY_CODE_2( _x, _sdl1 ) case SDL_SCANCODE_##_sdl1: return K_##_x;
+#define X_KEY_CODE_3( _x, _sdl1, _sdl2 ) case SDL_SCANCODE_##_sdl1: return K_##_x; case SDL_SCANCODE_##_sdl2: return K_##_x;
+		X_KEY_CODES
+#undef X_KEY_CODE_1
+#undef X_KEY_CODE_2
+#undef X_KEY_CODE_3
 		default: {
 			return K_NONE;
 		}
 	}
-	return K_NONE;
 }
 
 key_modifier_t SDL2::GetModifiers( SDL_Keymod modifiers ) const {
-	ui_legacy::event::key_modifier_t result = ui_legacy::event::KM_NONE;
+	input::key_modifier_t result = input::KM_NONE;
 
 	if ( ( modifiers & KMOD_LSHIFT ) || ( modifiers & KMOD_RSHIFT ) ) {
-		result |= ui_legacy::event::KM_SHIFT;
+		result |= input::KM_SHIFT;
 	}
 
 	if ( ( modifiers & KMOD_LCTRL ) || ( modifiers & KMOD_RCTRL ) ) {
-		result |= ui_legacy::event::KM_CTRL;
+		result |= input::KM_CTRL;
 	}
 
 	if ( ( modifiers & KMOD_LALT ) || ( modifiers & KMOD_RALT ) ) {
-		result |= ui_legacy::event::KM_ALT;
+		result |= input::KM_ALT;
 	}
 
 	return result;

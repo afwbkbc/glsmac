@@ -2,15 +2,15 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 
 #include "Parser.h"
 
 #include "gse/program/Types.h"
 
-#include "gse/Value.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Null.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Null.h"
+#include "gse/value/Undefined.h"
 
 namespace gse {
 
@@ -31,7 +31,7 @@ namespace parser {
 
 CLASS( JS, Parser )
 
-	JS( const std::string& filename, const std::string& source, const size_t initial_line_num );
+	JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 
 protected:
 	void GetElements( source_elements_t& elements ) override;
@@ -39,11 +39,13 @@ protected:
 
 private:
 
+	gc::Space* m_gc_space = nullptr;
+
 	const si_t GetSI( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 
 	const program::Scope* GetScope( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
-	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
+	const program::Control* GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end );
+	const program::Conditional* GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end );
 	const program::Statement* GetStatement( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Operand* GetExpressionOrOperand( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
 	const program::Expression* GetExpression( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end );
@@ -56,7 +58,7 @@ private:
 	const std::string CHARS_WHITESPACE = CHARS_EOLN + "	 ";
 	const std::string CHARS_NAMES = CHARS_LETTERS + "_#";
 	const std::string CHARS_NAMES_C = CHARS_LETTERS + CHARS_NUMBERS + "_";
-	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%~";
+	const std::string CHARS_OPERATORS = "=+-:.<>*/!&|%~?";
 	const std::string CHARS_QUOTES = "'";
 	const std::string CHARS_DELIMITERS = ";,{}()[]";
 
@@ -112,10 +114,6 @@ private:
 			Parser::Conditional::CT_IF
 		},
 		{
-			"elseif",
-			Parser::Conditional::CT_ELSEIF
-		},
-		{
 			"else",
 			Parser::Conditional::CT_ELSE
 		},
@@ -134,7 +132,19 @@ private:
 		{
 			"catch",
 			Parser::Conditional::CT_CATCH
-		}
+		},
+		{
+			"switch",
+			Parser::Conditional::CT_SWITCH
+		},
+		{
+			"case",
+			Parser::Conditional::CT_CASE
+		},
+		{
+			"default",
+			Parser::Conditional::CT_DEFAULTCASE
+		},
 	};
 
 	const std::unordered_map< std::string, program::loop_control_type_t > LOOP_CONTROL_KEYWORDS = {
@@ -161,22 +171,55 @@ private:
 		}
 	};
 
-	const std::unordered_map< std::string, Value > PREDEF_OPERATORS = {
+	enum predef_op_t {
+		PO_TRUE,
+		PO_FALSE,
+		PO_NULL,
+		PO_UNDEFINED,
+	};
+
+	const std::unordered_map< predef_op_t, std::function< Value*( gc::Space* const ) > > PREDEF_OPERATORS = {
+		{
+			PO_TRUE,
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Bool, , true );
+			},
+		},
+		{
+			PO_FALSE,
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Bool, , false );
+			},
+		},
+		{
+			PO_NULL,
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Null );
+			},
+		},
+		{
+			PO_UNDEFINED,
+			[]( gc::Space* const gc_space ) {
+				return VALUE( value::Undefined );
+			},
+		},
+	};
+	const std::unordered_map< std::string, predef_op_t > PREDEF_OPERATORS_S = {
 		{
 			"true",
-			VALUE( type::Bool, true ),
+			PO_TRUE
 		},
 		{
 			"false",
-			VALUE( type::Bool, false ),
+			PO_FALSE
 		},
 		{
 			"null",
-			VALUE( type::Null ),
+			PO_NULL
 		},
 		{
 			"undefined",
-			VALUE( type::Undefined ),
+			PO_UNDEFINED
 		},
 	};
 
@@ -299,15 +342,23 @@ private:
 		},
 		{
 			":~",
-			program::OT_POP,
+			program::OT_POP
 		},
 		{
 			":-",
-			program::OT_ERASE,
+			program::OT_ERASE
+		},
+		{
+			"::",
+			program::OT_RANGE
+		},
+		{
+			"?",
+			program::OT_TERNARY_IF
 		},
 		{
 			":",
-			program::OT_RANGE
+			program::OT_TERNARY_ELSE
 		},
 	};
 
@@ -410,14 +461,14 @@ private:
 		{
 			program::OT_AND,
 			{
-				4,
+				6,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_OR,
 			{
-				3,
+				6,
 				OL_BOTH
 			}
 		},
@@ -508,7 +559,7 @@ private:
 		{
 			program::OT_CHILD,
 			{
-				17,
+				18,
 				OL_BOTH
 			}
 		},
@@ -522,31 +573,45 @@ private:
 		{
 			program::OT_PUSH,
 			{
-				3,
+				5,
 				OL_BOTH
 			}
 		},
 		{
 			program::OT_POP,
 			{
-				3,
+				5,
 				OL_LEFT,
 			}
 		},
 		{
 			program::OT_ERASE,
 			{
-				3,
+				5,
 				OL_BOTH,
 			}
 		},
 		{
 			program::OT_RANGE,
 			{
-				3,
+				5,
 				OL_ANY_OR_BOTH
 			}
-		}
+		},
+		{
+			program::OT_TERNARY_IF,
+			{
+				3,
+				OL_BOTH
+			}
+		},
+		{
+			program::OT_TERNARY_ELSE,
+			{
+				4,
+				OL_BOTH
+			}
+		},
 	};
 
 	const source_elements_t::const_iterator GetBracketsEnd( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;
@@ -556,6 +621,11 @@ private:
 	void LogElement( const std::string& prefix, const SourceElement* element ) const;
 	void LogElements( const std::string& label, const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) const;
 #endif
+
+	gse::Value* const static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f );
+	std::unordered_map< predef_op_t, gse::Value* > m_static_vars_p = {};
+
+	void collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const override;
 
 };
 

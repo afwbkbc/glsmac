@@ -36,6 +36,7 @@ public:
 	SlotBadges(
 		BaseManager* bm,
 		sprite::InstancedSpriteManager* ism,
+		const size_t slot_index,
 		const faction::Faction* faction
 	);
 	~SlotBadges();
@@ -46,6 +47,7 @@ private:
 
 	BaseManager* m_bm = nullptr;
 	sprite::InstancedSpriteManager* const m_ism;
+	const size_t m_slot_index = 0;
 	const faction::Faction* m_faction = nullptr;
 
 	class slot_sprites_t {

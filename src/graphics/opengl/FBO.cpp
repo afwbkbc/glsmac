@@ -1,9 +1,9 @@
 #include "FBO.h"
 
-#include "types/mesh/Simple.h"
+#include "types/mesh/Render.h"
 #include "types/texture/Texture.h"
 #include "graphics/opengl/OpenGL.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
+#include "graphics/opengl/shader_program/Orthographic.h"
 
 namespace graphics {
 namespace opengl {
@@ -15,7 +15,7 @@ FBO::FBO( OpenGL* opengl, const size_t width, const size_t height )
 	glGenBuffers( 1, &m_vbo );
 	glGenBuffers( 1, &m_ibo );
 
-	NEW( m_mesh, types::mesh::Simple, 4, 2 ); // TODO: quad mesh
+	NEW( m_mesh, types::mesh::Render, 4, 2 ); // TODO: quad mesh
 	auto top_left = m_mesh->AddVertex(
 		{
 			-1,
@@ -128,10 +128,6 @@ void FBO::Resize( size_t width, size_t height ) {
 	ASSERT( width > 0, "fbo width zero" );
 	ASSERT( height > 0, "fbo height zero" );
 
-	// upscale
-	width *= INTERNAL_RESOLUTION_MULTIPLIER;
-	height *= INTERNAL_RESOLUTION_MULTIPLIER;
-
 	if ( width != m_width || height != m_height ) {
 
 		m_width = width;
@@ -170,11 +166,6 @@ void FBO::WriteBegin() {
 	m_opengl->WithBindFramebufferBegin( GL_DRAW_FRAMEBUFFER, m_fbo );
 	glDrawBuffer( GL_COLOR_ATTACHMENT0 );
 
-	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
-		// upscale
-		glViewport( 0, 0, m_width, m_height );
-	}
-
 	// start with clean state
 	// TODO: partial redraws?
 	//glClearColor( 0.5f, 0.5f, 0.5f, 0.5f );
@@ -201,15 +192,10 @@ void FBO::WriteEnd() {
 	glDrawBuffer( GL_NONE );
 	m_opengl->WithBindFramebufferEnd( GL_DRAW_FRAMEBUFFER );
 
-	if ( INTERNAL_RESOLUTION_MULTIPLIER != 1 ) {
-		// restore
-		glViewport( 0, 0, m_width / INTERNAL_RESOLUTION_MULTIPLIER, m_height / INTERNAL_RESOLUTION_MULTIPLIER );
-	}
-
 	m_is_enabled = false;
 }
 
-void FBO::Draw( shader_program::Simple2D* sp ) {
+void FBO::Draw( shader_program::Orthographic* sp ) {
 	ASSERT( !m_is_enabled, "can't draw fbo that is being written to" );
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
@@ -258,12 +244,11 @@ void FBO::CaptureToTexture( types::texture::Texture* const texture, const types:
 			GL_READ_FRAMEBUFFER, m_fbo, [ &w, &h, &top_left, &texture ]() {
 				glReadBuffer( GL_COLOR_ATTACHMENT0 );
 
-				glReadPixels( top_left.x, top_left.y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, texture->m_bitmap );
+				glReadPixels( top_left.x, top_left.y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, texture->GetBitmap() );
 
 				glReadBuffer( GL_NONE );
 			}
 		);
-
 		texture->FullUpdate(); // TODO: partial updates
 	}
 }
@@ -273,19 +258,15 @@ types::texture::Texture* FBO::CaptureToTexture() {
 	ASSERT( m_width > 0, "fbo width is zero" );
 	ASSERT( m_height > 0, "fbo height is zero" );
 
-	// downscale
-	const auto width = m_width / INTERNAL_RESOLUTION_MULTIPLIER;
-	const auto height = m_height / INTERNAL_RESOLUTION_MULTIPLIER;
-
-	NEWV( texture, types::texture::Texture, "FBOCapture", width, height );
+	NEWV( texture, types::texture::Texture, "FBOCapture", m_width, m_height );
 
 	CaptureToTexture(
 		texture, {
 			0,
 			0
 		}, {
-			width,
-			height
+			m_width,
+			m_height
 		}
 	);
 

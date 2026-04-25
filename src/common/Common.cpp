@@ -79,6 +79,14 @@ void Class::TestBreakpoint() {
 	}
 }
 
+void Class::SetTraceData( const std::string& data ) {
+	m_trace_data = data;
+}
+
+const std::string& Class::GetTraceData() const {
+	return m_trace_data;
+}
+
 #endif
 
 }

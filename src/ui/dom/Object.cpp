@@ -6,30 +6,54 @@
 #include "Container.h"
 #include "util/String.h"
 #include "scene/actor/Actor.h"
+#include "scene/actor/Mesh.h"
 #include "ui/UI.h"
 #include "ui/Class.h"
 #include "scene/Scene.h"
 #include "input/Event.h"
-#include "gse/type/Bool.h"
+#include "gse/value/Bool.h"
+#include "util/LogHelper.h"
+#include "engine/Engine.h"
+#include "graphics/Graphics.h"
+#include "gse/callable/Native.h"
+#include "gse/value/Object.h"
+#include "Root.h"
+#include "ui/geometry/Geometry.h"
+#include "ui/geometry/Rectangle.h"
+#include "types/mesh/Mesh.h"
+#include "gse/context/Context.h"
+#include "gse/GSE.h"
+#include "gse/Async.h"
 
 #include "Object.colormap.cpp"
 
 namespace ui {
 namespace dom {
 
-static std::atomic< id_t > s_next_id = 0;
+static std::atomic< dom_id_t > s_next_dom_id = 0;
+
+const gse::value::Object::object_class_t Object::WRAP_CLASS = "Object";
 
 Object::Object( DOM_ARGS_T )
-	: m_ui( ui )
+	: gse::GCWrappable( ui->GetGCSpace() )
+	, m_ui( ui )
+	, m_gc_space( ui->GetGCSpace() )
 	, m_tag( "$" + tag )
-	, m_id( ++s_next_id )
+	, m_dom_id( ++s_next_dom_id )
 	, m_parent( parent )
 	, m_initial_properties( properties ) {
-	Property( GSE_CALL, "id", gse::type::Type::T_STRING );
+	Property( GSE_CALL, "id", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const value ) {
+			m_id = ((gse::value::String*)value)->value;
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_id = "";
+		}
+	);
 
 	Property(
-		GSE_CALL, "class", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& value ) {
-			const auto names = util::String::Split( ( (gse::type::String*)value.Get() )->value, ' ' );
+		GSE_CALL, "class", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const value ) {
+			const auto names = util::String::Split( ( (gse::value::String*)value )->value, ' ' );
 			// check for duplicates
 			std::unordered_set< std::string > names_set = {};
 			for ( const auto& n : names ) {
@@ -44,20 +68,20 @@ Object::Object( DOM_ARGS_T )
 	Method( GSE_CALL, "addclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT_NOLOG( m_properties.at("class").Get()->type == gse::type::Type::T_STRING, "class is not string" );
-		auto names = util::String::Split( ((gse::type::String*)m_properties.at("class").Get())->value, ' ' );
+		ASSERT( m_properties.at("class")->type == gse::VT_STRING, "class is not string" );
+		auto names = util::String::Split( ((gse::value::String*)m_properties.at("class"))->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) == names.end() ) {
 			names.push_back( name );
-			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String,, util::String::Join( names, ' ' ) ) );
 			SetClasses( GSE_CALL, names );
 		}
-		return VALUE( gse::type::Undefined );
+		return nullptr;
 	} ) );
 	Method( GSE_CALL, "removeclass", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		N_GETVALUE( name, 0, String );
-		ASSERT_NOLOG( m_properties.at( "class" ).Get()->type == gse::type::Type::T_STRING, "class is not string" );
-		const auto names = util::String::Split( ( (gse::type::String*)m_properties.at( "class" ).Get() )->value, ' ' );
+		ASSERT( m_properties.at( "class" )->type == gse::VT_STRING, "class is not string" );
+		const auto names = util::String::Split( ( (gse::value::String*)m_properties.at( "class" ) )->value, ' ' );
 		if ( std::find( names.begin(), names.end(), name ) != names.end() ) {
 			std::vector< std::string > names_new = {};
 			names_new.reserve( names.size() - 1 );
@@ -66,32 +90,76 @@ Object::Object( DOM_ARGS_T )
 					names_new.push_back( n );
 				}
 			}
-			UpdateProperty( "class", VALUE( gse::type::String, util::String::Join( names_new, ' ' ) ) );
+			UpdateProperty( "class", VALUE( gse::value::String,, util::String::Join( names_new, ' ' ) ) );
 			SetClasses( GSE_CALL, names_new );
 		}
-		return VALUE( gse::type::Undefined );
+		return nullptr;
 	} ) );
 	Method( GSE_CALL, "remove", NATIVE_CALL( this ) {
-		ASSERT_NOLOG( m_parent, "remove without parent" );
+		ASSERT( m_parent, "remove without parent" );
 		m_parent->RemoveChild( GSE_CALL, this );
-		return VALUE( gse::type::Undefined );
+		return nullptr;
+	} ) );
+	Method( GSE_CALL, "listen", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 3 );
+		N_GET( object, 0, Object );
+		if ( !object->wrapobj ) {
+			GSE_ERROR( gse::EC.TYPE_ERROR, "Object not listenable: " + object->ToString() );
+		}
+		N_GETVALUE( event, 1, String );
+		N_GET_CALLABLE( callback, 2 );
+		const auto listen_id = AddListener( GSE_CALL, object->wrapobj, event, callback );
+		return VALUE( gse::value::Int,, listen_id );
+	} ) );
+	Method( GSE_CALL, "unlisten", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 );
+		N_GETVALUE( listen_id, 0, Int );
+		RemoveListener( GSE_CALL, listen_id );
+		return nullptr;
+	} ) );
+	Method( GSE_CALL, "timer", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( ms, 0, Int );
+		N_GET_CALLABLE( f, 1 );
+		gse::timer_id_t timer_id = 0;
+		auto* const timer = ctx->GetGSE()->GetAsync()->CreateTimer( ms, f, GSE_CALL_NOGC, &timer_id );
+		{
+			std::lock_guard guard( m_timer_ids_mutex );
+			ASSERT( m_timer_ids.find( timer_id ) == m_timer_ids.end(), "timer id collision" );
+			m_timer_ids.insert( timer_id );
+		}
+		return timer;
 	} ) );
 }
 
 Object::~Object() {
-	Hide();
-	if ( m_is_iterable_set ) {
-		m_ui->RemoveIterable( this );
+#ifdef DEBUG
+	if ( !m_is_destroyed ) {
+		util::LogHelper::Println( "WARNING: object was not destroyed properly!" );
 	}
-	for ( const auto& actor : m_actors ) {
-		m_ui->m_scene->RemoveActor( actor );
-		delete actor;
-	}
+#endif
 };
 
-const gse::Value Object::Wrap( const bool dynamic ) {
+gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
+		WRAPIMPL_TRIGGERS
+			{
+				"show",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					Show();
+					return VALUE( gse::value::Undefined );
+				} ),
+			},
+			{
+				"hide",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+					Hide();
+					return VALUE( gse::value::Undefined );
+				} ),
+			},
 		};
 		for ( const auto& p : m_properties ) {
 			properties.insert(
@@ -101,16 +169,21 @@ const gse::Value Object::Wrap( const bool dynamic ) {
 				}
 			);
 		}
-		m_wrapobj = std::make_shared< gse::type::Object >(
-			nullptr, properties, m_tag, this, dynamic
+		m_wrapobj = new gse::value::Object(
+			GSE_CALL, properties, m_tag, this, dynamic
 				? &Object::WrapSetStatic
 				: nullptr
 		);
 	}
-	return gse::Value( m_wrapobj );
+	return m_wrapobj;
 }
 
-void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
+UNWRAPIMPL_PTR( Object )
+
+void Object::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
+	if ( m_is_destroyed ) {
+		return; // TODO: investigate
+	}
 	auto def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -118,7 +191,7 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLA
 	if ( def_it->second.flags & PF_READONLY ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is read-only" );
 	}
-	if ( value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( value && value->type != gse::VT_UNDEFINED ) {
 		SetProperty( GSE_CALL, &m_manual_properties, key, value );
 		SetProperty( GSE_CALL, &m_properties, key, value );
 	}
@@ -128,8 +201,8 @@ void Object::WrapSet( const std::string& key, const gse::Value& value, GSE_CALLA
 	}
 }
 
-void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, const gse::Value& value, GSE_CALLABLE ) {
-	ASSERT_NOLOG( wrapobj, "wrapobj not set" );
+void Object::WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) {
+	ASSERT( wrapobj, "wrapobj not set" );
 	( (Object*)wrapobj )->WrapSet( key, value, GSE_CALL );
 }
 
@@ -138,10 +211,13 @@ geometry::Geometry* const Object::GetGeometry() const {
 }
 
 const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
+	ASSERT( !m_is_destroyed, "ProcessEvent: object is destroyed" );
 	if ( IsEventRelevant( event ) ) {
 		switch ( event.type ) {
 			case input::EV_MOUSE_OVER: {
-				AddModifier( GSE_CALL, CM_HOVER );
+				if ( m_is_hoverable ) {
+					AddModifier( GSE_CALL, CM_HOVER );
+				}
 				break;
 			}
 			case input::EV_MOUSE_OUT: {
@@ -158,66 +234,210 @@ const bool Object::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 }
 
 void Object::Destroy( GSE_CALLABLE ) {
-	SetClasses( GSE_CALL, {} );
-	delete this;
+	ASSERT( !m_is_destroyed, "already destroyed" );
+
+	{
+		std::lock_guard guard( m_listeners_mutex );
+		for ( const auto& l : m_listeners ) {
+			if ( l.second.object ) {
+				l.second.object->Off( GSE_CALL, l.second.event, l.second.handler_id );
+				l.second.object->Undepend( this );
+			}
+		}
+		m_listeners.clear();
+		m_object_listeners.clear();
+	}
+	{
+		std::lock_guard guard( m_timer_ids_mutex );
+		auto* const async = ctx->GetGSE()->GetAsync();
+		for ( const auto& timer_id : m_timer_ids ) {
+			async->StopTimer( timer_id );
+		}
+		m_timer_ids.clear();
+	}
+
+	Trigger( GSE_CALL, "remove" );
+
+	Hide();
+
+	if ( m_is_globalized ) {
+		Deglobalize( GSE_CALL );
+	}
+	auto* g = GetGeometry();
+	if ( g ) {
+		g->Destroy();
+	}
+	if ( m_ui ) {
+		SetClasses( GSE_CALL, {} );
+		if ( m_is_iterable_set ) {
+			m_ui->RemoveIterable( this );
+		}
+		auto* const scene = m_ui->GetScene();
+		std::lock_guard guard( m_actors_mutex );
+		for ( const auto& actor : m_actors ) {
+			scene->RemoveActor( actor );
+		}
+	}
+	ClearActors();
+	if ( g && g->m_type == geometry::Geometry::GT_RECTANGLE ) {
+		( (geometry::Rectangle*)g )->Clear();
+	}
+	m_is_destroyed = true;
 }
 
 void Object::Show() {
+	ASSERT( !m_is_destroyed, "Show: object is destroyed" );
 	if ( !m_is_visible ) {
-		for ( const auto& actor : m_actors ) {
-			actor->Show();
-		}
 		m_is_visible = true;
+		{
+			std::lock_guard guard( m_actors_mutex );
+			for ( const auto& actor : m_actors ) {
+				actor->Show();
+			}
+		}
 	}
 }
 
 void Object::Hide() {
+	ASSERT( !m_is_destroyed, "Hide: object is destroyed" );
 	if ( m_is_visible ) {
-		for ( const auto& actor : m_actors ) {
-			actor->Hide();
+		{
+			std::lock_guard guard( m_actors_mutex );
+			for ( const auto& actor : m_actors ) {
+				actor->Hide();
+			}
 		}
 		m_is_visible = false;
 	}
 }
 
+void Object::Refresh() {
+	if ( m_is_visible ) {
+		std::lock_guard guard( m_actors_mutex );
+		for ( const auto& actor : m_actors ) {
+			actor->UpdateCache();
+		}
+	}
+}
+
+void Object::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Object" );
+
+	if ( m_wrapobj ) {
+		GC_DEBUG_BEGIN( "wrapobj" );
+		GC_REACHABLE( m_wrapobj );
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_BEGIN( "properties");
+	for ( const auto& p : m_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_BEGIN( "default_properties");
+	for ( const auto& p : m_default_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_BEGIN( "manual_properties");
+	for ( const auto& p : m_manual_properties ) {
+		GC_REACHABLE( p.second );
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_END();
+}
+
+void Object::NotifyDependencyDestruction( const Wrappable* const dependency ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto& it = m_object_listeners.find( dependency );
+	ASSERT( it != m_object_listeners.end(), "dependencies not found" );
+	for ( const auto& listen_id : it->second ) {
+		ASSERT( m_listeners.find( listen_id ) != m_listeners.end(), "listener not found" );
+		ASSERT( m_listeners.at( listen_id ).object, "listener object already unlinked" );
+		m_listeners.at( listen_id ).object = nullptr;
+	}
+}
+
+const std::string Object::ToString() const {
+	std::string str = m_tag + "@" + std::to_string( m_dom_id );
+	if ( !m_id.empty() ) {
+		str += "#" + m_id;
+	}
+	for ( const auto& c : m_classes ) {
+		str += "." + c->GetDOMClassName();
+	}
+	return str;
+}
+
 const bool Object::IsEventRelevant( const input::Event& event ) const {
 	return
+		!m_is_destroyed &&
 		m_is_visible &&
-		m_supported_events.find( event.type ) != m_supported_events.end()
+		( m_catchall || m_supported_events.find( event.type ) != m_supported_events.end() )
 	;
 }
 
 const bool Object::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
-	ASSERT_NOLOG( IsEventRelevant( event ), "event irrelevant" );
-	const auto& event_type = event.GetTypeStr();
-	if ( HasHandlers( event_type ) ) {
-		gse::type::object_properties_t event_data = {};
-		SerializeEvent( event, event_data );
-		const auto result = Trigger( GSE_CALL, event_type, event_data, gse::type::Type::T_BOOL );
-		return ( (gse::type::Bool*)result.Get() )->value;
+	if ( IsEventRelevant( event ) ) {
+		const auto& event_type = event.GetTypeStr();
+		if ( HasHandlers( event_type ) ) {
+			gse::value::object_properties_t event_data = {};
+			WrapEvent( GSE_CALL, event, event_data );
+			const auto result = Trigger( GSE_CALL, event_type, ARGS( event_data ), gse::VT_BOOL );
+			return ( (gse::value::Bool*)result )->value;
+		}
 	}
 	return false;
 }
 
-void Object::UpdateProperty( const std::string& k, const gse::Value& v ) {
+void Object::UpdateProperty( const std::string& k, gse::Value* const v ) {
+	ASSERT( !m_is_destroyed, "UpdateProperty: object is destroyed" );
 	m_properties.insert_or_assign( k, v );
 	if ( m_wrapobj ) {
-		m_wrapobj->value.insert_or_assign( k, v );
+		m_wrapobj->Assign( k, v );
 	}
 }
 
 void Object::Actor( scene::actor::Actor* actor ) {
-	actor->SetPositionZ( 0.5f ); // TODO: proper zindex logic
+	ASSERT( !m_is_destroyed, "Actor: object is destroyed" );
+	actor->SetPositionZ( 0.5f );
 	if ( m_parent ) {
 		actor->SetCacheParent( m_parent->m_cache );
 	}
-	m_ui->m_scene->AddActor( actor );
-	m_actors.push_back( actor );
+	actor->SetRenderFlags(
+		actor->GetRenderFlags() |
+		scene::actor::Actor::RF_IGNORE_CAMERA |
+		scene::actor::Actor::RF_IGNORE_LIGHTING
+	);
+	ASSERT( m_ui, "ui detached" );
+	m_ui->GetScene()->AddActor( actor );
+	{
+		std::lock_guard guard( m_actors_mutex );
+		m_actors.push_back( actor );
+	}
 }
 
-void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
-	ASSERT_NOLOG( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
-	ASSERT_NOLOG( m_property_defs.find( name ) == m_property_defs.end(), "property def '" + name + "' already exists" );
+void Object::ClearActors() {
+	std::lock_guard guard( m_actors_mutex );
+	if ( m_ui ) {
+		auto* const scene = m_ui->GetScene();
+		for ( const auto& actor : m_actors ) {
+			scene->RemoveActor( actor );
+			delete actor;
+		}
+	}
+	m_actors.clear();
+}
+
+void Object::Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value, const property_flag_t flags, const f_on_set_t& f_on_set, const f_on_unset_t& f_on_unset ) {
+	ASSERT( !m_is_destroyed, "Property: object is destroyed" );
+	ASSERT( m_properties.find( name ) == m_properties.end(), "property '" + name + "' already exists" );
+	ASSERT( m_property_defs.find( name ) == m_property_defs.end(), "property def '" + name + "' already exists" );
 	m_property_defs.insert(
 		{
 			name,
@@ -230,10 +450,12 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 		}
 	);
 	const auto& it = m_initial_properties.find( name );
-	const gse::Value& v = it == m_initial_properties.end()
+	gse::Value* const v = it == m_initial_properties.end()
 		? default_value
+			? default_value
+			: nullptr
 		: it->second;
-	if ( default_value.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( default_value ) {
 		m_default_properties.insert(
 			{
 				name,
@@ -244,26 +466,33 @@ void Object::Property( GSE_CALLABLE, const std::string& name, const gse::type::T
 	if ( it != m_initial_properties.end() ) {
 		SetProperty( GSE_CALL, &m_manual_properties, name, it->second );
 	}
-	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( v ) {
 		SetProperty( GSE_CALL, &m_properties, name, v );
 	}
 }
 
-void Object::Method( GSE_CALLABLE, const std::string& name, const gse::Value& callable ) {
-	ASSERT_NOLOG( callable.Get()->type == gse::type::Type::T_CALLABLE, "method is not callable: " + callable.ToString() );
-	Property( GSE_CALL, name, gse::type::Type::T_CALLABLE, callable, PF_READONLY );
+void Object::Method( GSE_CALLABLE, const std::string& name, gse::Value* const callable ) {
+	ASSERT( callable->type == gse::VT_CALLABLE, "method is not callable: " + callable->ToString() );
+	Property( GSE_CALL, name, gse::VT_CALLABLE, callable, PF_READONLY );
+}
+
+void Object::Event( const input::event_type_t type ) {
+	m_supported_events.insert( type );
 }
 
 void Object::Events( const std::unordered_set< input::event_type_t >& events ) {
+	ASSERT( !m_is_destroyed, "Events: object is destroyed" );
 	for ( const auto& event : events ) {
-		ASSERT_NOLOG( m_supported_events.find( event ) == m_supported_events.end(), "event already handled: " + std::to_string( event ) );
+		ASSERT( m_supported_events.find( event ) == m_supported_events.end(), "event already handled: " + std::to_string( event ) );
 		m_supported_events.insert( event );
 	}
 }
 
 void Object::Iterable( const std::function< void() >& f ) {
-	ASSERT_NOLOG( !m_is_iterable_set, "iterable already set" );
+	ASSERT( !m_is_destroyed, "Iterable: object is destroyed" );
+	ASSERT( !m_is_iterable_set, "iterable already set" );
 	m_is_iterable_set = true;
+	ASSERT( m_ui, "ui detached" );
 	m_ui->AddIterable( this, f );
 }
 
@@ -313,55 +542,77 @@ void Object::ParseColor( GSE_CALLABLE, const std::string& str, types::Color& col
 	}
 }
 
-void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const {
+void Object::OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) {
+	ASSERT( !m_is_destroyed, "OnPropertyChange: object is destroyed" );
 	const auto& def = m_property_defs.find( key );
-	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
-	if ( value.Get()->type != def->second.type ) {
-		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + value.Get()->GetTypeString( def->second.type ) + ", got " + value.GetTypeString() + ": " + value.ToString() );
+	ASSERT( def != m_property_defs.end(), "property def not found" );
+	const auto t1 = def->second.type;
+	if ( value && t1 != gse::VT_NOTHING ) {
+		const auto t2 = value->type;
+		if ( t1 != t2 ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' is expected to be " + gse::Value::GetTypeStringStatic( def->second.type ) + ", got " + value->GetTypeString() + ": " + value->ToString() );
+		}
 	}
 	for ( const auto& obj : m_wrapobjs ) {
-		obj->value.insert_or_assign( key, value );
+		obj->Assign( key, value );
 	}
 	if ( def->second.f_on_set ) {
 		def->second.f_on_set( GSE_CALL, value );
 	}
 }
 
-void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const {
+void Object::OnPropertyRemove( GSE_CALLABLE, const std::string& key ) {
+	ASSERT( !m_is_destroyed, "OnPropertyRemove: object is destroyed" );
 	const auto& def = m_property_defs.find( key );
-	ASSERT_NOLOG( def != m_property_defs.end(), "property def not found" );
+	ASSERT( def != m_property_defs.end(), "property def not found" );
+	{
+		for ( const auto& obj : m_wrapobjs ) {
+			obj->Assign( key, nullptr );
+		}
+	}
 	if ( def->second.f_on_unset ) {
 		def->second.f_on_unset( GSE_CALL );
 	}
 }
 
-void Object::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Object::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_KEY_DOWN: {
 			if ( e.data.key.is_printable ) {
 				obj.insert(
 					{
 						"key",
-						VALUE( gse::type::String, std::string( 1, e.data.key.key ) )
+						VALUE( gse::value::String,, std::string( 1, e.data.key.key ) )
 					}
 				);
 			}
 			obj.insert(
 				{
 					"code",
-					VALUE( gse::type::String, e.GetKeyCodeStr() )
+					VALUE( gse::value::String,, e.GetKeyCodeStr() )
 				}
 			);
+			gse::value::object_properties_t modifier_props = {};
+			if ( e.data.key.modifiers & input::KM_SHIFT ) {
+				modifier_props.insert({"shift", VALUE( gse::value::Bool,, true )});
+			}
+			if ( e.data.key.modifiers & input::KM_CTRL ) {
+				modifier_props.insert({"ctrl", VALUE( gse::value::Bool,, true )});
+			}
+			if ( e.data.key.modifiers & input::KM_ALT ) {
+				modifier_props.insert({"alt", VALUE( gse::value::Bool,, true )});
+			}
+			obj.insert({"modifiers", VALUE( gse::value::Object,, ctx, {}, ep, modifier_props ) } );
 			break;
 		}
 		default: {
-			ASSERT_NOLOG( false, "unknown event type: " + e.GetTypeStr() );
+			ASSERT( false, "unknown event type: " + e.GetTypeStr() );
 		}
 	}
 }
 
 void Object::AddModifier( GSE_CALLABLE, const class_modifier_t modifier ) {
-	if ( m_modifiers.find( modifier ) == m_modifiers.end() ) {
+	if ( !m_is_destroyed && m_modifiers.find( modifier ) == m_modifiers.end() ) {
 		m_modifiers.insert( modifier );
 		for ( const auto& c : m_classes ) {
 			c->AddObjectModifier( GSE_CALL, this, modifier );
@@ -370,12 +621,70 @@ void Object::AddModifier( GSE_CALLABLE, const class_modifier_t modifier ) {
 }
 
 void Object::RemoveModifier( GSE_CALLABLE , const class_modifier_t modifier ) {
-	if ( m_modifiers.find( modifier ) != m_modifiers.end() ) {
+	if ( !m_is_destroyed && m_modifiers.find( modifier ) != m_modifiers.end() ) {
 		m_modifiers.erase( modifier );
 		for ( const auto& c : m_classes ) {
 			c->RemoveObjectModifier( GSE_CALL, this, modifier );
 		}
 	}
+}
+
+void Object::Globalize( GSE_CALLABLE, const std::function< void() >& f_on_deglobalize ) {
+	if ( m_is_globalized ) {
+		Deglobalize( GSE_CALL );
+	}
+	ASSERT( m_ui, "ui detached" );
+	ASSERT( m_parent == m_ui->GetRoot(), "can only globalize children of root object" );
+	m_ui->SetGlobalSingleton( GSE_CALL, this, f_on_deglobalize );
+	m_is_globalized = true;
+}
+
+void Object::Deglobalize( GSE_CALLABLE ) {
+	if ( m_is_globalized ) {
+		ASSERT( m_ui, "ui detached" );
+		ASSERT( m_parent == m_ui->GetRoot(), "can only deglobalize children of root object" );
+		m_ui->RemoveGlobalSingleton( GSE_CALL, this );
+		m_is_globalized = false;
+	}
+}
+
+const gse::Wrappable::callback_id_t Object::AddListener( GSE_CALLABLE, gse::Wrappable* const object, const std::string& event, gse::value::Callable* const callback ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto listen_id = m_next_listener_id++;
+	object->Depend( this );
+	const auto handler_id = object->On( GSE_CALL, event, callback );
+	m_listeners.insert( { listen_id, {
+		object,
+		event,
+		handler_id
+	}});
+	auto it = m_object_listeners.find( object );
+	if ( it == m_object_listeners.end() ) {
+		it = m_object_listeners.insert({ object, {} } ).first;
+	}
+	it->second.insert( listen_id );
+	return listen_id;
+}
+
+void Object::RemoveListener( GSE_CALLABLE, const gse::Wrappable::callback_id_t listen_id ) {
+	std::lock_guard guard( m_listeners_mutex );
+	const auto& it = m_listeners.find( listen_id );
+	if ( it == m_listeners.end() ) {
+		GSE_ERROR( gse::EC.INVALID_HANDLER, "Listener not found: " + std::to_string( listen_id ) );
+	}
+	auto* const object = it->second.object;
+	if ( object ) {
+		object->Off( GSE_CALL, it->second.event, it->second.handler_id );
+		object->Undepend( this );
+	}
+	const auto& it2 = m_object_listeners.find( object );
+	ASSERT( it2 != m_object_listeners.end(), "object listeners not found" );
+	ASSERT( it2->second.find( listen_id ) != it2->second.end(), "object listener not found" );
+	it2->second.erase( listen_id );
+	if ( it2->second.empty() ) {
+		m_object_listeners.erase( it2 );
+	}
+	m_listeners.erase( it );
 }
 
 void Object::InitAndValidate( GSE_CALLABLE ) {
@@ -395,7 +704,13 @@ void Object::InitProperties( GSE_CALLABLE ) {
 	}
 }
 
-void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, const gse::Value& value ) {
+void Object::Detach() {
+	ASSERT( m_parent, "parent not set" );
+	m_parent = nullptr;
+}
+
+void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value ) {
+	ASSERT( !m_is_destroyed, "SetProperty: object is destroyed" );
 	const auto& it = properties->find( key );
 	if ( it == properties->end() ) {
 		if ( properties == &m_properties ) {
@@ -414,7 +729,7 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 		}
 	}
 	else {
-		if ( it->second != value ) {
+		if ( ( ( it->second == nullptr ) != ( value == nullptr ) ) || ( value && ( *it->second != *value ) ) ) {
 			it->second = value;
 			if ( m_is_initialized && properties == &m_properties ) {
 				OnPropertyChange( GSE_CALL, key, value );
@@ -424,12 +739,14 @@ void Object::SetProperty( GSE_CALLABLE, properties_t* const properties, const st
 }
 
 void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key ) {
+	ASSERT( !m_is_destroyed, "UnsetProperty: object is destroyed" );
 	const auto& it = properties->find( key );
-	if ( it != properties->end() && it->second.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( it != properties->end() && it->second->type != gse::VT_UNDEFINED ) {
 		if ( properties == &m_properties && !m_classes.empty() ) {
 			for ( const auto& c : m_classes ) {
-				const auto& it2 = c->GetProperties().find( key );
-				if ( it2 != c->GetProperties().end() ) {
+				const auto& pp = c->GetProperties();
+				const auto& it2 = pp.find( key );
+				if ( it2 != pp.end() ) {
 					SetProperty( GSE_CALL, properties, it2->first, it2->second );
 					return;
 				}
@@ -438,7 +755,7 @@ void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const 
 		properties->erase( it );
 		if ( properties == &m_properties ) {
 			if ( m_wrapobj ) {
-				m_wrapobj->value.erase( key );
+				m_wrapobj->Assign( key, nullptr );
 			}
 		}
 		if ( m_is_initialized && properties == &m_properties ) {
@@ -448,6 +765,7 @@ void Object::UnsetProperty( GSE_CALLABLE, properties_t* const properties, const 
 }
 
 void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names ) {
+	ASSERT( !m_is_destroyed, "SetClasses: object is destroyed" );
 	if ( m_is_initialized ) {
 		for ( const auto& c : m_classes ) {
 			c->RemoveObject( GSE_CALL, this );
@@ -455,9 +773,10 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 		m_classes.clear();
 	}
 	else {
-		ASSERT_NOLOG( m_classes.empty(), "not initialized but classes not empty" );
+		ASSERT( m_classes.empty(), "not initialized but classes not empty" );
 	}
 	m_classes.reserve( names.size() );
+	ASSERT( m_ui, "ui detached" );
 	for ( const auto& name : names ) {
 		auto* c = m_ui->GetClass( name );
 		if ( !c ) {
@@ -470,7 +789,8 @@ void Object::SetClasses( GSE_CALLABLE, const std::vector< std::string >& names )
 	}
 }
 
-void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) {
+void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) {
+	ASSERT( !m_is_destroyed, "SetPropertyFromClass: object is destroyed" );
 	const auto& def_it = m_property_defs.find( key );
 	if ( def_it == m_property_defs.end() ) {
 		GSE_ERROR( gse::EC.UI_ERROR, "Property '" + key + "' does not exist" );
@@ -479,7 +799,7 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const g
 		// check if property was set by any of previous classes with higher modifier
 		for ( const auto& c : m_classes ) {
 			const auto kv = c->GetProperty( key, m_modifiers );
-			if ( kv.first.Get()->type != gse::type::Type::T_UNDEFINED && kv.second > modifier ) {
+			if ( kv.first && kv.second > modifier ) {
 				return;
 			}
 		}
@@ -488,10 +808,11 @@ void Object::SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const g
 }
 
 void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
+	ASSERT( !m_is_destroyed, "UnsetPropertyFromClass: object is destroyed" );
 	const auto& def_it = m_property_defs.find( key );
-	ASSERT_NOLOG( def_it != m_property_defs.end(), "property def not found: " + key );
+	ASSERT( def_it != m_property_defs.end(), "property def not found: " + key );
 
-	auto v = VALUE( gse::type::Undefined );
+	gse::Value* v = nullptr;
 
 	// search in manual properties
 	const auto& it = m_manual_properties.find( key );
@@ -499,31 +820,36 @@ void Object::UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) {
 		v = it->second;
 	}
 
-	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+	if ( !v ) {
 		// search in other classes
-		for ( auto it = m_classes.rbegin() ; it != m_classes.rend() ; it++ ) {
-			const auto kv = ( *it )->GetProperty( key, m_modifiers );
-			v = kv.first;
-			if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+		for ( auto it2 = m_classes.rbegin() ; it2 != m_classes.rend() ; it2++ ) {
+			const auto kv = ( *it2 )->GetProperty( key, m_modifiers );
+			if ( kv.first ) {
+				v = kv.first;
 				break;
 			}
 		}
 	}
 
-	if ( v.Get()->type == gse::type::Type::T_UNDEFINED ) {
+	if ( !v ) {
 		// search in default properties
-		const auto& it = m_default_properties.find( key );
-		if ( it != m_default_properties.end() ) {
-			v = it->second;
+		const auto& it2 = m_default_properties.find( key );
+		if ( it2 != m_default_properties.end() ) {
+			v = it2->second;
 		}
 	}
 
-	if ( v.Get()->type != gse::type::Type::T_UNDEFINED ) {
+	if ( v ) {
 		SetProperty( GSE_CALL, &m_properties, key, v );
 	}
 	else {
 		UnsetProperty( GSE_CALL, &m_properties, key );
 	}
+}
+
+void Object::DetachUI() {
+	ASSERT( m_ui, "ui already detached" );
+	m_ui = nullptr;
 }
 
 }

@@ -22,8 +22,6 @@ public:
 
 	void GeometryHandler( const geometry_handler_type_t type, const std::function< void() >& f );
 
-	virtual const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
-
 	void Show() override;
 	void Hide() override;
 

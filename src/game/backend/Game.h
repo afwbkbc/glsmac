@@ -7,10 +7,10 @@
 #include <vector>
 
 #include "common/MTModule.h"
+#include "gse/GCWrappable.h"
 
 #include "Types.h"
 #include "game/backend/map/Types.h"
-#include "game/backend/map_editor/Types.h"
 
 #include "types/Exception.h"
 #include "gse/Exception.h"
@@ -22,12 +22,15 @@
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
 
+class GLSMAC;
+
 namespace types {
 namespace texture {
 class Texture;
 }
 namespace mesh {
 class Render;
+
 class Data;
 }
 }
@@ -72,6 +75,7 @@ class Event;
 }
 
 class State;
+
 class Player;
 
 namespace connection {
@@ -86,12 +90,13 @@ namespace map {
 class Map;
 }
 
-namespace map_editor {
-class MapEditor;
-}
-
 namespace slot {
 class Slot;
+}
+
+namespace event {
+class Event;
+class EventHandler;
 }
 
 enum op_t {
@@ -101,8 +106,6 @@ enum op_t {
 	OP_GET_MAP_DATA,
 	OP_RESET,
 	OP_SAVE_MAP,
-	OP_EDIT_MAP,
-	OP_CHAT,
 	OP_GET_FRONTEND_REQUESTS,
 	OP_SEND_BACKEND_REQUESTS,
 	OP_ADD_EVENT,
@@ -137,9 +140,6 @@ struct MT_Request {
 	op_t op;
 	union {
 		struct {
-			State* state;
-		} init;
-		struct {
 			tile_query_purpose_t purpose;
 			size_t tile_x;
 			size_t tile_y;
@@ -157,13 +157,6 @@ struct MT_Request {
 			std::string* path;
 		} dump;
 #endif
-		struct {
-			size_t tile_x;
-			size_t tile_y;
-			map_editor::tool_type_t tool;
-			map_editor::brush_type_t brush;
-			map_editor::draw_mode_t draw_mode;
-		} edit_map;
 		struct {
 			std::string* serialized_event;
 		} add_event;
@@ -253,13 +246,6 @@ struct MT_Response {
 			std::string* path;
 		} save_map;
 		struct {
-			struct {
-				std::unordered_map< std::string, map::sprite_actor_t >* actors_to_add;
-				std::unordered_map< size_t, std::string >* instances_to_remove;
-				std::unordered_map< size_t, std::pair< std::string, types::Vec3 > >* instances_to_add;
-			} sprites;
-		} edit_map;
-		struct {
 			std::vector< FrontendRequest >* requests;
 		} get_frontend_requests;
 	} data;
@@ -267,21 +253,15 @@ struct MT_Response {
 
 typedef common::MTModule< MT_Request, MT_Response > MTModule;
 
-class InvalidEvent : public types::Exception {
-public:
-	InvalidEvent( const std::string& reason, const event::Event* event );
-};
+CLASS2( Game, MTModule, gse::GCWrappable )
 
-CLASS2( Game, MTModule, gse::Wrappable )
+	Game();
 
 	// returns success as soon as this thread is ready (not busy with previous requests)
 	common::mt_id_t MT_Ping();
 
 	// initialize map and other things
 	common::mt_id_t MT_Init( State* state );
-
-	// send chat message
-	common::mt_id_t MT_Chat( const std::string& message );
 
 	// get map data for display
 	common::mt_id_t MT_GetMapData();
@@ -292,17 +272,11 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	// saves current map into file
 	common::mt_id_t MT_SaveMap( const std::string& path );
 
-	// perform edit operation on map tile(s)
-	common::mt_id_t MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode );
-
 	// get all pending frontend requests (will be cleared after)
 	common::mt_id_t MT_GetFrontendRequests();
 
 	// send backend requests for processing
 	common::mt_id_t MT_SendBackendRequests( const std::vector< BackendRequest >& requests );
-
-	// send event
-	common::mt_id_t MT_AddEvent( const event::Event* event );
 
 #ifdef DEBUG
 
@@ -315,6 +289,7 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	void Stop() override;
 	void Iterate() override;
 
+	const bool IsStarted() const;
 	Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
@@ -325,7 +300,15 @@ CLASS2( Game, MTModule, gse::Wrappable )
 	void SetLoaderText( const std::string& text );
 	void HideLoader();
 
+	void Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args );
+	void AddEvent( event::Event* const event );
+	void AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved );
+
+	void ClearEvents();
+
 	WRAPDEFS_PTR( Game )
+
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 protected:
 
@@ -340,20 +323,16 @@ public:
 	void Message( const std::string& text );
 	void Quit( const std::string& reason );
 	void OnError( std::runtime_error& err );
-	void OnGSEError( gse::Exception& e );
-	const gse::Value AddEvent( event::Event* event );
+	void OnGSEError( const gse::Exception& e );
 	const size_t GetTurnId() const;
-	const bool IsTurnActive() const;
 	const bool IsTurnCompleted( const size_t slot_num ) const;
 	const bool IsTurnChecksumValid( const util::crc32::crc_t checksum ) const;
-	void CompleteTurn( const size_t slot_num );
+	void CompleteTurn( GSE_CALLABLE, const size_t slot_num );
 	void UncompleteTurn( const size_t slot_num );
-	void FinalizeTurn();
 	void AdvanceTurn( const size_t turn_id );
 
-	void GlobalFinalizeTurn();
-	void GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum );
-	void GlobalAdvanceTurn();
+	void GlobalFinalizeTurn( GSE_CALLABLE );
+	void FirstTurn( GSE_CALLABLE );
 
 	faction::Faction* GetFaction( const std::string& id ) const;
 
@@ -363,14 +342,17 @@ public:
 	base::BaseManager* GetBM() const;
 	animation::AnimationManager* GetAM() const;
 
-private:
+	gc::Space* const GetGCSpace() const;
 
-	void ValidateEvent( event::Event* event );
-	const gse::Value ProcessEvent( event::Event* event );
+	void CheckRW( GSE_CALLABLE );
+
+	void SetSlotNum( const size_t slotnum ); // not thread-safe, make sure to call from game thread only
+
+private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
-	void UpdateYields( map::tile::Tile* tile ) const;
+	void UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const;
 
 	map::tile::TileManager* m_tm = nullptr;
 	resource::ResourceManager* m_rm = nullptr;
@@ -382,13 +364,15 @@ private:
 		GS_NONE,
 		GS_PREPARING_MAP,
 		GS_INITIALIZING,
+		GS_STARTING,
 		GS_RUNNING,
 	};
-	game_state_t m_game_state = GS_NONE;
+	std::atomic< game_state_t > m_game_state = GS_NONE;
 	common::mt_flag_t m_init_cancel = false;
 	std::string m_initialization_error = "";
 
-	const Player* m_player = nullptr;
+	Player* m_player = nullptr;
+	bool m_is_master = true;
 	size_t m_slot_num = 0;
 	slot::Slot* m_slot = nullptr;
 
@@ -402,21 +386,48 @@ private:
 	void InitGame( MT_Response& response, MT_CANCELABLE );
 	void ResetGame();
 
-	// seed needs to be consistent during session (to prevent save-scumming and for easier reproducing of bugs)
+	// seed needs to be consistent during session (to prevent save-scumming and for easier reproduction of bugs)
 	Random* m_random = nullptr;
 	State* m_state = nullptr;
-	connection::Connection* m_connection = nullptr;
 
 	map::Map* m_map = nullptr;
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
-	map_editor::MapEditor* m_map_editor = nullptr;
-
-	std::vector< backend::event::Event* > m_unprocessed_events = {};
 
 	turn::Turn m_current_turn = {};
 
 	bool m_is_turn_complete = false;
 	void CheckTurnComplete();
+
+	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
+	std::mutex m_event_handlers_mutex;
+
+	std::vector< event::Event* > m_pending_events = {};
+	std::mutex m_pending_events_mutex;
+
+	struct event_waiting_for_response_t {
+		event::Event* event;
+		gse::Value* rollback_data;
+	};
+	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};
+	std::mutex m_events_waiting_for_responses_mutex;
+
+	struct pending_event_response_t {
+		std::string event_id;
+		bool is_accepted;
+		gse::Value* resolved;
+	};
+	std::vector< pending_event_response_t > m_pending_event_responses = {};
+	std::mutex m_pending_event_responses_mutex;
+
+	std::atomic< uint64_t > m_next_event_id = 0;
+
+	std::atomic< size_t > m_rw_counter = 0;
+	void WithRW( const std::function< void() >& f );
+
+	void InitComplete( GSE_CALLABLE );
+	void InitFailed( const std::string& error_text );
+
+	void SetTurnStatus( const backend::turn::turn_status_t status );
 
 private:
 	friend class map::tile::TileManager;
@@ -427,6 +438,15 @@ private:
 	void AddFrontendRequest( const FrontendRequest& request );
 
 	const bool IsRunning() const;
+	const bool IsMapReady() const;
+
+private:
+	friend class event::Event;
+	const std::string GenerateEventId();
+
+private:
+	friend class ::GLSMAC;
+	void SetState( State* const state );
 
 };
 

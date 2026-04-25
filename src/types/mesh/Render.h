@@ -14,7 +14,7 @@ CLASS( Render, Mesh )
 	static constexpr uint8_t VERTEX_NORMAL_SIZE = 3; // x, y, z
 	static constexpr uint8_t VERTEX_SIZE = VERTEX_COORD_SIZE + VERTEX_TEXCOORD_SIZE + VERTEX_TINT_SIZE + VERTEX_NORMAL_SIZE;
 
-	Render( const size_t vertex_count, const size_t surface_count );
+	Render( const size_t vertex_count, const size_t surface_count, const type_t type = MT_RENDER );
 
 	index_t AddVertex(
 		const types::Vec3& coord, const Vec2< coord_t >& tex_coord = {
@@ -46,6 +46,8 @@ CLASS( Render, Mesh )
 		0.0f
 	}
 	);
+
+	void SetVertex( const index_t index, const types::Vec3& coord );
 
 	void SetVertex(
 		const index_t index, const types::Vec3& coord, const Vec2< coord_t >& tex_coord, const Color::color_t tint = {

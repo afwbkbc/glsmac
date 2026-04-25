@@ -26,21 +26,28 @@ public:
 		FR_NONE,
 		FR_QUIT,
 		FR_ERROR,
-		FR_GLOBAL_MESSAGE,
 		FR_UPDATE_TILES,
 		FR_TURN_STATUS,
 		FR_TURN_ADVANCE,
 		FR_FACTION_DEFINE,
 		FR_SLOT_DEFINE,
 		FR_ANIMATION_DEFINE,
+		FR_ANIMATION_UNDEFINE,
 		FR_ANIMATION_SHOW,
+		FR_ANIMATION_ABORT,
+		FR_TILE_SELECT,
+		FR_UNIT_SELECT,
+		FR_BASE_SELECT,
 		FR_UNIT_DEFINE,
+		FR_UNIT_UNDEFINE,
 		FR_UNIT_SPAWN,
 		FR_UNIT_DESPAWN,
 		FR_UNIT_UPDATE,
 		FR_UNIT_MOVE,
 		FR_BASE_POP_DEFINE,
+		FR_BASE_POP_UNDEFINE,
 		FR_BASE_SPAWN,
+		FR_BASE_DESPAWN,
 		FR_BASE_UPDATE,
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
@@ -79,9 +86,6 @@ public:
 			const std::string* stacktrace;
 		} error;
 		struct {
-			const std::string* message;
-		} global_message;
-		struct {
 			const tile_updates_t* tile_updates;
 		} update_tiles;
 		struct {
@@ -106,6 +110,9 @@ public:
 		} animation_define;
 		struct {
 			const std::string* animation_id;
+		} animation_undefine;
+		struct {
+			const std::string* animation_id;
 			size_t running_animation_id;
 			struct {
 				float x;
@@ -114,8 +121,24 @@ public:
 			} render_coords;
 		} animation_show;
 		struct {
+			size_t running_animation_id;
+		} animation_abort;
+		struct {
+			size_t x;
+			size_t y;
+		} tile_select;
+		struct {
+			size_t unit_id;
+		} unit_select;
+		struct {
+			size_t base_id;
+		} base_select;
+		struct {
 			const std::string* serialized_unitdef; // can be optimized
 		} unit_define;
+		struct {
+			const std::string* id;
+		} unit_undefine;
 		struct {
 			size_t unit_id;
 			const std::string* unitdef_id;
@@ -163,6 +186,9 @@ public:
 			const std::string* serialized_popdef;
 		} base_pop_define;
 		struct {
+			const std::string* id;
+		} base_pop_undefine;
+		struct {
 			size_t base_id;
 			size_t slot_index;
 			struct {
@@ -176,6 +202,9 @@ public:
 			} render_coords;
 			const std::string* name;
 		} base_spawn;
+		struct {
+			size_t base_id;
+		} base_despawn;
 		struct {
 			size_t base_id;
 			size_t slot_index;

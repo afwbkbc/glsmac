@@ -59,5 +59,19 @@ static constexpr rotate_t ROTATE_270 = 3;
 
 typedef std::unordered_map< types::Color::rgba_t, types::Color::rgba_t > repaint_rules_t;
 
+// loadtexture flags
+static constexpr uint8_t LT_NONE = 0;
+static constexpr uint8_t LT_ROTATE = 1;
+static constexpr uint8_t LT_FLIPV = 2;
+static constexpr uint8_t LT_FLIPH = 4;
+static constexpr uint8_t LT_TILED = 8;
+static constexpr uint8_t LT_ALPHA = 16;
+static constexpr uint8_t LT_CONTRAST = 32;
+
+enum texture_flag_t {
+	TF_NONE = 0,
+	TF_MIPMAPS = 1 << 0,
+};
+
 }
 }

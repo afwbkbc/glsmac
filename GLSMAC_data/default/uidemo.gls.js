@@ -119,6 +119,26 @@
 		height: 60,
 		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
 	});
+	const child4 = parent.panel({
+		align: 'bottom left',
+		left: -10,
+		bottom: -10,
+		width: 60,
+		height: 60,
+		zindex: 0.4,
+		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
+	});
+
+	#async(300, () => {
+		if (child4.zindex == 0.4) {
+			child4.zindex = 0.6;
+		}
+		else {
+			child4.zindex = 0.4;
+		}
+		return true;
+	});
+
 	child1child2.background = '#00cc00';
 	child1child4.background = '#00ee00';
 
@@ -197,11 +217,7 @@
 	let visible = false;
 	#async(1000, () => {
 		visible = !visible;
-		if (visible) {
-			textcls1.color = '#ffff00ff';
-		} else {
-			textcls1.color = '#00000000';
-		}
+		textcls1.color = visible ? '#ffff00ff' : '#00000000';
 		return true;
 	});
 
@@ -470,25 +486,6 @@
 		return true;
 	});
 
-	const input = texts.panel({
-		align: 'center',
-		width: 300,
-		height: 120,
-	}).input({
-		align: 'bottom',
-		width: 300,
-		height: 20,
-		background: '#111116',
-		color: 'white',
-		font: ':16',
-		border: 'silver,2',
-	});
-
-	input.on('select', (e) => {
-		#print('SELECT', e);
-		return true;
-	});
-
 	const crpanel = texts.panel({
 		align: 'top center',
 		top: 100,
@@ -557,10 +554,20 @@
 				header_background: 'navy',
 				align: 'center',
 			});
+			#print( 'Window opened' );
 			window.text({
 				align: 'center',
 				text: 'WINDOW',
 				class: 'balltext',
+			});
+			let window_seconds = 0;
+			window.timer( 1000, () => {
+				window_seconds++;
+				#print( 'Window is open for ' + #to_string( window_seconds ) + ' seconds' );
+				return true;
+			});
+			window.on('remove', () => {
+				#print( 'Window is closed' );
 			});
 			const closebtn = window.button({
 				class: 'button1 button2 button-active',
@@ -572,11 +579,11 @@
 				text: 'CLOSE',
 			});
 			closebtn.on('click', (e) => {
-					window.remove();
-					window = null;
-					return true;
-				})
-			;
+				window.remove();
+				window = null;
+				return true;
+			});
+
 			const blockbtn = window.button({
 				class: 'button1 button2',
 				align: 'bottom left',
@@ -600,5 +607,275 @@
 		}
 		return true;
 	});
+
+	glsmac.ui.class('scroll_slider').set({
+		color: 'white',
+		text: '?',
+		background: '#660000',
+		_hover: {
+			background: '#aa0000',
+		},
+		_active: {
+			background: '#ff4444',
+		},
+	});
+
+	glsmac.ui.class('scroll_fromto').set({
+		color: 'white',
+		font: ':20',
+	});
+	glsmac.ui.class('scroll_from').extend('scroll_fromto').set({
+		text: '-1',
+		background: '#006600',
+		_hover: {
+			background: '#00aa00',
+		},
+		_active: {
+			background: '#44ff44',
+		},
+	});
+	glsmac.ui.class('scroll_to').extend('scroll_fromto').set({
+		text: '+1',
+		background: '#000066',
+		_hover: {
+			background: '#0000aa',
+		},
+		_active: {
+			background: '#4444ff',
+		},
+	});
+
+	glsmac.ui.class('scrollbar').set({
+		fromto_size: 20,
+		slider_size: 30,
+		background: '#666666',
+		class_from: 'scroll_from',
+		class_to: 'scroll_to',
+		class_slider: 'scroll_slider',
+		min: -1.0,
+		max: 1.0,
+		value: 0.0,
+		speed: 1.0,
+	});
+	glsmac.ui.class('vscrollbar').extend('scrollbar').set({
+		scroll_type: 'vertical',
+		width: 20,
+	});
+	glsmac.ui.class('hscrollbar').extend('scrollbar').set({
+		scroll_type: 'horizontal',
+		height: 20,
+	});
+	glsmac.ui.class('scrollvalue').set({
+		color: 'white',
+		font: ':16',
+	});
+
+	const vscroll = texts.scrollbar({
+		class: 'vscrollbar',
+		align: 'top left',
+		left: 30,
+		top: 50,
+		height: 200,
+	});
+	const vscrolltext = texts.text({
+		class: 'scrollvalue',
+		align: 'top left',
+		left: 30,
+		top: 30,
+		text: #to_string(vscroll.value),
+	});
+	vscroll.on('change', (e) => {
+		vscrolltext.text = #to_string(e.value);
+	});
+
+	const hscroll = texts.scrollbar({
+		class: 'hscrollbar',
+		align: 'top left',
+		left: 80,
+		top: 170,
+		width: 200,
+		height: 20,
+	});
+	const hscrolltext = texts.text({
+		class: 'scrollvalue',
+		align: 'top left',
+		left: 290,
+		top: 175,
+		text: #to_string(hscroll.value),
+	});
+	hscroll.on('change', (e) => {
+		hscrolltext.text = #to_string(e.value);
+	});
+
+	const scrollview = texts.scrollview({
+		align: 'top right',
+		top: 60,
+		right: 40,
+		height: 150,
+		width: 150,
+		background: '#aaaaff88',
+		vscroll_class: 'vscrollbar',
+		hscroll_class: 'hscrollbar',
+		padding: 10,
+	});
+
+	glsmac.ui.class('scrolltext').set({
+		color: 'white',
+		font: ':18',
+	});
+	const st = (left, top) => {
+		return scrollview.text({
+			class: 'scrolltext',
+			left: left,
+			top: top,
+			text: #to_string(left) + 'x' + #to_string(top),
+		})
+	};
+	st(50, 90);
+	st( 20, 40);
+	st(20, 142 );
+	st(300, 30);
+	st( 110, 50 );
+	st( 240, 130 );
+	const toremove = st( 30, 210 );
+
+	#async(3000, () => {
+		toremove.remove();
+	});
+
+	glsmac.ui.class('chattext').set({
+		font: ':16',
+		color: 'white',
+	});
+	const chat = texts.panel({
+		align: 'top center',
+		top: 400,
+		width: 300,
+		height: 150,
+	});
+	const chathistory = chat.listview({
+		align: 'top center',
+		top: 0,
+		left: 0,
+		right: 0,
+		bottom: 20,
+		background: '#111116',
+		vscroll_class: 'vscrollbar',
+		hscroll_class: 'hscrollbar',
+		scroll_type: 'vertical',
+		itemsize: 16,
+		padding: 6,
+		autoscroll: true,
+		has_hscroll: false,
+		max_items: 20,
+	});
+	const chatinput = chat.input({
+		class: 'chattext',
+		align: 'bottom',
+		width: 300,
+		height: 20,
+		background: '#111116',
+		border: 'silver,2',
+	});
+	let el = #undefined;
+	chatinput.on('input', (e) => {
+		if (e.value != '') {
+			el = chathistory.text({
+				class: 'chattext',
+				text: e.value,
+			});
+			#async(1500, () => {
+				if ( #is_defined(el) ) {
+					el.remove();
+					el = #undefined;
+				}
+			});
+			chatinput.value = '';
+		}
+		return true;
+	});
+	/*for (let i = 0 ; i < 50 ; i++) {
+		chathistory.text({
+			class: 'chattext',
+			text: 'LINE ' + #to_string( i ),
+		});
+	}*/
+
+	const recursive_parent = texts.panel({
+		align: 'bottom right',
+		bottom: 120,
+		right: 10,
+		width: 180,
+		height: 180,
+	});
+	const recursive_panel = (parent, depth) => {
+		const child = parent.panel({
+			background: '#44444422',
+			align: 'center',
+			top: depth,
+			bottom: depth,
+			left: depth,
+			right: depth,
+		});
+		if ( depth >= 10 ) {
+			return child;
+		}
+		else {
+			return recursive_panel( child, depth + 1 );
+		}
+	};
+	const rp = recursive_panel( recursive_parent, 0 );
+	rp.text({
+		align: 'center',
+		color: 'white',
+		font: ':16',
+		text: 'test text',
+	});
+
+	// button groups
+	glsmac.ui.class('groupbtn').set({
+		width: 40,
+		height: 20,
+		background: 'rgb(70,70,70)',
+		border: '#666666,2',
+		font: ':16',
+		color: 'white',
+		top: 5,
+		_hover: {
+			background: 'rgb(120,120,120)',
+		},
+		_active: {
+			background: 'white',
+			color: 'black',
+		},
+		group: 'default',
+	});
+	const gp = root.panel({
+		left: 150,
+		top: 90,
+		width: 137,
+		height: 30,
+		background: 'rgba(125,255,255,100)',
+	});
+	let gpleft = 5;
+	const f_gp_btn_add = ( name ) => {
+		const btn = gp.button({
+			class: 'groupbtn',
+			left: gpleft,
+			text: name,
+		});
+		btn.on( 'on', ( e ) => {
+			#print( name + ' ENABLED' );
+			return true;
+		});
+		btn.on( 'off', ( e ) => {
+			#print( name + ' DISABLED' );
+			return true;
+		});
+		gpleft += 44;
+	};
+	f_gp_btn_add( 'BTN1' );
+	f_gp_btn_add( 'BTN2' );
+	f_gp_btn_add( 'BTN3' );
 
 });

@@ -31,6 +31,7 @@ public:
 	static const void SetNextId( const size_t id );
 
 	Unit(
+		GSE_CALLABLE,
 		UnitManager* um,
 		const size_t id,
 		Def* def,
@@ -52,18 +53,22 @@ public:
 	health_t m_health;
 	bool m_moved_this_turn;
 
+	size_t m_animation_id = 0;
+
 	static const movement_t MINIMUM_MOVEMENT_TO_KEEP;
 	static const movement_t MINIMUM_HEALTH_TO_KEEP;
 	const bool HasMovesLeft() const;
 
 	const std::string& GetMoraleString() const;
 
-	void SetTile( map::tile::Tile* tile );
+	void SetTile( GSE_CALLABLE, map::tile::Tile* tile );
 
 	static const types::Buffer Serialize( const Unit* unit );
-	static Unit* Unserialize( types::Buffer& buf, UnitManager* um );
+	static Unit* Deserialize( GSE_CALLABLE, types::Buffer& buf, UnitManager* um );
 
 	WRAPDEFS_DYNAMIC( Unit );
+
+	WRAPDEF_SERIALIZABLE;
 
 private:
 	UnitManager* const m_um;

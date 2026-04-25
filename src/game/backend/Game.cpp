@@ -10,10 +10,6 @@
 #include "State.h"
 #include "game/backend/faction/Faction.h"
 #include "game/backend/faction/FactionManager.h"
-#include "map_editor/MapEditor.h"
-#include "event/FinalizeTurn.h"
-#include "event/TurnFinalized.h"
-#include "event/AdvanceTurn.h"
 #include "Random.h"
 #include "config/Config.h"
 #include "slot/Slots.h"
@@ -23,11 +19,10 @@
 #include "connection/Client.h"
 #include "map/Map.h"
 #include "map/Consts.h"
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/Array.h"
-#include "ui_legacy/UI.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/Array.h"
 #include "map/tile/TileManager.h"
 #include "map/tile/Tiles.h"
 #include "map/MapState.h"
@@ -43,6 +38,10 @@
 #include "base/PopDef.h"
 #include "base/Base.h"
 #include "animation/AnimationManager.h"
+#include "gc/Space.h"
+#include "game/backend/event/Event.h"
+#include "game/backend/event/EventHandler.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace backend {
@@ -59,13 +58,8 @@ response_map_data_t::~response_map_data_t() {
 	}
 };
 
-InvalidEvent::InvalidEvent( const std::string& reason, const event::Event* event )
-	: Exception(
-	"InvalidEvent", (std::string)
-		"Event validation failed!\n" +
-		TS_OFFSET + "reason: '" + reason + "'\n" +
-		TS_OFFSET + "event: " + event->ToString( TS_OFFSET )
-) {}
+Game::Game()
+	: gse::GCWrappable( nullptr ) {}
 
 common::mt_id_t Game::MT_Ping() {
 	MT_Request request = {};
@@ -74,16 +68,8 @@ common::mt_id_t Game::MT_Ping() {
 }
 
 common::mt_id_t Game::MT_Init( State* state ) {
-	MT_Request request = {};
+ 	MT_Request request = {};
 	request.op = OP_INIT;
-	request.data.init.state = state;
-	return MT_CreateRequest( request );
-}
-
-common::mt_id_t Game::MT_Chat( const std::string& message ) {
-	MT_Request request = {};
-	request.op = OP_CHAT;
-	NEW( request.data.save_map.path, std::string, message );
 	return MT_CreateRequest( request );
 }
 
@@ -109,17 +95,6 @@ common::mt_id_t Game::MT_SaveMap( const std::string& path ) {
 	return MT_CreateRequest( request );
 }
 
-common::mt_id_t Game::MT_EditMap( const types::Vec2< size_t >& tile_coords, map_editor::tool_type_t tool, map_editor::brush_type_t brush, map_editor::draw_mode_t draw_mode ) {
-	MT_Request request = {};
-	request.op = OP_EDIT_MAP;
-	request.data.edit_map.tile_x = tile_coords.x;
-	request.data.edit_map.tile_y = tile_coords.y;
-	request.data.edit_map.tool = tool;
-	request.data.edit_map.brush = brush;
-	request.data.edit_map.draw_mode = draw_mode;
-	return MT_CreateRequest( request );
-}
-
 common::mt_id_t Game::MT_GetFrontendRequests() {
 	MT_Request request = {};
 	request.op = OP_GET_FRONTEND_REQUESTS;
@@ -130,13 +105,6 @@ common::mt_id_t Game::MT_SendBackendRequests( const std::vector< BackendRequest 
 	MT_Request request = {};
 	request.op = OP_SEND_BACKEND_REQUESTS;
 	NEW( request.data.send_backend_requests.requests, std::vector< BackendRequest >, requests );
-	return MT_CreateRequest( request );
-}
-
-common::mt_id_t Game::MT_AddEvent( const event::Event* event ) {
-	MT_Request request = {};
-	request.op = OP_ADD_EVENT;
-	NEW( request.data.add_event.serialized_event, std::string, event::Event::Serialize( event ).ToString() );
 	return MT_CreateRequest( request );
 }
 
@@ -161,7 +129,7 @@ x( MT_LoadDump, OP_LOAD_DUMP )
 void Game::Start() {
 	MTModule::Start();
 
-	Log( "Starting thread" );
+	MTModule::Log( "Starting thread" );
 
 	m_game_state = GS_NONE;
 	m_init_cancel = false;
@@ -176,44 +144,21 @@ void Game::Start() {
 		m_random->SetState( config->GetQuickstartSeed() );
 	}
 
-	// init map editor
-	NEW( m_map_editor, map_editor::MapEditor, this );
-
-	NEW( m_tm, map::tile::TileManager, this );
-	NEW( m_rm, resource::ResourceManager, this );
-	NEW( m_um, unit::UnitManager, this );
-	NEW( m_bm, base::BaseManager, this );
-	NEW( m_am, animation::AnimationManager, this );
-
 }
 
 void Game::Stop() {
-	Log( "Stopping thread" );
+	MTModule::Log( "Stopping thread" );
 
 	if ( m_state ) {
-	   DELETE( m_state );
 	   m_state = nullptr;
-	   m_connection = nullptr;
 	}
 
 	ResetGame();
 
-	DELETE( m_map_editor );
-	m_map_editor = nullptr;
-
-	DELETE( m_tm );
 	m_tm = nullptr;
-
-	DELETE( m_rm );
 	m_rm = nullptr;
-
-	DELETE( m_um );
 	m_um = nullptr;
-
-	DELETE( m_bm );
 	m_bm = nullptr;
-
-	DELETE( m_am );
 	m_am = nullptr;
 
 	DELETE( m_pending_frontend_requests );
@@ -228,231 +173,368 @@ void Game::Stop() {
 void Game::Iterate() {
 	MTModule::Iterate();
 
-	try {
-		if ( m_state ) {
-			m_state->Iterate();
+	if ( m_state ) {
+		m_state->Iterate();
+	}
+
+	if ( m_game_state == GS_INITIALIZING ) {
+
+		ASSERT( m_state, "state is null" );
+
+		if ( !m_state->IsMaster() ) {
+			ASSERT( m_state->m_connection, "not master but no connection" );
+			// notify server of successful download and continue initialization
+			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
+			m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
 		}
 
-		if ( m_game_state == GS_INITIALIZING ) {
+		auto ec = m_map->Initialize( m_init_cancel );
+		if ( !ec && m_init_cancel ) {
+			ec = map::Map::EC_ABORTED;
+		}
 
-			bool ready = true;
-
-			ASSERT_NOLOG( m_state, "state is null" );
-
-			if ( m_state->IsMaster() ) {
-#ifdef DEBUG
-				static std::string waiting_for_players_old = "";
-				std::string waiting_for_players = "";
-#endif
-				for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-					if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.HasPlayerFlag( slot::PF_MAP_DOWNLOADED ) ) {
-						ready = false;
-#ifdef DEBUG
-						waiting_for_players += " " + slot.GetPlayer()->GetPlayerName();
-#else
-						break;
-#endif
-					}
-				}
+		if ( !ec ) {
 
 #ifdef DEBUG
-				if ( waiting_for_players != waiting_for_players_old ) {
-					waiting_for_players_old = waiting_for_players;
-					if ( !ready ) {
-						Log( "Waiting for players:" + waiting_for_players );
-					}
-				}
-#endif
+			const auto* config = g_engine->GetConfig();
+			// also handy to have dump of generated map
+			if (
+				!ec &&
+					config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
+					!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
+				) {
+				MTModule::Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
+				SetLoaderText( "Saving dump" );
+				util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
 			}
-			else {
-				// notify server of successful download and continue initialization
-				m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED );
-				m_connection->UpdateSlot( m_slot_num, m_slot, true );
-			}
-
-			if ( ready ) {
-
-				auto ec = m_map->Initialize( m_init_cancel );
-				if ( !ec && m_init_cancel ) {
-					ec = map::Map::EC_ABORTED;
-				}
-
-				const auto& f_init_failed = [ this ]( const std::string& error_text ) {
-					// need to delete these here because they weren't passed to main thread
-					if ( m_map->m_textures.terrain ) {
-						DELETE( m_map->m_textures.terrain );
-						m_map->m_textures.terrain = nullptr;
-					}
-					if ( m_map->m_meshes.terrain ) {
-						DELETE( m_map->m_meshes.terrain );
-						m_map->m_meshes.terrain = nullptr;
-					}
-					if ( m_map->m_meshes.terrain_data ) {
-						DELETE( m_map->m_meshes.terrain_data );
-						m_map->m_meshes.terrain_data = nullptr;
-					}
-
-					ResetGame();
-					m_initialization_error = error_text;
-
-					if ( m_old_map ) {
-						Log( "Restoring old map state" );
-						DELETE( m_map );
-						m_map = m_old_map; // restore old state // TODO: test
-					}
-
-					if ( m_connection ) {
-						m_connection->Disconnect( "Failed to initialize game" );
-					}
-				};
-
-				if ( !ec ) {
-
-#ifdef DEBUG
-					const auto* config = g_engine->GetConfig();
-					// also handy to have dump of generated map
-					if (
-						!ec &&
-							config->HasDebugFlag( config::Config::DF_MAPDUMP ) &&
-							!config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) // no point saving if we just loaded it
-						) {
-						Log( (std::string)"Saving map dump to " + config->GetDebugPath() + map::s_consts.debug.lastdump_filename );
-						SetLoaderText( "Saving dump" );
-						util::FS::WriteFile( config->GetDebugPath() + map::s_consts.debug.lastdump_filename, m_map->Serialize().ToString() );
-					}
 #endif
 
-					ASSERT( m_map, "map not set" );
+			ASSERT( m_map, "map not set" );
 
-					NEW( m_response_map_data, response_map_data_t );
+			NEW( m_response_map_data, response_map_data_t );
 
-					m_response_map_data->map_width = m_map->GetWidth();
-					m_response_map_data->map_height = m_map->GetHeight();
+			m_response_map_data->map_width = m_map->GetWidth();
+			m_response_map_data->map_height = m_map->GetHeight();
 
-					ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
-					m_response_map_data->terrain_texture = m_map->m_textures.terrain;
+			ASSERT( m_map->m_textures.terrain, "map terrain texture not generated" );
+			m_response_map_data->terrain_texture = m_map->m_textures.terrain;
 
-					ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
-					m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
+			ASSERT( m_map->m_meshes.terrain, "map terrain mesh not generated" );
+			m_response_map_data->terrain_mesh = m_map->m_meshes.terrain;
 
-					ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
-					m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
+			ASSERT( m_map->m_meshes.terrain_data, "map terrain data mesh not generated" );
+			m_response_map_data->terrain_data_mesh = m_map->m_meshes.terrain_data;
 
-					m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
-					m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
+			m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
+			m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-					for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
-						UpdateYields( tile );
+			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+				for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
+					UpdateYields( GSE_CALL, tile );
+				}
+			});
+
+			m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
+			m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
+
+			if ( m_old_map ) {
+				MTModule::Log( "Destroying old map state" );
+				DELETE( m_old_map );
+				m_old_map = nullptr;
+			}
+
+			// notify server of successful initialization
+			m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
+			if ( m_state->m_connection ) {
+				m_state->m_connection->UpdateSlot( m_slot_num, m_slot, true );
+			}
+
+			{
+				const auto factions = m_state->GetFM()->GetAll();
+				NEWV( faction_defines, FrontendRequest::faction_defines_t );
+				for ( const auto& faction : factions ) {
+					faction_defines->push_back( faction );
+				}
+				auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
+				fr.data.faction_define.factiondefs = faction_defines;
+				AddFrontendRequest( fr );
+			}
+
+			{
+				const auto& slots = m_state->m_slots->GetSlots();
+				NEWV( slot_defines, FrontendRequest::slot_defines_t );
+				for ( const auto& slot : slots ) {
+					if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
+						continue;
 					}
-					m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
-
-					m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
-
-					if ( m_old_map ) {
-						Log( "Destroying old map state" );
-						DELETE( m_old_map );
-						m_old_map = nullptr;
-					}
-
-					// notify server of successful initialization
-					m_slot->SetPlayerFlag( slot::PF_GAME_INITIALIZED );
-					if ( m_connection ) {
-						m_connection->UpdateSlot( m_slot_num, m_slot, true );
-					}
-
-					{
-						const auto factions = m_state->GetFM()->GetAll();
-						auto* faction_defines = new FrontendRequest::faction_defines_t();
-						for ( const auto& faction : factions ) {
-							faction_defines->push_back( faction );
+					ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
+					auto* player = slot.GetPlayer();
+					ASSERT( player, "slot player not set" );
+					ASSERT( player->GetFaction(), "slot player faction not set" );
+					slot_defines->push_back(
+						FrontendRequest::slot_define_t{
+							slot.GetIndex(),
+							player->GetFaction()->m_id
 						}
-						auto fr = FrontendRequest( FrontendRequest::FR_FACTION_DEFINE );
-						fr.data.faction_define.factiondefs = faction_defines;
-						AddFrontendRequest( fr );
+					);
+				}
+				auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
+				fr.data.slot_define.slotdefs = slot_defines;
+				AddFrontendRequest( fr );
+			}
+
+			HideLoader();
+
+			m_game_state = GS_STARTING;
+
+			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+
+				if ( m_state->IsMaster() ) {
+					try {
+						m_state->TriggerObject(
+							this, "create_world", ARGS_F( this ) {
+								{
+									"game",
+									Wrap( GSE_CALL )
+								},
+							}; }
+						);
+						InitComplete( GSE_CALL );
 					}
-
-					{
-						const auto& slots = m_state->m_slots->GetSlots();
-						auto* slot_defines = new FrontendRequest::slot_defines_t();
-						for ( const auto& slot : slots ) {
-							if ( slot.GetState() == slot::Slot::SS_OPEN || slot.GetState() == slot::Slot::SS_CLOSED ) {
-								continue;
-							}
-							ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "unknown slot state: " + std::to_string( slot.GetState() ) );
-							auto* player = slot.GetPlayer();
-							ASSERT( player, "slot player not set" );
-							slot_defines->push_back(
-								FrontendRequest::slot_define_t{
-									slot.GetIndex(),
-									player->GetFaction()->m_id
-								}
-							);
-						}
-						auto fr = FrontendRequest( FrontendRequest::FR_SLOT_DEFINE );
-						fr.data.slot_define.slotdefs = slot_defines;
-						AddFrontendRequest( fr );
+					catch ( const gse::Exception& e ) {
+						MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
+						InitFailed( e.what() );
+						return;
 					}
-
-					// start main loop
-					m_game_state = GS_RUNNING;
-
 					if ( m_game_state == GS_RUNNING ) {
-
-						HideLoader();
-
-						m_um->ProcessUnprocessed();
-						m_bm->ProcessUnprocessed();
-
-						for ( auto& it : m_unprocessed_events ) {
-							ASSERT( m_connection, "connection not set" );
-							try {
-								ValidateEvent( it );
-							}
-							catch ( const InvalidEvent& e ) {
-								for ( auto& it2 : m_unprocessed_events ) {
-									delete it2;
-								}
-								m_unprocessed_events.clear();
-								throw e;
-							}
-						}
-						for ( auto& it : m_unprocessed_events ) {
-							ProcessEvent( it );
-						}
-						m_unprocessed_events.clear();
-
-						if ( m_state->IsMaster() ) {
-							try {
-								m_state->m_bindings->Trigger( this, "start", {
-									{
-										"game",
-										Wrap()
-									},
-								});
-							}
-							catch ( gse::Exception& e ) {
-								Log( (std::string)"Initialization failed: " + e.ToString() );
-								f_init_failed( e.what() );
-							}
-							GlobalAdvanceTurn();
-						}
-						CheckTurnComplete();
-
+						FirstTurn( GSE_CALL );
 					}
 				}
 				else {
-					f_init_failed( map::Map::GetErrorString( ec ) );
+					InitComplete( GSE_CALL );
 				}
-			}
+
+				if ( m_game_state == GS_RUNNING ) {
+					CheckTurnComplete();
+				}
+
+			});
+
+		}
+		else {
+			InitFailed( map::Map::GetErrorString( ec ) );
 		}
 	}
-	catch ( const InvalidEvent& e ) {
-		Log( (std::string)e.what() );
-		Quit( "Event validation error" ); // TODO: fix reason
+	if ( m_state ) {
+
+		m_state->m_gc_space->Accumulate( this, [ this ]() {
+
+			{
+				std::lock_guard guard( m_pending_event_responses_mutex );
+				for ( const auto& it : m_pending_event_responses ) {
+					std::lock_guard guard2( m_events_waiting_for_responses_mutex );
+					ASSERT( m_events_waiting_for_responses.find( it.event_id ) != m_events_waiting_for_responses.end(), "event for response not found" );
+					const auto& event_data = m_events_waiting_for_responses.at( it.event_id );
+					const auto* const event = event_data.event;
+					const bool was_event_applied = m_state->IsMaster() || ( m_state->IsSlave() && event->GetSource() != event::Event::ES_LOCAL );
+					if ( !it.is_accepted ) {
+						if ( was_event_applied ) {
+							// event was rejected, rollback
+							m_state->WithGSE(
+								this, [ this, event_data, event ]( GSE_CALLABLE ) {
+									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+									if ( event_data.rollback_data ) {
+										obj->Set( "applied", event_data.rollback_data, GSE_CALL );
+									}
+									const auto fargs = gse::value::function_arguments_t{ obj };
+									event::EventHandler* h = nullptr;
+									{
+										std::lock_guard guard( m_event_handlers_mutex );
+										const auto& it = m_event_handlers.find( event->GetEventName() );
+										if ( it != m_event_handlers.end() ) {
+											h = it->second;
+										}
+										else {
+											MTModule::Log( "WARNING: tried to rollback event '" + event->GetEventName() + ", but found no handler" );
+										}
+									}
+									if ( h ) {
+										WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+											h->Rollback( GSE_CALL, fargs );
+										});
+									}
+								}
+							);
+						}
+					}
+					else {
+						// event was accepted (and maybe resolved)
+						if ( !was_event_applied ) {
+							m_state->WithGSE(
+								this, [ this, it, event ]( GSE_CALLABLE ) {
+									auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+									if ( it.resolved ) {
+										obj->Set( "resolved", it.resolved, GSE_CALL );
+									}
+									const auto fargs = gse::value::function_arguments_t{ obj };
+									event::EventHandler* h = nullptr;
+									{
+										std::lock_guard guard( m_event_handlers_mutex );
+										const auto& it2 = m_event_handlers.find( event->GetEventName() );
+										if ( it2 != m_event_handlers.end() ) {
+											h = it2->second;
+										}
+										else {
+											MTModule::Log( "WARNING: tried to apply event '" + event->GetEventName() + ", but found no handler" );
+										}
+									}
+									if ( h ) {
+										WithRW( [ &h, &ctx, &gc_space, &si, &ep, &fargs ]() {
+											h->Apply( GSE_CALL, fargs );
+										});
+									}
+								}
+							);
+						}
+					}
+					m_events_waiting_for_responses.erase( it.event_id );
+				}
+				m_pending_event_responses.clear();
+			}
+
+			std::vector< event::Event* > events;
+			{
+				std::lock_guard guard( m_pending_events_mutex );
+				events = m_pending_events;
+				m_pending_events.clear();
+			}
+			if ( !events.empty() ) {
+				m_state->WithGSE( this, [ this, events ]( GSE_CALLABLE ) {
+					const std::string* errptr = nullptr;
+					for ( const auto& event : events ) {
+#if defined(DEBUG) || defined(FASTDEBUG)
+						MTModule::Log( "Processing event: " + event->ToString() );
+#endif
+						auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
+						const auto fargs = gse::value::function_arguments_t{ obj };
+						event::EventHandler* handler = nullptr;
+						{
+							std::lock_guard guard( m_event_handlers_mutex );
+							const auto& it = m_event_handlers.find( event->GetEventName() );
+							handler = it != m_event_handlers.end()
+								? it->second
+								: nullptr;
+						}
+						if ( handler ) {
+							errptr = handler->Validate( GSE_CALL, fargs );
+						}
+						else {
+							errptr = new std::string( "Unknown event: " + event->GetEventName() );
+						}
+						if ( !errptr ) {
+
+							const auto f_process = [ &handler, &fargs, &gc_space, &ctx, &si, &ep, &obj ] () {
+								auto* applied = handler->Apply( GSE_CALL, fargs );
+								if ( applied ) {
+									obj->Set( "applied", applied, GSE_CALL );
+								}
+								return applied;
+							};
+
+							if ( m_state->IsMaster() ) { // either singleplayer or multiplayer host
+								ASSERT( event->GetSource() != event::Event::ES_SERVER, "got event from server to server" );
+								// process event
+								gse::Value* resolved = nullptr;
+								if ( handler->HasResolve() ) {
+									resolved = handler->Resolve( GSE_CALL, fargs );
+									if ( resolved ) {
+										event->SetResolved( resolved );
+										obj->Set( "resolved", resolved, GSE_CALL );
+									}
+								}
+								if ( m_state->m_connection ) {
+									if ( event->GetCaller() != 0 ) {
+										// notify caller of acceptance
+										m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), true, resolved );
+									}
+									// broadcast to clients
+									ASSERT( m_state->m_connection->IsServer(), "master but not server" );
+									m_state->m_connection->SendGameEvent( event );
+								}
+								WithRW( f_process );
+							}
+							else { // multiplayer non-host
+								ASSERT( event->GetSource() != event::Event::ES_CLIENT, "got event from client to client" );
+								ASSERT( m_state->m_connection, "not master but no connection" );
+								bool process_now = false;
+								if ( handler->HasResolve() ) {
+									if ( event->GetSource() == event::Event::ES_LOCAL ) {
+										// just send to server and wait for resolution
+										ASSERT( !event->GetResolved(), "client event already resolved" );
+										process_now = false;
+									}
+									else {
+										// resolution came from server
+										auto* const resolved = event->GetResolved();
+										ASSERT( resolved, "server sent unresolved event" );
+										obj->Set( "resolved", resolved, GSE_CALL );
+										process_now = true;
+									}
+								}
+								else {
+									process_now = true;
+								}
+								gse::Value* rollback_data = nullptr;
+								if ( process_now ) {
+									WithRW( [ &f_process, &rollback_data ](){
+										rollback_data = f_process();
+									} );
+								}
+								if ( event->GetSource() == event::Event::ES_LOCAL ) {
+									std::lock_guard guard( m_events_waiting_for_responses_mutex );
+									// send to server and wait for response asynchonously
+									ASSERT( m_events_waiting_for_responses.find( event->GetId() ) == m_events_waiting_for_responses.end(), "event already waiting for response" );
+									m_events_waiting_for_responses.insert(
+										{
+											event->GetId(),
+											{
+												event,
+												rollback_data
+											}
+										}
+									);
+									m_state->m_connection->SendGameEvent( event );
+								}
+							}
+						}
+						else {
+							MTModule::Log( "Event rejected: " + *errptr );
+							if ( m_state->m_connection && m_state->IsMaster() ) {
+								if ( event->GetCaller() != 0 ) {
+									// notify caller of rejection
+									m_state->m_connection->AsServer()->SendGameEventResponse( event->GetCaller(), event->GetId(), false, nullptr );
+								}
+							}
+							delete ( errptr );
+						}
+					}
+				});
+			}
+		});
 	}
-	m_um->PushUpdates();
-	m_bm->PushUpdates();
-	m_tm->ProcessTileLockRequests();
+	if ( m_um ) {
+		m_um->PushUpdates();
+	}
+	if ( m_bm ) {
+		m_bm->PushUpdates();
+	}
+	if ( m_tm ) {
+		m_tm->ProcessTileLockRequests();
+	}
+}
+
+const bool Game::IsStarted() const {
+	return m_game_state != GS_NONE;
 }
 
 Random* Game::GetRandom() const {
@@ -460,6 +542,7 @@ Random* Game::GetRandom() const {
 }
 
 map::Map* Game::GetMap() const {
+	ASSERT( m_map, "backend game map is null" );
 	return m_map;
 }
 
@@ -470,8 +553,8 @@ State* Game::GetState() const {
 
 const Player* Game::GetPlayer() const {
 	ASSERT( m_state, "state not set" );
-	if ( m_connection ) {
-		return m_connection->GetPlayer();
+	if ( m_state->m_connection ) {
+		return m_state->m_connection->GetPlayer();
 	}
 	else {
 		return m_state->m_slots->GetSlot( 0 ).GetPlayer();
@@ -500,65 +583,469 @@ void Game::HideLoader() {
 	AddFrontendRequest( fr );
 }
 
+void Game::AddEvent( event::Event* const event ) {
+	std::lock_guard guard( m_pending_events_mutex );
+	m_pending_events.push_back( event );
+}
+
+void Game::AddEventResponse( const std::string& event_id, const bool result, gse::Value* const resolved ) {
+	std::lock_guard guard( m_pending_event_responses_mutex );
+	m_pending_event_responses.push_back({
+		event_id,
+		result,
+		resolved
+	});
+}
+
+void Game::ClearEvents() {
+	std::lock_guard guard( m_event_handlers_mutex );
+/*#if defined( DEBUG ) || defined( FASTDEBUG )
+	for ( const auto& it : m_event_handlers ) {
+		g_engine->Log( "Removing event: \"" + it.first + "\"" );
+	}
+#endif*/
+	m_event_handlers.clear();
+}
+
+void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& args ) {
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		const auto& it = m_event_handlers.find( name );
+		if ( it == m_event_handlers.end() ) {
+			return;
+		}
+	}
+	AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args ) );
+}
+
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
+	WRAPIMPL_CUSTOM_SETTERS
 		{
-			"year",
-			VALUE( gse::type::Int, 2100/*tmp*/ + m_current_turn.GetId() )
+			"is_master",
+			NATIVE_CALL( this ) {
+				return VALUE( gse::value::Bool, , m_state->IsMaster() );
+			} ),
+		},
+		{
+			"is_slave",
+			NATIVE_CALL( this ) {
+			return VALUE( gse::value::Bool, , m_state->IsSlave() );
+		} ),
 		},
 		{
 			"random",
-			m_random->Wrap()
+			m_random->Wrap( GSE_CALL, true )
 		},
 		{
-			"tm",
-			m_tm->Wrap()
-		},
-		{
-			"rm",
-			m_rm->Wrap()
-		},
-		{
-			"um",
-			m_um->Wrap()
-		},
-		{
-			"bm",
-			m_bm->Wrap(),
-		},
-		{
-			"am",
-			m_am->Wrap()
-		},
-		{
-		"message",
+			"message",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( text, 0, String );
 				Message( text );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			})
+		},
+		{
+			"get_player",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS_MIN_MAX( 0, 1 );
+				size_t slot_id = m_slot_num;
+				if ( arguments.size() > 0 ) {
+					N_GETVALUE( id, 0, Int );
+					slot_id = id;
+				}
+				auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id < slots.size() ) {
+					auto& slot = slots.at( slot_id );
+					return slot.Wrap( GSE_CALL );
+				}
+				GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+			}),
 		},
 		{
 			"get_players",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				auto& slots = m_state->m_slots->GetSlots();
-				gse::type::array_elements_t elements = {};
+				gse::value::array_elements_t elements = {};
 				for ( auto& slot : slots ) {
 					const auto state = slot.GetState();
 					if ( state == slot::Slot::SS_OPEN || state == slot::Slot::SS_CLOSED ) {
 						continue; // skip
 					}
-					elements.push_back( slot.Wrap() );
+					elements.push_back( slot.Wrap( GSE_CALL ) );
 				}
-				return VALUE( gse::type::Array, elements );
+				return VALUE( gse::value::Array,, elements );
+			} )
+		},
+		{
+			"get_turn",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::Int,, m_current_turn.GetId() );
+			} )
+		},
+		{
+			"get_year",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::Int,, m_current_turn.GetId() + 2100 /* TODO: better way to define starting year? */ );
+			} )
+		},
+		{
+			"is_turn_complete",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				ASSERT( slot.GetState() != slot::Slot::SS_PLAYER || slot.GetPlayer(), "player is null" );
+				return VALUE( gse::value::Bool,,
+					slot.GetState() == slot::Slot::SS_PLAYER
+						? slot.GetPlayer()->IsTurnCompleted()
+						: true // ai has always turn completed during turns of players
+				);
+			} )
+		},
+		{
+			"complete_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
+				}
+				ASSERT( slot.GetPlayer(), "player is null" );
+				ASSERT( !slot.GetPlayer()->IsTurnCompleted(), "player turn already completed" );
+				CompleteTurn( GSE_CALL, slot_id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"uncomplete_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( slot_id, 0, Int );
+
+				const auto& slots = m_state->m_slots->GetSlots();
+				if ( slot_id >= slots.size() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " not found" );
+				}
+
+				const auto& slot = slots.at( slot_id );
+				if ( slot.GetState() != slot::Slot::SS_PLAYER ) {
+					GSE_ERROR( gse:: EC.GAME_ERROR, "Player id " + std::to_string( slot_id ) + " is not player" );
+				}
+				ASSERT( slot.GetPlayer(), "player is null" );
+				ASSERT( slot.GetPlayer()->IsTurnCompleted(), "player turn not completed" );
+				UncompleteTurn( slot_id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"advance_turn",
+			NATIVE_CALL( this ) {
+
+				CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( turn_id, 0, Int );
+
+				AdvanceTurn( turn_id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"get_settings", // deprecated
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				return m_state->m_settings.Wrap( GSE_CALL, true );
+			} )
+		},
+		{
+			"get_map",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_map ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Map not initialized" );
+				}
+				return m_map->Wrap( GSE_CALL, true );
+			} )
+		},
+		{
+			"register_event",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( name, 0, String );
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					if ( m_event_handlers.find( name ) != m_event_handlers.end() ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Event already registered: " + name );
+					}
+				}
+				N_GETVALUE( def, 1, Object );
+				auto validate_it = def.find( "validate" );
+				if ( validate_it == def.end() || validate_it->second->type != gse::VT_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide validate method" );
+				}
+				gse::value::Callable* resolve = nullptr;
+				auto resolve_it = def.find( "resolve" );
+				if ( resolve_it != def.end() ) {
+					if ( resolve_it->second->type != gse::VT_CALLABLE ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide resolve method" );
+					}
+					resolve = (gse::value::Callable*)resolve_it->second;
+				}
+				auto apply_it = def.find( "apply" );
+				if ( apply_it == def.end() || apply_it->second->type != gse::VT_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide apply method" );
+				}
+				auto rollback_it = def.find( "rollback" );
+				if ( rollback_it == def.end() || rollback_it->second->type != gse::VT_CALLABLE ) {
+					GSE_ERROR( gse::EC.INVALID_HANDLER, "Event handler does not provide rollback method" );
+				}
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					m_event_handlers.insert(
+						{ name, new event::EventHandler(
+							gc_space, name,
+							(gse::value::Callable*)validate_it->second,
+							resolve,
+							(gse::value::Callable*)apply_it->second,
+							(gse::value::Callable*)rollback_it->second
+						) }
+					);
+				}
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"event",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( name, 0, String );
+				{
+					std::lock_guard guard( m_event_handlers_mutex );
+					const auto& it = m_event_handlers.find( name );
+					if ( it == m_event_handlers.end() ) {
+						GSE_ERROR( gse::EC.INVALID_HANDLER, "Unknown event: " + name );
+					}
+				}
+				N_GET( args, 1, Object );
+				if ( !args->object_class.empty() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Invalid event data - expected: primitive object, found: " + args->object_class );
+				}
+				AddEvent( new event::Event( this, event::Event::ES_LOCAL, m_slot_num, GSE_CALL, name, args->value ) );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"get_fm",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return m_state
+					? m_state->GetFM()->Wrap( GSE_CALL, true )
+					: VALUE( gse::value::Undefined )
+					;
+			} )
+		},
+#define X( _x ) \
+		{ \
+			"get_" # _x, \
+			NATIVE_CALL( this ) { \
+				N_EXPECT_ARGS( 0 ); \
+				return m_##_x \
+					? m_##_x->Wrap( GSE_CALL, true ) \
+					: VALUE( gse::value::Undefined ) \
+					; \
+			} ) \
+		},
+		X( um )
+		X( bm )
+		X( rm )
+		X( tm )
+#undef X
+		{
+			"is_started",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::Bool,, m_game_state != GS_NONE );
+			} )
+		},
+		{
+			"select_tile",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( tile, 0, map::tile::Tile );
+				auto fr = FrontendRequest( FrontendRequest::FR_TILE_SELECT );
+				fr.data.tile_select.x = tile->coord.x;
+				fr.data.tile_select.y = tile->coord.y;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"select_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( unit, 0, unit::Unit );
+				auto fr = FrontendRequest( FrontendRequest::FR_UNIT_SELECT );
+				fr.data.unit_select.unit_id = unit->m_id;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"select_base",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE_UNWRAP( base, 0, base::Base );
+				auto fr = FrontendRequest( FrontendRequest::FR_BASE_SELECT );
+				fr.data.base_select.base_id = base->m_id;
+				AddFrontendRequest( fr );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};
+	if ( m_tm ) {
+		properties.insert(
+			{
+				"tm",
+				m_tm->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_rm ) {
+		properties.insert(
+			{
+				"rm",
+				m_rm->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_um ) {
+		properties.insert(
+			{
+				"um",
+				m_um->Wrap( GSE_CALL, true )
+			}
+		);
+	}
+	if ( m_bm ) {
+		properties.insert(
+
+			{
+				"bm",
+				m_bm->Wrap( GSE_CALL, true ),
+			}
+		);
+	}
+	if ( m_am ) {
+		properties.insert(
+			{
+				"am",
+				m_am->Wrap( GSE_CALL, true )
+			}
+		);
+	}
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Game )
+
+void Game::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Game" );
+
+	if ( m_tm ) {
+		GC_REACHABLE( m_tm );
+	}
+	if ( m_rm ) {
+		GC_REACHABLE( m_rm );
+	}
+	if ( m_um ) {
+		GC_REACHABLE( m_um );
+	}
+	if ( m_bm ) {
+		GC_REACHABLE( m_bm );
+	}
+	if ( m_am ) {
+		GC_REACHABLE( m_am );
+	}
+
+	if ( m_map ) {
+		GC_REACHABLE( m_map );
+	}
+
+	GC_DEBUG_BEGIN( "events" );
+	{
+		std::lock_guard guard( m_pending_events_mutex );
+		for ( const auto& event : m_pending_events ) {
+			GC_REACHABLE( event );
+		}
+	}
+	GC_DEBUG_END();
+
+	GC_DEBUG_BEGIN( "event_handlers" );
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		for ( const auto& it : m_event_handlers ) {
+			GC_REACHABLE( it.second );
+		}
+	}
+	GC_DEBUG_END();
+
+	if ( !m_events_waiting_for_responses.empty() ) {
+		std::lock_guard guard( m_events_waiting_for_responses_mutex );
+		GC_DEBUG_BEGIN( "events_waiting_for_responses" );
+		for ( const auto& it : m_events_waiting_for_responses ) {
+			GC_REACHABLE( it.second.event );
+			if ( it.second.rollback_data ) {
+				GC_REACHABLE( it.second.rollback_data );
+			}
+		}
+		GC_DEBUG_END();
+	}
+
+	if ( !m_pending_event_responses.empty() ) {
+		std::lock_guard guard( m_pending_event_responses_mutex );
+		GC_DEBUG_BEGIN( "pending_event_responses" );
+		for ( const auto& it : m_pending_event_responses ) {
+			if ( it.resolved ) {
+				GC_REACHABLE( it.resolved );
+			}
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
+}
 
 const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE ) {
 	MT_Response response = {};
@@ -566,16 +1053,31 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 
 	switch ( request.op ) {
 		case OP_INIT: {
-			//Log( "Got init request" );
-			ASSERT( request.data.init.state, "state not set" );
-			m_state = request.data.init.state;
-			m_state->SetGame( this );
+			//MTModule::Log( "Got init request" );
+
+			ASSERT( m_state, "state not set" );
+
+			m_state->WithGSE(
+				this,
+				[ this ]( GSE_CALLABLE ) {
+					m_state->TriggerObject(
+						this, "initialize", ARGS_F( this ) {
+							{
+								"game",
+								Wrap( GSE_CALL )
+							}
+						}; }
+					);
+				}
+			);
+			//m_state->SetGame( this );
+
 			InitGame( response, MT_C );
 			response.data.init.slot_index = m_slot_num;
 			break;
 		}
 		case OP_GET_MAP_DATA: {
-			//Log( "Got get-map-data request" );
+			//MTModule::Log( "Got get-map-data request" );
 			if ( m_game_state != GS_RUNNING ) {
 				if ( m_initialization_error.empty() ) {
 					response.result = R_PENDING;
@@ -589,6 +1091,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				response.result = R_SUCCESS;
 				response.data.get_map_data = m_response_map_data;
 				m_response_map_data = nullptr;
+				// ownership transferred to frontend
+				m_map->m_textures.terrain = nullptr;
+				m_map->m_meshes.terrain = nullptr;
+				m_map->m_meshes.terrain_data = nullptr;
 			}
 			else if ( m_init_cancel ) {
 				response.result = R_ABORTED;
@@ -600,18 +1106,18 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_RESET: {
-			//Log( "Got reset request" );
+			//MTModule::Log( "Got reset request" );
 			ResetGame();
 			response.result = R_SUCCESS;
 			break;
 		}
 		case OP_PING: {
-			//Log( "Got ping request" );
+			//MTModule::Log( "Got ping request" );
 			response.result = R_SUCCESS;
 			break;
 		}
 		case OP_SAVE_MAP: {
-			//Log( "got save map request" );
+			//MTModule::Log( "got save map request" );
 			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
@@ -624,74 +1130,10 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			}
 			break;
 		}
-		case OP_EDIT_MAP: {
-			//Log( "got edit map request" );
-
-			m_map_editor->SelectTool( request.data.edit_map.tool );
-			m_map_editor->SelectBrush( request.data.edit_map.brush );
-			const auto tiles_to_reload = m_map_editor->Draw( m_map->GetTile( request.data.edit_map.tile_x, request.data.edit_map.tile_y ), request.data.edit_map.draw_mode );
-
-			if ( !tiles_to_reload.empty() ) {
-				auto* graphics = g_engine->GetGraphics();
-
-				m_map->m_sprite_actors_to_add.clear();
-				m_map->m_sprite_instances_to_remove.clear();
-				m_map->m_sprite_instances_to_add.clear();
-
-				graphics->Lock(); // needed to avoid tearing artifacts
-				m_map->LoadTiles( tiles_to_reload, MT_C );
-				m_map->FixNormals( tiles_to_reload, MT_C );
-				graphics->Unlock();
-
-				typedef std::unordered_map< std::string, map::sprite_actor_t > t1; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.actors_to_add, t1 );
-				*response.data.edit_map.sprites.actors_to_add = m_map->m_sprite_actors_to_add;
-
-				typedef std::unordered_map< size_t, std::string > t2; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.instances_to_remove, t2 );
-				*response.data.edit_map.sprites.instances_to_remove = m_map->m_sprite_instances_to_remove;
-
-				typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > t3; // can't use comma in macro below
-				NEW( response.data.edit_map.sprites.instances_to_add, t3 );
-				*response.data.edit_map.sprites.instances_to_add = m_map->m_sprite_instances_to_add;
-
-				// TODO: remove invalid units and terraforming
-
-				auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
-				NEWV( tile_updates, FrontendRequest::tile_updates_t );
-				tile_updates->reserve( tiles_to_reload.size() );
-				for ( const auto& tile : tiles_to_reload ) {
-					tile_updates->push_back(
-						{
-							tile,
-							m_map->GetTileState( tile )
-						}
-					);
-				}
-				fr.data.update_tiles.tile_updates = tile_updates;
-				AddFrontendRequest( fr );
-			}
-
-			response.result = R_SUCCESS;
-			break;
-		}
-		case OP_CHAT: {
-			Log( "got chat message request: " + *request.data.chat.message );
-
-			if ( m_connection ) {
-				m_connection->SendMessage( *request.data.chat.message );
-			}
-			else {
-				Message( "<" + m_player->GetPlayerName() + "> " + *request.data.chat.message );
-			}
-
-			response.result = R_SUCCESS;
-			break;
-		}
 		case OP_GET_FRONTEND_REQUESTS: {
-			//Log( "got events request" );
+			//MTModule::Log( "got events request" );
 			if ( !m_pending_frontend_requests->empty() ) {
-				Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
+				//MTModule::Log( "Sending " + std::to_string( m_pending_frontend_requests->size() ) + " events to frontend" );
 				response.data.get_frontend_requests.requests = m_pending_frontend_requests; // will be destroyed in DestroyResponse
 				NEW( m_pending_frontend_requests, std::vector< FrontendRequest > ); // reset
 			}
@@ -703,10 +1145,13 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 		}
 		case OP_SEND_BACKEND_REQUESTS: {
 			try {
+				auto* gc_space = GetGCSpace();
 				for ( const auto& r : *request.data.send_backend_requests.requests ) {
 					switch ( r.type ) {
 						case BackendRequest::BR_ANIMATION_FINISHED: {
-							m_am->FinishAnimation( r.data.animation_finished.animation_id );
+							gc_space->Accumulate( this, [ this, &r ] () {
+								m_am->FinishAnimation( r.data.animation_finished.animation_id );
+							});
 							break;
 						}
 						default:
@@ -715,7 +1160,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 				}
 				response.result = R_SUCCESS;
 			}
-			catch ( gse::Exception& e ) {
+			catch ( const gse::Exception& e ) {
 				OnGSEError( e );
 				response.result = R_ERROR;
 			}
@@ -726,25 +1171,20 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			break;
 		}
 		case OP_ADD_EVENT: {
-			const std::string* errmsg = nullptr;
-			event::Event* event = nullptr;
-			auto buf = types::Buffer( *request.data.add_event.serialized_event );
-			event = event::Event::Unserialize( buf );
-			if ( !m_current_turn.IsActive() && event->m_type != event::Event::ET_UNCOMPLETE_TURN ) {
-				errmsg = new std::string( "Turn not active" );
-			}
-			else {
-				errmsg = event->Validate( this );
-			}
-			if ( errmsg ) {
-				// log and do nothing
-				Log( "Event declined: " + *errmsg );
-				delete errmsg;
-				delete event;
-			}
-			else {
-				AddEvent( event );
-			}
+			THROW( "deprecated: OP_ADD_EVENT" );
+			/*m_state->WithGSE( [ this, &event, &errmsg, &buf ]( GSE_CALLABLE ) {
+				event = event::Event::Deserialize( GSE_CALL, buf );
+				errmsg = event->Validate( GSE_CALL, this );
+				if ( errmsg ) {
+					// log and do nothing
+					MTModule::Log( "Event declined: " + *errmsg );
+					delete errmsg;
+					delete event;
+				}
+				else {
+					AddEvent( GSE_CALL, event );
+				}
+			});*/
 			break;
 		}
 		default: {
@@ -760,12 +1200,6 @@ void Game::DestroyRequest( const MT_Request& request ) {
 		case OP_SAVE_MAP: {
 			if ( request.data.save_map.path ) {
 				DELETE( request.data.save_map.path );
-			}
-			break;
-		}
-		case OP_CHAT: {
-			if ( request.data.chat.message ) {
-				DELETE( request.data.chat.message );
 			}
 			break;
 		}
@@ -799,18 +1233,6 @@ void Game::DestroyResponse( const MT_Response& response ) {
 				}
 				break;
 			}
-			case OP_EDIT_MAP: {
-				if ( response.data.edit_map.sprites.actors_to_add ) {
-					DELETE( response.data.edit_map.sprites.actors_to_add );
-				}
-				if ( response.data.edit_map.sprites.instances_to_remove ) {
-					DELETE( response.data.edit_map.sprites.instances_to_remove );
-				}
-				if ( response.data.edit_map.sprites.instances_to_add ) {
-					DELETE( response.data.edit_map.sprites.instances_to_add );
-				}
-				break;
-			}
 			case OP_GET_FRONTEND_REQUESTS: {
 				if ( response.data.get_frontend_requests.requests ) {
 					DELETE( response.data.get_frontend_requests.requests );
@@ -825,9 +1247,13 @@ void Game::DestroyResponse( const MT_Response& response ) {
 }
 
 void Game::Message( const std::string& text ) {
-	auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
-	NEW( fr.data.global_message.message, std::string, text );
-	AddFrontendRequest( fr );
+	m_state->WithGSE( this, [ this, text ]( GSE_CALLABLE ){
+		m_state->TriggerObject(
+			this, "message", ARGS_F( text ) {
+				{ "text", VALUE( gse::value::String,, text ) }
+			}; }
+		);
+	});
 }
 
 void Game::Quit( const std::string& reason ) {
@@ -843,31 +1269,15 @@ void Game::OnError( std::runtime_error& err ) {
 	AddFrontendRequest( fr );
 }
 
-void Game::OnGSEError( gse::Exception& err ) {
+void Game::OnGSEError( const gse::Exception& err ) {
 	auto fr = FrontendRequest( FrontendRequest::FR_ERROR );
 	NEW( fr.data.error.what, std::string, (std::string)"Script error: " + err.what() );
 	NEW( fr.data.error.stacktrace, std::string, err.ToString() );
 	AddFrontendRequest( fr );
 }
 
-const gse::Value Game::AddEvent( event::Event* event ) {
-	ASSERT( event->m_initiator_slot == m_slot_num, "initiator slot mismatch" );
-	if ( m_connection ) {
-		m_connection->SendGameEvent( event );
-	}
-	if ( m_state->IsMaster() ) {
-		// note that this will work only on master, do slaves need return values too? i.e. for callbacks
-		return ProcessEvent( event );
-	}
-	return VALUE( gse::type::Undefined );
-}
-
 const size_t Game::GetTurnId() const {
 	return m_current_turn.GetId();
-}
-
-const bool Game::IsTurnActive() const {
-	return m_current_turn.IsActive();
 }
 
 const bool Game::IsTurnCompleted( const size_t slot_num ) const {
@@ -882,32 +1292,13 @@ const bool Game::IsTurnChecksumValid( const util::crc32::crc_t checksum ) const 
 	return m_turn_checksum == checksum;
 }
 
-void Game::CompleteTurn( const size_t slot_num ) {
+void Game::CompleteTurn( GSE_CALLABLE, const size_t slot_num ) {
 	const auto& slot = m_state->m_slots->GetSlot( slot_num );
 	ASSERT( slot.GetState() == slot::Slot::SS_PLAYER, "slot is not player" );
 	auto* player = slot.GetPlayer();
 	ASSERT( player, "slot player not set" );
 	player->CompleteTurn();
-
-	if ( slot_num == m_slot_num ) {
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = turn::TS_WAITING_FOR_PLAYERS;
-		AddFrontendRequest( fr );
-	}
-
-	if ( m_state->IsMaster() ) {
-		// check if all players completed their turns
-		bool is_turn_complete = true;
-		for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-			if ( slot.GetState() == slot::Slot::SS_PLAYER && !slot.GetPlayer()->IsTurnCompleted() ) {
-				is_turn_complete = false;
-				break;
-			}
-		}
-		if ( is_turn_complete ) {
-			GlobalFinalizeTurn();
-		}
-	}
+	SetTurnStatus( turn::TS_WAITING_FOR_PLAYERS );
 }
 
 void Game::UncompleteTurn( const size_t slot_num ) {
@@ -920,22 +1311,15 @@ void Game::UncompleteTurn( const size_t slot_num ) {
 		m_is_turn_complete = false;
 		CheckTurnComplete();
 		if ( !m_is_turn_complete ) {
-			auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-			fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
-			AddFrontendRequest( fr );
+			SetTurnStatus( turn::TS_TURN_ACTIVE );
 		}
 	}
-}
-
-void Game::FinalizeTurn() {
-	m_turn_checksum = m_current_turn.FinalizeAndChecksum();
-	AddEvent( new event::TurnFinalized( m_slot_num, m_turn_checksum ) );
 }
 
 void Game::AdvanceTurn( const size_t turn_id ) {
 	m_current_turn.AdvanceTurn( turn_id );
 	m_is_turn_complete = false;
-	Log( "Turn started: " + std::to_string( turn_id ) );
+	MTModule::Log( "Turn started: " + std::to_string( turn_id ) );
 
 	{
 		auto fr = FrontendRequest( FrontendRequest::FR_TURN_ADVANCE );
@@ -943,33 +1327,41 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 		AddFrontendRequest( fr );
 	}
 
-	for ( auto& it : m_um->GetUnits() ) {
-		auto* unit = it.second;
-		m_state->m_bindings->Trigger( m_um, "unit_turn", {
-			{
-				"unit",
-				unit->Wrap( true )
-			},
-		});
-		unit->m_moved_this_turn = false;
-		m_um->RefreshUnit( unit );
-	}
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+		for ( auto& it : m_um->GetUnits() ) {
+			auto* unit = it.second;
+			m_state->TriggerObject(
+				m_um, "unit_turn", ARGS_F( &unit ) {
+					{
+						"unit",
+						unit->Wrap( GSE_CALL, true )
+					},
+				}; }
+			);
+			unit->m_moved_this_turn = false;
+			m_um->RefreshUnit( GSE_CALL, unit );
+		}
 
-	for ( auto& it : m_bm->GetBases() ) {
-		auto* base = it.second;
-		m_state->m_bindings->Trigger( m_bm, "base_turn", {
-			{
-				"base",
-				base->Wrap( true )
-			},
-		});
-		m_bm->RefreshBase( base );
-	}
+		for ( auto& it : m_bm->GetBases() ) {
+			auto* base = it.second;
+			m_state->TriggerObject(
+				m_bm, "base_turn", ARGS_F( &base ) {
+					{
+						"base",
+						base->Wrap( GSE_CALL, true )
+					},
+				}; }
+			);
+			m_bm->RefreshBase( base );
+		}
 
-	m_state->m_bindings->Trigger( this, "turn", {
-		{
-			"game",
-			Wrap()
+		if ( m_state->IsMaster() ) {
+			m_state->TriggerObject( this, "turn", ARGS_F( this ) {
+				{
+					"year",
+					VALUE( gse::value::Int,, m_current_turn.GetId() + 2100 /* TODO: better way to define starting year? */ ),
+				},
+			}; } );
 		}
 	});
 
@@ -982,54 +1374,33 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 	m_is_turn_complete = false;
 	CheckTurnComplete();
 	if ( !m_is_turn_complete ) {
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = turn::TS_TURN_ACTIVE;
-		AddFrontendRequest( fr );
+		SetTurnStatus( turn::TS_TURN_ACTIVE );
 	}
 
 }
 
-void Game::GlobalFinalizeTurn() {
+void Game::GlobalFinalizeTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
-	ASSERT( m_current_turn.IsActive(), "current turn not active" );
 	ASSERT( m_verified_turn_checksum_slots.empty(), "turn finalization slots not empty" );
-	Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
-	AddEvent( new event::FinalizeTurn( m_slot_num ) );
+	MTModule::Log( "Finalizing turn ( checksum = " + std::to_string( m_turn_checksum ) + " )" );
+	THROW( "TODO: GLOBAL FINALIZE TURN");
+	//AddEvent( GSE_CALL, new event::FinalizeTurn( m_slot_num ) );
 }
 
-void Game::GlobalProcessTurnFinalized( const size_t slot_num, const util::crc32::crc_t checksum ) {
-	ASSERT( m_state->IsMaster(), "not master" );
-	ASSERT( m_turn_checksum == checksum, "turn checksum mismatch" );
-	ASSERT( m_verified_turn_checksum_slots.find( slot_num ) == m_verified_turn_checksum_slots.end(), "duplicate turn finalization from " + std::to_string( slot_num ) );
-	m_verified_turn_checksum_slots.insert( slot_num );
-
-	bool is_turn_finalized = true;
-	for ( const auto& slot : m_state->m_slots->GetSlots() ) {
-		if (
-			slot.GetState() == slot::Slot::SS_PLAYER &&
-				m_verified_turn_checksum_slots.find( slot.GetIndex() ) == m_verified_turn_checksum_slots.end()
-			) {
-			is_turn_finalized = false;
-			break;
-		}
-	}
-
-	if ( is_turn_finalized ) {
-		GlobalAdvanceTurn();
-	}
-}
-
-static size_t s_turn_id = 0;
-void Game::GlobalAdvanceTurn() {
+void Game::FirstTurn( GSE_CALLABLE ) {
 	ASSERT( m_state->IsMaster(), "not master" );
 
 	// reset some states
-	s_turn_id++;
+	m_current_turn.AdvanceTurn( 1 );
 	m_verified_turn_checksum_slots.clear();
 	m_turn_checksum = 0;
 
-	Log( "Advancing turn ( id = " + std::to_string( s_turn_id ) + " )" );
-	AddEvent( new event::AdvanceTurn( m_slot_num, s_turn_id ) );
+	MTModule::Log( "Advancing turn ( id = " + std::to_string( m_current_turn.GetId() ) + " )" );
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ){
+		Event( GSE_CALL, "advance_turn", {
+			{ "turn_id", VALUE( gse::value::Int,, m_current_turn.GetId() ) }
+		} );
+	});
 }
 
 faction::Faction* Game::GetFaction( const std::string& id ) const {
@@ -1058,33 +1429,10 @@ animation::AnimationManager* Game::GetAM() const {
 	return m_am;
 }
 
-void Game::ValidateEvent( event::Event* event ) {
-	if ( !event->m_is_validated ) {
-		const auto* errmsg = event->Validate( this );
-		if ( errmsg ) {
-			InvalidEvent err( *errmsg, event );
-			delete errmsg;
-			delete event;
-			throw err;
-		}
-		event->m_is_validated = true;
-	}
-}
-
-const gse::Value Game::ProcessEvent( event::Event* event ) {
-	if ( m_state->IsMaster() ) { // TODO: validate in either case?
-		ValidateEvent( event );
-	}
-
-	ASSERT( event->m_is_validated, "event was not validated" );
-
-	if ( m_state->IsMaster() ) {
-		// things like random outcomes must be resolved on server only
-		event->Resolve( this );
-	}
-
-	m_current_turn.AddEvent( event );
-	return event->Apply( this );
+gc::Space* const Game::GetGCSpace() const {
+	ASSERT( m_state, "state not set" );
+	ASSERT( m_state->m_gc_space, "state gc space not set" );
+	return m_state->m_gc_space;
 }
 
 const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
@@ -1102,30 +1450,161 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 	};
 }
 
-void Game::UpdateYields( map::tile::Tile* tile ) const {
+void Game::UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const {
 	tile->yields = m_rm->GetYields(
+		GSE_CALL,
 		tile,
 		m_slot
 	);
 }
 
+void Game::WithRW( const std::function< void() >& f ) {
+	m_rw_counter++;
+	f();
+	m_rw_counter--;
+}
+
+void Game::InitComplete( GSE_CALLABLE ) {
+	ASSERT( m_game_state != GS_RUNNING, "game already initialized" );
+
+	try {
+		m_state->TriggerObject(
+			this, "start", ARGS_F( this ) {
+				{
+					"game",
+					Wrap( GSE_CALL )
+				},
+			}; }
+		);
+	}
+	catch ( const gse::Exception& e ) {
+		MTModule::Log( (std::string)"Initialization failed: " + e.ToString() );
+		InitFailed( e.what() );
+		return;
+	}
+
+	m_game_state = GS_RUNNING;
+	m_um->ProcessUnprocessed( GSE_CALL );
+	m_bm->ProcessUnprocessed( GSE_CALL );
+	if ( m_state->m_connection ) {
+		m_state->m_connection->IfServer(
+			[]( connection::Server* connection ) -> void {
+				connection->SetGameState( connection::Connection::GS_RUNNING ); // allow clients to download map
+			}
+		);
+	}
+}
+
+void Game::InitFailed( const std::string& error_text ) {
+	HideLoader();
+	// need to delete these here because they weren't passed to main thread
+	if ( m_map->m_textures.terrain ) {
+		DELETE( m_map->m_textures.terrain );
+		m_map->m_textures.terrain = nullptr;
+	}
+	if ( m_map->m_meshes.terrain ) {
+		DELETE( m_map->m_meshes.terrain );
+		m_map->m_meshes.terrain = nullptr;
+	}
+	if ( m_map->m_meshes.terrain_data ) {
+		DELETE( m_map->m_meshes.terrain_data );
+		m_map->m_meshes.terrain_data = nullptr;
+	}
+
+	ASSERT( m_state, "state not set" );
+	if ( m_state->m_connection ) {
+		m_state->m_connection->Disconnect( "Failed to initialize game" );
+	}
+	m_state->TriggerObject(
+		this, "error", ARGS_F( this, &error_text ) {
+			{
+				"game",
+				Wrap( GSE_CALL )
+			},
+			{
+				"error",
+				VALUE( gse::value::String, , error_text ),
+			},
+		}; }
+	);
+
+	ResetGame();
+	m_state = nullptr;
+
+	m_initialization_error = error_text;
+
+	if ( m_old_map ) {
+		MTModule::Log( "Restoring old map state" );
+		DELETE( m_map );
+		m_map = m_old_map; // restore old state // TODO: test
+	}
+}
+
+static const std::unordered_map< backend::turn::turn_status_t, std::string > s_turn_status_str = {
+	{ turn::TS_PLEASE_WAIT, "please_wait" },
+	{ turn::TS_TURN_ACTIVE, "active" },
+	{ turn::TS_TURN_COMPLETE, "turn_complete" },
+	{ turn::TS_WAITING_FOR_PLAYERS, "waiting_for_players" },
+};
+
+void Game::SetTurnStatus( const backend::turn::turn_status_t status ) {
+	auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
+	fr.data.turn_status.status = status;
+	AddFrontendRequest( fr );
+	ASSERT( s_turn_status_str.find( status ) != s_turn_status_str.end(), "unknown status: " + std::to_string( status ) );
+	m_state->WithGSE( this, [ this, status ]( GSE_CALLABLE ) {
+		m_state->TriggerObject( this, "turn_status", ARGS_F( &status ) {
+			{
+				"status",
+				VALUE( gse::value::String,, s_turn_status_str.at( status ) ),
+			},
+		}; } );
+	});
+}
+
+void Game::CheckRW( GSE_CALLABLE ) {
+	if ( !m_rw_counter ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
+	}
+}
+
+void Game::SetSlotNum( const size_t slotnum ) {
+	m_slot_num = slotnum;
+}
+
 void Game::AddFrontendRequest( const FrontendRequest& request ) {
-	//Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
+	//MTModule::Log( "Sending frontend request (type=" + std::to_string( request.type ) + ")" ); // spammy
 	m_pending_frontend_requests->push_back( request );
 }
 
 void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
-	ASSERT( !m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
-	ASSERT( m_game_state == GS_NONE || m_game_state == GS_RUNNING, "game still initializing" );
+	if ( m_game_state != GS_NONE ) {
+		ResetGame();
+	}
 
-	Log( "Initializing game" );
+	ASSERT( !m_state || !m_state->m_connection || m_game_state == GS_NONE, "multiplayer game already initializing or running" );
+	ASSERT( m_game_state == GS_NONE, "game still initializing" );
 
-	m_state->m_bindings->Trigger( this, "configure", {
-		{
-			"game",
-			Wrap()
-		},
+	MTModule::Log( "Initializing game" );
+
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+		ASSERT( !m_tm, "tm not null" );
+		m_tm = new map::tile::TileManager( this );
+		ASSERT( !m_rm, "rm not null" );
+		m_rm = new resource::ResourceManager( this );
+		ASSERT( !m_um, "um not null" );
+		m_um = new unit::UnitManager( this );
+		ASSERT( !m_bm, "bm not null" );
+		m_bm = new base::BaseManager( this );
+		ASSERT( !m_am, "am not null" );
+		m_am = new animation::AnimationManager( this );
+		m_state->TriggerObject( this, "configure", ARGS_F( this ) {
+			{
+				"game",
+				Wrap( GSE_CALL )
+			},
+		}; } );
 	});
 
 	ASSERT( m_pending_frontend_requests, "pending events not set" );
@@ -1134,7 +1613,7 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_game_state = GS_PREPARING_MAP;
 	m_initialization_error = "";
 
-	m_connection = m_state->GetConnection();
+	auto* const connection = m_state->m_connection;
 
 	if ( m_state->IsMaster() ) {
 
@@ -1161,46 +1640,46 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				}
 			}
 		}
-		if ( m_connection ) {
-			m_connection->AsServer()->SendPlayersList();
+		if ( connection ) {
+			connection->AsServer()->SendPlayersList();
 		}
 
 	}
 
-	if ( m_connection ) {
+	if ( connection ) {
 
-		m_slot_num = m_connection->GetSlotNum();
+		m_slot_num = connection->GetSlotNum();
 
-		m_connection->ResetHandlers();
-		m_connection->IfServer(
+		connection->ResetHandlers();
+		connection->IfServer(
 			[ this ]( connection::Server* connection ) -> void {
 
-				connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
-					Log( "Player " + player->GetFullName() + " is connecting..." );
+				/*connection->m_on_player_join = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
+					MTModule::Log( "Player " + player->GetFullName() + " is connecting..." );
 					connection->GlobalMessage( "Connection from " + player->GetFullName() + "..." );
 					// actual join will happen after he downloads and initializes map
-				};
+				};*/
 
 				connection->m_on_flags_update = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) -> void {
 					if ( !( old_flags & slot::PF_GAME_INITIALIZED ) && ( new_flags & slot::PF_GAME_INITIALIZED ) ) {
 						const auto* player = slot->GetPlayer();
-						Log( player->GetFullName() + " joined the game." );
+						MTModule::Log( player->GetFullName() + " joined the game." );
 						connection->GlobalMessage( player->GetFullName() + " joined the game." );
 					}
 				};
 
-				connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
-					Log( "Player " + player->GetFullName() + " left the game." );
+				/*connection->m_on_player_leave = [ this, connection ]( const size_t slot_num, slot::Slot* slot, const Player* player ) -> void {
+					MTModule::Log( "Player " + player->GetFullName() + " left the game." );
 					connection->GlobalMessage( player->GetFullName() + " left the game." );
 					m_tm->ReleaseTileLocks( slot_num );
-				};
+				};*/
 
 				connection->m_on_download_request = [ this ]() -> const std::string {
 					if ( !m_map ) {
 						// map not generated yet
 						return "";
 					}
-					Log( "Preparing snapshot for download" );
+					MTModule::Log( "Preparing snapshot for download" );
 					types::Buffer buf;
 
 					// map
@@ -1235,8 +1714,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					}
 
 					// send turn info
-					Log( "Sending turn ID: " + std::to_string( s_turn_id ) );
-					buf.WriteInt( s_turn_id );
+					MTModule::Log( "Sending turn ID: " + std::to_string( m_current_turn.GetId() ) );
+					buf.WriteInt( m_current_turn.GetId() );
 
 					return buf.ToString();
 				};
@@ -1245,12 +1724,11 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		);
 
-		m_connection->IfClient(
+		connection->IfClient(
 			[ this ]( connection::Client* connection ) -> void {
 				connection->m_on_disconnect = [ this ]() -> bool {
-					Log( "Connection lost" );
+					MTModule::Log( "Connection lost" );
 					m_state->DetachConnection();
-					m_connection = nullptr;
 					if ( m_game_state != GS_RUNNING ) {
 						m_initialization_error = "Lost connection to server";
 					}
@@ -1266,31 +1744,47 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 		);
 
-		m_connection->m_on_message = [ this ]( const std::string& message ) -> void {
-			auto fr = FrontendRequest( FrontendRequest::FR_GLOBAL_MESSAGE );
-			NEW( fr.data.global_message.message, std::string, message );
-			AddFrontendRequest( fr );
+		connection->m_on_message = [ this ]( const std::string& message ) -> void {
+			Message( message );
 		};
 
-		m_connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
+		connection->m_on_game_event_validate = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
+			THROW( "TODO: m_on_game_event_validate");
 			if ( m_game_state == GS_RUNNING ) {
-				ValidateEvent( event );
+/*				m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
+					ValidateEvent( GSE_CALL, event );
+				} );*/
 			}
 			else {
-				m_unprocessed_events.push_back( event );
+				//m_unprocessed_events.push_back( event );
 			}
 
 		};
 
-		m_connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
+		connection->m_on_game_event_apply = [ this ]( event::Event* event ) -> void {
 			if ( m_state->IsMaster() ) {
 				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
 			}
+			THROW( "TODO: m_on_game_event_apply");
 			if ( m_game_state == GS_RUNNING ) {
-				ProcessEvent( event );
+				/*m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
+					ProcessEvent( GSE_CALL, event );
+				});*/
+			}
+		};
+
+		connection->m_on_game_event_rollback = [ this ]( event::Event* event ) -> void {
+			if ( m_state->IsMaster() ) {
+				ASSERT( m_game_state == GS_RUNNING, "game is not running but received event" );
+			}
+			THROW( "TODO: m_on_game_event_rollback");
+			if ( m_game_state == GS_RUNNING ) {
+				/*m_state->WithGSE( this, [ this, event ]( GSE_CALLABLE ) {
+					ProcessEvent( GSE_CALL, event );
+				});*/
 			}
 		};
 
@@ -1301,12 +1795,10 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 	m_player = m_state->m_slots->GetSlot( m_slot_num ).GetPlayer();
 	m_slot = m_player->GetSlot();
 
-	auto* ui = g_engine->GetUI();
-
 	if ( m_state->IsMaster() ) {
 		// generate map
 
-		Log( "Game seed: " + m_random->GetStateString() );
+		MTModule::Log( "Game seed: " + m_random->GetStateString() );
 
 		ASSERT( !m_old_map, "old map not null" );
 		m_old_map = nullptr;
@@ -1325,18 +1817,18 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 		map::Map::error_code_t ec = map::Map::EC_UNKNOWN;
 
 #ifdef DEBUG
-		if ( !m_connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
+		if ( !connection && config->HasDebugFlag( config::Config::DF_QUICKSTART_MAP_DUMP ) ) {
 			const std::string& filename = config->GetQuickstartMapDump();
 			ASSERT( util::FS::FileExists( filename ), "map dump file \"" + filename + "\" not found" );
-			Log( (std::string)"Loading map dump from " + filename );
+			MTModule::Log( (std::string)"Loading map dump from " + filename );
 			SetLoaderText( "Loading dump" );
-			m_map->Unserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
+			m_map->Deserialize( types::Buffer( util::FS::ReadTextFile( filename ) ) );
 			ec = map::Map::EC_NONE;
 		}
 		else
 #endif
 		{
-			if ( !m_connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
+			if ( !connection && config->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_FILE ) ) {
 				const std::string& filename = config->GetQuickstartMapFile();
 				ec = m_map->LoadFromFile( filename );
 			}
@@ -1359,31 +1851,21 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 		if ( !ec ) {
 			m_slot->SetPlayerFlag( slot::PF_MAP_DOWNLOADED ); // map was generated locally
-			if ( m_connection ) {
-				m_connection->IfServer(
-					[ this ]( connection::Server* connection ) -> void {
-						connection->SetGameState( connection::Connection::GS_RUNNING ); // allow clients to download map
-					}
-				);
-				m_connection->UpdateSlot( m_slot_num, m_slot, true );
-				SetLoaderText( "Waiting for players" );
+			if ( connection ) {
+				connection->UpdateSlot( m_slot_num, m_slot, true );
 			}
-			else {
-				SetLoaderText( "Starting game" );
-			}
-
 			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
 		}
 	}
 	else {
-		m_connection->IfClient(
-			[ this, &response, ui ]( connection::Client* connection ) -> void {
+		connection->IfClient(
+			[ this, &response ]( connection::Client* connection ) -> void {
 
 				// wait for server to initialize
 				SetLoaderText( "Waiting for server" );
 
-				const auto f_download_map = [ this, ui, connection ] {
+				const auto f_download_map = [ this, connection ] {
 
 					SetLoaderText( "Downloading world snapshot" );
 
@@ -1393,52 +1875,57 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 					connection->m_on_download_complete = [ this, connection ]( const std::string serialized_snapshot ) -> void {
 						connection->m_on_download_complete = nullptr;
 						connection->m_on_download_progress = nullptr;
-						Log( "Unpacking world snapshot" );
-						auto buf = types::Buffer( serialized_snapshot );
+						MTModule::Log( "Unpacking world snapshot" );
 
-						// map
-						auto b = types::Buffer( buf.ReadString() );
-						NEW( m_map, map::Map, this );
-						const auto ec = m_map->LoadFromBuffer( b );
-						if ( ec == map::Map::EC_NONE ) {
+						m_state->WithGSE( this, [ this, connection, serialized_snapshot ]( GSE_CALLABLE ) {
 
-							// resources
-							{
-								auto ub = types::Buffer( buf.ReadString() );
-								m_rm->Unserialize( ub );
+							auto buf = types::Buffer( serialized_snapshot );
+
+							// map
+							auto b = types::Buffer( buf.ReadString() );
+							NEW( m_map, map::Map, this );
+							const auto ec = m_map->LoadFromBuffer( b );
+							if ( ec == map::Map::EC_NONE ) {
+
+								// resources
+								{
+									auto ub = types::Buffer( buf.ReadString() );
+									m_rm->Deserialize( ub );
+								}
+
+								// units
+								{
+									auto ub = types::Buffer( buf.ReadString() );
+									m_um->Deserialize( GSE_CALL, ub );
+								}
+
+								// bases
+								{
+									auto bb = types::Buffer( buf.ReadString() );
+									m_bm->Deserialize( GSE_CALL, bb );
+								}
+
+								// animations
+								{
+									auto ab = types::Buffer( buf.ReadString() );
+									m_am->Deserialize( ab );
+								}
+
+								// get turn info
+								const auto turn_id = buf.ReadInt();
+								if ( turn_id > 0 ) {
+									MTModule::Log( "Received turn ID: " + std::to_string( turn_id ) );
+									AdvanceTurn( turn_id );
+								}
+
+								m_game_state = GS_INITIALIZING;
+
 							}
-
-							// units
-							{
-								auto ub = types::Buffer( buf.ReadString() );
-								m_um->Unserialize( ub );
+							else {
+								MTModule::Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
+								connection->Disconnect( "Snapshot format mismatch" );
 							}
-
-							// bases
-							{
-								auto bb = types::Buffer( buf.ReadString() );
-								m_bm->Unserialize( bb );
-							}
-
-							// animations
-							{
-								auto ab = types::Buffer( buf.ReadString() );
-								m_am->Unserialize( ab );
-							}
-
-							// get turn info
-							const auto turn_id = buf.ReadInt();
-							if ( turn_id > 0 ) {
-								Log( "Received turn ID: " + std::to_string( turn_id ) );
-								AdvanceTurn( turn_id );
-							}
-
-							m_game_state = GS_INITIALIZING;
-						}
-						else {
-							Log( "WARNING: failed to unpack world snapshot (code=" + std::to_string( ec ) + ")" );
-							connection->Disconnect( "Snapshot format mismatch" );
-						}
+						});
 					};
 					connection->RequestDownload();
 				};
@@ -1449,11 +1936,18 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 				else {
 					// wait for server to initialize
 					connection->m_on_game_state_change = [ this, f_download_map ]( const connection::Connection::game_state_t state ) -> void {
-						if ( state == connection::Connection::GS_RUNNING ) {
-							f_download_map();
-						}
-						else {
-							THROW( "unexpected game state: " + std::to_string( state ) );
+						switch ( state ) {
+							case connection::Connection::GS_INITIALIZING: {
+								// waiting
+								break;
+							}
+							case connection::Connection::GS_RUNNING: {
+								f_download_map();
+								break;
+							}
+							default: {
+								THROW( "unexpected game state: " + std::to_string( state ) );
+							}
 						}
 					};
 				}
@@ -1465,6 +1959,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 
 void Game::ResetGame() {
 
+	ClearHandlers();
+
 	if ( m_game_state != GS_NONE ) {
 		// TODO: do something?
 		m_game_state = GS_NONE;
@@ -1474,19 +1970,28 @@ void Game::ResetGame() {
 	m_slot_num = 0;
 	m_slot = nullptr;
 
-	for ( auto& it : m_unprocessed_events ) {
-		delete it;
+	{
+		std::lock_guard guard( m_events_waiting_for_responses_mutex );
+		m_events_waiting_for_responses.clear();
 	}
-	m_unprocessed_events.clear();
+	{
+		std::lock_guard guard( m_pending_events_mutex );
+		m_pending_events.clear();
+	}
+	{
+		std::lock_guard guard( m_event_handlers_mutex );
+		m_event_handlers.clear();
+	}
+	m_next_event_id = 0;
 
-	m_tm->Clear();
-	m_rm->Clear();
-	m_um->Clear();
-	m_bm->Clear();
-	m_am->Clear();
+	m_tm = nullptr;
+	m_rm = nullptr;
+	m_um = nullptr;
+	m_bm = nullptr;
+	m_am = nullptr;
 
 	if ( m_map ) {
-		Log( "Resetting map" );
+		MTModule::Log( "Resetting map" );
 		DELETE( m_map );
 		m_map = nullptr;
 	}
@@ -1500,21 +2005,14 @@ void Game::ResetGame() {
 	if ( m_state ) {
 		// ui thread will reset state as needed
 		m_state->UnsetGame();
-		if ( m_connection ) {
-			m_connection->Disconnect();
-			m_connection->ResetHandlers();
-			m_connection = nullptr;
+		if ( m_state->m_connection ) {
+			m_state->m_connection->Disconnect();
+			m_state->m_connection->ResetHandlers();
 		}
-		delete m_state;
-		m_state = nullptr;
 	}
 }
 
 void Game::CheckTurnComplete() {
-	if ( !m_current_turn.IsActive() ) {
-		// turn not active
-		return;
-	}
 
 	bool is_turn_complete = true;
 
@@ -1527,17 +2025,33 @@ void Game::CheckTurnComplete() {
 
 	if ( m_is_turn_complete != is_turn_complete ) {
 		m_is_turn_complete = is_turn_complete;
-		Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
-		auto fr = FrontendRequest( FrontendRequest::FR_TURN_STATUS );
-		fr.data.turn_status.status = m_is_turn_complete
+		MTModule::Log( "Sending turn complete status: " + std::to_string( m_is_turn_complete ) );
+		SetTurnStatus( m_is_turn_complete
 			? turn::TS_TURN_COMPLETE
-			: turn::TS_TURN_ACTIVE;
-		AddFrontendRequest( fr );
+			: turn::TS_TURN_ACTIVE
+		);
 	}
+
 }
 
 const bool Game::IsRunning() const {
 	return m_game_state == GS_RUNNING;
+}
+
+const bool Game::IsMapReady() const {
+	return m_game_state > GS_PREPARING_MAP;
+}
+
+const std::string Game::GenerateEventId() {
+	return std::to_string( m_slot_num ) + "_" + std::to_string( ++m_next_event_id );
+}
+
+void Game::SetState( State* const state ) {
+	ASSERT( state, "state is null" );
+	if ( state != m_state ) {
+		ASSERT( !m_state, "game state already set" );
+		m_state = state;
+	}
 }
 
 }

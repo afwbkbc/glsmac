@@ -43,8 +43,8 @@ size_t Font::GetTextHeight( const char* text ) const {
 			height = h;
 		}
 	}
-	if ( height < m_dimensions.height ) {
-		height = m_dimensions.height - 2; // TODO: why?
+	if ( height < m_dimensions.height - 3 ) {
+		height = m_dimensions.height - 3; // TODO: why - 3 ?
 	}
 	return height;
 }

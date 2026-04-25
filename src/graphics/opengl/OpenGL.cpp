@@ -2,16 +2,15 @@
 
 #include "engine/Engine.h"
 
-#include "shader_program/Simple2D.h"
 #include "shader_program/Orthographic.h"
 #include "shader_program/OrthographicData.h"
 #include "scene/Scene.h"
 #include "scene/Camera.h"
-#include "routine/Overlay.h"
 #include "routine/UI.h"
 #include "routine/World.h"
 #include "FBO.h"
 #include "types/texture/Texture.h"
+#include "gc/GC.h"
 
 namespace graphics {
 namespace opengl {
@@ -45,8 +44,7 @@ OpenGL::OpenGL( const std::string title, const unsigned short window_width, cons
 	m_px_to_gl_clamp.y.SetInversed( true );
 }
 
-OpenGL::~OpenGL() {
-}
+OpenGL::~OpenGL() {}
 
 void OpenGL::Start() {
 
@@ -117,21 +115,12 @@ void OpenGL::Start() {
 	m_shader_programs.push_back( sp_orthographic );
 	NEWV( sp_orthographic_data, shader_program::OrthographicData );
 	m_shader_programs.push_back( sp_orthographic_data );
-	NEWV( sp_simple2d, shader_program::Simple2D );
-	m_shader_programs.push_back( sp_simple2d );
 
 	// routines ( order is important )
-	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_ORTHO, sp_orthographic, sp_orthographic_data );
+	NEWV( r_world, routine::World, this, scene::SCENE_TYPE_WORLD, sp_orthographic, sp_orthographic_data );
 	m_routines.push_back( r_world );
-	NEWV( r_overlay, routine::Overlay, this, sp_simple2d );
-	m_routines.push_back( r_overlay );
-	NEWV( r_ui, routine::UI, this, sp_simple2d );
+	NEWV( r_ui, routine::UI, this, sp_orthographic );
 	m_routines.push_back( r_ui );
-	NEWV( r_world_ui, routine::World, this, scene::SCENE_TYPE_ORTHO_UI, sp_orthographic, sp_orthographic_data );
-	m_routines.push_back( r_world_ui );
-
-	// some routines are special
-	m_routine_overlay = r_overlay;
 
 	for ( auto it = m_shader_programs.begin() ; it != m_shader_programs.end() ; ++it ) {
 		( *it )->Start();
@@ -194,6 +183,8 @@ void OpenGL::Stop() {
 	}
 	m_shader_programs.clear();
 
+	ProcessPendingUnloads();
+
 	for ( auto& texture : m_textures ) {
 		glDeleteTextures( 1, &texture.second.obj );
 	}
@@ -209,6 +200,8 @@ void OpenGL::Stop() {
 }
 
 void OpenGL::Iterate() {
+	std::lock_guard guard( m_render_mutex );
+
 	Lock();
 
 	Graphics::Iterate();
@@ -233,6 +226,8 @@ void OpenGL::Iterate() {
 		THROW( "OpenGL error occured in render loop, aborting: " + std::to_string( errcode ) );
 	}
 
+	ProcessPendingUnloads();
+
 	Unlock();
 
 	DEBUG_STAT_INC( frames_rendered );
@@ -254,7 +249,9 @@ void OpenGL::AddScene( scene::Scene* scene ) {
 		}
 	}
 
+#ifdef DEBUG
 	ASSERT( added, "no matching routine for scene [" + scene->GetName() + "]" );
+#endif
 }
 
 void OpenGL::RemoveScene( scene::Scene* scene ) {
@@ -273,7 +270,9 @@ void OpenGL::RemoveScene( scene::Scene* scene ) {
 		}
 	}
 
+#ifdef DEBUG
 	ASSERT( removed, "no matching routine for scene [" + scene->GetName() + "]" );
+#endif
 }
 
 const unsigned short OpenGL::GetWindowWidth() const {
@@ -331,6 +330,9 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 	glActiveTexture( GL_TEXTURE0 );
 
+	const auto tw = texture->GetWidth();
+	const auto th = texture->GetHeight();
+
 	if ( it == m_textures.end() ) {
 
 		//Log( "Initializing texture '" + texture->m_name + "'" );
@@ -341,8 +343,8 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 					0,
 					texture->UpdatedCount(),
 					{
-						texture->m_width,
-						texture->m_height,
+						tw,
+						th,
 					}
 				}
 			}
@@ -355,11 +357,11 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 	}
 
 	auto& t = it->second;
-	if ( t.last_dimensions.x != texture->m_width || t.last_dimensions.y != texture->m_height ) {
+	if ( t.last_dimensions.x != tw || t.last_dimensions.y != th ) {
 		is_reload_needed = true;
 		need_full_update = true;
-		t.last_dimensions.x = texture->m_width;
-		t.last_dimensions.y = texture->m_height;
+		t.last_dimensions.x = tw;
+		t.last_dimensions.y = th;
 	}
 
 	if ( t.last_texture_update_counter != texture_update_counter ) {
@@ -371,7 +373,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 		//Log( "Loading texture '" + texture->m_name + "'" );
 
 		WithBindTexture(
-			t.obj, [ this, &need_full_update, &texture, &smoothen ]() {
+			t.obj, [ &need_full_update, &texture, &smoothen, &tw, &th ]() {
 
 				if ( need_full_update ) {
 					ASSERT( !glGetError(), "Texture parameter error" );
@@ -381,21 +383,43 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 						GL_TEXTURE_2D,
 						0,
 						GL_RGBA8,
-						(GLsizei)texture->m_width,
-						(GLsizei)texture->m_height,
+						(GLsizei)tw,
+						(GLsizei)th,
 						0,
 						GL_RGBA,
 						GL_UNSIGNED_BYTE,
-						ptr( texture->m_bitmap, 0, texture->m_width * texture->m_height * 4 )
+						ptr( texture->GetBitmap(), 0, texture->GetBitmapSize() )
 					);
+
+					const bool use_mipmaps = texture->HasFlag( types::texture::TF_MIPMAPS );
+
+					/*
+					float maxAniso;
+					glGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso );
+					glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso );
+
+					glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.7f );
+*/
+					if ( use_mipmaps ) {
+						glGenerateMipmap( GL_TEXTURE_2D );
+						glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.5f );
+					}
 
 					if ( smoothen ) {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+						glTexParameteri(
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_mipmaps
+								? GL_LINEAR_MIPMAP_LINEAR
+								: GL_LINEAR
+						);
 					}
 					else {
 						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-						glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST );
+						glTexParameteri(
+							GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, use_mipmaps
+								? GL_NEAREST_MIPMAP_NEAREST
+								: GL_NEAREST
+						);
 					}
 
 					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
@@ -531,7 +555,6 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 				const auto err = glGetError();
 				ASSERT( !err, "Error loading texture: " + std::to_string( err ) );
 
-				glGenerateMipmap( GL_TEXTURE_2D );
 			}
 		);
 
@@ -540,21 +563,20 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 }
 
 void OpenGL::UnloadTexture( const types::texture::Texture* texture ) {
-	m_textures_map::iterator it = m_textures.find( texture );
-	if ( it != m_textures.end() ) {
-		//Log("Unloading texture '" + texture->m_name + "'");
-		glActiveTexture( GL_TEXTURE0 );
-		glDeleteTextures( 1, &it->second.obj );
-		m_textures.erase( it );
-	}
+	std::lock_guard guard( m_texture_objs_to_unload_mutex );
+	m_texture_objs_to_unload.push_back( texture );
 }
 
 void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f ) {
 	GLuint obj;
 	if ( texture ) {
 		auto it = m_textures.find( texture );
-		ASSERT( it != m_textures.end(), "texture to be enabled ( " + texture->m_name + " ) not found" );
-		obj = it->second.obj;
+		if ( it != m_textures.end() ) {
+			obj = it->second.obj;
+		}
+		else {
+			obj = m_no_texture;
+		}
 	}
 	else {
 		obj = m_no_texture;
@@ -640,11 +662,16 @@ const types::Vec2< types::mesh::coord_t > OpenGL::GetGLCoords( const types::Vec2
 	};
 }
 
-void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
+void OpenGL::NoRender( const std::function< void() >& f ) {
+	std::lock_guard guard( m_render_mutex );
+	f();
+}
 
+void OpenGL::ResizeViewport( const size_t width, const size_t height ) {
 	if (
-		m_viewport_size.x != ( width + 1 ) / 2 * 2 ||
-			m_viewport_size.y != ( height + 1 ) / 2 * 2
+		m_viewport_size.x != ( width + 1 ) / 2 * 2
+			||
+				m_viewport_size.y != ( height + 1 ) / 2 * 2
 		) {
 		UpdateViewportSize( width, height );
 
@@ -715,15 +742,25 @@ void OpenGL::SetWindowed() {
 	ResizeViewport( m_window_size.x, m_window_size.y );
 }
 
-void OpenGL::RedrawOverlay() {
-	m_routine_overlay->Redraw();
-}
-
 void OpenGL::UpdateViewportSize( const size_t width, const size_t height ) {
 	// I'm having weird texture tiling bugs at non-even window heights
 	// also don't let them go below 2 or something will assert/crash
 	m_viewport_size.x = ( width + 1 ) / 2 * 2;
 	m_viewport_size.y = ( height + 1 ) / 2 * 2;
+}
+
+void OpenGL::ProcessPendingUnloads() {
+	std::lock_guard guard( m_texture_objs_to_unload_mutex );
+	for ( auto& texture : m_texture_objs_to_unload ) {
+		m_textures_map::iterator it = m_textures.find( texture );
+		if ( it != m_textures.end() ) {
+			//Log( "Unloading texture '" + texture->m_name + "'" );
+			glActiveTexture( GL_TEXTURE0 );
+			glDeleteTextures( 1, &it->second.obj );
+			m_textures.erase( it );
+		}
+	}
+	m_texture_objs_to_unload.clear();
 }
 
 }

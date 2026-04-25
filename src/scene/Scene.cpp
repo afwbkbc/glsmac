@@ -11,9 +11,16 @@ Scene::~Scene() {
 	if ( m_local_camera ) {
 		DELETE( m_local_camera );
 	}
+	{
+		std::lock_guard guard( m_actors_mutex );
+		for ( const auto& actor : m_actors ) {
+			actor->SetScene( nullptr );
+		}
+	}
 }
 
 void Scene::AddActor( actor::Actor* actor ) {
+	std::lock_guard guard( m_actors_mutex );
 	//Log( "Adding actor [" + actor->GetName() + "]" );
 	actor->SetScene( this );
 	actor->UpdatePosition();
@@ -21,12 +28,18 @@ void Scene::AddActor( actor::Actor* actor ) {
 }
 
 void Scene::RemoveActor( actor::Actor* actor ) {
+	std::lock_guard guard( m_actors_mutex );
 	auto it = std::find( m_actors.begin(), m_actors.end(), actor );
-	if ( it < m_actors.end() ) {
+	if ( it != m_actors.end() ) {
 		//Log( "Removing actor [" + actor->GetName() + "]" );
 		actor->SetScene( NULL );
 		m_actors.erase( it, it + 1 );
 	}
+}
+
+void Scene::WithActors( const std::function< void( const std::vector< actor::Actor* >& actors ) >& f ) {
+	std::lock_guard guard( m_actors_mutex );
+	f( m_actors );
 }
 
 void Scene::SetCamera( Camera* camera ) {

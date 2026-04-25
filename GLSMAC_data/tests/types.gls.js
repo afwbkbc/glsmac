@@ -1,5 +1,4 @@
 // test script
-
 let a = 5;
 a++;
 const a_const = 6;
@@ -47,6 +46,7 @@ let testarr2 = [3, 'TEST', {
 	key1: 'value1',
 	key2: 'value2',
 }];
+
 testarr1 [] = 'first';
 testarr1 [] = 'second';
 testarr1 [] = 1 + 2 + 3;
@@ -55,9 +55,9 @@ testarr1 [] = testarr2;
 let testarr3 = #clone(testarr1);
 testarr3[1] = 'SECOND';
 testarr3[testmethod2(a, b, c) + 61] = 'FIRST';
-testarr3[2:5] = testarr1[0:1] + testarr2[0:1];
-let testarr4 = testarr3[:3];
-testarr4[ c + 1 - 100 : c - 100 + 2 ] = ['new first', 'new second'];
+testarr3[2::5] = testarr1[0::1] + testarr2[0::1];
+let testarr4 = testarr3[::3];
+testarr4[ c + 1 - 100 :: c - 100 + 2 ] = ['new first', 'new second'];
 
 let testobj1 = {};
 let testobj2 = {
@@ -156,11 +156,11 @@ test.assert(testarr4[1] == 'new first');
 test.assert(testarr4[2] == 'new second');
 test.assert(testarr4[3] == 'second');
 
-test.assert(testarr1[0:1] == ['first', 'second']);
+test.assert(testarr1[0::1] == ['first', 'second']);
 
-test.assert(testarr1[5:] == [testarr1[5], testarr1[6]]);
-test.assert(testarr1[:3] == [testarr1[0], testarr1[1]] + testarr1[2:3] );
-test.assert(testarr1[4:5] + testarr1[2:3] == [testarr1[4], testarr1[5], testarr1[2], testarr1[3]]);
+test.assert(testarr1[5::] == [testarr1[5], testarr1[6]]);
+test.assert(testarr1[::3] == [testarr1[0], testarr1[1]] + testarr1[2::3] );
+test.assert(testarr1[4::5] + testarr1[2::3] == [testarr1[4], testarr1[5], testarr1[2], testarr1[3]]);
 test.assert(testobj3.child1.child2.value == 'CHILD VALUE');
 test.assert(testobj1.propertyInt == 272 + c);
 test.assert(testobj1 == {propertyInt: 372});
@@ -191,13 +191,16 @@ if (false) {
 if (false) {
 	test.assert(false);
 }
-elseif(false)
+else if(false)
 {
 	test.assert(false);
 }
-elseif(true)
+else if(true)
 {
 	yes_or_no = true;
+}
+else if (true) {
+	test.assert(false);
 }
 else
 {
@@ -323,7 +326,7 @@ while (i > 0) {
 			if ( ii == 'a' || ii == 'c' ) {
 				continue;
 			}
-			elseif (ii == 'e') {
+			else if (ii == 'e') {
 				break;
 			}
 			arr :+ ii;
@@ -364,13 +367,13 @@ test.assert(arr == [
 	'failfunc',
 	'failfunc2',
 	'CAUGHT TestError : something happened',
-	'\tat ' + test.get_script_path() + ':343: throw TestError(\'something happened\');',
-	'\tat ' + test.get_script_path() + ':348: realfailfunc();',
-	'\tat ' + test.get_script_path() + ':350: failfunc();'
+	'\tat ' + test.get_script_path() + ':346: throw TestError(\'something happened\');',
+	'\tat ' + test.get_script_path() + ':351: realfailfunc();',
+	'\tat ' + test.get_script_path() + ':353: failfunc();'
 ]);
 
 test.assert(#to_string(2 + 3) + ' (five)' == '5 (five)');
-test.assert(#to_string(#to_float(#to_string(#to_int('1' + '2') + 55) + '1')) == '671.000000');
+test.assert(#to_string(#to_float(#to_string(#to_int('1' + '2') + 55) + '1')) == '671.0');
 test.assert(#to_int(#to_string(2 + 3) + '2') * 123 == 6396);
 
 test.assert(#to_string('string') == 'string');
@@ -385,7 +388,7 @@ test.assert(#typeof(123.) == 'Float');
 test.assert(#typeof(0.123) == 'Float');
 test.assert(#typeof('string') == 'String');
 test.assert(#typeof([]) == 'Array');
-test.assert(#typeof(2:3) == 'Range');
+test.assert(#typeof(2::3) == 'Range');
 test.assert(#typeof({}) == 'Object');
 test.assert(#typeof(() => {}) == 'Callable');
 
@@ -484,4 +487,106 @@ test.assert(#to_string(testobj6) == '{ key1: value1, key3: null }');
 
 ;
 ;
+
+const testswitch = (input) => {
+	let result = 0;
+	switch (input) {
+		case 'a': {
+			result = 1;
+			break;
+		}
+		case 'b': {
+			result = 2;
+			// no break
+		}
+		case 'c': {
+			result = 3;
+			break;
+		}
+		case 'd': {
+			continue;
+			result = 4;
+			break;
+		}
+		case 'e': {
+			result = 5;
+			break;
+		}
+		default: {
+			if (input == 'x') {
+				result = 6;
+			}
+		}
+	}
+	return result;
+};
+
+test.assert(testswitch('a') == 1);
+test.assert(testswitch('b') == 3); // fall-through
+test.assert(testswitch('c') == 3);
+test.assert(testswitch('d') == 5); // continue
+test.assert(testswitch('x') == 6); // default
+test.assert(testswitch('y') == 0); // default
+
 ;
+;
+;
+
+const parent_object = {
+	property: 'value1',
+	child_object: {
+		property: 'value2',
+		child_child_object: {
+			property: 'value3',
+			f: () => {
+
+				test.assert(#is_defined(this));
+				test.assert(#is_defined(this.this.this.this));
+				test.assert(#is_defined(parent));
+				test.assert(#is_defined(parent.parent));
+				test.assert(!#is_defined(parent.parent.parent));
+
+				test.assert(this.this.this == this);
+				test.assert(this.this == this.this.this.this.this);
+				test.assert(parent == this.parent);
+				test.assert(parent.parent.child_object == parent);
+				test.assert(parent.parent.child_object.child_child_object == this);
+
+				this.newprop = 'newvalue';
+				test.assert(this == this.parent.child_child_object);
+				test.assert(this.parent.parent.child_object.child_child_object.newprop == 'newvalue');
+				parent.child_child_object.newprop2 = 'newvalue2';
+				test.assert(this.newprop2 == 'newvalue2');
+				parent.parent.child_object.parent.child_object.child_child_object.parent.parent.child_object.newprop3 = 'newvalue3';
+				test.assert(parent.newprop3 == 'newvalue3');
+				parent.parent.newprop4 = 'newvalue4';
+			},
+		},
+	},
+};
+parent_object.child_object.child_child_object.f();
+test.assert(parent_object.newprop4 == 'newvalue4');
+test.assert(parent_object.child_object.newprop3 == 'newvalue3');
+test.assert(parent_object.child_object.child_child_object.newprop2 == 'newvalue2');
+test.assert(parent_object.child_object.child_child_object.newprop == 'newvalue');
+
+test.assert((true ? 1 : 2) == 1);
+test.assert((false ? 1 : 2) == 2);
+const big_ternary =
+	(
+		true
+			? (
+				true
+					? false
+					: true
+			)
+			: (
+				true
+					? true
+					: false
+			)
+	)
+		? false
+		: true
+;
+test.assert(big_ternary == true);

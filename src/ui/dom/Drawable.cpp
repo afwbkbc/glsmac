@@ -4,6 +4,8 @@
 #include "ui/geometry/Rectangle.h"
 #include "input/Event.h"
 #include "util/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
 
 namespace ui {
 namespace dom {
@@ -37,28 +39,38 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, _type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
-#define GEOMPROP( _key, _method ) \
-    GEOMSETTER( _key, T_INT ) { \
-        m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+#define GEOMPROP( _key, _method, _type ) \
+    GEOMSETTER( _key, gse::value::_type::GetType() ) { \
+        m_geometry->_method( ( (gse::value::_type*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
     } )
-	GEOMPROP( "left", SetLeft );
-	GEOMPROP( "top", SetTop );
-	GEOMPROP( "right", SetRight );
-	GEOMPROP( "bottom", SetBottom );
+	GEOMPROP( "left", SetLeft, Int );
+	GEOMPROP( "top", SetTop, Int );
+	GEOMPROP( "right", SetRight, Int );
+	GEOMPROP( "bottom", SetBottom, Int );
 #undef GEOMPROP
 
-	GEOMSETTER( "align", T_STRING ) {
-		const auto strs = util::String::Split( ( (gse::type::String*)v.Get() )->value, ' ' );
+	GEOMSETTER( "zindex", gse::VT_FLOAT ) {
+		const auto old_zindex = m_geometry->GetZIndex();
+		const auto new_zindex = ( (gse::value::Float*)v )->value;
+		m_geometry->SetZIndex( new_zindex );
+		if ( m_parent ) {
+			m_parent->UpdateMouseOver( GSE_CALL );
+			m_parent->UpdateChildZIndex( m_dom_id, old_zindex, new_zindex );
+		}
+	} );
+
+	GEOMSETTER( "align", gse::VT_STRING ) {
+		const auto strs = util::String::Split( ( (gse::value::String*)v )->value, ' ' );
 		uint8_t align = geometry::Geometry::ALIGN_NONE;
 		for ( const auto& str : strs ) {
 			const auto& it = s_align_strs.find( str );
 			if ( it == s_align_strs.end() ) {
-				throw gse::Exception( gse::EC.UI_ERROR, "Invalid align value: " + str, GSE_CALL );
+				GSE_ERROR( gse::EC.UI_ERROR, "Invalid align value: " + str );
 			}
 			auto a = it->second;
 			if ( a == geometry::Geometry::ALIGN_CENTER ) {
@@ -103,20 +115,6 @@ geometry::Geometry* const Drawable::GetGeometry() const {
 
 void Drawable::GeometryHandler( const geometry_handler_type_t type, const std::function< void() >& f ) {
 	m_geometry_handler_ids.push_back( m_geometry->AddHandler( type, f ) );
-}
-
-const bool Drawable::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
-	switch ( event.type ) {
-		case input::EV_MOUSE_OVER: {
-			m_is_mouse_over = true;
-			break;
-		}
-		case input::EV_MOUSE_OUT: {
-			m_is_mouse_over = false;
-			break;
-		}
-	}
-	return Object::ProcessEvent( GSE_CALL, event );
 }
 
 void Drawable::Show() {

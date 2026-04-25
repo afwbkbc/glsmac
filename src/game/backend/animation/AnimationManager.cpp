@@ -5,20 +5,34 @@
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Array.h"
-#include "gse/type/Float.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
 #include "gse/ExecutionPointer.h"
 #include "engine/Engine.h"
 #include "loader/sound/SoundLoader.h"
 #include "game/backend/animation/FramesRow.h"
-#include "game/backend/event/DefineAnimation.h"
+#include "game/backend/map/tile/TileManager.h"
+
+#include "AnimationSequence.h"
+#include "Animation.h"
 
 namespace game {
 namespace backend {
 namespace animation {
 
+#define PARSEANIMATION( _var, _type, ... ) \
+	const auto& it_##_var = props.find( #_var ); \
+	if ( it_##_var == props.end() ) { \
+		GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations() does not contain property: " #_var ); \
+	} \
+	if ( it_##_var->second->type != gse::value::_type::GetType() ) { \
+		GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property " #_var " is of wrong type. Expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got " + it_##_var->second->GetTypeString() + ": " + it_##_var->second->ToString() ); \
+	} \
+	const auto _var = ((gse::value::_type*)it_##_var->second) __VA_ARGS__;
+
 AnimationManager::AnimationManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 
@@ -27,6 +41,10 @@ AnimationManager::~AnimationManager() {
 }
 
 void AnimationManager::Clear() {
+	{
+		std::lock_guard guard( m_animation_sequences_mutex );
+		ASSERT( m_animation_sequences.empty(), "some animations are still running" );
+	}
 	m_running_animations_callbacks.clear();
 	m_next_running_animation_id = 0;
 	for ( auto& it : m_animation_defs ) {
@@ -38,7 +56,7 @@ void AnimationManager::Clear() {
 void AnimationManager::DefineAnimation( animation::Def* def ) {
 	Log( "Defining animation ('" + def->m_id + "')" );
 
-	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "Animation definition '" + def->m_id + "' already exists" );
+	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "animation definition already exists" );
 
 	// backend doesn't need any animation details, just keep track of it's existence for validations
 	m_animation_defs.insert(
@@ -53,12 +71,24 @@ void AnimationManager::DefineAnimation( animation::Def* def ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-const std::string* AnimationManager::ShowAnimation( const std::string& animation_id, map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
+void AnimationManager::UndefineAnimation( const std::string& id ) {
+	Log( "Undefining animation ('" + id + "')" );
+
+	ASSERT( m_animation_defs.find( id ) != m_animation_defs.end(), "animation definition not found" );
+
+	m_animation_defs.erase( id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_UNDEFINE );
+	NEW( fr.data.animation_undefine.animation_id, std::string, id );
+	m_game->AddFrontendRequest( fr );
+}
+
+const size_t AnimationManager::ShowAnimation( GSE_CALLABLE, const std::string& animation_id, const map::tile::Tile* tile, const cb_oncomplete& on_complete ) {
 	if ( m_animation_defs.find( animation_id ) == m_animation_defs.end() ) {
-		return new std::string( "Animation '" + animation_id + "' is not defined" );
+		GSE_ERROR( gse::EC.GAME_ERROR, "Animation '" + animation_id + "' is not defined" );
 	}
 	if ( !tile->IsLocked() ) {
-		return new std::string( "Tile must be locked before showing animation" );
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile must be locked before showing animation" );
 	}
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_SHOW );
 	NEW( fr.data.animation_show.animation_id, std::string, animation_id );
@@ -70,26 +100,45 @@ const std::string* AnimationManager::ShowAnimation( const std::string& animation
 		c.z,
 	};
 	m_game->AddFrontendRequest( fr );
-	return nullptr; // no error
+	return fr.data.animation_show.running_animation_id;
 }
 
 void AnimationManager::FinishAnimation( const size_t animation_id ) {
 	const auto& it = m_running_animations_callbacks.find( animation_id );
-	ASSERT( it != m_running_animations_callbacks.end(), "animation " + std::to_string( animation_id ) + " is not running" );
-	const auto on_complete = it->second;
-	m_running_animations_callbacks.erase( it );
-	on_complete();
+	if ( it != m_running_animations_callbacks.end() ) {
+		const auto on_complete = it->second;
+		m_running_animations_callbacks.erase( it );
+		on_complete( animation_id );
+	}
+}
+
+void AnimationManager::AbortAnimation( const size_t animation_id ) {
+	const auto& it = m_running_animations_callbacks.find( animation_id );
+	if ( it != m_running_animations_callbacks.end() ) {
+		m_running_animations_callbacks.erase( it );
+		auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_ABORT );
+		fr.data.animation_abort.running_animation_id = animation_id;
+		m_game->AddFrontendRequest( fr );
+	}
 }
 
 WRAPIMPL_BEGIN( AnimationManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
-			"define_animation",
+			"define",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( animation_def, 1, Object );
 				N_GETPROP( type, animation_def, "type", String );
+
+				if ( m_animation_defs.find( id ) != m_animation_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Animation \"" + id + "\" already exists" );
+				}
 
 				if ( type == "frames_row" ) {
 					N_GETPROP( file, animation_def, "file", String );
@@ -126,7 +175,8 @@ WRAPIMPL_BEGIN( AnimationManager )
 						duration_ms,
 						sound
 					);
-					return m_game->AddEvent( new event::DefineAnimation( m_game->GetSlotNum(), def ) );
+					DefineAnimation( def );
+					return VALUE( gse::value::Undefined );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported animation type: " + type );
@@ -136,21 +186,133 @@ WRAPIMPL_BEGIN( AnimationManager )
 		{
 			"show_animation",
 			NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 3 );
-			N_GETVALUE( id, 0, String );
-			N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
-			N_PERSIST_CALLABLE( on_complete, 2 );
-			const auto* errmsg = ShowAnimation( id, tile, [ on_complete, ctx, si, ep ]() {
-				auto ep2 = ep;
-				on_complete->Run( ctx, si, ep2, {} );
-				N_UNPERSIST_CALLABLE( on_complete );
-			});
-			if ( errmsg ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, *errmsg );
-				delete errmsg;
-			}
-			return VALUE( gse::type::Undefined );
-		} )
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS_MIN_MAX( 2, 3 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE_UNWRAP( tile, 1, map::tile::Tile );
+				N_GET_CALLABLE_OPT( on_complete, 2 );
+				if ( on_complete ) {
+					Persist( on_complete );
+				}
+
+				auto* tm = m_game->GetTM();
+				const auto slotnum = m_game->GetSlotNum();
+				tm->LockTiles( slotnum, { tile } );
+
+				try {
+					ShowAnimation(
+						GSE_CALL, id, tile, [ this, tm, slotnum, tile, on_complete, gc_space, ctx, si, ep ]( const size_t animation_id ) {
+							if ( on_complete ) {
+								auto ep2 = ep;
+								on_complete->Run( gc_space, ctx, si, ep2, {} );
+								Unpersist( on_complete );
+							}
+							tm->UnlockTiles( slotnum, { tile } );
+						}
+					);
+				} catch ( gse::Exception& e ) {
+					if ( on_complete ) {
+						Unpersist( on_complete );
+					}
+					tm->UnlockTiles( slotnum, { tile } );
+					throw;
+				}
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"stop_animations",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( animations_id, 0, Int );
+
+				{
+					std::lock_guard guard( m_animation_sequences_mutex );
+					const auto& it = m_animation_sequences.find( animations_id );
+					if ( it != m_animation_sequences.end() ) {
+						it->second->Abort();
+					}
+				}
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"show_animations",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( animations, 0, Array );
+
+				m_game->CheckRW( GSE_CALL );
+
+				if ( animations.empty() ) {
+					// nothing to do
+					return VALUE( gse::value::Undefined );
+				}
+
+				std::unordered_set< map::tile::Tile* > unique_tiles = {};
+
+				if ( m_next_animation_sequence_id == SIZE_MAX ) {
+					m_next_animation_sequence_id = 1;
+				}
+
+				auto* sequence = new AnimationSequence( gc_space, this, m_next_animation_sequence_id, animations.size() );
+
+				{
+					std::lock_guard guard( m_animation_sequences_mutex );
+					m_animation_sequences.insert( { m_next_animation_sequence_id, sequence } );
+
+					for ( const auto& value : animations ) {
+						if ( value->type != gse::VT_OBJECT ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Invalid array element in show_animations(): expected Object, got " + value->GetTypeString() + ": " + value->ToString() );
+						}
+
+						const auto& props = ( (gse::value::Object*)value )->value;
+
+						PARSEANIMATION( id, String, ->value );
+
+						PARSEANIMATION( tile, Object );
+						if ( tile->object_class != map::tile::Tile::WRAP_CLASS ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Element of show_animations(): property tile is not of class Tile: " + tile->ToString() );
+						}
+
+						const auto& t = (map::tile::Tile*)tile->wrapobj;
+						unique_tiles.insert( t );
+
+						gse::value::Callable* cb = nullptr;
+						if ( props.find( "oncomplete" ) != props.end() ) {
+							PARSEANIMATION( oncomplete, Callable );
+							cb = oncomplete;
+						}
+						sequence->AddAnimation( new Animation( gc_space, t, id, cb ) );
+					}
+
+					sequence->Run( GSE_CALL );
+				}
+
+				return VALUE( gse::value::Int,, m_next_animation_sequence_id++ );
+			} )
+		},
+		{
+			"undefine",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_animation_defs.find( id ) == m_animation_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Animation \"" + id + "\" does not exist" );
+				}
+
+				UndefineAnimation( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
 		}
 	};
 WRAPIMPL_END_PTR()
@@ -168,7 +330,7 @@ void AnimationManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next animation id: " + std::to_string( m_next_running_animation_id ) );
 }
 
-void AnimationManager::Unserialize( types::Buffer& buf ) {
+void AnimationManager::Deserialize( types::Buffer& buf ) {
 	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
 	size_t sz = buf.ReadInt();
 	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
@@ -176,7 +338,7 @@ void AnimationManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineAnimation( animation::Def::Unserialize( b ) );
+		DefineAnimation( animation::Def::Deserialize( b ) );
 	}
 	m_next_running_animation_id = buf.ReadInt();
 	Log( "Restored next animation id: " + std::to_string( m_next_running_animation_id ) );
@@ -193,6 +355,28 @@ const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_com
 	return running_animation_id;
 }
 
+void AnimationManager::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "animation_sequences" );
+	{
+		std::lock_guard guard( m_animation_sequences_mutex );
+		for ( const auto& it : m_animation_sequences ) {
+			GC_REACHABLE( it.second );
+		}
+	}
+	GC_DEBUG_END();
+
+}
+
+void AnimationManager::RemoveAnimationSequence( const size_t sequence_id ) {
+	std::lock_guard guard( m_animation_sequences_mutex );
+	ASSERT( m_animation_sequences.find( sequence_id ) != m_animation_sequences.end(), "animation sequence not found" );
+	m_animation_sequences.erase( sequence_id );
+}
+
 }
 }
 }
+
+#undef PARSEANIMATION

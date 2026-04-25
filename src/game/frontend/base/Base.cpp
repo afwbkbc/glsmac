@@ -3,7 +3,6 @@
 #include "game/frontend/Game.h"
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/tile/Tile.h"
-#include "util/String.h"
 #include "game/frontend/Slot.h"
 #include "game/frontend/sprite/Sprite.h"
 #include "game/frontend/sprite/InstancedSprite.h"
@@ -14,10 +13,6 @@
 #include "types/texture/Texture.h"
 #include "BaseManager.h"
 #include "SlotBadges.h"
-#include "ui_legacy/object/Mesh.h"
-#include "ui_legacy/object/Label.h"
-#include "../ui_legacy/bottom_bar/objects_list/ObjectsListItem.h"
-#include "../ui_legacy/bottom_bar/ObjectPreview.h"
 
 namespace game {
 namespace frontend {
@@ -57,9 +52,9 @@ Base::Base(
 	, m_is_owned( is_owned )
 	, m_is_guarded( !m_tile->GetUnits().empty() )
 	, m_slot_badges( m_bm->GetSlotBadges( slot->GetIndex() ) ) {
-	m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 	m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
-	m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+	UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 	m_tile->SetBase( this );
 }
 
@@ -67,6 +62,12 @@ Base::~Base() {
 	Hide();
 	m_tile->UnsetBase( this );
 	delete m_render.name_sprite;
+	if ( m_render_data.base.mesh ) {
+		DELETE( m_render_data.base.mesh );
+	}
+	if ( m_render_data.badge.mesh ) {
+		DELETE( m_render_data.badge.mesh );
+	}
 }
 
 const size_t Base::GetId() const {
@@ -112,9 +113,9 @@ void Base::Show() {
 
 		if ( m_render.badge.pops_count != m_pops.size() ) {
 			m_render.badge.pops_count = m_pops.size();
-			m_render_data.base = GetMeshTex( GetSprite()->instanced_sprite );
+			UpdateMeshTex( m_render_data.base, GetSprite()->instanced_sprite );
 			m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_render.badge.pops_count, m_is_guarded );
-			m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+			UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		}
 
 		const auto& c = m_render.coords;
@@ -164,7 +165,7 @@ void Base::Update() {
 		}
 		m_is_guarded = is_guarded;
 		m_render.badge.def = m_slot_badges->GetBaseBadgeSprite( m_pops.size(), m_is_guarded );
-		m_render_data.badge = GetMeshTex( m_render.badge.def->instanced_sprite );
+		UpdateMeshTex( m_render_data.badge, m_render.badge.def->instanced_sprite );
 		if ( m_render.is_rendered ) {
 			ShowBadge();
 		}
@@ -173,100 +174,6 @@ void Base::Update() {
 
 const Base::render_data_t& Base::GetRenderData() const {
 	return m_render_data;
-}
-
-void* Base::CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const {
-	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
-
-	const auto& render = GetRenderData();
-
-	const types::mesh::Mesh* mesh;
-	::ui_legacy::object::Mesh* ui_mesh;
-#define X( _key, _class ) \
-    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
-    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui_legacy::object::Mesh, (std::string)"BBObjectsListPreview" + (_class) ); \
-    ui_mesh->SetMesh( mesh ); \
-    ui_mesh->SetTexture( render._key.texture ); \
-    element->AddChild( ui_mesh ); \
-    ui_elements->push_back( ui_mesh );
-
-	// order is important
-	X( base, "Base" );
-	X( badge, m_pops.size() >= 10
-		? "BaseBadge2"
-		: "BaseBadge1"
-	);
-
-#undef X
-
-	return ui_elements;
-}
-
-void Base::DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
-
-	for ( const auto& e : *ui_elements ) {
-		element->RemoveChild( e );
-	}
-
-	DELETE( ui_elements );
-}
-
-void* Base::CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const {
-	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
-
-	const auto& render = GetRenderData();
-
-	const types::mesh::Mesh* mesh;
-	::ui_legacy::object::Mesh* ui_mesh;
-#define X( _key, _class ) \
-    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectPreview" _class ); \
-    ui_mesh->SetMesh( mesh ); \
-    ui_mesh->SetTexture( render._key.texture ); \
-    element->AddChild( ui_mesh ); \
-    ui_elements->push_back( ui_mesh );
-
-	// order is important
-	X( base, "Object" );
-	X( badge, "Badge" );
-
-#undef X
-
-	size_t top = 86;
-	::ui_legacy::object::Label* label;
-#define X( _text, _align ) \
-    if ( !(_text).empty() ) { \
-        NEW( label, ::ui_legacy::object::Label, "BBObjectPreviewLabel" #_align ); \
-        label->SetText( _text );                                           \
-        label->SetTop( top ); \
-        element->AddChild( label ); \
-        ui_elements->push_back( label ); \
-        top += label->GetHeight(); \
-    }
-
-	X( m_name, Header );
-	X( (std::string)"Producing:", Left );
-
-#undef X
-
-	return ui_elements;
-}
-
-void Base::DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
-
-	for ( const auto& e : *ui_elements ) {
-		element->RemoveChild( e );
-	}
-
-	DELETE( ui_elements );
-}
-
-const bool Base::OnBottomBarListActivate( Game* game ) {
-	game->SelectBase( this );
-	return false; // because previously active unit should stay active, base popup will have it's own bottombar
 }
 
 const Base::pops_t& Base::GetPops() const {
@@ -294,7 +201,7 @@ void Base::HideBadge() {
 	m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
 }
 
-Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
+void Base::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(
@@ -315,15 +222,16 @@ Base::meshtex_t Base::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 			sprite->xy.y + sprite->wh.y
 		},
 		{
-			texture->m_width,
-			texture->m_height
+			texture->GetWidth(),
+			texture->GetHeight()
 		},
 		0.8f
 	);
-	return {
-		mesh,
-		texture,
-	};
+	if ( meshtex.mesh ) {
+		DELETE( meshtex.mesh );
+	}
+	meshtex.mesh = mesh->ToRenderMesh();
+	meshtex.texture = texture;
 }
 
 }

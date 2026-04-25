@@ -2,13 +2,16 @@
 
 #include <vector>
 #include <cstdint>
+#include <unordered_map>
 
-#include "common/Common.h"
+#include "gc/Object.h"
 
 #include "gse/Types.h"
 #include "gse/program/Types.h"
 
 namespace gse {
+
+class Value;
 
 namespace program {
 class Program;
@@ -16,12 +19,14 @@ class Program;
 
 namespace parser {
 
-CLASS( Parser, common::Class )
+CLASS( Parser, gc::Object )
 
-	Parser( const std::string& filename, const std::string& source, const size_t initial_line_num );
+	Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num );
 	virtual ~Parser();
 
 	const program::Program* Parse();
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
 
 protected:
 
@@ -122,21 +127,24 @@ protected:
 	public:
 		enum conditional_type_t {
 			CT_IF,
-			CT_ELSEIF,
 			CT_ELSE,
 			CT_WHILE,
 			CT_FOR,
 			CT_TRY,
 			CT_CATCH,
+			CT_SWITCH,
+			CT_CASE,
+			CT_DEFAULTCASE,
 		};
 		Conditional( const conditional_type_t conditional_type, const si_t& si )
 			: SourceElement( ET_CONDITIONAL, si )
 			, m_conditional_type( conditional_type )
 			, has_condition(
 				conditional_type == CT_IF ||
-					conditional_type == CT_ELSEIF ||
 					conditional_type == CT_WHILE ||
-					conditional_type == CT_FOR
+					conditional_type == CT_FOR ||
+					conditional_type == CT_SWITCH ||
+					conditional_type == CT_CASE
 			) {};
 
 		const conditional_type_t m_conditional_type;
@@ -146,8 +154,6 @@ protected:
 			switch ( m_conditional_type ) {
 				case CT_IF:
 					return "if";
-				case CT_ELSEIF:
-					return "elseif";
 				case CT_ELSE:
 					return "else";
 				case CT_WHILE:
@@ -158,6 +164,12 @@ protected:
 					return "try";
 				case CT_CATCH:
 					return "catch";
+				case CT_SWITCH:
+					return "switch";
+				case CT_CASE:
+					return "case";
+				case CT_DEFAULTCASE:
+					return "defaultcase";
 				default:
 					THROW( "unexpected conditional type: " + std::to_string( m_conditional_type ) );
 			}
@@ -269,7 +281,17 @@ protected:
 
 	gse::ExecutionPointer* m_ep = nullptr;
 
+#define X( _n, _t ) gse::Value* const _n( const _t& v, gc::Space* const gc_space );
+	X( static_var_s, std::string )
+	X( static_var_i, int64_t )
+	X( static_var_f, float )
+#undef X
+
+	virtual void collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const;
+
 private:
+	bool m_is_parsed = false;
+
 	const std::string m_source;
 	const std::string m_filename;
 
@@ -281,6 +303,11 @@ private:
 
 	inline void move();
 	inline void move_by( const size_t len = 1 );
+
+	std::unordered_map< std::string, gse::Value* > m_static_vars_s = {};
+	std::unordered_map< int64_t, gse::Value* > m_static_vars_i = {};
+	std::unordered_map< float, gse::Value* > m_static_vars_f = {};
+
 };
 
 }

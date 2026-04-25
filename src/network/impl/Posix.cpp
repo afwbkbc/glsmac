@@ -37,6 +37,10 @@ void Network::Impl::ConfigureSocket( const fd_t socket ) const {
 	fcntl( socket, F_SETFL, flags | O_NONBLOCK );
 	unsigned long l = 1;
 	setsockopt( socket, SOL_SOCKET, MSG_NOSIGNAL, (void*)&l, sizeof( l ) );
+	struct linger linger;
+	linger.l_onoff = 1;
+	linger.l_linger = 0;
+	setsockopt( socket, SOL_SOCKET, SO_LINGER, &linger, sizeof( linger ) );
 }
 
 bool Network::Impl::IsConnectionSucceeded( const ec_t ec ) const {
@@ -62,6 +66,7 @@ int Network::Impl::Send( const fd_t fd, const void* buf, const int len ) const {
 }
 
 void Network::Impl::CloseSocket( const fd_t socket ) const {
+	shutdown( socket, SHUT_WR );
 	close( socket );
 }
 

@@ -1,0 +1,77 @@
+#pragma once
+
+#include <unordered_map>
+
+#include "Area.h"
+
+#include "ui/Types.h"
+
+namespace game::frontend::widget {
+class Widget;
+}
+
+namespace types {
+namespace texture {
+class Texture;
+}
+}
+
+namespace scene::actor {
+class Actor;
+}
+
+namespace ui {
+namespace dom {
+
+class Widget : public Area {
+public:
+
+	Widget( DOM_ARGS );
+
+	void Show() override;
+	void Hide() override;
+	void Destroy( GSE_CALLABLE ) override;
+	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
+
+	void SetTexture( types::texture::Texture* const texture, const size_t index = 0 );
+	void SetActor( scene::actor::Actor* const actor, const size_t index = 0 );
+	void Clear();
+
+	types::texture::Texture* const GetTexture( const size_t index = 0 ) const;
+
+	void OnUpdate( const f_widget_update_t& on_widget_update );
+	void OnRemove( const f_widget_remove_t& on_widget_remove );
+
+	typedef std::function< bool( const input::Event& ) > f_on_event_t;
+#define F_EVENT_HANDLER( ... ) [ __VA_ARGS__ ]( const input::Event& event )
+	void SetEventHandler( const input::event_type_t type, const f_on_event_t& f );
+	void SetGlobalEventHandler( const input::event_type_t type, const f_on_event_t& f );
+
+private:
+
+	widget_type_t m_type = WT_NONE;
+	void Enable( const widget_type_t type );
+	void Disable();
+	void SetData( gse::value::Object* const data );
+
+	bool m_is_attached = false;
+	void Attach();
+	void Detach();
+
+	gse::value::Object* m_data = nullptr;
+	bool m_data_update_needed = false;
+
+	std::unordered_map< size_t, types::texture::Texture* > m_textures = {};
+	std::unordered_map< size_t, scene::actor::Actor* > m_actors = {};
+
+	f_widget_update_t m_on_widget_update = nullptr;
+	f_widget_remove_t m_on_widget_remove = nullptr;
+	void UpdateWidget();
+
+	std::unordered_map< input::event_type_t, f_on_event_t > m_event_handlers = {};
+	std::unordered_map< input::event_type_t, f_on_event_t > m_global_event_handlers;
+	size_t m_global_handler_id = 0;
+};
+
+}
+}

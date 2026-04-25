@@ -7,9 +7,9 @@ namespace texture {
 
 Filter::Filter( types::texture::Texture* const source_texture )
 	: m_source_texture( source_texture )
-	, m_width( source_texture->m_width )
-	, m_height( source_texture->m_height ) {
-	ASSERT_NOLOG( m_source_texture, "texture not set" );
+	, m_width( source_texture->GetWidth() )
+	, m_height( source_texture->GetHeight() ) {
+	ASSERT( m_source_texture, "texture not set" );
 }
 
 Filter::~Filter() {
@@ -32,7 +32,7 @@ const Filter::texture_data_t Filter::GetTexture() {
 
 		// export color map to texture
 		const auto* in = m_colormap;
-		auto* out = (types::Color::rgba_t*)texture->m_bitmap;
+		auto* out = (types::Color::rgba_t*)texture->GetBitmap();
 		for ( auto y = 0 ; y < m_height ; y++ ) {
 			const auto yw = y * m_width;
 			for ( auto x = 0 ; x < m_width ; x++ ) {
@@ -54,7 +54,7 @@ const Filter::texture_data_t Filter::GetTexture() {
 }
 
 void Filter::Tint( const types::Color& color, const float intensity ) {
-	ASSERT_NOLOG( intensity >= 0.0f && intensity <= 1.0f, "intensity overflow" );
+	ASSERT( intensity >= 0.0f && intensity <= 1.0f, "intensity overflow" );
 	Prepare();
 
 	const float a = 1.0f - intensity;
@@ -69,10 +69,10 @@ void Filter::Tint( const types::Color& color, const float intensity ) {
 }
 
 void Filter::Crop( const size_t x1, const size_t y1, const size_t x2, const size_t y2 ) {
-	ASSERT_NOLOG( x2 >= x1, "crop x2 less than x1" );
-	ASSERT_NOLOG( y2 >= y1, "crop x2 less than x1" );
-	ASSERT_NOLOG( x2 < m_width, "crop x2 overflow" );
-	ASSERT_NOLOG( y2 < m_height, "crop y2 overflow" );
+	ASSERT( x2 >= x1, "crop x2 less than x1" );
+	ASSERT( y2 >= y1, "crop x2 less than x1" );
+	ASSERT( x2 < m_width, "crop x2 overflow" );
+	ASSERT( y2 < m_height, "crop y2 overflow" );
 
 	const auto w = x2 - x1 + 1;
 	const auto h = y2 - y1 + 1;
@@ -138,7 +138,7 @@ void Filter::FlipH() {
 }
 
 void Filter::Contrast( const float value ) {
-	ASSERT_NOLOG( value >= 0.0f && value <= 10.0f, "contrast overflow" );
+	ASSERT( value >= 0.0f && value <= 10.0f, "contrast overflow" );
 
 	Prepare();
 
@@ -166,7 +166,7 @@ void Filter::Prepare() {
 		m_colormap = (types::Color::color_t*)malloc( sizeof( types::Color::color_t ) * m_height * m_width );
 
 		// export texture to color map
-		const auto* in = (types::Color::rgba_t*)m_source_texture->m_bitmap;
+		const auto* in = (types::Color::rgba_t*)m_source_texture->GetBitmap();
 		auto* out = m_colormap;
 		for ( auto y = 0 ; y < m_height ; y++ ) {
 			const auto yw = y * m_width;

@@ -1,5 +1,7 @@
 #include "ExecutionPointer.h"
 
+#include "gse/Exception.h"
+
 namespace gse {
 
 void ExecutionPointer::WithSI( const si_t& si, const std::function< void() >& f ) {
@@ -7,7 +9,7 @@ void ExecutionPointer::WithSI( const si_t& si, const std::function< void() >& f 
 	try {
 		f();
 	}
-	catch ( const std::exception& e ) {
+	catch ( const gse::Exception& e ) {
 		m_stacktrace.pop_back();
 		throw;
 	}

@@ -7,7 +7,6 @@
 
 #include "game/backend/map/tile/Types.h"
 #include "gse/Wrappable.h"
-#include "gse/Value.h"
 
 namespace game {
 namespace backend {
@@ -39,7 +38,7 @@ public:
 	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
 
 	static const types::Buffer Serialize( const Def* def );
-	static Def* Unserialize( types::Buffer& buf );
+	static Def* Deserialize( types::Buffer& buf );
 
 	WRAPDEFS_PTR( Def );
 

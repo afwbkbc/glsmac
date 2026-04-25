@@ -25,29 +25,29 @@ const std::string& Account::GetGSID() const {
 }
 
 const std::string& Account::GetLastPlayerName() const {
-	return m_last_values.player_name;
+	return player_name;
 }
 
 void Account::SetLastPlayerName( const std::string& value ) {
-	m_last_values.player_name = value;
+	player_name = value;
 	Save();
 }
 
 const std::string& Account::GetLastGameName() const {
-	return m_last_values.game_name;
+	return game_name;
 }
 
 void Account::SetLastGameName( const std::string& value ) {
-	m_last_values.game_name = value;
+	game_name = value;
 	Save();
 }
 
 const std::string& Account::GetLastRemoteAddress() const {
-	return m_last_values.remote_address;
+	return remote_address;
 }
 
 void Account::SetLastRemoteAddress( const std::string& value ) {
-	m_last_values.remote_address = value;
+	remote_address = value;
 	Save();
 }
 
@@ -66,9 +66,9 @@ void Account::Save() {
 	YAML::Node account;
 	account[ "gsid" ] = m_gsid;
 	YAML::Node last_values;
-	last_values[ "player_name" ] = m_last_values.player_name;
-	last_values[ "game_name" ] = m_last_values.game_name;
-	last_values[ "remote_address" ] = m_last_values.remote_address;
+	last_values[ "player_name" ] = player_name;
+	last_values[ "game_name" ] = game_name;
+	last_values[ "remote_address" ] = remote_address;
 	account[ "last_values" ] = last_values;
 	root[ m_gsid ] = account; // gsids are keys
 	util::FS::WriteFile( GetPath(), Dump( root ) );
@@ -103,7 +103,7 @@ void Account::Load() {
 			const auto& last_values = account[ "last_values" ];
 #define x( _field ) \
             if ( last_values[ #_field ] ) { \
-                m_last_values._field = last_values[ #_field ].as< std::string >(); \
+                _field = last_values[ #_field ].as< std::string >(); \
             } \
             else { \
                 need_update = true; \
@@ -129,6 +129,18 @@ void Account::Load() {
 		Create();
 	}
 }
+
+WRAPIMPL_DYNAMIC_GETTERS( Account )
+			WRAPIMPL_GET( player_name, String )
+			WRAPIMPL_GET( game_name, String )
+			WRAPIMPL_GET( remote_address, String )
+WRAPIMPL_DYNAMIC_SETTERS( Account )
+	WRAPIMPL_SET( player_name, String )
+	WRAPIMPL_SET( game_name, String )
+	WRAPIMPL_SET( remote_address, String )
+WRAPIMPL_DYNAMIC_ON_SET( Account )
+	Save();
+WRAPIMPL_DYNAMIC_END()
 
 }
 }

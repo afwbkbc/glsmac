@@ -1,11 +1,12 @@
 #include "Faction.h"
 
 #include "types/texture/Texture.h"
-#include "gse/type/String.h"
-#include "gse/type/Bool.h"
+#include "gse/value/String.h"
+#include "gse/value/Bool.h"
 #include "engine/Engine.h"
 #include "loader/texture/TextureLoader.h"
 #include "resource/ResourceManager.h"
+#include "util/String.h"
 
 namespace game {
 namespace backend {
@@ -45,14 +46,14 @@ const types::Buffer Faction::Serialize() const {
 	return buf;
 }
 
-void Faction::Unserialize( types::Buffer buf ) {
+void Faction::Deserialize( types::Buffer buf ) {
 
 	m_id = buf.ReadString();
 	m_name = buf.ReadString();
 
-	m_colors.text = buf.ReadColor();
-	m_colors.text_shadow = buf.ReadColor();
-	m_colors.border = buf.ReadColor();
+	buf.ReadColor( m_colors.text );
+	buf.ReadColor( m_colors.text_shadow );
+	buf.ReadColor( m_colors.border );
 
 	m_bases_render.file = buf.ReadString();
 	m_bases_render.grid_x = buf.ReadInt();
@@ -69,23 +70,27 @@ void Faction::Unserialize( types::Buffer buf ) {
 
 WRAPIMPL_BEGIN( Faction )
 	WRAPIMPL_PROPS
-		{
-			"id",
-			VALUE( gse::type::String, m_id )
-		},
-		{
-			"name",
-			VALUE( gse::type::String, m_name )
-		},
-		{
-			"is_naval",
-			VALUE( gse::type::Bool, m_flags & Faction::FF_NAVAL )
-		},
-		{
-			"is_progenitor",
-			VALUE( gse::type::Bool, m_flags & Faction::FF_PROGENITOR )
-		},
-	};
+			{
+				"id",
+				VALUE( gse::value::String, , m_id )
+			},
+			{
+				"name",
+				VALUE( gse::value::String, , m_name )
+			},
+			{
+				"text_color",
+				m_colors.text.Wrap( GSE_CALL ),
+			},
+			{
+				"is_naval",
+				VALUE( gse::value::Bool, , m_flags & Faction::FF_NAVAL )
+			},
+			{
+				"is_progenitor",
+				VALUE( gse::value::Bool, , m_flags & Faction::FF_PROGENITOR )
+			},
+		};
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Faction )

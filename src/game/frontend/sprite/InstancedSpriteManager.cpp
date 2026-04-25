@@ -11,9 +11,7 @@ namespace frontend {
 namespace sprite {
 
 InstancedSpriteManager::InstancedSpriteManager( scene::Scene* scene )
-	: m_scene( scene ) {
-
-}
+	: m_scene( scene ) {}
 
 InstancedSpriteManager::~InstancedSpriteManager() {
 	for ( auto& sprite : m_instanced_sprites ) {
@@ -27,7 +25,7 @@ InstancedSpriteManager::~InstancedSpriteManager() {
 	m_instanced_sprites.clear();
 
 	for ( const auto& it : m_repainted_textures ) {
-		delete it.second;
+		DELETE( it.second );
 	}
 }
 
@@ -52,6 +50,9 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 
 		Log( "Creating instanced sprite: " + key );
 
+		const auto tw = texture->GetWidth();
+		const auto th = texture->GetHeight();
+
 		NEWV(
 			sprite,
 			scene::actor::Sprite,
@@ -63,12 +64,12 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 			texture,
 			{
 				{
-					(float)1.0f / texture->m_width * ( src_xy.x ),
-					(float)1.0f / texture->m_height * ( src_xy.y )
+					(float)1.0f / tw * ( src_xy.x ),
+					(float)1.0f / th * ( src_xy.y )
 				},
 				{
-					(float)1.0f / texture->m_width * ( src_xy.x + src_wh.x ),
-					(float)1.0f / texture->m_height * ( src_xy.y + src_wh.y )
+					(float)1.0f / tw * ( src_xy.x + src_wh.x ),
+					(float)1.0f / th * ( src_xy.y + src_wh.y )
 				}
 			},
 			{
@@ -139,7 +140,6 @@ InstancedSprite* InstancedSpriteManager::GetRepaintedInstancedSprite( const std:
 				}
 			}
 		).first;
-
 	}
 	return &it->second;
 }
@@ -150,6 +150,7 @@ void InstancedSpriteManager::RemoveInstancedSpriteByKey( const std::string& key 
 	Log( "Removing instanced sprite: " + key );
 	const auto& sprite = it->second;
 	m_scene->RemoveActor( sprite.actor );
+	DELETE( sprite.actor );
 	m_instanced_sprites.erase( it );
 }
 
@@ -159,6 +160,7 @@ void InstancedSpriteManager::RemoveRepaintedInstancedSpriteByKey( const std::str
 	Log( "Removing instanced sprite: " + key );
 	const auto& sprite = it->second;
 	m_scene->RemoveActor( sprite.actor );
+	DELETE( sprite.actor );
 	m_repainted_instanced_sprites.erase( it );
 }
 
@@ -167,7 +169,7 @@ types::texture::Texture* InstancedSpriteManager::GetRepaintedSourceTexture( cons
 	if ( it != m_repainted_textures.end() ) {
 		return it->second;
 	}
-	NEWV( texture, types::texture::Texture, original->m_name, original->m_width, original->m_height );
+	NEWV( texture, types::texture::Texture, original->GetFilename(), original->GetWidth(), original->GetHeight() );
 	texture->RepaintFrom( original, rules );
 	m_repainted_textures.insert(
 		{

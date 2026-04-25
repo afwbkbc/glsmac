@@ -28,7 +28,8 @@ CLASS( Packet, Serializable )
 		PT_DOWNLOAD_RESPONSE, // S->C
 		PT_DOWNLOAD_NEXT_CHUNK_REQUEST, // C->S
 		PT_DOWNLOAD_NEXT_CHUNK_RESPONSE, // S->C
-		PT_GAME_EVENTS, // *->*
+		PT_GAME_EVENT, // *->*
+		PT_GAME_EVENT_RESPONSE, // S->C
 	};
 
 	Packet( const packet_type_t type );
@@ -58,11 +59,12 @@ CLASS( Packet, Serializable )
 		bool boolean;
 		size_t num;
 		std::string str;
+		std::string str2;
 		std::vector< std::string > vec;
 	} data;
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buffer ) override;
+	void Deserialize( types::Buffer buffer ) override;
 };
 
 }

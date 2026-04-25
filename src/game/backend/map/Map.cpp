@@ -7,7 +7,6 @@
 #include "config/Config.h"
 #include "game/backend/Random.h"
 #include "util/FS.h"
-#include "ui_legacy/UI.h"
 #include "loader/texture/TextureLoader.h"
 #include "game/backend/map/module/Prepare.h"
 #include "game/backend/map/module/LandMoisture.h"
@@ -34,6 +33,8 @@
 
 #endif
 
+#define Log( ... ) GCWrappable::Log( __VA_ARGS__ ) // diamond problem
+
 namespace game {
 namespace backend {
 namespace map {
@@ -50,7 +51,8 @@ static inline unsigned char S_to_binary_( const char* s ) {
 }
 
 Map::Map( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( nullptr )
+	, m_game( game ) {
 	// add texture variant bitmap maps
 	CalculateTextureVariants(
 		TVT_TILES, {
@@ -101,7 +103,7 @@ Map::Map( Game* game )
 	//   order of passes is important
 	//   order of modules within pass is important too
 
-	module::Module* m;
+	module::Module * m;
 	module_pass_t module_pass;
 
 	{ // prepare tile states
@@ -210,25 +212,25 @@ const types::Buffer Map::Serialize() const {
 	return buf;
 }
 
-void Map::Unserialize( types::Buffer buf ) {
+void Map::Deserialize( types::Buffer buf ) {
 
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles );
-	m_tiles->Unserialize( buf.ReadString() );
+	m_tiles->Deserialize( buf.ReadString() );
 
 	ASSERT( !m_map_state, "map state already set" );
 	NEW( m_map_state, MapState );
-	m_map_state->Unserialize( buf.ReadString() );
+	m_map_state->Deserialize( buf.ReadString() );
 
 	InitTextureAndMesh();
-	m_meshes.terrain->Unserialize( buf.ReadString() );
-	m_meshes.terrain_data->Unserialize( buf.ReadString() );
-	m_textures.terrain->Unserialize( buf.ReadString() );
+	m_meshes.terrain->Deserialize( buf.ReadString() );
+	m_meshes.terrain_data->Deserialize( buf.ReadString() );
+	m_textures.terrain->Deserialize( buf.ReadString() );
 
 	size_t sz = buf.ReadInt();
 	m_sprite_actors.clear();
 	for ( auto i = 0 ; i < sz ; i++ ) {
-		m_sprite_actors[ buf.ReadString() ] = UnserializeSpriteActor( buf.ReadString() );
+		m_sprite_actors[ buf.ReadString() ] = DeserializeSpriteActor( buf.ReadString() );
 	}
 
 	sz = buf.ReadInt();
@@ -297,6 +299,7 @@ void Map::ClearTexture() {
 void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
+	ASSERT( m_textures.terrain, "terrain texture not set" );
 	m_textures.terrain->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -367,8 +370,8 @@ void Map::CopyTextureDeferred( const tile::tile_layer_type_t tile_layer_from, co
 
 void Map::GetTexture( types::texture::Texture* dest_texture, const pcx_texture_coordinates_t& tc, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_current_ts, "GetTexture called outside of tile generation" );
-	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -386,8 +389,8 @@ void Map::GetTexture( types::texture::Texture* dest_texture, const pcx_texture_c
 
 void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile::tile_layer_type_t tile_layer, const size_t tx_from, const size_t ty_from, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) const {
 	ASSERT( m_map_state, "map state not set" );
-	ASSERT( dest_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
-	ASSERT( dest_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
+	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
 	dest_texture->AddFrom(
 		m_textures.terrain,
 		mode,
@@ -406,8 +409,9 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState* ts, types::texture::Texture* src_texture, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "SetTexture called outside of tile generation" );
-	ASSERT( src_texture->m_width == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
-	ASSERT( src_texture->m_height == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
+	ASSERT( m_textures.terrain, "terrain texture not set" );
+	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
+	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
 	m_textures.terrain->AddFrom(
 		src_texture,
 		mode,
@@ -542,7 +546,7 @@ const types::Buffer Map::SerializeSpriteActor( const sprite_actor_t& sprite_acto
 	return buf;
 }
 
-const sprite_actor_t Map::UnserializeSpriteActor( types::Buffer buf ) const {
+const sprite_actor_t Map::DeserializeSpriteActor( types::Buffer buf ) const {
 	const auto name = buf.ReadString();
 	const auto tex_coords = buf.ReadVec2u();
 	const auto z_index = buf.ReadFloat();
@@ -608,12 +612,17 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 	);
 }
 
+WRAPIMPL_BEGIN( Map )
+	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
+	};
+WRAPIMPL_END_PTR()
+
+UNWRAPIMPL_PTR( Map )
+
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
 	generator::SimplePerlin generator( m_game, random );
-	types::Vec2< size_t > size = map_settings->size == settings::MAP_CONFIG_CUSTOM
-		? map_settings->custom_size
-		: map::s_consts.map_sizes.at( map_settings->size );
 #ifdef DEBUG
 	util::Timer timer;
 	timer.Start();
@@ -621,24 +630,26 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 	const auto* c = g_engine->GetConfig();
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_SIZE ) ) {
-			size = c->GetQuickstartMapSize();
+			const auto size = c->GetQuickstartMapSize();
+			map_settings->size_x = size.x;
+			map_settings->size_y = size.y;
 		}
-		map_settings->ocean = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
-			? map_settings->ocean = c->GetQuickstartMapOcean()
-			: map_settings->ocean = random->GetUInt( 1, 3 );
-		map_settings->erosive = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
-			? map_settings->erosive = c->GetQuickstartMapErosive()
-			: map_settings->erosive = random->GetUInt( 1, 3 );
-		map_settings->lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
-			? map_settings->lifeforms = c->GetQuickstartMapLifeforms()
-			: map_settings->lifeforms = random->GetUInt( 1, 3 );
-		map_settings->clouds = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
-			? map_settings->clouds = c->GetQuickstartMapClouds()
-			: map_settings->clouds = random->GetUInt( 1, 3 );
+		map_settings->ocean_coverage = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_OCEAN )
+			? c->GetQuickstartMapOceanCoverage()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->erosive_forces = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_EROSIVE )
+			? c->GetQuickstartMapErosiveForces()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->native_lifeforms = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_LIFEFORMS )
+			? c->GetQuickstartMapNativeLifeforms()
+			: random->GetFloat( 0.2f, 0.8f );
+		map_settings->cloud_cover = c->HasLaunchFlag( config::Config::LF_QUICKSTART_MAP_CLOUDS )
+			? c->GetQuickstartMapCloudCover()
+			: random->GetFloat( 0.2, 0.8f );
 	}
-	Log( "Generating map of size " + size.ToString() );
+	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, tile::Tiles, size.x, size.y );
+	NEW( m_tiles, tile::Tiles, map_settings->size_x, map_settings->size_y );
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {
 		Log( "Map generation canceled" );
@@ -664,7 +675,7 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	}
 	NEW( m_tiles, tile::Tiles );
 	try {
-		m_tiles->Unserialize( buffer );
+		m_tiles->Deserialize( buffer );
 		return EC_NONE;
 	}
 	catch ( std::runtime_error& e ) {

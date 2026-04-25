@@ -8,7 +8,7 @@ namespace rules {
 
 CLASS( Default, Rules )
 
-	const DifficultyLevel& GetDefaultDifficultyLevel() const override;
+	const std::string& GetDefaultDifficultyLevel() const override;
 
 protected:
 	void InitRules() override;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gse/Wrappable.h"
-#include "gse/type/Object.h"
+#include "gse/GCWrappable.h"
+#include "gse/value/Object.h"
 
 namespace game {
 namespace backend {
@@ -23,7 +23,7 @@ public:
 	WRAPDEFS_PTR( FactionManager )
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer buf );
+	void Deserialize( types::Buffer buf );
 
 private:
 	struct faction_t {

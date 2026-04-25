@@ -1,18 +1,22 @@
 return (glsmac) => {
 
-	#include('styles/system')(glsmac.ui);
+	for (style of ['common', 'system', 'popup', 'lobby']) {
+		#include('styles/' + style)(glsmac.ui);
+	}
 
 	const m = {
 		utils: #include('utils/utils'),
 		glsmac: glsmac,
+		ui: glsmac.ui,
 		root: glsmac.ui.root,
 	};
 	for (step of [
 		'smacpath_prompt',
 		'intro',
-		'mainmenu',
+		'mainmenu/mainmenu',
+		'error',
 		'loader',
-		'game',
+		'game/game',
 	]) {
 		#include('parts/' + step)(m);
 	}

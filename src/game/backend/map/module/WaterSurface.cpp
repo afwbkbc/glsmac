@@ -20,12 +20,12 @@ void WaterSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Ma
 			RandomRotate()
 		);
 
-#define x( _k ) ts->layers[ tile::LAYER_WATER_SURFACE ].colors._k = types::Color{ \
+#define x( _k ) ts->layers[ tile::LAYER_WATER_SURFACE ].colors._k.Set( \
             s_consts.tile.elevation_to_water_r.Clamp( ts->elevations._k ), \
             s_consts.tile.elevation_to_water_g.Clamp( ts->elevations._k ), \
             s_consts.tile.elevation_to_water_b.Clamp( ts->elevations._k ), \
             s_consts.tile.elevation_to_water_a.Clamp( ts->elevations._k ) \
-        }
+        )
 		x( center );
 		x( left );
 		x( top );

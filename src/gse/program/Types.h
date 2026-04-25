@@ -45,6 +45,8 @@ enum operator_type_t {
 	OT_POP,
 	OT_ERASE,
 	OT_RANGE,
+	OT_TERNARY_IF,
+	OT_TERNARY_ELSE,
 };
 
 enum loop_control_type_t {

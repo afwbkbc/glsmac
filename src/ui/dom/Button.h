@@ -6,22 +6,42 @@ namespace ui {
 namespace dom {
 
 class Text;
+class Sound;
+class Container;
 
 class Button : public Panel {
 public:
 	Button( DOM_ARGS );
 
+	typedef std::function< bool( const input::Event& event ) > f_on_event_t;
+	f_on_event_t m_on_mousedown = nullptr;
+	f_on_event_t m_on_mouseup = nullptr;
+	f_on_event_t m_on_click = nullptr;
+
 protected:
 	virtual const bool ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) override;
-
-	virtual void SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const override;
+	virtual void WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const override;
 
 private:
 	Text* m_label;
+	Sound* m_sound;
+
 	input::mouse_button_t m_last_button = input::MB_NONE;
 
 	bool m_is_ok = false;
 	bool m_is_cancel = false;
+
+	std::string m_group = "";
+	bool m_is_group_enabled = false;
+
+	bool m_is_active = false;
+
+	void SetActive( GSE_CALLABLE, const bool is_active );
+
+private:
+	friend class Container;
+	void GroupEnable( GSE_CALLABLE );
+	void GroupDisable( GSE_CALLABLE );
 
 };
 

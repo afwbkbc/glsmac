@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "types/Serializable.h"
+#include "gse/GCWrappable.h"
 
 #include "Types.h"
 #include "common/MTTypes.h"
@@ -53,7 +54,7 @@ class Module;
 class Finalize;
 }
 
-CLASS( Map, types::Serializable )
+CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 	Map( Game* game );
 	~Map();
@@ -74,7 +75,7 @@ CLASS( Map, types::Serializable )
 	const error_code_t Initialize( MT_CANCELABLE );
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 	static const std::string& GetErrorString( const error_code_t& code );
 
@@ -120,11 +121,13 @@ CLASS( Map, types::Serializable )
 	tile::Tiles* GetTilesPtr() const;
 
 	const types::Buffer SerializeSpriteActor( const sprite_actor_t& sprite_actor ) const;
-	const sprite_actor_t UnserializeSpriteActor( types::Buffer buf ) const;
+	const sprite_actor_t DeserializeSpriteActor( types::Buffer buf ) const;
 
 	const std::string GetTerrainSpriteActor( const std::string& name, const pcx_texture_coordinates_t& tex_coords, const float z_index );
 	const size_t AddTerrainSpriteActorInstance( const std::string& key, const types::Vec3& coords );
 	void RemoveTerrainSpriteActorInstance( const std::string& key, const size_t instance_id );
+
+	WRAPDEFS_PTR( Map )
 
 private:
 	friend class module::Finalize;
@@ -158,6 +161,7 @@ private:
 	Game* m_game = nullptr;
 
 	tile::Tiles* m_tiles = nullptr;
+	tile::Tile* m_selected_tile = nullptr;
 	MapState* m_map_state = nullptr;
 
 	typedef std::vector< tile::Tile* > tiles_t;
@@ -185,7 +189,6 @@ private:
 
 	tile::TileState* m_current_ts = nullptr;
 	const tile::Tile* m_current_tile = nullptr;
-
 };
 
 }

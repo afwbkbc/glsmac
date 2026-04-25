@@ -1,21 +1,21 @@
 #include "Slot.h"
 
+#include "engine/Engine.h"
+#include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"
 #include "game/backend/faction/Faction.h"
 
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
 
 namespace game {
 namespace backend {
 namespace slot {
 
-Slot::Slot( const size_t index, const State* state )
+Slot::Slot( const size_t index, State* state )
 	: m_index( index )
-	, m_state( state ) {
-
-}
+	, m_state( state ) {}
 
 const Slot::slot_state_t Slot::GetState() const {
 	return m_slot_state;
@@ -57,7 +57,10 @@ const std::string& Slot::GetRemoteAddress() const {
 
 void Slot::SetPlayerFlag( const player_flag_t flag ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flag on non-player slot" );
-	m_player_data.flags |= flag;
+	if ( !( m_player_data.flags & flag ) ) {
+		m_player_data.flags |= flag;
+		Update();
+	}
 }
 
 const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
@@ -67,7 +70,10 @@ const bool Slot::HasPlayerFlag( const player_flag_t flag ) const {
 
 void Slot::UnsetPlayerFlag( const player_flag_t flag ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to unset player flag on non-player slot" );
-	m_player_data.flags &= ~flag;
+	if ( m_player_data.flags & flag ) {
+		m_player_data.flags &= ~flag;
+		Update();
+	}
 }
 
 Player* Slot::GetPlayerAndClose() {
@@ -97,8 +103,8 @@ void Slot::SetPlayer( Player* player, const network::cid_t cid, const std::strin
 		ASSERT( m_slot_state == SS_OPEN, "attempted to set player to non-open slot" );
 		ASSERT( !player->GetSlot(), "attempted to set slot to player with non-empty slot" );
 		m_player_data.player = player;
-		player->SetSlot( this );
 		m_slot_state = SS_PLAYER;
+		player->SetSlot( this );
 	}
 	m_player_data.cid = cid;
 	m_player_data.remote_address = remote_address;
@@ -129,7 +135,10 @@ const player_flag_t Slot::GetPlayerFlags() const {
 
 void Slot::SetPlayerFlags( const player_flag_t flags ) {
 	ASSERT( m_slot_state == SS_PLAYER, "attempted to set player flags to non-player slot" );
-	m_player_data.flags = flags;
+	if ( m_player_data.flags != flags ) {
+		m_player_data.flags = flags;
+		Update();
+	}
 }
 
 const types::Buffer Slot::Serialize() const {
@@ -147,7 +156,7 @@ const types::Buffer Slot::Serialize() const {
 	return buf;
 }
 
-void Slot::Unserialize( types::Buffer buf ) {
+void Slot::Deserialize( types::Buffer buf ) {
 	m_slot_state = (slot_state_t)buf.ReadInt();
 	if ( m_slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
@@ -155,7 +164,7 @@ void Slot::Unserialize( types::Buffer buf ) {
 			m_player_data.player->SetSlot( this );
 		}
 		else {
-			m_player_data.player->Unserialize( buf.ReadString() );
+			m_player_data.player->Deserialize( buf.ReadString() );
 		}
 		m_player_data.flags = buf.ReadInt();
 	}
@@ -163,29 +172,30 @@ void Slot::Unserialize( types::Buffer buf ) {
 }
 
 WRAPIMPL_BEGIN( Slot )
-	ASSERT_NOLOG( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
+	ASSERT( m_slot_state == SS_PLAYER, "only player slots can be wrapped for now" );
 	auto* player = m_player_data.player;
-	WRAPIMPL_PROPS
-		{
-			"id",
-			VALUE( gse::type::Int, m_player_data.cid )
-		},
-		{
-			"type",
-			VALUE( gse::type::String, "human" )
-		},
-		{
-			"name",
-			VALUE( gse::type::String, player->GetPlayerName() )
-		},
-		{
-			"faction",
-			player->GetFaction()->Wrap()
-		},
-	};
-WRAPIMPL_END_PTR()
+	ASSERT( player, "can't wrap slot without player" );
+	return player->Wrap( GSE_CALL );
+}
 
 UNWRAPIMPL_PTR( Slot )
+
+void Slot::Update() {
+	auto* const game = g_engine->GetGame();
+	ASSERT( game, "game not set" );
+	m_state->WithGSE(
+		m_state, [ this, game ]( GSE_CALLABLE ) {
+			game->Trigger(
+				GSE_CALL, "player_update", ARGS_F( this ) {
+					{
+						"player", Wrap( GSE_CALL, true )
+					}
+				}; }
+			);
+		}
+	);
+
+}
 
 }
 }

@@ -9,6 +9,7 @@
 #include "Conversions.h"
 #include "Math.h"
 #include "String.h"
+#include "Object.h"
 #include "Async.h"
 
 namespace gse {
@@ -16,11 +17,14 @@ namespace builtins {
 
 class Builtins : public Bindings {
 public:
-	void AddToContext( context::Context* ctx, ExecutionPointer& ep ) override;
+	void AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) override;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
+
 	void LogCaptureStart() const { m_console.CaptureStart(); }
+
 	const std::string& LogCaptureStopGet() const { return m_console.CaptureStopGet(); }
+
 #endif
 
 private:
@@ -30,6 +34,7 @@ private:
 	Conversions m_conversions = {};
 	Math m_math = {};
 	String m_string = {};
+	Object m_object = {};
 	Async m_async = {};
 
 };

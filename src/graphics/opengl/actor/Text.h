@@ -30,12 +30,24 @@ protected:
 
 	void DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera = nullptr ) override;
 
+	// must match data alignment of types::mesh::Render
 	struct vertex_t {
+		// coords
 		GLfloat x;
 		GLfloat y;
 		GLfloat z; // ignored
+		// tex coords
 		GLfloat tx;
 		GLfloat ty;
+		// tint
+		GLfloat tr;
+		GLfloat tg;
+		GLfloat tb;
+		GLfloat ta;
+		// normals
+		GLfloat nx;
+		GLfloat ny;
+		GLfloat nz;
 	};
 	struct vertex_box_t {
 		vertex_t v1;

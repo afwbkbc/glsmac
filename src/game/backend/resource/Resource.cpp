@@ -67,7 +67,7 @@ const types::Buffer Resource::Serialize( const Resource* resource ) {
 	return buf;
 }
 
-Resource* Resource::Unserialize( types::Buffer& buf ) {
+Resource* Resource::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
 	render_info_t render_info = {};

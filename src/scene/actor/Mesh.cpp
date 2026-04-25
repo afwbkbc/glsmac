@@ -46,6 +46,23 @@ const types::Color& Mesh::GetTintColor() const {
 	return m_tint_color;
 }
 
+void Mesh::SetAlpha( const types::Color::channel_t alpha ) {
+	if ( alpha == 1.0f ) {
+		if ( ( m_render_flags & RF_USE_TINT ) || m_tint_color.value.alpha != alpha ) {
+			m_render_flags &= ~RF_USE_TINT;
+			m_tint_color.value.alpha = alpha;
+			UpdateCache();
+		}
+	}
+	else {
+		if ( !( m_render_flags & RF_USE_TINT ) || m_tint_color.value.alpha != alpha ) {
+			m_render_flags |= RF_USE_TINT;
+			m_tint_color.value.alpha = alpha;
+			UpdateCache();
+		}
+	}
+}
+
 const types::mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
 }
@@ -103,7 +120,7 @@ void Mesh::CancelDataRequest( const rr::id_t request_id ) {
 }
 
 rr::id_t Mesh::CaptureToTexture( scene::Camera* camera, const types::Vec2< size_t > texture_dimensions ) {
-	Log( "Requesting capture-to-texture" );
+	//Log( "Requesting capture-to-texture" );
 	NEWV( request, rr::Capture );
 	request->camera = camera;
 	request->texture_width = texture_dimensions.x;
@@ -117,7 +134,7 @@ types::texture::Texture* Mesh::GetCaptureToTextureResponse( const rr::id_t reque
 		types::texture::Texture* result = r->texture;
 		r->texture = nullptr; // to prevent deletion in destructor
 		ASSERT( result, "received null texture response for " + std::to_string( request_id ) );
-		Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
+		//Log( "Received capture-to-texture response for " + std::to_string( request_id ) );
 		DELETE( r );
 		return result;
 	}

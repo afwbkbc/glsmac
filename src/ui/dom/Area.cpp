@@ -3,6 +3,7 @@
 #include "Container.h"
 #include "ui/geometry/Rectangle.h"
 #include "input/Event.h"
+#include "ui/UI.h"
 
 namespace ui {
 namespace dom {
@@ -28,11 +29,11 @@ Area::Area( DOM_ARGS_T )
 
 #define GEOMSETTER( _key, _type ) \
     Property( \
-        GSE_CALL, _key, gse::type::Type::_type, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v )
+        GSE_CALL, _key, gse::_type, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v )
 
 #define GEOMPROP( _key, _method ) \
-    GEOMSETTER( _key, T_INT ) { \
-        m_geometry->_method( ( (gse::type::Int*)v.Get() )->value ); \
+    GEOMSETTER( _key, VT_INT ) { \
+        m_geometry->_method( ( (gse::value::Int*)v )->value ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
@@ -41,6 +42,29 @@ Area::Area( DOM_ARGS_T )
 	GEOMPROP( "height", SetHeight );
 #undef GEOMPROP
 
+	m_geometry->m_on_resize = [ this ]( const size_t width, const size_t height, const bool is_update_from_parent ) {
+		if ( !m_ui ) {
+			return;
+		}
+		m_ui->WithGSE( // TODO: optimize a bit
+			[ this, width, height, is_update_from_parent ]( GSE_CALLABLE ) {
+				auto* const w = VALUE( gse::value::Int, , width );
+				auto* const h = VALUE( gse::value::Int, , height );
+				UpdateProperty( "width", w );
+				UpdateProperty( "height", h );
+				if ( m_on_resize ) {
+					m_on_resize( width, height );
+				}
+				if ( is_update_from_parent ) {
+					gse::value::object_properties_t event_data = {
+						{ "width",  w },
+						{ "height", h },
+					};
+					Trigger( GSE_CALL, "resize", ARGS( event_data ) );
+				}
+			}
+		);
+	};
 }
 
 const bool Area::IsEventRelevant( const input::Event& event ) const {
@@ -63,36 +87,37 @@ const bool Area::IsEventRelevant( const input::Event& event ) const {
 	return Drawable::IsEventRelevant( event );
 }
 
-void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t& obj ) const {
+void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& obj ) const {
 	switch ( e.type ) {
 		case input::EV_MOUSE_MOVE:
 		case input::EV_MOUSE_OVER:
 		case input::EV_MOUSE_OUT:
 		case input::EV_MOUSE_DOWN:
-		case input::EV_MOUSE_UP: {
+		case input::EV_MOUSE_UP:
+		case input::EV_MOUSE_SCROLL: {
 			const auto& area = m_geometry->GetEffectiveArea();
 			obj.insert(
 				{
 					"x",
-					VALUE( gse::type::Int, e.data.mouse.x - area.left )
+					VALUE( gse::value::Int, , e.data.mouse.x - area.left )
 				}
 			);
 			obj.insert(
 				{
 					"y",
-					VALUE( gse::type::Int, e.data.mouse.y - area.top )
+					VALUE( gse::value::Int, , e.data.mouse.y - area.top )
 				}
 			);
 			obj.insert(
 				{
 					"ax",
-					VALUE( gse::type::Int, e.data.mouse.x )
+					VALUE( gse::value::Int, , e.data.mouse.x )
 				}
 			);
 			obj.insert(
 				{
 					"ay",
-					VALUE( gse::type::Int, e.data.mouse.y )
+					VALUE( gse::value::Int, , e.data.mouse.y )
 				}
 			);
 			if ( e.type == input::EV_MOUSE_DOWN || e.type == input::EV_MOUSE_UP ) {
@@ -111,20 +136,28 @@ void Area::SerializeEvent( const input::Event& e, gse::type::object_properties_t
 						break;
 					}
 					default: {
-						ASSERT_NOLOG( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
+						ASSERT( false, "unknown button: " + std::to_string( e.data.mouse.button ) );
 					}
 				}
 				obj.insert(
 					{
 						"button",
-						VALUE( gse::type::String, buttonstr )
+						VALUE( gse::value::String, , buttonstr )
+					}
+				);
+			}
+			if ( e.type == input::EV_MOUSE_SCROLL ) {
+				obj.insert(
+					{
+						"scroll_y",
+						VALUE( gse::value::Int, , e.data.mouse.scroll_y )
 					}
 				);
 			}
 			break;
 		}
 		default: {
-			Drawable::SerializeEvent( e, obj );
+			Drawable::WrapEvent( GSE_CALL, e, obj );
 		}
 	}
 }

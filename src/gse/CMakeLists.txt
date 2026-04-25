@@ -1,12 +1,12 @@
 SUBDIR( context )
-SUBDIR( type )
+SUBDIR( value )
 SUBDIR( callable )
 SUBDIR( parser )
 SUBDIR( program )
 SUBDIR( runner )
 SUBDIR( builtins )
 
-IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
+IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "FastDebug" )
 	SUBDIR( tests )
 ENDIF ()
 
@@ -17,6 +17,7 @@ SET( SRC ${SRC}
 	${PWD}/ExecutionPointer.cpp
 	${PWD}/Exception.cpp
 	${PWD}/Wrappable.cpp
+	${PWD}/GCWrappable.cpp
 	${PWD}/Async.cpp
 
 )

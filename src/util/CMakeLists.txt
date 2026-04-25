@@ -11,5 +11,8 @@ SET( SRC ${SRC}
 	${PWD}/UUID.cpp
 	${PWD}/ConfigManager.cpp
 	${PWD}/String.cpp
+	${PWD}/Struct.cpp
+	${PWD}/LogHelper.cpp
+	${PWD}/Time.cpp
 
 	PARENT_SCOPE )

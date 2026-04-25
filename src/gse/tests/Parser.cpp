@@ -1,6 +1,9 @@
 #include "Tests.h"
 
 #include "task/gsetests/GSETests.h"
+#include "gc/Space.h"
+
+#include "gse/GSE.h"
 #include "gse/program/Program.h"
 #include "gse/program/Scope.h"
 #include "gse/program/Statement.h"
@@ -16,7 +19,6 @@
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
 #include "gse/program/If.h"
-#include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
 #include "gse/program/Try.h"
@@ -27,11 +29,9 @@ namespace gse {
 using namespace program;
 namespace tests {
 
-extern const gse::program::Program* g_test_program;
-
 void AddParserTests( task::gsetests::GSETests* task ) {
 
-	const auto validate_program = []( const Program* program ) -> std::string {
+	const auto validate_program = []( const Program* program, const Program* reference_program ) -> std::string {
 		GT_ASSERT( program != nullptr, "parser returned null program" );
 
 #define VALIDATOR( _type, ... ) [ __VA_ARGS__ ]( const _type* a, const _type* b ) -> std::string
@@ -57,7 +57,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 
 		const auto value = VALIDATOR( program::Value, &errmsg, &si ) {
 			VALIDATE( si, a->m_si, b->m_si );
-			GT_ASSERT( a->value == b->value, "values differ ( " + a->value.ToString() + " != " + b->value.ToString() + " )" );
+			GT_ASSERT( *a->value == *b->value, "values differ ( " + a->value->ToString() + " != " + b->value->ToString() + " )" );
 			GT_OK();
 		};
 
@@ -247,11 +247,6 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 					VALIDATE( scope, ( (If*)a )->body, ( (If*)b )->body );
 					break;
 				}
-				case Conditional::CT_ELSEIF: {
-					VALIDATE( condition, ( (ElseIf*)a )->condition, ( (ElseIf*)b )->condition );
-					VALIDATE( scope, ( (ElseIf*)a )->body, ( (ElseIf*)b )->body );
-					break;
-				}
 				case Conditional::CT_ELSE: {
 					VALIDATE( scope, ( (Else*)a )->body, ( (Else*)b )->body );
 					break;
@@ -280,8 +275,8 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 		const auto control = VALIDATOR( Control, &errmsg, &statement, &conditional, &si ) {
-			VALIDATE( si, a->m_si, b->m_si );
 			GT_ASSERT( a->control_type == b->control_type, "controls have different types ( " + a->Dump() + " != " + b->Dump() + " )" );
+			VALIDATE( si, a->m_si, b->m_si );
 			switch ( a->control_type ) {
 				case Control::CT_CONDITIONAL: {
 					VALIDATE( conditional, (Conditional*)a, (Conditional*)b );
@@ -306,7 +301,7 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 			GT_OK();
 		};
 
-		VALIDATE( scope, g_test_program->body, program->body );
+		VALIDATE( scope, program->body, reference_program->body );
 
 #undef VALIDATOR
 #undef VALIDATE
@@ -316,12 +311,22 @@ void AddParserTests( task::gsetests::GSETests* task ) {
 	task->AddTest(
 		"test if JS parser produces valid output",
 		GT( validate_program ) {
-			parser::JS parser( GetTestFilename(), GetTestSource(), 1 );
-			const auto* program = parser.Parse();
-			const auto result = validate_program( program );
-			if ( program ) {
-				DELETE( program );
-			}
+			auto* gc_space = gse->GetGCSpace();
+			std::string result = "";
+			gc_space->Accumulate(
+				nullptr,
+				[ &gc_space, &validate_program, &result ]() {
+					NEWV( parser, parser::JS, gc_space, GetTestFilename(), GetTestSource(), 1 );
+					const auto* program = parser->Parse();
+					const auto* reference_program = gse::tests::GetTestProgram( gc_space );
+					ASSERT( reference_program, "reference program is null" );
+					result = validate_program( reference_program, program );
+					if ( program ) {
+						DELETE( program );
+					}
+					delete reference_program;
+				}
+			);
 			return result;
 		}
 	);

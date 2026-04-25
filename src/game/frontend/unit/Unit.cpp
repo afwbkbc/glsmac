@@ -14,10 +14,6 @@
 #include "types/mesh/Rectangle.h"
 #include "scene/actor/Sprite.h"
 #include "types/texture/Texture.h"
-#include "ui_legacy/object/Mesh.h"
-#include "ui_legacy/object/Label.h"
-#include "../ui_legacy/bottom_bar/objects_list/ObjectsListItem.h"
-#include "../ui_legacy/bottom_bar/ObjectPreview.h"
 
 namespace game {
 namespace frontend {
@@ -60,15 +56,24 @@ Unit::Unit(
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
-	m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
-	m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
-	m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.unit, GetSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.badge, GetBadgeSprite()->instanced_sprite );
+	UpdateMeshTex( m_render_data.healthbar, GetBadgeHealthbarSprite()->instanced_sprite );
 	m_tile->AddUnit( this );
 }
 
 Unit::~Unit() {
 	Hide();
 	m_tile->RemoveUnit( this );
+	if ( m_render_data.unit.mesh ) {
+		DELETE( m_render_data.unit.mesh );
+	}
+	if ( m_render_data.badge.mesh ) {
+		DELETE( m_render_data.badge.mesh );
+	}
+	if ( m_render_data.healthbar.mesh ) {
+		DELETE( m_render_data.healthbar.mesh );
+	}
 }
 
 const size_t Unit::GetId() const {
@@ -282,12 +287,13 @@ void Unit::Refresh() {
 			}
 		}
 		// TODO: cache/optimize
-		m_render_data.unit = GetMeshTex( GetSprite()->instanced_sprite );
-		m_render_data.badge = GetMeshTex( GetBadgeSprite()->instanced_sprite );
-		m_render_data.healthbar = GetMeshTex( GetBadgeHealthbarSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.unit, GetSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.badge, GetBadgeSprite()->instanced_sprite );
+		UpdateMeshTex( m_render_data.healthbar, GetBadgeHealthbarSprite()->instanced_sprite );
 		if ( is_badge_visible ) {
 			ShowBadge();
 		}
+		m_um->RefreshUnit( this );
 	}
 }
 
@@ -310,8 +316,8 @@ const bool Unit::CanMove() const {
 }
 
 void Unit::SetTile( tile::Tile* dst_tile ) {
-	ASSERT_NOLOG( m_tile, "source tile not set" );
-	ASSERT_NOLOG( dst_tile, "destination tile not set" );
+	ASSERT( m_tile, "source tile not set" );
+	ASSERT( dst_tile, "destination tile not set" );
 
 	m_tile->RemoveUnit( this );
 
@@ -323,10 +329,10 @@ void Unit::SetTile( tile::Tile* dst_tile ) {
 }
 
 void Unit::MoveToTile( tile::Tile* dst_tile ) {
-	ASSERT_NOLOG( !m_mover.IsRunning(), "unit already moving" );
-	ASSERT_NOLOG( m_tile != dst_tile, "can't move to same tile" );
-	ASSERT_NOLOG( m_tile, "source tile not set" );
-	ASSERT_NOLOG( dst_tile, "destination tile not set" );
+	m_mover.Stop(); //ASSERT( !m_mover.IsRunning(), "unit already moving" );
+	//ASSERT( m_tile != dst_tile, "can't move to same tile" );
+	ASSERT( m_tile, "source tile not set" );
+	ASSERT( dst_tile, "destination tile not set" );
 
 	StopBadgeBlink( true );
 	HideFakeBadge();
@@ -345,116 +351,11 @@ const Unit::render_data_t& Unit::GetRenderData() const {
 	return m_render_data;
 }
 
-void* Unit::CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const {
-	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
-
-	const auto& render = GetRenderData();
-
-	const types::mesh::Mesh* mesh;
-	::ui_legacy::object::Mesh* ui_mesh;
-#define X( _key, _class ) \
-    ASSERT_NOLOG( render._key.mesh, #_key " mesh not defined" ); \
-    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectsListPreview" _class ); \
-    ui_mesh->SetMesh( mesh ); \
-    ui_mesh->SetTexture( render._key.texture ); \
-    element->AddChild( ui_mesh ); \
-    ui_elements->push_back( ui_mesh );
-
-	// order is important
-	X( unit, "Unit" );
-	X( healthbar, "UnitHealthbar" );
-	X( badge, "UnitBadge" );
-
-#undef X
-
-	NEWV( label, ::ui_legacy::object::Label, "BBObjectsListPreviewLabel" );
-	label->SetTop( 0 );
-	label->SetText( GetStatsString() );
-	element->AddChild( label );
-	ui_elements->push_back( label );
-
-	return ui_elements;
-}
-
-void Unit::DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
-
-	for ( const auto& e : *ui_elements ) {
-		element->RemoveChild( e );
-	}
-
-	DELETE( ui_elements );
-}
-
-void* Unit::CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const {
-	NEWV( ui_elements, std::vector< ::ui_legacy::object::UIObject* >, {} );
-
-	const auto& render = GetRenderData();
-
-	const types::mesh::Mesh* mesh;
-	::ui_legacy::object::Mesh* ui_mesh;
-#define X( _key, _class ) \
-    NEW( mesh, types::mesh::Mesh, *render._key.mesh ); /* make a copy */ \
-    NEW( ui_mesh, ::ui_legacy::object::Mesh, "BBObjectPreview" _class ); \
-    ui_mesh->SetMesh( mesh ); \
-    ui_mesh->SetTexture( render._key.texture ); \
-    element->AddChild( ui_mesh ); \
-    ui_elements->push_back( ui_mesh );
-
-	// order is important
-	X( unit, "Object" );
-	X( healthbar, "Healthbar" );
-	X( badge, "Badge" );
-
-#undef X
-
-	size_t top = 86;
-	::ui_legacy::object::Label* label;
-#define X( _text, _align ) \
-    if ( !(_text).empty() ) { \
-        NEW( label, ::ui_legacy::object::Label, "BBObjectPreviewLabel" #_align ); \
-        label->SetText( _text ); \
-        label->SetTop( top ); \
-        element->AddChild( label ); \
-        ui_elements->push_back( label ); \
-        top += label->GetHeight(); \
-    }
-
-	X( GetNameString(), Header );
-	X( "( " + GetStatsString() + " )", Center );
-	X( GetMoraleString(), Left );
-	X( GetMovesString(), Left );
-
-	// HACK: fix ( and ) vertical misalignment
-	auto& bugged_label = ui_elements->at( 4 );
-	bugged_label->SetTop( bugged_label->GetTop() - 4 );
-
-#undef X
-
-	return ui_elements;
-}
-
-void Unit::DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const {
-	auto* ui_elements = (std::vector< ::ui_legacy::object::UIObject* >*)state;
-
-	for ( const auto& e : *ui_elements ) {
-		element->RemoveChild( e );
-	}
-
-	DELETE( ui_elements );
-}
-
-const bool Unit::OnBottomBarListActivate( Game* game ) {
-	game->GetUM()->SelectUnit( this, true );
-	return true;
-}
-
 const bool Unit::ShouldBeActive() const {
 	return m_is_owned && CanMove();
 }
 
-Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
+void Unit::UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite ) {
 	auto* texture = sprite->actor->GetSpriteActor()->GetTexture();
 	NEWV( mesh, types::mesh::Rectangle );
 	mesh->SetCoords(
@@ -475,15 +376,16 @@ Unit::meshtex_t Unit::GetMeshTex( const sprite::InstancedSprite* sprite ) {
 			sprite->xy.y + sprite->wh.y
 		},
 		{
-			texture->m_width,
-			texture->m_height
+			texture->GetWidth(),
+			texture->GetHeight()
 		},
 		0.8f
 	);
-	return {
-		mesh,
-		texture,
-	};
+	if ( meshtex.mesh ) {
+		DELETE( meshtex.mesh );
+	}
+	meshtex.mesh = mesh->ToRenderMesh();
+	meshtex.texture = texture;
 }
 
 void Unit::SetRenderCoords( const types::Vec3& coords ) {

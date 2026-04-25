@@ -10,24 +10,23 @@
 #include "game/backend/State.h"
 #include "game/backend/Bindings.h"
 #include "game/backend/slot/Slots.h"
-#include "game/backend/event/DefineMorales.h"
-#include "game/backend/event/DefineUnit.h"
-#include "game/backend/event/SpawnUnit.h"
-#include "game/backend/event/DespawnUnit.h"
 #include "game/backend/unit/SpriteRender.h"
+#include "game/backend/Player.h"
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Float.h"
-#include "gse/type/Array.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
+#include "game/backend/map/tile/TileManager.h"
 
 namespace game {
 namespace backend {
 namespace unit {
 
 UnitManager::UnitManager( Game* game )
-	: m_game( game ) {
+	: gse::GCWrappable( game->GetGCSpace() )
+	, m_game( game ) {
 	//
 }
 
@@ -72,6 +71,14 @@ void UnitManager::DefineMoraleSet( MoraleSet* moraleset ) {
 	);
 }
 
+void UnitManager::UndefineMoraleSet( const std::string& id ) {
+	Log( "Undefining unit moraleset ('" + id + "')" );
+
+	ASSERT( m_unit_moralesets.find( id ) != m_unit_moralesets.end(), "Unit moraleset '" + id + "' not found" );
+
+	m_unit_moralesets.erase( id );
+}
+
 void UnitManager::DefineUnit( Def* def ) {
 	Log( "Defining unit ('" + def->m_id + "')" );
 
@@ -89,7 +96,19 @@ void UnitManager::DefineUnit( Def* def ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-void UnitManager::SpawnUnit( Unit* unit ) {
+void UnitManager::UndefineUnit( const std::string& id ) {
+	Log( "Undefining unit ('" + id + "')" );
+
+	ASSERT( m_unit_defs.find( id ) != m_unit_defs.end(), "Unit definition '" + id + "' not found" );
+
+	m_unit_defs.erase( id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_UNIT_UNDEFINE );
+	NEW( fr.data.unit_undefine.id, std::string, id );
+	m_game->AddFrontendRequest( fr );
+}
+
+void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 	if ( !m_game->IsRunning() ) {
 		m_unprocessed_units.push_back( unit );
 		return;
@@ -97,7 +116,7 @@ void UnitManager::SpawnUnit( Unit* unit ) {
 
 	auto* tile = unit->GetTile();
 
-	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + tile->ToString() );
+	Log( "Spawning unit #" + std::to_string( unit->m_id ) + " ( " + unit->m_def->m_id + " ) at " + tile->ToString() );
 
 	ASSERT( m_units.find( unit->m_id ) == m_units.end(), "duplicate unit id" );
 	m_units.insert_or_assign( unit->m_id, unit );
@@ -106,19 +125,22 @@ void UnitManager::SpawnUnit( Unit* unit ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Trigger( this, "unit_spawn",{
+		state->TriggerObject( this, "unit_spawn", ARGS_F( &unit, this ) {
 			{
 				"unit",
-				unit->Wrap()
+				unit->Wrap( GSE_CALL, m_game->GetGCSpace() )
 			},
-		});
+		}; } );
 	}
 }
 
-void UnitManager::DespawnUnit( const size_t unit_id ) {
+void UnitManager::DespawnUnit( GSE_CALLABLE, const size_t unit_id ) {
 
 	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
+	if ( it == m_units.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unit id " + std::to_string( unit_id ) + " not found" );
+	}
+
 	auto* unit = it->second;
 
 	Log( "Despawning unit #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
@@ -135,27 +157,15 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 	auto* state = m_game->GetState();
 	if ( state->IsMaster() ) {
-		state->m_bindings->Trigger( this, "unit_despawn", {
+		state->TriggerObject( this, "unit_despawn", ARGS_F( &unit ) {
 			{
 				"unit",
-				unit->Wrap()
+				unit->Wrap( GSE_CALL )
 			}
-		});
+		}; } );
 	}
 
 	delete unit;
-}
-
-void UnitManager::SkipUnitTurn( const size_t unit_id ) {
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-	auto* unit = it->second;
-
-	Log( "Skipping unit turn #" + std::to_string( unit->m_id ) + " (" + unit->m_def->m_id + ") at " + unit->GetTile()->ToString() );
-
-	unit->m_movement = 0.0f;
-
-	RefreshUnit( unit );
 }
 
 MoraleSet* UnitManager::GetMoraleSet( const std::string& name ) const {
@@ -188,10 +198,10 @@ const std::map< size_t, Unit* >& UnitManager::GetUnits() const {
 	return m_units;
 }
 
-void UnitManager::ProcessUnprocessed() {
+void UnitManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	ASSERT( m_game->IsRunning(), "game not running" );
 	for ( auto& it : m_unprocessed_units ) {
-		SpawnUnit( it );
+		SpawnUnit( GSE_CALL, it );
 	}
 	m_unprocessed_units.clear();
 }
@@ -256,37 +266,96 @@ void UnitManager::PushUpdates() {
 
 WRAPIMPL_BEGIN( UnitManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
-			"define_morales",
+			"define_moraleset",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( arr, 1, Array );
+
+				if ( m_unit_moralesets.find( id ) != m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" already exists" );
+				}
+
 				const uint8_t expected_count = unit::MORALE_MAX - unit::MORALE_MIN + 1;
 				if ( arr.size() != expected_count ) {
-					GSE_ERROR( gse::EC.INVALID_CALL, "Morale set must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
+					GSE_ERROR( gse::EC.INVALID_CALL, "Moraleset must have exactly " + std::to_string( expected_count ) + " values (found " + std::to_string( arr.size() ) + ")");
 				}
 				unit::MoraleSet::morale_values_t values = {};
 				for ( const auto& v : arr ) {
-					if ( v.Get()->type != gse::type::Type::T_OBJECT ) {
-						GSE_ERROR( gse::EC.INVALID_CALL, "Morale set elements must be objects");
+					if ( v->type != gse::VT_OBJECT ) {
+						GSE_ERROR( gse::EC.INVALID_CALL, "Moraleset elements must be objects");
 					}
-					const auto* obj = (gse::type::Object*)v.Get();
+					const auto* obj = (gse::value::Object*)v;
 					N_GETPROP( name, obj->value, "name", String );
 					values.push_back( unit::Morale{ name } );
 				}
-				return m_game->AddEvent( new event::DefineMorales( m_game->GetSlotNum(), new unit::MoraleSet( id, values ) ) );
+
+				DefineMoraleSet( new unit::MoraleSet( id, values ) );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"undefine_moraleset",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_unit_moralesets.find( id ) == m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" not found" );
+				}
+
+				UndefineMoraleSet( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"get_moraleset",
+			NATIVE_CALL( this ) {
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				const auto& moraleset = m_unit_moralesets.find( id );
+				if ( moraleset == m_unit_moralesets.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Moraleset \"" + id + "\" not found" );
+				}
+
+				gse::value::array_elements_t result = {};
+				for ( const auto& morale : moraleset->second->m_morale_values ) {
+					// TODO: refactor with Wrap()
+					result.push_back( VALUE( gse::value::String,, morale.m_name ) );
+				}
+
+				return VALUE( gse::value::Array,, result );
 			} )
 		},
 		{
 			"define_unit",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 2 );
 				N_GETVALUE( id, 0, String );
 				N_GETVALUE( unit_def, 1, Object );
 				N_GETPROP( name, unit_def, "name", String );
 				N_GETPROP( morale, unit_def, "morale", String );
 				N_GETPROP( unit_type, unit_def, "type", String );
+
+				if ( m_unit_defs.find( id ) != m_unit_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit def '" + id + "' already exists");
+				}
+
 				if ( unit_type == "static" ) {
 					N_GETPROP( movement_type_str, unit_def, "movement_type", String );
 					unit::movement_type_t movement_type;
@@ -317,7 +386,7 @@ WRAPIMPL_BEGIN( UnitManager )
 						N_GETPROP( sprite_cx, render_def, "cx", Int );
 						N_GETPROP( sprite_cy, render_def, "cy", Int );
 						N_GETPROP_OPT_INT( sprite_morale_based_xshift, render_def, "morale_based_xshift" );
-						const auto* moraleset = m_game->GetUM()->GetMoraleSet( morale );
+						const auto* moraleset = GetMoraleSet( morale );
 						if ( !moraleset ) {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Morale type '" + morale + "' is not defined");
 						}
@@ -338,7 +407,10 @@ WRAPIMPL_BEGIN( UnitManager )
 								sprite_morale_based_xshift
 							)
 						);
-						return m_game->AddEvent( new event::DefineUnit( m_game->GetSlotNum(), def ) );
+
+						DefineUnit( def );
+
+						return VALUE( gse::value::Undefined );
 					}
 					else {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Unsupported render type: " + render_type );
@@ -350,31 +422,99 @@ WRAPIMPL_BEGIN( UnitManager )
 			})
 		},
 		{
+			"undefine_unit",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				if ( m_unit_defs.find( id ) == m_unit_defs.end() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit def '" + id + "' not found" );
+				}
+
+				UndefineUnit( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"has_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( unit_id, 0, Int );
+				return VALUE( gse::value::Bool,, m_units.find( unit_id ) != m_units.end() );
+			} )
+		},
+		{
+			"get_unit",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( unit_id, 0, Int );
+				const auto& it = m_units.find( unit_id );
+				if ( it != m_units.end() ) {
+					return it->second->Wrap( GSE_CALL, true );
+				}
+				else {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit id " + std::to_string( unit_id ) + " not found" );
+				}
+			} )
+		},
+		{
 			"spawn_unit",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 5 );
-				N_GETVALUE( def_name, 0, String );
-				N_GETVALUE_UNWRAP( owner, 1, slot::Slot );
-				N_GETVALUE_UNWRAP( tile, 2, map::tile::Tile );
-				N_GETVALUE( morale, 3, Int );
-				N_GETVALUE( health, 4, Float );
-				return m_game->AddEvent( new event::SpawnUnit(
-					m_game->GetSlotNum(),
-					def_name,
-					owner->GetIndex(),
-					tile->coord.x,
-					tile->coord.y,
-					GetMorale( GSE_CALL, morale ),
-					GetHealth( GSE_CALL, health )
-				) );
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( obj, 0, Object );
+
+				N_GETPROP_OPT( size_t, unit_id, obj, "id", Int, 0 );
+				N_GETPROP( def_name, obj, "def", String );
+				N_GETPROP_UNWRAP( owner, obj, "owner", Player );
+				N_GETPROP_UNWRAP( tile, obj, "tile", map::tile::Tile );
+				N_GETPROP( morale, obj, "morale", Int );
+				N_GETPROP( health, obj, "health", Float );
+
+				auto* def = GetUnitDef( def_name );
+				if ( !def ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Unit type '" + def_name + "' is not defined" );
+				}
+				ASSERT( def->m_type == unit::DT_STATIC, "only static defs are supported for now" );
+				const auto* staticdef = (unit::StaticDef*)def;
+				auto* unit = new unit::Unit(
+					GSE_CALL,
+					this,
+					unit_id ? unit_id : unit::Unit::GetNextId(),
+					def,
+					owner->GetSlot(),
+					tile,
+					staticdef->m_movement_per_turn,
+					morale,
+					health,
+					false
+				);
+				SpawnUnit( GSE_CALL, unit );
+				return unit->Wrap( GSE_CALL, true );
 			})
 		},
 		{
 			"despawn_unit",
 			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
 				N_EXPECT_ARGS( 1 );
-				N_GETVALUE_UNWRAP( unit, 0, Unit );
-				return m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );
+				if ( arguments.at( 0 )->type == gse::VT_INT ) {
+					N_GETVALUE( unit_id, 0, Int );
+					DespawnUnit( GSE_CALL, unit_id );
+				}
+				else {
+					N_GETVALUE_UNWRAP( unit, 0, Unit );
+					DespawnUnit( GSE_CALL, unit->m_id );
+				}
+				return VALUE( gse::value::Undefined );
 			})
 		},
 	};
@@ -408,7 +548,7 @@ void UnitManager::Serialize( types::Buffer& buf ) const {
 	Log( "Saved next unit id: " + std::to_string( Unit::GetNextId() ) );
 }
 
-void UnitManager::Unserialize( types::Buffer& buf ) {
+void UnitManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	ASSERT( m_unit_moralesets.empty(), "unit moralesets not empty" );
 	ASSERT( m_unit_defs.empty(), "unit defs not empty" );
 	ASSERT( m_units.empty(), "units not empty" );
@@ -420,7 +560,7 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineMoraleSet( MoraleSet::Unserialize( b ) );
+		DefineMoraleSet( MoraleSet::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -429,7 +569,7 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineUnit( Def::Unserialize( b ) );
+		DefineUnit( Def::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -439,7 +579,7 @@ void UnitManager::Unserialize( types::Buffer& buf ) {
 	}
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
-		SpawnUnit( Unit::Unserialize( b, this ) );
+		SpawnUnit( GSE_CALL, Unit::Deserialize( GSE_CALL, b, this ) );
 	}
 
 	Unit::SetNextId( buf.ReadInt() );
@@ -461,12 +601,23 @@ void UnitManager::QueueUnitUpdate( const Unit* unit, const unit_update_op_t op )
 	}
 	auto& update = it->second;
 	if ( op == UUO_DESPAWN ) {
-		if ( op & UUO_SPAWN ) {
+		if ( update.ops & UUO_SPAWN ) {
 			// if unit is despawned immediately after spawning - frontend doesn't need to know
 			m_unit_updates.erase( it );
 			return;
 		}
 		update.ops = UUO_NONE; // clear other actions if unit was despawned
+	}
+	if ( op == UUO_SPAWN || op == UUO_REFRESH ) {
+		if ( update.ops & UUO_DESPAWN ) {
+			// do not despawn if it needs to spawn or refresh, i.e. if event was rolled back
+			update.ops = (unit_update_op_t)( (uint8_t)update.ops & ~UUO_DESPAWN);
+			if ( op == UUO_SPAWN ) {
+				// if there's pending despawn event it means unit was already spawned, nothing to do
+				m_unit_updates.erase( it );
+				return;
+			}
+		}
 	}
 	// add to operations list
 	update.ops = (unit_update_op_t)( (uint8_t)update.ops | (uint8_t)op );
@@ -489,88 +640,30 @@ const health_t UnitManager::GetHealth( GSE_CALLABLE, const float health ) {
 	return (health_t)health;
 }
 
-const std::string* UnitManager::MoveUnitValidate( Unit* unit, map::tile::Tile* dst_tile ) {
-	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_move_validate", {
-		{
-			"unit",
-			unit->Wrap()
-		},
-		{
-			"src_tile",
-			unit->GetTile()->Wrap()
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap()
-		},
-	});
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
-			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
-		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
+
+	auto* tm = m_game->GetTM();
+	auto* am = m_game->GetAM();
+
+	if ( unit->m_animation_id ) {
+		// stop any previous animation
+		am->FinishAnimation( unit->m_animation_id );
 	}
-}
 
-const gse::Value UnitManager::MoveUnitResolve( Unit* unit, map::tile::Tile* dst_tile ) {
-	return m_game->GetState()->m_bindings->Trigger(this, "unit_move_resolve", {
-		{
-			"unit",
-			unit->Wrap()
-		},
-		{
-			"src_tile",
-			unit->GetTile()->Wrap()
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap()
-		},
-	});
-}
-
-void UnitManager::MoveUnitApply( Unit* unit, map::tile::Tile* dst_tile, const gse::Value resolutions ) {
 	auto* src_tile = unit->GetTile();
-	ASSERT( dst_tile, "dst tile not set" );
-
-	if ( src_tile == dst_tile ) {
-		return;
-	}
-
-	Log( "Moving unit #" + std::to_string( unit->m_id ) + " to " + dst_tile->coord.ToString() );
-
-	ASSERT( src_tile, "src tile not set" );
-	ASSERT( src_tile->units.find( unit->m_id ) != src_tile->units.end(), "src tile does not contain this unit" );
-	ASSERT( dst_tile->units.find( unit->m_id ) == dst_tile->units.end(), "dst tile already contains this unit" );
-
-	m_game->GetState()->m_bindings->Trigger( this, "unit_move_apply", {
-		{
-			"unit",
-			unit->Wrap( true )
-		},
-		{
-			"src_tile",
-			src_tile->Wrap()
-		},
-		{
-			"dst_tile",
-			dst_tile->Wrap()
-		},
-		{
-			"resolutions",
-			resolutions
-		}
-	});
-}
-
-const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst_tile, const cb_oncomplete& on_complete ) {
-	const auto* src_tile = unit->GetTile();
 	if ( src_tile == dst_tile ) {
 		return new std::string( "Unit can't move because it's already on target tile" );
 	}
+
+	const std::unordered_set< map::tile::Tile* > tiles_to_lock = { src_tile, dst_tile };
+
+	const auto* locked_tile = tm->FindLockedTile( tiles_to_lock );
+	if ( locked_tile ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Tile " + locked_tile->coord.ToString() + " is locked" );
+	}
+
+	m_game->GetTM()->LockTiles( m_game->GetSlotNum(), tiles_to_lock );
+
 	if ( !src_tile->IsLocked() ) {
 		return new std::string( "Source tile must be locked before moving unit" );
 	}
@@ -583,94 +676,78 @@ const std::string* UnitManager::MoveUnitToTile( Unit* unit, map::tile::Tile* dst
 		dst_tile->coord.x,
 		dst_tile->coord.y
 	};
-	fr.data.unit_move.running_animation_id = m_game->GetAM()->AddAnimationCallback(
-		[ on_complete, unit, dst_tile ]() {
-			unit->SetTile( dst_tile );
+	fr.data.unit_move.running_animation_id = unit->m_animation_id = am->AddAnimationCallback(
+		[ this, tm, tiles_to_lock, on_complete, unit, dst_tile, ctx, gc_space, ep, si ]( const size_t animation_id ) {
+			ASSERT( unit->m_animation_id, "animation id gone" );
+			unit->m_animation_id = 0;
+			tm->UnlockTiles( m_game->GetSlotNum(), tiles_to_lock );
+			gse::ExecutionPointer ep2 = ep;
+			unit->SetTile( gc_space, ctx, si, ep2 , dst_tile );
 			on_complete();
 		}
 	);
 	m_game->AddFrontendRequest( fr );
+
 	return nullptr; // no error
 }
 
-const std::string* UnitManager::AttackUnitValidate( Unit* attacker, Unit* defender ) {
-	const auto result = m_game->GetState()->m_bindings->Trigger( this, "unit_attack_validate", {
+const std::string* UnitManager::AttackUnitValidate( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
+	const auto result = m_game->GetState()->TriggerObject( this, "unit_attack_validate", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
-			attacker->Wrap()
+			attacker->Wrap( GSE_CALL )
 		},
 		{
 			"defender",
-			defender->Wrap()
+			defender->Wrap( GSE_CALL )
 		},
-	});
-	switch ( result.Get()->type ) {
-		case gse::type::Type::T_NULL:
-		case gse::type::Type::T_UNDEFINED:
+	}; } );
+	switch ( result->type ) {
+		case gse::VT_NULL:
+		case gse::VT_UNDEFINED:
 			return nullptr; // no errors
-		case gse::type::Type::T_STRING:
-			return new std::string( ( (gse::type::String*)result.Get() )->value ); // error
+		case gse::VT_STRING:
+			return new std::string( ( (gse::value::String*)result )->value ); // error
 		default:
-			THROW( "unexpected validation result type: " + gse::type::Type::GetTypeString( result.Get()->type ) );
+			THROW( "unexpected validation result type: " + result->GetTypeString() );
 	}
 }
 
-const gse::Value UnitManager::AttackUnitResolve( Unit* attacker, Unit* defender ) {
-	return m_game->GetState()->m_bindings->Trigger( this, "unit_attack_resolve", {
+gse::Value* const UnitManager::AttackUnitResolve( GSE_CALLABLE, Unit* attacker, Unit* defender ) {
+	return m_game->GetState()->TriggerObject( this, "unit_attack_resolve", ARGS_F( &attacker, &defender ) {
 		{
 			"attacker",
-			attacker->Wrap()
+			attacker->Wrap( GSE_CALL )
 		},
 		{
 			"defender",
-			defender->Wrap()
+			defender->Wrap( GSE_CALL )
 		},
-	});
+	}; } );
 }
 
-void UnitManager::AttackUnitApply( Unit* attacker, Unit* defender, const gse::Value resolutions ) {
+void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender, gse::Value* const resolutions ) {
 	auto* state = m_game->GetState();
-	state->m_bindings->Trigger( this, "unit_attack_apply",{
+	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &attacker, &defender, &resolutions ) {
 		{
 			"attacker",
-			attacker->Wrap( true )
+			attacker->Wrap( GSE_CALL, true )
 		},
 		{
 			"defender",
-			defender->Wrap( true )
+			defender->Wrap( GSE_CALL, true )
 		},
 		{
 			"resolutions",
 			resolutions
 		}
-	});
-	if ( attacker->m_health <= 0.0f ) {
-		if ( state->IsMaster() ) {
-			m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), attacker->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( attacker );
-	}
-	if ( defender->m_health <= 0.0f ) {
-		if ( state->IsMaster() ) {
-			m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), defender->m_id ) );
-		}
-	}
-	else {
-		RefreshUnit( defender );
-	}
+	}; } );
+	RefreshUnit( GSE_CALL, attacker );
+	RefreshUnit( GSE_CALL, defender );
 }
 
-void UnitManager::RefreshUnit( const Unit* unit ) {
-	if ( unit->m_health <= 0.0f ) {
-		if ( m_game->GetState()->IsMaster() ) {
-			m_game->AddEvent( new event::DespawnUnit( m_game->GetSlotNum(), unit->m_id ) );
-		}
-	}
-	else {
-		QueueUnitUpdate( unit, UUO_REFRESH );
-	}
+void UnitManager::RefreshUnit( GSE_CALLABLE, const Unit* unit ) {
+	QueueUnitUpdate( unit, UUO_REFRESH );
 }
 
 map::Map* UnitManager::GetMap() const {

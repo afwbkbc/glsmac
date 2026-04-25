@@ -4,9 +4,9 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/BaseManager.h"
-#include "gse/type/String.h"
-#include "gse/type/Int.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 
 namespace game {
@@ -21,44 +21,46 @@ Pop::Pop( Base* const base, PopDef* def, const uint8_t variant )
 }
 
 void Pop::Serialize( types::Buffer& buf ) const {
-	ASSERT_NOLOG( m_base, "pop base is null" );
-	ASSERT_NOLOG( m_def, "pop def is null" );
+	ASSERT( m_base, "pop base is null" );
+	ASSERT( m_def, "pop def is null" );
 
-	buf.WriteInt( m_base->m_id );
 	buf.WriteString( m_def->m_name );
 	buf.WriteInt( m_variant );
 }
 
-void Pop::Unserialize( types::Buffer& buf, Game* game ) {
-	ASSERT_NOLOG( !m_base, "pop base is not null" );
-	ASSERT_NOLOG( !m_def, "pop def is not null" );
+void Pop::Deserialize( types::Buffer& buf, Game* game ) {
+	ASSERT( !m_base, "pop base is not null" );
+	ASSERT( !m_def, "pop def is not null" );
 
 	auto* bm = game->GetBM();
-	ASSERT_NOLOG( bm, "bm is null" );
+	ASSERT( bm, "bm is null" );
 
-	m_base = bm->GetBase( buf.ReadInt() );
-	ASSERT_NOLOG( m_base, "base not found" );
 	m_def = bm->GetPopDef( buf.ReadString() );
-	ASSERT_NOLOG( m_def, "pop def not found" );
+	ASSERT( m_def, "pop def not found" );
 	m_variant = buf.ReadInt();
+}
+
+void Pop::SetBase( Base* const base ) {
+	ASSERT( !m_base, "pop base already set" );
+	m_base = base;
 }
 
 WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
 		{
 			"type",
-			VALUE( gse::type::String, m_def->m_id )
+			VALUE( gse::value::String,, m_def->m_id )
 		},
 		{
 			"variant",
-			VALUE( gse::type::Int, m_variant )
+			VALUE( gse::value::Int,, m_variant )
 		},
 		{
 			"get_base",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
-				ASSERT_NOLOG( m_base, "pop has no base" );
-				return m_base->Wrap();
+				ASSERT( m_base, "pop has no base" );
+				return m_base->Wrap( GSE_CALL, gc_space );
 			} )
 		},
 	};

@@ -138,6 +138,14 @@ static const std::unordered_map< operator_type_t, std::string > s_op_labels = {
 		OT_RANGE,
 		"["
 	},
+	{
+		OT_TERNARY_IF,
+		"?"
+	},
+	{
+		OT_TERNARY_ELSE,
+		":"
+	},
 };
 
 Operator::Operator( const si_t& si, const operator_type_t op )
@@ -146,12 +154,12 @@ Operator::Operator( const si_t& si, const operator_type_t op )
 
 const std::string Operator::ToString() const {
 	const auto it = s_op_labels.find( op );
-	ASSERT_NOLOG( it != s_op_labels.end(), "op label not found: " + std::to_string( op ) );
+	ASSERT( it != s_op_labels.end(), "op label not found: " + std::to_string( op ) );
 	return it->second;
 }
 const std::string Operator::Dump( const size_t depth ) const {
 	const auto it = s_op_labels.find( op );
-	ASSERT_NOLOG( it != s_op_labels.end(), "op label not found: " + std::to_string( op ) );
+	ASSERT( it != s_op_labels.end(), "op label not found: " + std::to_string( op ) );
 	return Formatted( "Operator" + m_si.ToString() + "( " + it->second + " )", depth );
 }
 

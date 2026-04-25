@@ -25,7 +25,7 @@ CLASS( ResourceManager, common::Module )
 
 private:
 
-	config::smac_type_t m_detected_smac_type = config::ST_AUTO;
+	config::smac_type_t m_detected_smac_type = config::ST_UNKNOWN;
 	std::string m_data_path = "";
 
 	const std::unordered_map< resource_t, std::string > m_resources_to_filenames = {};

@@ -10,6 +10,10 @@
 #include "game/frontend/tile/TileManager.h"
 #include "BadgeDefs.h"
 #include "types/mesh/Rectangle.h"
+#include "game/backend/Game.h"
+#include "game/backend/unit/UnitManager.h"
+#include "game/backend/unit/Unit.h"
+#include "game/backend/map/Map.h"
 
 namespace game {
 namespace frontend {
@@ -17,8 +21,7 @@ namespace unit {
 
 UnitManager::UnitManager( Game* game )
 	: m_game( game )
-	, m_ism( game->GetISM() )
-	, m_slot_index( game->GetMySlotIndex() ) {
+	, m_ism( game->GetISM() ) {
 	NEW( m_badge_defs, BadgeDefs, m_ism );
 }
 
@@ -62,14 +65,16 @@ void UnitManager::Iterate() {
 }
 
 Unit* UnitManager::GetUnitById( const size_t id ) const {
-	ASSERT( m_units.find( id ) != m_units.end(), "unit id not found" );
-	return m_units.at( id );
+	const auto& it = m_units.find( id );
+	return it != m_units.end()
+		? it->second
+		: nullptr;
 }
 
 void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 	ASSERT( m_unitdefs.find( def->m_id ) == m_unitdefs.end(), "unit def already exists" );
 
-	Log( "Initializing unit definition: " + def->m_id );
+	Log( "Defining unit: " + def->m_id );
 
 	m_unitdefs.insert(
 		{
@@ -80,6 +85,14 @@ void UnitManager::DefineUnit( const backend::unit::Def* def ) {
 			)
 		}
 	);
+}
+
+void UnitManager::UndefineUnit( const std::string& id ) {
+	ASSERT( m_unitdefs.find( id ) != m_unitdefs.end(), "unit def not found" );
+
+	Log( "Undefining unit: " + id );
+
+	m_unitdefs.erase( id );
 }
 
 void UnitManager::SpawnUnit(
@@ -95,7 +108,11 @@ void UnitManager::SpawnUnit(
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
-	ASSERT( m_units.find( unit_id ) == m_units.end(), "unit id already exists" );
+
+	if ( m_units.find( unit_id ) != m_units.end() ) {
+		// maybe unit was spawned, then despawned and then despawn rolled back
+		return;
+	}
 
 	auto* unitdef = m_unitdefs.at( unitdef_id );
 	auto* slot = m_game->GetSlot( slot_index );
@@ -116,7 +133,7 @@ void UnitManager::SpawnUnit(
 					render_coords.y,
 					render_coords.z
 				},
-				slot_index == m_slot_index,
+				slot_index == m_game->GetMySlotIndex(),
 				movement,
 				morale,
 				morale_string,
@@ -131,11 +148,7 @@ void UnitManager::SpawnUnit(
 	m_game->RenderTile( tile, m_selected_unit );
 
 	if ( unit->IsActive() ) {
-		const bool was_selectables_empty = m_selectable_units.empty();
 		AddSelectable( unit );
-		if ( was_selectables_empty ) {
-			SelectNextUnitMaybe();
-		}
 	}
 }
 
@@ -161,7 +174,6 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 
 void UnitManager::RefreshUnit( Unit* unit ) {
 	const auto was_active = unit->IsActive();
-	unit->Refresh();
 	UpdateSelectable( unit );
 	m_game->RenderTile( unit->GetTile(), m_selected_unit );
 	if ( m_selected_unit == unit && was_active ) {
@@ -172,11 +184,22 @@ void UnitManager::RefreshUnit( Unit* unit ) {
 			unit->StartBadgeBlink();
 		}
 	}
+	m_game->UpdateRelatedWidgets( ui::WT_UNIT_PREVIEW, unit->GetId(), unit );
 }
 
 void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id ) {
 	auto* src_tile = unit->GetTile();
-	ASSERT( m_moving_units.find( unit ) == m_moving_units.end(), "unit already moving" );
+	const auto& it = m_moving_units.find( unit );
+	if ( it != m_moving_units.end() ) {
+		const auto& tile = it->second.tile;
+		if ( unit == m_selected_unit ) {
+			m_game->SetSelectedTile( tile );
+		}
+		unit->SetTile( tile );
+		m_game->RefreshSelectedTileIf( tile, m_selected_unit );
+		m_game->SendAnimationFinished( it->second.animation_id );
+		m_moving_units.erase( it );
+	}
 	m_moving_units.insert(
 		{
 			unit,
@@ -190,33 +213,6 @@ void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t anima
 	m_game->RefreshSelectedTileIf( src_tile, m_selected_unit );
 	m_game->SetSelectedTile( dst_tile );
 	unit->MoveToTile( dst_tile );
-}
-
-void UnitManager::MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords ) {
-
-	auto* src_tile = unit->GetTile();
-
-	unit->SetTile( dst_tile );
-
-	// TODO: animation
-
-	if ( m_selected_unit == unit ) {
-		m_game->SetSelectedTile( m_selected_unit->GetTile() );
-	}
-
-	// update old tile
-	m_game->RenderTile( src_tile, m_selected_unit );
-
-	// update unit
-	RefreshUnit( unit );
-
-	// update new tile
-	m_game->RenderTile( dst_tile, m_selected_unit );
-
-	if ( m_selected_unit == unit ) {
-		m_game->ScrollToSelectedTile( false );
-	}
-
 }
 
 Unit* UnitManager::GetSelectedUnit() const {
@@ -243,7 +239,26 @@ void UnitManager::SelectUnit( Unit* unit, const bool actually_select_unit ) {
 			most_important_unit->Hide();
 		}
 		m_selected_unit->StartBadgeBlink();
-		Log( "Selected unit " + std::to_string( m_selected_unit->GetId() ) );
+		const auto id = m_selected_unit->GetId();
+		Log( "Selected unit " + std::to_string( id ) );
+		auto* game = m_game->GetGame();
+		auto* const u = game->GetUM()->GetUnit( id );
+		m_game->Trigger(
+			game->GetMap(), "unit_preview", ARGS_F( &u ) {
+				{
+					"unit",
+					u->Wrap( GSE_CALL )
+				},
+			}; }
+		);
+		m_game->Trigger(
+			game, "unit_select", ARGS_F( &u ) {
+				{
+					"unit",
+					u->Wrap( GSE_CALL )
+				},
+			}; }
+		);
 	}
 }
 
@@ -288,7 +303,11 @@ const types::Vec3 UnitManager::GetCloserCoords( const types::Vec3& coords, const
 void UnitManager::AddSelectable( Unit* unit ) {
 	const auto& it = std::find( m_selectable_units.begin(), m_selectable_units.end(), unit );
 	if ( it == m_selectable_units.end() ) {
+		const bool was_empty = m_selectable_units.empty();
 		m_selectable_units.push_back( unit );
+		if ( was_empty ) {
+			SelectNextUnitMaybe();
+		}
 	}
 }
 
@@ -383,23 +402,21 @@ const bool UnitManager::SelectNextUnitMaybe() {
 		return false;
 	}
 	auto* selected_unit = GetNextSelectable();
-	if ( selected_unit != m_selected_unit ) {
-		if ( selected_unit ) {
-			SelectUnit( selected_unit, true );
-			m_game->ScrollToTile( m_selected_unit->GetTile(), true );
-			return true;
-		}
-		else {
-			m_selected_unit = nullptr;
-			return false;
-		}
+	if ( selected_unit ) {
+		SelectUnit( selected_unit, true );
+		m_game->ScrollToTile( m_selected_unit->GetTile(), true );
+		return true;
 	}
-	return false;
+	else {
+		m_selected_unit = nullptr;
+		return false;
+	}
 }
 
 void UnitManager::SelectNextUnitOrSwitchToTileSelection() {
 	if ( !SelectNextUnitMaybe() ) {
 		m_game->SelectUnitOrSelectedTile( m_selected_unit );
+		m_selected_unit = nullptr;
 	}
 }
 

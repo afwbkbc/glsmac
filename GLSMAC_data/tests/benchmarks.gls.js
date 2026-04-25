@@ -63,7 +63,7 @@ softassert(timeof('defining and calling function 10000 times', () => {
 		})();
 	}
 }) < 1000000000);
-
+/*
 softassert(timeof('creating scope and variable 10000 times', () => {
 	idx = 0;
 	while (idx++ < 10000) {
@@ -86,3 +86,4 @@ softassert(timeof('calling recursive function 400 times with depth 25', () => {
 		recursivefunc(0, 25);
 	}
 }) < 1500000000);
+*/

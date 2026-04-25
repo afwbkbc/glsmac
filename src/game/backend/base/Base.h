@@ -46,6 +46,7 @@ public:
 	virtual ~Base() = default;
 
 	void AddPop( const Pop& pop );
+	void RemovePop( const size_t pop_id );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -54,9 +55,11 @@ public:
 	pops_t m_pops;
 
 	static const types::Buffer Serialize( const Base* base );
-	static Base* Unserialize( types::Buffer& buf, Game* game );
+	static Base* Deserialize( types::Buffer& buf, Game* game );
 
 	WRAPDEFS_DYNAMIC( Base );
+
+	WRAPDEF_SERIALIZABLE;
 
 private:
 	Game* const m_game;

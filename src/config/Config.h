@@ -3,6 +3,7 @@
 #include <string>
 
 #include "common/Module.h"
+#include "gse/Wrappable.h"
 
 #include "util/random/Types.h"
 #include "game/backend/settings/Types.h"
@@ -10,13 +11,15 @@
 
 #include "Types.h"
 
+class GLSMAC;
+
 namespace util {
 class ConfigManager;
 }
 
 namespace config {
 
-CLASS( Config, common::Module )
+CLASS2( Config, common::Module, gse::Wrappable )
 	Config( const std::string& path );
 	~Config();
 
@@ -40,22 +43,31 @@ CLASS( Config, common::Module )
 		LF_QUICKSTART_MAP_CLOUDS = 1 << 13,
 		LF_QUICKSTART_FACTION = 1 << 14,
 		LF_MODS = 1 << 15,
-		LF_NEWUI = 1 << 16,
+		LF_PLAYERNAME = 1 << 16,
+		LF_GAMENAME = 1 << 17,
+		LF_HOST = 1 << 18,
+		LF_JOIN = 1 << 19,
+		LF_MAXIPS = 1 << 20,
 	};
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	enum debug_flag_t : uint16_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
-		DF_MAPDUMP = 1 << 1,
-		DF_MEMORYDEBUG = 1 << 2,
-		DF_QUIET = 1 << 3,
-		DF_GSE_ONLY = 1 << 4,
-		DF_GSE_TESTS = 1 << 5,
-		DF_GSE_TESTS_SCRIPT = 1 << 6,
-		DF_GSE_PROMPT_JS = 1 << 7,
-		DF_NOPINGS = 1 << 8,
-		DF_QUICKSTART_MAP_DUMP = 1 << 9,
+		DF_QUIET = 1 << 1,
+		DF_GSE_ONLY = 1 << 2,
+		DF_GSE_TESTS = 1 << 3,
+		DF_GSE_TESTS_SCRIPT = 1 << 4,
+		DF_GSE_PROMPT_JS = 1 << 5,
+		DF_NOPINGS = 1 << 6,
+		DF_VERBOSE_GC = 1 << 7,
+		DF_NO_GC = 1 << 8,
+		DF_SINGLE_THREAD = 1 << 9,
+#ifdef DEBUG
+		DF_MAPDUMP = 1 << 10,
+		DF_MEMORYDEBUG = 1 << 11,
+		DF_QUICKSTART_MAP_DUMP = 1 << 12,
+#endif
 	};
 #endif
 
@@ -68,8 +80,7 @@ CLASS( Config, common::Module )
 
 	void SetSMACPath( const std::string& path ) const;
 
-#ifdef DEBUG
-
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
 #endif
 
@@ -79,23 +90,26 @@ CLASS( Config, common::Module )
 	const util::random::state_t& GetQuickstartSeed() const;
 	const std::string& GetQuickstartMapFile() const;
 	const types::Vec2< size_t >& GetQuickstartMapSize() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapOcean() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapErosive() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapLifeforms() const;
-	const game::backend::settings::map_config_value_t GetQuickstartMapClouds() const;
+	const float GetQuickstartMapOceanCoverage() const;
+	const float GetQuickstartMapErosiveForces() const;
+	const float GetQuickstartMapNativeLifeforms() const;
+	const float GetQuickstartMapCloudCover() const;
 	const std::string& GetQuickstartFaction() const;
-
 	const std::vector< std::string >& GetModPaths() const;
+	const std::string& GetJoinAddress() const;
+	const std::string& GetMainScript() const;
+	const std::string& GetWorldScript() const;
+	const uint16_t GetMaxIPS() const;
 
-	const std::string& GetNewUIMainScript() const;
-
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const std::string& GetQuickstartMapDump() const;
 	const std::string& GetGSETestsScript() const;
 
 #endif
+
+	WRAPDEFS_PTR( Config )
 
 private:
 
@@ -123,17 +137,18 @@ private:
 	util::random::state_t m_quickstart_seed = {};
 	std::string m_quickstart_mapfile = "";
 	types::Vec2< size_t > m_quickstart_mapsize = {};
-	game::backend::settings::map_config_value_t m_quickstart_map_ocean = game::backend::settings::MAP_CONFIG_OCEAN_MEDIUM;
-	game::backend::settings::map_config_value_t m_quickstart_map_erosive = game::backend::settings::MAP_CONFIG_EROSIVE_AVERAGE;
-	game::backend::settings::map_config_value_t m_quickstart_map_lifeforms = game::backend::settings::MAP_CONFIG_LIFEFORMS_AVERAGE;
-	game::backend::settings::map_config_value_t m_quickstart_map_clouds = game::backend::settings::MAP_CONFIG_CLOUDS_AVERAGE;
+	float m_quickstart_map_ocean_coverage = 0.4f;
+	float m_quickstart_map_erosive_forces = 0.75f;
+	float m_quickstart_map_native_lifeforms = 0.5f;
+	float m_quickstart_map_cloud_cover = 0.5f;
 	std::string m_quickstart_faction = "";
-
 	std::vector< std::string > m_mod_paths = {};
+	std::string m_join_address = "";
+	std::string m_mainscript = "main";
+	std::string m_worldscript = "default";
+	uint16_t m_maxips = 500;
 
-	std::string m_newui_mainscript = "main";
-
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	uint16_t m_debug_flags = DF_NONE;
 	std::string m_quickstart_mapdump = "";
@@ -141,6 +156,7 @@ private:
 	std::string m_gse_tests_script = "";
 
 #endif
+
 };
 
 }

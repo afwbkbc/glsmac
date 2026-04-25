@@ -6,6 +6,8 @@
 
 #include "Assert.h"
 
+#define VERY_BIG_NUMBER 99999999999 // to detect sign overflows
+
 // used in multiline ToString() implementations
 
 #define TS_DEF() const std::string ToString( const std::string& prefix ) const override;
@@ -59,6 +61,8 @@ public:
 	void SetTesting( const bool testing );
 	const bool IsTesting() const;
 	void TestBreakpoint(); // set gdb breakpoint inside
+	void SetTraceData( const std::string& data );
+	const std::string& GetTraceData() const;
 #endif
 
 protected:
@@ -72,6 +76,7 @@ private:
 
 #ifdef DEBUG
 	bool m_is_testing = false;
+	std::string m_trace_data = "";
 #endif
 
 };
@@ -95,6 +100,10 @@ class _name : public _parent1, public _parent2 { \
 
 #define CLASS3( _name, _parent1, _parent2, _parent3 ) \
 class _name : public _parent1, public _parent2, public _parent3 { \
+    CLASS_HEADER( _name, _parent1 )
+
+#define CLASS4( _name, _parent1, _parent2, _parent3, _parent4 ) \
+class _name : public _parent1, public _parent2, public _parent3, public _parent4 { \
     CLASS_HEADER( _name, _parent1 )
 
 }

@@ -28,10 +28,11 @@ const exception_ec_t EC = {
 	"GSEInvalidHandler",
 };
 
-Exception::Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE )
+Exception::Exception( const std::string& class_name, const std::string& reason, GSE_CALLABLE_NOGC )
 	: types::Exception( class_name, reason )
 	, class_name( class_name )
-	, reason( reason ) {
+	, reason( reason )
+	, si( si ) {
 	ep.WithSI(
 		si, [ this, &ep, &ctx, &si ]() {
 			const auto& st = ep.GetStackTrace();
@@ -74,6 +75,10 @@ const std::string Exception::ToString() const {
 		result += it;
 	}
 	return result;
+}
+
+const char* Exception::what() const noexcept {
+	return strdup( ToString().c_str() );
 }
 
 }

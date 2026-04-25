@@ -33,7 +33,7 @@ TXTLoader::txt_data_t::txt_data_t( const std::string& source ) {
 			}
 			else {
 				const auto section_name = line.substr( 1 );
-				ASSERT_NOLOG( sections.find( section_name ) == sections.end(), "section '" + section_name + "' already exists" );
+				ASSERT( sections.find( section_name ) == sections.end(), "section '" + section_name + "' already exists" );
 				section_it = sections.insert(
 					{
 						section_name,

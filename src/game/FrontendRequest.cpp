@@ -28,10 +28,6 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			}
 			break;
 		}
-		case FR_GLOBAL_MESSAGE: {
-			NEW( data.global_message.message, std::string, *other.data.global_message.message );
-			break;
-		}
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
 			break;
@@ -48,12 +44,20 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.animation_define.serialized_animation, std::string, *other.data.animation_define.serialized_animation );
 			break;
 		}
+		case FR_ANIMATION_UNDEFINE: {
+			NEW( data.animation_undefine.animation_id, std::string, *other.data.animation_undefine.animation_id );
+			break;
+		}
 		case FR_ANIMATION_SHOW: {
 			NEW( data.animation_show.animation_id, std::string, *other.data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {
 			NEW( data.unit_define.serialized_unitdef, std::string, *other.data.unit_define.serialized_unitdef );
+			break;
+		}
+		case FR_UNIT_UNDEFINE: {
+			NEW( data.unit_undefine.id, std::string, *other.data.unit_undefine.id );
 			break;
 		}
 		case FR_UNIT_SPAWN: {
@@ -63,6 +67,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_BASE_POP_DEFINE: {
 			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
+			break;
+		}
+		case FR_BASE_POP_UNDEFINE: {
+			NEW( data.base_pop_undefine.id, std::string, *other.data.base_pop_undefine.id );
 			break;
 		}
 		case FR_BASE_SPAWN: {
@@ -100,10 +108,6 @@ FrontendRequest::~FrontendRequest() {
 			}
 			break;
 		}
-		case FR_GLOBAL_MESSAGE: {
-			DELETE( data.global_message.message );
-			break;
-		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
 			break;
@@ -120,12 +124,20 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.animation_define.serialized_animation );
 			break;
 		}
+		case FR_ANIMATION_UNDEFINE: {
+			DELETE( data.animation_undefine.animation_id );
+			break;
+		}
 		case FR_ANIMATION_SHOW: {
 			DELETE( data.animation_show.animation_id );
 			break;
 		}
 		case FR_UNIT_DEFINE: {
 			DELETE( data.unit_define.serialized_unitdef );
+			break;
+		}
+		case FR_UNIT_UNDEFINE: {
+			DELETE( data.unit_undefine.id );
 			break;
 		}
 		case FR_UNIT_SPAWN: {
@@ -135,6 +147,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_BASE_POP_DEFINE: {
 			DELETE( data.base_pop_define.serialized_popdef );
+			break;
+		}
+		case FR_BASE_POP_UNDEFINE: {
+			DELETE( data.base_pop_undefine.id );
 			break;
 		}
 		case FR_BASE_SPAWN: {

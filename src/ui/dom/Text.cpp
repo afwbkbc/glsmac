@@ -27,8 +27,8 @@ Text::Text( DOM_ARGS )
 	Actor( m_actor );
 
 	Property(
-		GSE_CALL, "text", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			SetText( ( (gse::type::String*)v.Get() )->value );
+		GSE_CALL, "text", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetText( ( (gse::value::String*)v )->value );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetText( "" );
@@ -36,8 +36,8 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "transform", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE, [ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& value = ( (gse::type::String*)v.Get() )->value;
+		GSE_CALL, "transform", gse::VT_STRING, nullptr, PF_NONE, [ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& value = ( (gse::value::String*)v )->value;
 			if ( value == "lowercase" ) {
 				SetTransform( T_LOWERCASE );
 			}
@@ -45,7 +45,7 @@ Text::Text( DOM_ARGS )
 				SetTransform( T_UPPERCASE );
 			}
 			else {
-				GSE_ERROR( gse::EC.UI_ERROR, "Unknown transform, expected: uppercase or lowercase, got: " + value );
+				GSE_ERROR( gse::EC.UI_ERROR, "Unknown transform, expected: none, uppercase or lowercase, got: " + value );
 			}
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -54,10 +54,18 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "color", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
+		GSE_CALL, "color", gse::VT_NOTHING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			types::Color color = {};
-			ParseColor( GSE_CALL, ( (gse::type::String*)v.Get() )->value, color );
+			if ( v->type == gse::VT_STRING ) {
+				ParseColor( GSE_CALL, ( (gse::value::String*)v )->value, color );
+			}
+			else if ( v->type == gse::VT_OBJECT && ( (gse::value::Object*)v )->object_class == "Color" ) {
+				color = types::Color::Unwrap( v );
+			}
+			else {
+				GSE_ERROR( gse::EC.UI_ERROR, "Property 'color' is expected to be String or Color, got " + v->GetTypeString() + ": " + v->ToString() );
+			}
 			m_actor->SetColor( color );
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -67,22 +75,23 @@ Text::Text( DOM_ARGS )
 	);
 
 	Property(
-		GSE_CALL, "font", gse::type::Type::T_STRING, VALUE( gse::type::String, ":32" ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto parts = util::String::Split( ( (gse::type::String*)v.Get() )->value, ':' );
+		GSE_CALL, "font", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto parts = util::String::Split( ( (gse::value::String*)v )->value, ':' );
 			if ( parts.size() != 2 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v.ToString(), GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'font' is expected to be font string ('<fontname>:<size>' ), got: " + v->ToString() );
 			}
 			const auto sz = strtoul( parts.at( 1 ).c_str(), nullptr, 10 );
 			if ( !sz || sz > 255 ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v.ToString(), GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v->ToString() );
 			}
 			m_fontname = parts.at( 0 );
 			m_fontsize = sz;
 			UpdateFont();
 		},
 		[ this ]( GSE_CALLABLE ) {
-			m_fontname = 32;
+			m_fontname = "";
+			m_fontsize = 0;
 			UpdateFont();
 		}
 	);
@@ -93,6 +102,9 @@ Text::~Text() {
 }
 
 void Text::SetText( const std::string& text ) {
+	if ( m_geometry->IsDestroying() ) {
+		return;
+	}
 	std::string transformed_text = text;
 	switch ( m_transform ) {
 		case T_LOWERCASE: {
@@ -122,13 +134,17 @@ void Text::SetTransform( const transform_t transform ) {
 }
 
 void Text::UpdateFont() {
-	ASSERT_NOLOG( m_fontsize, "font size is zero" );
-	types::Font* font;
-	if ( m_fontname.empty() ) {
-		font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
+	if ( m_geometry->IsDestroying() ) {
+		return;
 	}
-	else {
-		font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
+	types::Font* font = nullptr;
+	if ( m_fontsize > 0 ) {
+		if ( m_fontname.empty() ) {
+			font = g_engine->GetFontLoader()->GetBuiltinFont( m_fontsize );
+		}
+		else {
+			font = g_engine->GetFontLoader()->LoadCustomFont( m_fontname, m_fontsize );
+		}
 	}
 	m_actor->SetFont( font );
 	m_geometry->SetWidth( m_actor->GetWidth() );

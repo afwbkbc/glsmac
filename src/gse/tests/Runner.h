@@ -1,5 +1,9 @@
 #pragma once
 
+namespace gc {
+class Space;
+}
+
 namespace task::gsetests {
 class GSETests;
 }

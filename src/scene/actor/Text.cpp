@@ -34,11 +34,15 @@ const types::Color& Text::GetColor() const {
 }
 
 const size_t Text::GetWidth() const {
-	return m_font->GetTextWidth( m_text.c_str() );
+	return m_font
+		? m_font->GetTextWidth( m_text.c_str() )
+		: 0;
 }
 
 const size_t Text::GetHeight() const {
-	return m_font->GetTextHeight( m_text.c_str() );
+	return m_font
+		? m_font->GetTextHeight( m_text.c_str() )
+		: 0;
 }
 
 void Text::SetText( const std::string& text ) {
@@ -68,8 +72,7 @@ void Text::UpdatePosition() {
 }
 
 void Text::Redraw() {
-	if ( m_graphics_object ) {
-		ASSERT( !m_graphics_object->Removed(), "textactor graphics object removed" );
+	if ( m_graphics_object && !m_graphics_object->Removed() ) {
 		auto* gl_actor = m_graphics_object->GetDstObject< graphics::opengl::Text >();
 		gl_actor->Update( m_font, m_text, m_position.x, m_position.y );
 	}

@@ -16,6 +16,10 @@
 #include "engine/Engine.h"
 #include "loader/font/FontLoader.h"
 #include "SlotBadges.h"
+#include "game/backend/Game.h"
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/Base.h"
+#include "game/backend/map/Map.h"
 
 namespace game {
 namespace frontend {
@@ -36,11 +40,16 @@ BaseManager::~BaseManager() {
 	for ( const auto& it : m_popdefs ) {
 		delete it.second;
 	}
+	for ( const auto& it : m_slot_badges ) {
+		delete it.second;
+	}
 }
 
 base::Base* BaseManager::GetBaseById( const size_t id ) const {
-	ASSERT( m_bases.find( id ) != m_bases.end(), "base id not found" );
-	return m_bases.at( id );
+	const auto& it = m_bases.find( id );
+	return it != m_bases.end()
+		? it->second
+		: nullptr;
 }
 
 void BaseManager::DefinePop( const backend::base::PopDef* def ) {
@@ -56,6 +65,19 @@ void BaseManager::DefinePop( const backend::base::PopDef* def ) {
 			)
 		}
 	);
+}
+
+void BaseManager::UndefinePop( const std::string& id ) {
+	const auto& it = m_popdefs.find( id );
+	ASSERT( it != m_popdefs.end(), "popdef does not exist: " + id );
+	delete it->second;
+	m_popdefs.erase( it );
+	for ( auto it = m_popdefs_order.begin() ; it != m_popdefs_order.end() ; it++ ) {
+		if ( ( *it ) == id ) {
+			m_popdefs_order.erase( it );
+			break;
+		}
+	}
 }
 
 const std::vector< std::string >& BaseManager::GetPopDefOrder() const {
@@ -118,8 +140,22 @@ void BaseManager::SpawnBase(
 	RefreshBase( base );
 }
 
+void BaseManager::DespawnBase( const size_t base_id ) {
+	const auto& it = m_bases.find( base_id );
+	ASSERT( it != m_bases.end(), "base id not found" );
+
+	auto* base = it->second;
+
+	m_bases.erase( it );
+
+	delete base;
+
+	m_game->RefreshSelectedTile();
+}
+
 void BaseManager::RefreshBase( Base* base ) {
 	m_game->RenderTile( base->GetTile(), m_game->GetUM()->GetSelectedUnit() );
+	m_game->UpdateRelatedWidgets( ui::WT_BASE_PREVIEW, base->GetId(), base );
 }
 
 /* TODO void BaseManager::DespawnBase( const size_t base_id ) {
@@ -150,13 +186,31 @@ void BaseManager::DefineSlotBadges( const size_t slot_index, const faction::Fact
 	m_slot_badges.insert(
 		{
 			slot_index,
-			new SlotBadges( this, m_ism, faction )
+			new SlotBadges( this, m_ism, slot_index, faction )
 		}
 	);
 }
 
 void BaseManager::SelectBase( Base* base ) {
-	m_game->OpenBasePopup( base );
+	m_game->UpdateTilePreview( base->GetTile() );
+	auto* game = m_game->GetGame();
+	auto* const b = game->GetBM()->GetBase( base->GetId() );
+	m_game->Trigger(
+		game->GetMap(), "base_preview", ARGS_F( &b ) {
+			{
+				"base",
+				b->Wrap( GSE_CALL )
+			},
+		}; }
+	);
+	m_game->Trigger(
+		game, "base_select", ARGS_F( &b ) {
+			{
+				"base",
+				b->Wrap( GSE_CALL )
+			},
+		}; }
+	);
 }
 
 Base* BaseManager::GetBaseBefore( Base* base ) const {

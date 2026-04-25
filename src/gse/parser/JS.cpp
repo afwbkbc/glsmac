@@ -2,10 +2,11 @@
 
 #include <stack>
 #include <functional>
+#include <memory>
 
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/String.h"
+#include "gc/Space.h"
+
+#include "gse/value/String.h"
 
 #include "gse/Exception.h"
 #include "gse/program/Program.h"
@@ -20,7 +21,6 @@
 #include "gse/program/Function.h"
 #include "gse/program/Call.h"
 #include "gse/program/If.h"
-#include "gse/program/ElseIf.h"
 #include "gse/program/Else.h"
 #include "gse/program/While.h"
 #include "gse/program/For.h"
@@ -29,6 +29,8 @@
 #include "gse/program/ForConditionInOf.h"
 #include "gse/program/ForConditionExpressions.h"
 #include "gse/program/LoopControl.h"
+#include "gse/program/Switch.h"
+#include "gse/program/Case.h"
 
 namespace gse {
 
@@ -36,10 +38,9 @@ using namespace program;
 
 namespace parser {
 
-JS::JS( const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: Parser( filename, source, initial_line_num ) {
-
-}
+JS::JS( gc::Space* gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num )
+	: Parser( gc_space, filename, source, initial_line_num )
+	, m_gc_space( gc_space ) {}
 
 void JS::GetElements( source_elements_t& elements ) {
 	char c;
@@ -184,6 +185,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 	auto it = begin;
 	source_elements_t::const_iterator it_end;
 	std::stack< uint8_t > brackets = {};
+	source_elements_t::const_iterator pend = {};
 	while ( it != end ) {
 		it_end = it;
 		while ( it_end != end ) {
@@ -219,8 +221,9 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 									(
 										( *( it_end + 1 ) )->m_type != SourceElement::ET_CONDITIONAL || (
 											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSE &&
-											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_ELSEIF &&
-											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CATCH &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_CASE &&
+											( (Conditional*)*(it_end + 1))->m_conditional_type != Conditional::CT_DEFAULTCASE
 										)
 									)
 							)
@@ -231,7 +234,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( ( Block * )( *it_end ) )->m_block_side == Block::BS_END &&
 						!IsObject( it + 1, it_end )
 					) {
-					body.push_back( GetControl( it, it_end + 1 ) );
+					body.push_back( GetControl( it, it_end + 1, &pend ) );
 					break;
 				}
 				else if (
@@ -239,7 +242,7 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 						( ( Delimiter * )( *it_end ) )->m_delimiter_type == Delimiter::DT_CODE
 					) {
 					if ( it != it_end ) {
-						body.push_back( GetControl( it, it_end ) );
+						body.push_back( GetControl( it, it_end, &pend ) );
 					}
 					break;
 				}
@@ -249,7 +252,10 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 			}
 		}
 		if ( it_end == end ) {
-			body.push_back( GetControl( it, it_end ) );
+			pend = it;
+			while ( pend != it_end ) {
+				body.push_back( GetControl( pend, it_end, &pend ) );
+			}
 		}
 		it = it_end;
 		if ( it != end ) {
@@ -259,37 +265,58 @@ const program::Scope* JS::GetScope( const source_elements_t::const_iterator& beg
 	return new program::Scope( GetSI( begin, end ), body );
 }
 
-const program::Control* JS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Control* JS::GetControl( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end ) {
 	ELS( "GetControl" );
+	ASSERT( processed_end, "processed_end is null" );
 	ASSERT( begin != end, "no elements inside" );
 	if ( ( *begin )->m_type == SourceElement::ET_CONDITIONAL ) {
-		return GetConditional( begin, end );
+		return GetConditional( begin, end, processed_end );
 	}
 	else {
-		return GetStatement( begin, end );
+		const auto* result = GetStatement( begin, end );
+		*processed_end = end;
+		return result;
 	}
 }
 
-const program::Conditional* JS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end ) {
+const program::Conditional* JS::GetConditional( const source_elements_t::const_iterator& begin, const source_elements_t::const_iterator& end, source_elements_t::const_iterator* processed_end ) {
 	ELS( "GetConditional" );
+	ASSERT( processed_end, "processed_end is null" );
 	ASSERT( ( *begin )->m_type == SourceElement::ET_CONDITIONAL, "conditional expected here" );
 	Conditional* conditional = (Conditional*)( *begin );
 	source_elements_t::const_iterator it = begin + 1, it_end;
-	const program::Condition* condition = nullptr;
-	if ( conditional->has_condition ) {
-		if (
-			it == end ||
-				( *it )->m_type != SourceElement::ET_BLOCK ||
-				( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
-				( ( Block * )( *it ) )->m_block_type != BLOCK_ROUND_BRACKETS ) {
-			throw Exception(
-				EC.PARSE_ERROR, "Expected (" + ( it == end
-					? " here"
-					: ", got: " + ( *it )->ToString()
-				), nullptr, ( *begin )->m_si, *m_ep
-			);
+	std::unique_ptr< const program::Condition > condition = {};
+	if ( conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
+		// default:
+		it++; // skip colon
+		ASSERT( it < end, "it overflow" );
+	}
+	else if ( conditional->has_condition ) {
+		if ( conditional->m_conditional_type == Conditional::CT_CASE ) {
+			// <condition>:
+			it_end = it + 1;
+			while ( it_end != end && !( (*it_end)->m_type == SourceElement::ET_OPERATOR && ( (Operator* )( *it_end ) )->m_op == ":" ) ) {
+				it_end++;
+			}
+			it--; // because no brackets
+			ASSERT( it >= begin, "it before begin" );
 		}
-		it_end = GetBracketsEnd( it, end );
+		else {
+			// (<condition>)
+			if (
+				it == end ||
+					( *it )->m_type != SourceElement::ET_BLOCK ||
+					( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
+					( ( Block * )( *it ) )->m_block_type != BLOCK_ROUND_BRACKETS ) {
+				throw Exception(
+					EC.PARSE_ERROR, "Expected (" + ( it == end
+						? " here"
+						: ", got: " + ( *it )->ToString()
+					), nullptr, ( *begin )->m_si, *m_ep
+				);
+			}
+			it_end = GetBracketsEnd( it, end );
+		}
 		if (conditional->m_conditional_type == Conditional::CT_FOR ) {
 			if (++it == end) {
 				throw Exception(
@@ -331,11 +358,12 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				it_second != it_end &&
 				it_second + 1 != it_end
 			) {
-				condition = new program::ForConditionExpressions(
+				condition.reset( new program::ForConditionExpressions(
 					( *it )->m_si,
 					GetExpression( it, it_first ),
 					GetExpression( it_first + 1, it_second ),
-					GetExpression( it_second + 1, it_end ) );
+					GetExpression( it_second + 1, it_end ) )
+				);
 			}
 			else {
 				// in-of loop
@@ -357,16 +385,16 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				else {
 					throw Exception( EC.PARSE_ERROR, "Expected iteration condition, got: " + in_or_of->ToString(), nullptr, ( *begin )->m_si, *m_ep );
 				}
-				condition = new program::ForConditionInOf(
+				condition.reset( new program::ForConditionInOf(
 					( *it )->m_si,
 					new Variable( variable->m_si, variable->m_name ),
 					type,
 					GetExpression( it, it_end )
-				);
+				) );
 			}
 		}
 		else {
-			condition = new program::SimpleCondition( ( *it )->m_si, GetExpression( it + 1, it_end ) );
+			condition.reset( new program::SimpleCondition( ( *it )->m_si, GetExpression( it + 1, it_end ) ) );
 		}
 		ASSERT( it_end != end, "expected {, got EOF" );
 		it = it_end + 1;
@@ -377,13 +405,20 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 		);
 	}
 	else if (
+		( *it )->m_type == SourceElement::ET_CONDITIONAL &&
+		( ( Conditional * )( *it ) )->m_conditional_type == Conditional::CT_IF
+	) {
+		return GetConditional( it, end, processed_end );
+	}
+	else if (
 		( *it )->m_type != SourceElement::ET_BLOCK ||
 		( ( Block * )( *it ) )->m_block_side != Block::BS_BEGIN ||
 		( ( Block * )( *it ) )->m_block_type != BLOCK_CURLY_BRACKETS ) {
 		throw Exception(
-			EC.PARSE_ERROR, "Expected {, got: " + ( *it )->ToString(), nullptr, ( *begin )->m_si, *m_ep
+			EC.PARSE_ERROR, "Expected { or if, got: " + ( *it )->ToString(), nullptr, ( *begin )->m_si, *m_ep
 		);
 	}
+
 	it_end = GetBracketsEnd( it, end );
 	const auto* body = GetScope( it + 1, it_end );
 
@@ -392,28 +427,50 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 		it++;
 	}
 
+	*processed_end = it_end == end ? it_end : it_end + 1;
+
 	switch ( conditional->m_conditional_type ) {
 		case Conditional::CT_IF:
-		case Conditional::CT_ELSEIF: {
+		case Conditional::CT_CASE:
+		case Conditional::CT_DEFAULTCASE: {
 			const program::Conditional* els = nullptr;
-			const auto si = GetSI( begin, it );
-			if ( it != end ) {
-				els = GetConditional( it, end );
-				it++;
-			}
-			if ( conditional->m_conditional_type == Conditional::CT_IF ) {
-				return new program::If( si, (SimpleCondition*)condition, body, els );
+			si_t si;
+			if ( conditional->m_conditional_type == Conditional::CT_CASE || conditional->m_conditional_type == Conditional::CT_DEFAULTCASE ) {
+				si = {
+					conditional->m_si.file,
+					conditional->m_si.from,
+					body->m_si.to
+				};
 			}
 			else {
-				return new program::ElseIf( si, (SimpleCondition*)condition, body, els );
+				si = GetSI( begin, it );
+				if ( it != end ) {
+					source_elements_t::const_iterator pend = {};
+					els = GetConditional( it, end, &pend );
+					if ( pend != end ) {
+						throw Exception( EC.PARSE_ERROR, "Unexpected code :" + ( *pend )->ToString(), nullptr, ( *pend )->m_si, *m_ep );
+					}
+					*processed_end = pend;
+				}
+			}
+			it++;
+			switch ( conditional->m_conditional_type ) {
+				case Conditional::CT_IF:
+					return new program::If( si, (SimpleCondition*)condition.release(), body, els );
+				case Conditional::CT_CASE:
+					return new program::Case( si, (SimpleCondition*)condition.release(), body );
+				case Conditional::CT_DEFAULTCASE:
+					return new program::Case( si, nullptr, body );
+				default:
+					THROW( "conditional type not handled: " + std::to_string( conditional->m_conditional_type ) );
 			}
 		}
 		case Conditional::CT_ELSE:
 			return new program::Else( GetSI( begin, end ), body );
 		case Conditional::CT_WHILE:
-			return new program::While( GetSI( begin, end ), (SimpleCondition*)condition, body );
+			return new program::While( GetSI( begin, end ), (SimpleCondition*)condition.release(), body );
 		case Conditional::CT_FOR: {
-			return new program::For( GetSI( begin, end ), (ForCondition*)condition, body );
+			return new program::For( GetSI( begin, end ), (ForCondition*)condition.release(), body );
 		}
 		case Conditional::CT_TRY: {
 			if (
@@ -432,10 +489,21 @@ const program::Conditional* JS::GetConditional( const source_elements_t::const_i
 				);
 			}
 			it_end = GetBracketsEnd( it + 1, end );
+			*processed_end = it_end == end ? it_end : it_end + 1;
 			return new program::Try( GetSI( begin, it ), body, new program::Catch( GetSI( it, it_end + 1 ), GetObject( it + 2, it_end ) ) );
 		}
 		case Conditional::CT_CATCH: {
 			throw Exception( EC.PARSE_ERROR, "Unexpected catch without try", nullptr, conditional->m_si, *m_ep );
+		}
+		case Conditional::CT_SWITCH: {
+			std::vector< Case* > cases = {};
+			cases.reserve( body->body.size() );
+			for ( const auto& c : body->body ) {
+				ASSERT( c->control_type == program::Control::CT_CONDITIONAL, "control type not conditional" );
+				ASSERT( ((program::Conditional*)c)->conditional_type == program::Conditional::CT_CASE, "conditional type not case" );
+				cases.push_back( (program::Case*)c );
+			}
+			return new program::Switch( GetSI( begin, end ), (SimpleCondition*)condition.release(), cases );
 		}
 		default:
 			THROW( "unexpected conditional type: " + conditional->ToString() );
@@ -563,10 +631,10 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 				if ( has_a && has_b ) {
 					throw Exception( EC.PARSE_ERROR, "Either left or right operand is expected, both found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
 				}
-				case OL_ANY_OR_BOTH:
-					if ( !has_a && !has_b ) {
-						throw Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
-					}
+			case OL_ANY_OR_BOTH:
+				if ( !has_a && !has_b ) {
+					throw Exception( EC.PARSE_ERROR, "Neither left nor right operand is found, for operator: " + ( *split_it )->ToString(), nullptr, ( *split_it )->m_si, *m_ep );
+				}
 				return new program::Expression(
 					si,
 					has_a
@@ -613,16 +681,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					}
 					it_tmp++;
 				}
-				if ( it_tmp == it + 1 || it_tmp == end ) {
-					// no child dereferences, treat as single operand
-					elements.push_back( GetOperand( ( Identifier * )( *it ), &next_var_hints ) );
-				}
-				else {
-					// child dereference, group it into expression
-					ASSERT( next_var_hints == VH_NONE, "variable modifier can't be used with properties" );
-					elements.push_back( GetExpressionOrOperand( it, it_tmp ) );
-					it = it_tmp - 1;
-				}
+				elements.push_back( GetOperand( ( Identifier * )( *it ), &next_var_hints ) );
 				break;
 			}
 			case SourceElement::ET_OPERATOR: {
@@ -661,15 +720,17 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 					next_var_hints = mod_it->second;
 					break;
 				}
-				const auto predef_it = PREDEF_OPERATORS.find( op );
-				if ( predef_it != PREDEF_OPERATORS.end() ) {
-					elements.push_back( new program::Value( ( *it )->m_si, predef_it->second ) );
+				const auto predef_s_it = PREDEF_OPERATORS_S.find( op );
+				if ( predef_s_it != PREDEF_OPERATORS_S.end() ) {
+					ASSERT( PREDEF_OPERATORS.find( predef_s_it->second ) != PREDEF_OPERATORS.end(), "predef operator not found" );
+					const auto p = predef_s_it->second;
+					elements.push_back( new program::Value( ( *it )->m_si, static_var_p( p, m_gc_space, PREDEF_OPERATORS.at( p ) ) ) );
 				}
 				else {
 					elements.push_back( GetOperator( (Operator*)( *it ) ) );
 					if ( op == "return" && ( ( it + 1 == it_end ) || ( *(it + 1))->m_type == SourceElement::ET_DELIMITER ) ) {
 						// return undefined by default
-						elements.push_back( new program::Value( (*it)->m_si, VALUE( type::Undefined ) ) );
+						elements.push_back( new program::Value( (*it)->m_si, nullptr ) );
 					}
 				}
 				var_hints_allowed = false;
@@ -781,7 +842,7 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 									break;
 								}
 							}
-							const auto* expr = (Expression*)get_operand( callable_begin, elements.end() );
+							const auto* operand = (program::Operand*)get_operand( callable_begin, elements.end() );
 							elements.erase( callable_begin, elements.end() );
 
 							std::vector< const Expression* > arguments = {};
@@ -812,13 +873,13 @@ const program::Operand* JS::GetExpressionOrOperand( const source_elements_t::con
 							elements.push_back(
 								new Call(
 									{
-										expr->m_si.file,
-										expr->m_si.from,
+										operand->m_si.file,
+										operand->m_si.from,
 										( *it_end )->m_si.to
 									},
-									expr->type == Operand::OT_EXPRESSION
-										? (Expression*)expr
-										: new Expression( expr->m_si, expr ),
+									operand->type == Operand::OT_EXPRESSION
+										? (Expression*)operand
+										: new Expression( operand->m_si, operand ),
 									arguments
 								)
 							);
@@ -918,12 +979,12 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 				// maybe it's int?
 				const bool is_float = element->m_name.find( '.' ) != std::string::npos;
 				if ( is_float ) {
-					const auto f = std::stof( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( type::Float, f ) );
+					const auto v = std::stof( element->m_name.c_str() );
+					return new program::Value( element->m_si, static_var_f( v, m_gc_space ) );
 				}
 				else {
 					const auto v = std::stol( element->m_name.c_str() );
-					return new program::Value( element->m_si, VALUE( type::Int, v ) );
+					return new program::Value( element->m_si, static_var_i( v, m_gc_space ) );
 				}
 			}
 			catch ( std::logic_error const& ex ) {
@@ -931,7 +992,8 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 			}
 		}
 		case IDENTIFIER_STRING: {
-			return new program::Value( element->m_si, VALUE( type::String, element->m_name ) );
+			const auto& v = element->m_name;
+			return new program::Value( element->m_si, static_var_s( v, m_gc_space ) );
 		}
 		default:
 			THROW( "unexpected identifier type: " + std::to_string( element->m_identifier_type ) );
@@ -941,7 +1003,9 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 const program::Operator* JS::GetOperator( const Operator* element ) {
 	EL( "GetOperator" )
 	const auto it = OPERATOR_NAMES.find( element->m_op );
-	ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
+	if ( it == OPERATOR_NAMES.end() ) {
+		ASSERT( it != OPERATOR_NAMES.end(), "operator name not found: " + element->m_op );
+	}
 	return new program::Operator( element->m_si, it->second );
 }
 
@@ -1111,6 +1175,20 @@ void JS::LogElements( const std::string& label, const source_elements_t::const_i
 
 #undef ELS
 #undef EL
+
+gse::Value* const JS::static_var_p( const predef_op_t& key, gc::Space* gc_space, const std::function< gse::Value*( gc::Space* const gc_space ) >& f ) {
+	CHECKACCUM( gc_space );
+	const auto& it = m_static_vars_p.find( key );
+	return it != m_static_vars_p.end() ? it->second : m_static_vars_p.insert({ key, f( gc_space ) }).first->second;
+}
+
+void JS::collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const {
+	Parser::collect_static_vars( static_vars );
+	static_vars.reserve( static_vars.size() + m_static_vars_p.size() );
+	for ( const auto& it : m_static_vars_p ) {
+		static_vars.insert( it.second );
+	}
+}
 
 }
 }

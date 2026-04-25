@@ -7,6 +7,10 @@
 
 #include "Util.h"
 
+namespace config {
+class Config;
+}
+
 namespace util {
 
 #define AH( ... ) [ __VA_ARGS__ ]( const std::string& value ) -> void
@@ -36,8 +40,13 @@ CLASS( ConfigManager, Util )
 	void UpdateSetting( const std::string& key, const std::string& value );
 
 private:
+	friend class config::Config;
+	typedef std::map< std::string, std::pair< bool, std::string > > settings_t;
+	const settings_t& GetSettings() const;
 
-	std::map< std::string, std::pair< bool, std::string > > m_settings = {};
+private:
+
+	settings_t m_settings = {};
 
 	const std::string m_path;
 	const std::string m_config_path;

@@ -10,11 +10,8 @@ typedef SSIZE_T ssize_t;
 #if !defined(NOMINMAX)
 #define NOMINMAX
 #endif
-#define WIN32_LEAN_AND_MEAN
 
-#define _WINSOCKAPI_
-#include <WinSock2.h> // TODO: check if compiles with mingw
-#include <windows.h>
+#include <WinSock2.h>
 
 #define fd_t SOCKET
 typedef long long ptr_int_t;
@@ -31,5 +28,7 @@ typedef long long ptr_int_t;
 #undef ERROR
 #undef CALLBACK
 #undef MB_RIGHT
+
+#define strdup _strdup
 
 #endif

@@ -15,18 +15,21 @@
 namespace types {
 namespace texture {
 
-Texture::Texture() {
+Texture::Texture( const texture_flag_t flags )
+	: m_flags( flags ) {
 	// nothing
 }
 
-Texture::Texture( const size_t width, const size_t height ) {
+Texture::Texture( const size_t width, const size_t height, const texture_flag_t flags )
+	: m_flags( flags ) {
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
 }
 
-Texture::Texture( const std::string& name, const size_t width, const size_t height )
-	: m_name( name ) {
+Texture::Texture( const std::string& filename, const size_t width, const size_t height, const texture_flag_t flags )
+	: m_filename( filename )
+	, m_flags( flags ) {
 	if ( width > 0 && height > 0 ) {
 		Resize( width, height );
 	}
@@ -45,43 +48,81 @@ Texture::~Texture() {
 }
 
 const bool Texture::IsEmpty() const {
-	return m_width == 0 && m_height == 0;
+	return m_width == 0 || m_height == 0;
 }
 
-void Texture::Resize( const size_t width, const size_t height ) {
-	if ( m_width != width || m_height != height ) {
-
-		//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
-
-		m_width = width;
-		m_height = height;
-
-		if ( m_bitmap ) {
-			free( m_bitmap );
-		}
-
-		m_bitmap_size = m_width * m_height * m_bpp;
-
-		if ( m_height > 0 && m_width > 0 ) {
-
-			m_aspect_ratio = m_height / m_width;
-
-			m_bitmap = (unsigned char*)malloc( m_bitmap_size );
-			memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
-		}
-		else {
-			m_bitmap = nullptr;
-		}
-		FullUpdate();
+const bool Texture::Resize( const size_t width, const size_t height ) {
+	if ( m_width == width && m_height == height ) {
+		return false;
 	}
+
+	//Log( "Setting texture size to " + std::to_string( width ) + "x" + std::to_string( height ) );
+	ASSERT( width < VERY_BIG_NUMBER, "texture width overflow" );
+	ASSERT( height < VERY_BIG_NUMBER, "texture height overflow" );
+
+	m_width = width;
+	m_height = height;
+
+	if ( m_bitmap ) {
+		free( m_bitmap );
+	}
+
+	m_bitmap_size = m_width * m_height * m_bpp;
+
+	if ( m_height > 0 && m_width > 0 ) {
+
+		m_aspect_ratio = m_height / m_width;
+
+		m_bitmap = (unsigned char*)malloc( m_bitmap_size );
+		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
+	}
+	else {
+		m_bitmap = nullptr;
+	}
+	FullUpdate();
+	return true;
+}
+
+void Texture::Clear() {
+	ASSERT( m_bitmap, "bitmap is null" );
+	memset( m_bitmap, 0, m_bitmap_size );
+	FullUpdate();
+}
+
+const size_t Texture::GetWidth() const {
+	return m_width;
+}
+
+const size_t Texture::GetHeight() const {
+	return m_height;
+}
+
+unsigned char* const Texture::GetBitmap() const {
+	return m_bitmap;
+}
+
+const size_t Texture::GetBitmapSize() const {
+	return m_bitmap_size;
+}
+
+const std::string& Texture::GetFilename() const {
+	return m_filename;
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color::rgba_t& rgba ) {
+	ASSERT( x < m_width, "SetPixel x overflow ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
+	ASSERT( y < m_height, "SetPixel y overflow ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	memcpy( ptr( m_bitmap, ( y * m_width + x ) * m_bpp, sizeof( rgba ) ), &rgba, sizeof( rgba ) );
 }
 
 void Texture::SetPixel( const size_t x, const size_t y, const Color& color ) {
 	SetPixel( x, y, color.GetRGBA() );
+}
+
+void Texture::SetPixelMaybe( const ssize_t x, const ssize_t y, const Color& color ) {
+	if ( x > 0 && x < m_width && y > 0 && y < m_height ) {
+		SetPixel( x, y, color );
+	}
 }
 
 void Texture::SetPixelAlpha( const size_t x, const size_t y, const uint8_t alpha ) {
@@ -135,6 +176,9 @@ void Texture::Fill( const size_t x1, const size_t y1, const size_t x2, const siz
 void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const size_t dest_x, const size_t dest_y, const rotate_t rotate, const float alpha, util::random::Random* rng, util::Perlin* perlin ) {
 	ASSERT( x2 >= x1, "invalid source x size ( " + std::to_string( x2 ) + " < " + std::to_string( x1 ) + " )" );
 	ASSERT( y2 >= y1, "invalid source y size ( " + std::to_string( y2 ) + " < " + std::to_string( y1 ) + " )" );
+	ASSERT( source, "source texture is null" );
+	ASSERT( x2 < source->m_width, "source x overflow ( " + std::to_string( x2 ) + " >= " + std::to_string( source->m_width ) + " )" );
+	ASSERT( y2 < source->m_height, "source y overflow ( " + std::to_string( y2 ) + " >= " + std::to_string( source->m_height ) + " )" );
 	ASSERT( dest_x + ( x2 - x1 ) < m_width, "destination x overflow ( " + std::to_string( dest_x + ( x2 - x1 ) ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( dest_y + ( y2 - y1 ) < m_height, "destination y overflow (" + std::to_string( dest_y + ( y2 - y1 ) ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( alpha >= 0, "invalid alpha value ( " + std::to_string( alpha ) + " < 0 )" );
@@ -154,8 +198,11 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	const size_t w = x2 - x1 + 1;
 	const size_t h = y2 - y1 + 1;
 
-	const void* from;
-	void* to;
+	ASSERT( w > 0, "w is zero" );
+	ASSERT( h > 0, "h is zero" );
+
+	const void* from = nullptr;
+	void* to = nullptr;
 
 	ASSERT( rotate < 4, "invalid rotate value " + std::to_string( rotate ) );
 	if ( rotate > 0 ) {
@@ -441,8 +488,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxx[ y ] && x < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxx[ y - 1 ] && y > 0 && x <= perlin_maxx[ y - 1 ] ) ||
-								( perlin_maxx[ y + 1 ] && y < h - 1 && x <= perlin_maxx[ y + 1 ] )
+								( y > 0 && perlin_maxx[ y - 1 ] && x <= perlin_maxx[ y - 1 ] ) ||
+								( y < h - 1 && perlin_maxx[ y + 1 ] && x <= perlin_maxx[ y + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -455,8 +502,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxy[ x ] && y < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxy[ x - 1 ] && x > 0 && y <= perlin_maxy[ x - 1 ] ) ||
-								( perlin_maxy[ x + 1 ] && x < w - 1 && y <= perlin_maxy[ x + 1 ] )
+								( x > 0 && perlin_maxy[ x - 1 ] && y <= perlin_maxy[ x - 1 ] ) ||
+								( x < w - 1 && perlin_maxy[ x + 1 ] && y <= perlin_maxy[ x + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -469,8 +516,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxx[ y ] && ( w - x ) < perlin_maxx[ y ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxx[ y - 1 ] && y > 0 && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
-								( perlin_maxx[ y + 1 ] && y < h - 1 && ( w - x ) <= perlin_maxx[ y + 1 ] )
+								( y > 0 && perlin_maxx[ y - 1 ] && ( w - x ) <= perlin_maxx[ y - 1 ] ) ||
+								( y < h - 1 && perlin_maxx[ y + 1 ] && ( w - x ) <= perlin_maxx[ y + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -483,8 +530,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 					if ( !perlin_need_pixel && !perlin_need_border && ( flags & types::texture::AM_COASTLINE_BORDER ) ) {
 						if (
 							( perlin_maxy[ x ] && ( h - y ) < perlin_maxy[ x ] + COASTLINES_BORDER_RND ) ||
-								( perlin_maxy[ x - 1 ] && x > 0 && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
-								( perlin_maxy[ x + 1 ] && x < w - 1 && ( h - y ) <= perlin_maxy[ x + 1 ] )
+								( x > 0 && perlin_maxy[ x - 1 ] && ( h - y ) <= perlin_maxy[ x - 1 ] ) ||
+								( x < w - 1 && perlin_maxy[ x + 1 ] && ( h - y ) <= perlin_maxy[ x + 1 ] )
 							) {
 							perlin_need_border = true;
 						}
@@ -769,7 +816,6 @@ void Texture::ColorizeFrom( const types::texture::Texture* original, const types
 	ASSERT( original->m_bitmap, "original bitmap not set" );
 
 	uint32_t rgba;
-	repaint_rules_t::const_iterator rule_it;
 	for ( size_t y = 0 ; y < m_height ; y++ ) {
 		for ( size_t x = 0 ; x < m_width ; x++ ) {
 			const auto idx = ( y * m_width + x ) * m_bpp;
@@ -862,21 +908,28 @@ Texture* Texture::FromColor( const Color& color ) {
 }
 
 void Texture::Update( const updated_area_t updated_area ) {
-	//Log( "Need texture update [ "+ std::to_string( updated_area.left ) + " " + std::to_string( updated_area.top ) + " " + std::to_string( updated_area.right ) + " " + std::to_string( updated_area.bottom ) + " ]" );
+	//Log( "Need texture update [ " + std::to_string( updated_area.left ) + " " + std::to_string( updated_area.top ) + " " + std::to_string( updated_area.right ) + " " + std::to_string( updated_area.bottom ) + " ]" );
+	ASSERT( updated_area.right > updated_area.left && updated_area.right < VERY_BIG_NUMBER, "invalid area right" );
+	ASSERT( updated_area.bottom > updated_area.top && updated_area.bottom < VERY_BIG_NUMBER, "invalid area right" );
 	m_updated_areas.push_back( updated_area );
 	m_update_counter++;
 }
 
 void Texture::FullUpdate() {
 	ClearUpdatedAreas();
-	Update(
-		{
-			0,
-			0,
-			m_width,
-			m_height
-		}
-	);
+	if ( m_width > 0 && m_height > 0 ) {
+		Update(
+			{
+				0,
+				0,
+				m_width,
+				m_height
+			}
+		);
+	}
+	else {
+		m_update_counter++;
+	}
 }
 
 const size_t Texture::UpdatedCount() const {
@@ -921,7 +974,7 @@ unsigned char* Texture::CopyBitmap( const size_t x1, const size_t y1, const size
 const types::Buffer Texture::Serialize() const {
 	types::Buffer buf;
 
-	buf.WriteString( m_name );
+	buf.WriteString( m_filename );
 	buf.WriteInt( m_width );
 	buf.WriteInt( m_height );
 	buf.WriteFloat( m_aspect_ratio );
@@ -935,9 +988,9 @@ const types::Buffer Texture::Serialize() const {
 	return buf;
 }
 
-void Texture::Unserialize( types::Buffer buf ) {
+void Texture::Deserialize( types::Buffer buf ) {
 
-	m_name = buf.ReadString();
+	m_filename = buf.ReadString();
 	size_t width = buf.ReadInt();
 	if ( width != m_width ) {
 		THROW( "texture read width mismatch ( " + std::to_string( width ) + " != " + std::to_string( m_width ) + " )" );
@@ -962,6 +1015,18 @@ void Texture::Unserialize( types::Buffer buf ) {
 	m_is_tiled = buf.ReadBool();
 
 	FullUpdate();
+}
+
+void Texture::SetBitmap( void* const pixels ) {
+
+}
+
+const bool Texture::HasFlag( const texture_flag_t flag ) const {
+	return m_flags & flag;
+}
+
+const texture_flag_t Texture::GetFlags() const {
+	return m_flags;
 }
 
 }

@@ -4,6 +4,10 @@
 
 #include "types/Matrix44.h"
 
+namespace ui::dom {
+class Object;
+}
+
 namespace common {
 class ObjectLink;
 }
@@ -70,11 +74,11 @@ CLASS( Actor, Entity )
 	void SetCacheParent( Cache* const cache_parent );
 	const Cache* const GetCacheParent() const;
 
-	void Show();
-	void Hide();
+	void Show() override;
+	void Hide() override;
 
 	virtual const types::Buffer Serialize() const override;
-	virtual void Unserialize( types::Buffer buf ) override;
+	virtual void Deserialize( types::Buffer buf ) override;
 
 protected:
 	const type_t m_type;
@@ -90,6 +94,8 @@ protected:
 	render_flag_t m_render_flags = RF_NONE;
 	area_limits_t m_area_limits = {};
 
+protected:
+	friend class ui::dom::Object; // TODO: remove this hack
 	void UpdateCache();
 
 private:

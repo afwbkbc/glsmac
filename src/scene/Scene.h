@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <unordered_set>
+#include <mutex>
+#include <functional>
 
 #include "common/Common.h"
 
@@ -28,9 +30,7 @@ CLASS( Scene, common::Class )
 	~Scene();
 	void AddActor( actor::Actor* actor );
 	void RemoveActor( actor::Actor* actor );
-	std::vector< actor::Actor* >* GetActors() {
-		return &m_actors;
-	}
+	void WithActors( const std::function< void( const std::vector< actor::Actor* >& actors ) >& f );
 	const scene_type_t GetType() const {
 		return m_scene_type;
 	}
@@ -49,6 +49,7 @@ protected:
 
 	const scene_type_t m_scene_type = SCENE_TYPE_NONE;
 
+	std::mutex m_actors_mutex;
 	std::vector< actor::Actor* > m_actors = {};
 
 	Camera* m_camera = nullptr;

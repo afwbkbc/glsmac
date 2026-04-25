@@ -37,7 +37,7 @@ void main(void) { \
 		position += vec4( uPosition, 0.0, 0.0 ); \
 	}\
 	gl_Position = position; \
-	texpos = vec2( aTexCoord.xy ); \
+	texpos = aTexCoord.xy; \
 	tintcolor = aTintColor; \
 	fragpos = position.xyz; \
 	normal = aNormal; \
@@ -86,8 +86,9 @@ void main(void) { \
 		) + " \
 	ambient /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
 	diffuse /= " + std::to_string( OpenGL::MAX_WORLD_LIGHTS ) + "; \
-	vec4 tex = texture2D( uTexture, vec2( texpos.xy ) ); \
-	float gamma = 1.4; /* TODO: pass via uniform */ \
+	vec4 tex = texture( uTexture, texpos.xy ); \
+	float gamma = 1.1 ; /* TODO: pass via uniform */ \
+	float contrast = 0.1; /* TODO: pass via uniform */ \
 	vec3 color = vec3( tex.r * tintcolor.r, tex.g * tintcolor.g, tex.b * tintcolor.b ); \
 	float alpha = tintcolor.a * tex.a; \
 	if ( " + S_HasFlag( "uFlags", scene::actor::Actor::RF_USE_TINT ) + " ) { \
@@ -96,8 +97,9 @@ void main(void) { \
 	} \
 	if ( ! " + S_HasFlag( "uFlags", scene::actor::Actor::RF_IGNORE_LIGHTING ) + " ) { \
 		color *= ambient + diffuse; \
+		color = clamp( color * gamma - vec3( contrast, contrast, contrast ), 0.0, 1.0 ); \
 	} \
-	FragColor = vec4( color * gamma, alpha ); \
+	FragColor = vec4( color, alpha ); \
 } \
 \
 "
@@ -136,7 +138,6 @@ void Orthographic::EnableAttributes() const {
 	vaofs += types::mesh::Render::VERTEX_TINT_SIZE * tsz;
 	glEnableVertexAttribArray( attributes.normal );
 	glVertexAttribPointer( attributes.normal, types::mesh::Render::VERTEX_NORMAL_SIZE, GL_FLOAT, GL_FALSE, vasz, (const GLvoid*)vaofs );
-	// vaofs += types::mesh::Render::VERTEX_NORMAL_SIZE * tsz;
 };
 
 void Orthographic::DisableAttributes() const {

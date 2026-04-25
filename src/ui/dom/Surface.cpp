@@ -9,24 +9,38 @@
 #include "types/texture/Texture.h"
 #include "util/String.h"
 #include "types/texture/Filter.h"
+#include "ui/UI.h"
+#include "gse/value/Float.h"
 
 namespace ui {
 namespace dom {
 
-Surface::Surface( DOM_ARGS )
-	: Area( DOM_ARGS_PASS, "surface" ) {
+Surface::Surface( DOM_ARGS_T )
+	: Area( DOM_ARGS_PASS, tag ) {
 
 	NEW( m_mesh, types::mesh::Rectangle );
-	m_geometry->AsRectangle()->SetMesh( m_mesh );
+	auto* g = m_geometry->AsRectangle();
+	g->AddMesh( m_mesh );
 	m_actor = new scene::actor::Mesh( "UI::Surface", m_mesh );
 	Actor( m_actor );
+	g->AddActor( m_actor );
 
 	Property(
-		GSE_CALL, "background", gse::type::Type::T_STRING, VALUE( gse::type::Undefined ), PF_NONE,
-		[ this ]( GSE_CALLABLE, const gse::Value& v ) {
-			const auto& str = ( (gse::type::String*)v.Get() )->value;
+		GSE_CALL, "opacity", gse::VT_FLOAT, VALUE( gse::value::Float, , 1.0f ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_actor->SetAlpha( ( (gse::value::Float*)v )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_actor->SetAlpha( 1.0f );
+		}
+	);
+
+	Property(
+		GSE_CALL, "background", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			const auto& str = ( (gse::value::String*)v )->value;
 			if ( str.empty() ) {
-				throw gse::Exception( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path", GSE_CALL );
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'background' expects color code or texture path" );
 			}
 			bool is_tiled = true;
 			types::Color color = {};
@@ -41,7 +55,7 @@ Surface::Surface( DOM_ARGS )
 				//   texture.pcx
 				//   texture.pcx:filter1(arg1,arg2,...):filter2():...
 				const auto params = util::String::Split( str, ':' );
-				ASSERT_NOLOG( !params.empty(), "texture params empty" );
+				ASSERT( !params.empty(), "texture params empty" );
 				auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( params.front() );
 				if ( !texture ) {
 					GSE_ERROR( gse::EC.LOADER_ERROR, "Could not load texture: " + params.front() );
@@ -82,7 +96,6 @@ Surface::Surface( DOM_ARGS )
 					}
 					else if ( f == "tint" ) {
 						f_expect_args( 2 );
-						types::Color color;
 						float intensity;
 						ParseColor( GSE_CALL, args.at( 0 ), color );
 						if ( !util::String::ParseFloat( args.at( 1 ), intensity ) ) {
@@ -160,8 +173,8 @@ Surface::Surface( DOM_ARGS )
 			if ( is_tiled ) {
 				m_geometry->AsRectangle()->SetTiled(
 					{
-						m_background.texture->m_width,
-						m_background.texture->m_height
+						m_background.texture->GetWidth(),
+						m_background.texture->GetHeight()
 					}
 				);
 			}
@@ -173,6 +186,7 @@ Surface::Surface( DOM_ARGS )
 			ClearTexture();
 		}
 	);
+
 }
 
 Surface::~Surface() {
@@ -203,7 +217,7 @@ types::texture::Texture* Surface::GetOwnedTexturePtr() {
 		CreateTexture();
 	}
 	else {
-		ASSERT_NOLOG( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
+		ASSERT( m_background.is_texture_owned, "GetOwnedTexturePtr on non-owned texture" );
 	}
 	return m_background.texture;
 }

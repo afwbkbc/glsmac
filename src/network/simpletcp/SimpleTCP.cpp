@@ -298,7 +298,7 @@ void SimpleTCP::ProcessEvents() {
 	for ( auto& event : events ) {
 		switch ( event.type ) {
 			case Event::ET_PACKET: {
-				Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
+				//Log( "Packet event ( cid = " + std::to_string( event.cid ) + " )" );
 				if ( event.cid ) { // presence of cid means we are server
 					if ( GetCurrentConnectionMode() != CM_SERVER ) {
 						Log( "WARNING: got non-zero cid in packet while not being server, ignoring" );
@@ -389,7 +389,8 @@ void SimpleTCP::Iterate() {
 				data.buffer.ptr = data.buffer.data;
 				data.fd = m_server.tmp.newfd;
 
-				data.remote_address = inet_ntoa( ( (struct sockaddr_in*)&m_server.tmp.client_addr )->sin_addr );
+				char str[ INET_ADDRSTRLEN ];
+				data.remote_address = inet_ntop( AF_INET, &( (struct sockaddr_in*)&m_server.tmp.client_addr )->sin_addr, str, INET_ADDRSTRLEN );
 
 				data.last_data_at = m_tmp.now;
 				data.ping_needed = false;
@@ -488,7 +489,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 
 	if ( m_tmp.tmpint2 > 0 ) {
 
-		Log( "Read " + std::to_string( m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long long)socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
+		//Log( "Read " + std::to_string( m_tmp.tmpint2 ) + " bytes into buffer " + std::to_string( (long long)socket.buffer.ptr ) + " (size=" + std::to_string( socket.buffer.len ) + ")" );
 
 		socket.last_data_at = m_tmp.now;
 		socket.ping_needed = false;
@@ -541,15 +542,15 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 			m_tmp.event.data.packet_data = std::string( m_tmp.ptr, m_tmp.tmpint );
 			try {
 				types::Packet p( types::Packet::PT_NONE );
-				p.Unserialize( types::Buffer( m_tmp.event.data.packet_data ) );
+				p.Deserialize( types::Buffer( m_tmp.event.data.packet_data ) );
 				// quick hack to respond to pings without escalating events outside
 				// TODO: refactor
 				if ( p.type == types::Packet::PT_PING ) {
-					Log( "Ping received" );
+					//Log( "Ping received" );
 					socket.pong_needed = true;
 				}
 				else if ( p.type == types::Packet::PT_PONG ) {
-					Log( "Pong received" );
+					//Log( "Pong received" );
 					socket.ping_sent = false;
 				}
 				else {
@@ -566,7 +567,7 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 
 		}
 
-		Log( "Processed " + std::to_string( m_tmp.tmpint2 ) + " bytes" );
+		//Log( "Processed " + std::to_string( m_tmp.tmpint2 ) + " bytes" );
 
 		if ( m_tmp.tmpint2 > 0 ) {
 			ASSERT( socket.buffer.len >= m_tmp.tmpint2, "processed more than total" );
@@ -633,7 +634,7 @@ bool SimpleTCP::MaybePing( remote_socket_data_t& socket ) {
 	m_tmp.time = m_tmp.now - socket.last_data_at;
 
 	if ( m_tmp.time > SEND_PING_AFTER && !socket.ping_sent ) {
-		Log( "Need ping" );
+		//Log( "Need ping" );
 		socket.ping_needed = true;
 	}
 
@@ -657,14 +658,14 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
 	}
 
 	if ( socket.ping_needed && !socket.ping_sent ) {
-		Log( "Sending ping to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
+		//Log( "Sending ping to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
 		types::Packet packet( types::Packet::PT_PING );
 		std::string data = packet.Serialize().ToString();
 		socket.ping_sent = true;
 		return WriteToSocket( socket.fd, data );
 	}
 	if ( socket.pong_needed ) {
-		Log( "Ping received, sending pong to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
+		//Log( "Ping received, sending pong to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
 		types::Packet packet( types::Packet::PT_PONG );
 		socket.pong_needed = false;
 		std::string data = packet.Serialize().ToString();

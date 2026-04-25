@@ -31,7 +31,7 @@ jobs:
       - name: install_dependencies
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -qq libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev clang-tools-19 clang++-19
+          sudo apt-get install -qq cmake libfreetype-dev libsdl2-dev libsdl2-image-dev libglu-dev libglew-dev libossp-uuid-dev libyaml-cpp-dev clang-tools-19 clang++-19
       - name: cmake
         run: |
           mkdir scanbuild
@@ -71,7 +71,7 @@ jobs:
           artifacts: "scanbuild-report/*,glsmac-ubuntu64/*,glsmac-win64/*"
           tag: "development"
           name: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}-dev"
-          title: "development version"
+#          title: "development version"
           prerelease: true
   release:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
           artifacts: "scanbuild-report/*,glsmac-ubuntu64/*,glsmac-win64/*"
           tag: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
           name: "${{ needs.prepare.outputs.ver }}-${{ needs.prepare.outputs.sha }}"
-          title: "stable version"
+#          title: "stable version"
           commit: stable
       - uses: dev-drprasad/delete-older-releases@v0.2.0
         with:
@@ -138,6 +138,9 @@ jobs:
       - name: install_dependencies
         run: |
           choco install ninja
+          cmake --version
+          (Get-Command cmake).Path
+          where.exe cmake
       - name: prepare
         run: |
           mkdir build

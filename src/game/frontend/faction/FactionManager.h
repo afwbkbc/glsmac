@@ -21,6 +21,7 @@ class Faction;
 CLASS( FactionManager, common::Class )
 
 	FactionManager( Game* game );
+	~FactionManager();
 
 	void DefineFaction( const backend::faction::Faction* def );
 

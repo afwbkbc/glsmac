@@ -6,13 +6,13 @@ namespace graphics {
 namespace opengl {
 
 namespace shader_program {
-class Simple2D;
+class Orthographic;
 }
 
 namespace routine {
 
 CLASS( UI, Routine )
-	UI( OpenGL* opengl, shader_program::Simple2D* shader_program );
+	UI( OpenGL* opengl, shader_program::Orthographic* shader_program );
 
 	void Start() override;
 	void Stop() override;
@@ -24,7 +24,7 @@ CLASS( UI, Routine )
 
 protected:
 
-	shader_program::Simple2D* m_shader_program = nullptr;
+	shader_program::Orthographic* m_shader_program = nullptr;
 
 };
 

@@ -4,7 +4,7 @@
 namespace graphics {
 
 Graphics::~Graphics() {
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( !m_on_resize_handlers.empty() ) {
 		Log( "WARNING: some resize handlers still set" );
 	}
@@ -73,6 +73,11 @@ void Graphics::Lock() {
 
 void Graphics::Unlock() {
 	m_render_lock.unlock();
+}
+
+void Graphics::NoRender( const std::function< void() >& f ) {
+	std::lock_guard guard( m_render_lock );
+	f();
 }
 
 }

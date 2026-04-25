@@ -3,12 +3,18 @@
 #include <cstring>
 
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
+
+#include "gse/value/String.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
 
 namespace gse {
 namespace parser {
 
-Parser::Parser( const std::string& filename, const std::string& source, const size_t initial_line_num )
-	: m_source( source + '\n' )
+Parser::Parser( gc::Space* const gc_space, const std::string& filename, const std::string& source, const size_t initial_line_num )
+	: gc::Object( gc_space )
+	, m_source( source + '\n' )
 	, m_filename( filename )
 	, m_begin( m_source.c_str() )
 	, m_end( m_source.c_str() + m_source.size() ) {
@@ -23,6 +29,8 @@ Parser::~Parser() {
 }
 
 const program::Program* Parser::Parse() {
+	ASSERT( !m_is_parsed, "already parsed" );
+	m_is_parsed = true;
 	source_elements_t elements = {};
 	GetElements( elements );
 	const auto* program = GetProgram( elements );
@@ -30,6 +38,25 @@ const program::Program* Parser::Parse() {
 		delete it;
 	}
 	return program;
+}
+
+void Parser::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gc::Object::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Parser" );
+
+	std::unordered_set< gse::Value* > static_vars = {};
+	collect_static_vars( static_vars );
+
+	{
+		GC_DEBUG_BEGIN( "static_vars" );
+		for ( const auto& var : static_vars ) {
+			GC_REACHABLE( var );
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
 }
 
 const char Parser::get() const {
@@ -275,6 +302,36 @@ const std::string Parser::unpack_backslashes( const std::string& source ) const 
 		result += source.substr( last_pos );
 	}
 	return result;
+}
+
+#define X( _n, _t, _tt, _m ) \
+gse::Value* const _n( const _t& v, gc::Space* const gc_space ) { \
+    CHECKACCUM( gc_space ); \
+    const auto& it = _m.find( v ); \
+    return it != _m.end() \
+        ? it->second \
+        : _m.insert( \
+            { \
+                v, \
+                VALUE( _tt, , v ) \
+            } \
+        ).first->second; \
+}
+X( Parser::static_var_s, std::string, value::String, m_static_vars_s )
+X( Parser::static_var_i, int64_t, value::Int, m_static_vars_i )
+X( Parser::static_var_f, float, value::Float, m_static_vars_f )
+#undef X
+
+void Parser::collect_static_vars( std::unordered_set< gse::Value* >& static_vars ) const {
+	static_vars.reserve( static_vars.size() + m_static_vars_s.size() + m_static_vars_f.size() + m_static_vars_i.size() );
+#define X( _m ) \
+    for ( const auto& it : _m ) { \
+        static_vars.insert( it.second ); \
+    }
+	X( m_static_vars_s )
+	X( m_static_vars_i )
+	X( m_static_vars_f )
+#undef X
 }
 
 inline void Parser::move() {

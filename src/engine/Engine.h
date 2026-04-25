@@ -3,9 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <atomic>
-
-// TODO: move to config
-extern const size_t g_max_fps;
+#include <string>
 
 namespace common {
 class Thread;
@@ -66,8 +64,8 @@ namespace scheduler {
 class Scheduler;
 }
 
-namespace ui_legacy {
-class UI;
+namespace gc {
+class GC;
 }
 
 namespace engine {
@@ -89,7 +87,6 @@ public:
 		graphics::Graphics* graphics,
 		audio::Audio* audio,
 		network::Network* network,
-		ui_legacy::UI* ui,
 		game::backend::Game* game
 	);
 
@@ -108,8 +105,8 @@ public:
 	audio::Audio* GetAudio() const { return m_audio; }
 	network::Network* GetNetwork() const { return m_network; }
 	scheduler::Scheduler* GetScheduler() const { return m_scheduler; }
-	ui_legacy::UI* GetUI() const { return m_ui; }
 	game::backend::Game* GetGame() const { return m_game; }
+	gc::GC* GetGC() const { return m_gc; }
 
 	void Log( const std::string& text ) const;
 
@@ -132,8 +129,8 @@ protected:
 	graphics::Graphics* m_graphics = nullptr;
 	audio::Audio* m_audio = nullptr;
 	network::Network* m_network = nullptr;
-	ui_legacy::UI* m_ui = nullptr;
 	game::backend::Game* m_game = nullptr;
+	gc::GC* m_gc = nullptr;
 
 };
 

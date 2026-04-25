@@ -73,7 +73,7 @@ void LandSurface::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 
 	// add underwater color
 	if ( tile->is_water_tile ) {
-#define x( _k ) ts->layers[ tile::LAYER_LAND ].colors._k = s_consts.underwater_tint;
+#define x( _k ) ts->layers[ tile::LAYER_LAND ].colors._k.value = s_consts.underwater_tint.value;
 		x( center );
 		x( left );
 		x( top );

@@ -37,8 +37,8 @@ Faction::Faction( const backend::faction::Faction* def, sprite::InstancedSpriteM
 }
 
 sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size, const uint8_t perimeter_level ) {
-	ASSERT_NOLOG( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
-	ASSERT_NOLOG( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
+	ASSERT( size < 4, "base size overflow ( " + std::to_string( size ) + " >= 4 )" );
+	ASSERT( perimeter_level < 3, "base perimeter level overflow ( " + std::to_string( perimeter_level ) + " >= 3 )" );
 	const uint8_t index = ( is_water
 		? 12
 		: 0
@@ -102,7 +102,7 @@ sprite::Sprite* Faction::GetBaseSprite( const bool is_water, const uint8_t size,
 
 types::texture::Texture* Faction::GetBaseGridTexture() {
 	if ( !m_base_grid_texture ) {
-		m_base_grid_texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.bases_render.file );
+		m_base_grid_texture = g_engine->GetTextureLoader()->LoadCustomTexture( m_render.bases_render.file, types::texture::TF_MIPMAPS );
 	}
 	return m_base_grid_texture;
 }

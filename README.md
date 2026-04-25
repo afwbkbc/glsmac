@@ -12,7 +12,7 @@ GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 ### Quickstart
 
-1) Download [latest release](https://github.com/afwbkbc/glsmac/releases/latest) for your OS ( only 64-bit windows and ubuntu for now )
+1) Download [latest stable release](https://github.com/afwbkbc/glsmac/releases/latest) or [latest development build](https://github.com/afwbkbc/glsmac/releases/tag/development) for your OS (only 64-bit windows and ubuntu for now)
 
 2) Unpack all files into your SMAC directory (must have SMACX expansion too)
 
@@ -55,6 +55,14 @@ Some things are still hardcoded in C++ for now, but in the end everything will b
 ### Other improvements?
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics). See "GLSMAC v2.x+ features" section below.
+
+### AI policy
+
+I myself don't and won't use AI-generated code.
+
+Pull requests with AI code will be reviewed the same way as pure human code (no discrimination towards AI but also no 'cutting some slack' for AI)
+
+Any increases of dependency versions after 2025/10/20 will happen only after I manually review changes in them. This means versions will be changed less often and really only if it's actually needed for something (to fix specific bug or to bring specific functionality). This will not affect manual builds without -DVENDORED_DEPENDENCIES=YES (prebuilt releases for windows and ubuntu always use vendored dependencies).
 
 ### Current Version:
 
@@ -149,6 +157,10 @@ It is recommended to build in separate directory. For example: `cmake -S . -B bu
 For release build (default): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && make -C build`
 
 For debug build: `cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug && make -C build`
+
+For 'fast debug' build (gdb and most asserts work, removed expensive checks and sanitation): `cmake -S . -B build -DCMAKE_BUILD_TYPE=FastDebug && make -C build`
+
+*( for debug or 'fast debug' build you can also add `-DSANITIZER=YES` to use asan, it does not work reliably on all OSes so is disabled by default. an alternative is to use valgrind tool )*
 
 For portable build (binary that can be executed on different machines): `cmake -S . -B build -DCMAKE_BUILD_TYPE=Portable64 && make -C build` ( or `Portable32` for 32-bit )
 

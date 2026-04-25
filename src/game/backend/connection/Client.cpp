@@ -5,15 +5,19 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/event/Event.h"
+#include "game/backend/Player.h"
+#include "game/backend/Game.h"
+#include "engine/Engine.h"
 #include "types/Packet.h"
 #include "network/Network.h"
+#include "gse/value/Array.h"
 
 namespace game {
 namespace backend {
 namespace connection {
 
-Client::Client( settings::LocalSettings* const settings )
-	: Connection( network::CM_CLIENT, settings ) {
+Client::Client( gc::Space* const gc_space, settings::LocalSettings* const settings )
+	: Connection( gc_space, network::CM_CLIENT, settings ) {
 	//
 }
 
@@ -27,7 +31,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 			try {
 				if ( !event.data.packet_data.empty() ) {
 					types::Packet packet( types::Packet::PT_NONE );
-					packet.Unserialize( types::Buffer( event.data.packet_data ) );
+					packet.Deserialize( types::Buffer( event.data.packet_data ) );
 					switch ( packet.type ) {
 						case types::Packet::PT_REQUEST_AUTH: {
 							Log( "Authenticating" );
@@ -44,13 +48,15 @@ void Client::ProcessEvent( const network::Event& event ) {
 							if ( packet.data.num ) {
 								// initial players list
 								m_slot = packet.data.num;
+								g_engine->GetGame()->SetSlotNum( m_slot );
 							}
 							else {
 								// players list update (i.e. after resolving random players )
 								m_state->m_slots->Clear();
 							}
-							m_state->m_slots->Unserialize( packet.data.str );
-							for ( auto i = 0 ; i < m_state->m_slots->GetCount() ; i++ ) {
+							m_state->m_slots->Deserialize( packet.data.str );
+							const auto c = m_state->m_slots->GetCount();
+							for ( auto i = 0 ; i < c ; i++ ) {
 								const auto& slot = m_state->m_slots->GetSlot( i );
 								if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 									const auto& player = slot.GetPlayer();
@@ -58,10 +64,22 @@ void Client::ProcessEvent( const network::Event& event ) {
 									if ( i == m_slot ) {
 										m_player = player;
 									}
+
+									auto* player_copy = new Player( player );
+									WTrigger(
+										"player_join", ARGS_F( player_copy ) {
+											{
+												"player", player_copy->Wrap( GSE_CALL, true )
+											}
+										}; },
+										[ player_copy ]() {
+											delete player_copy;
+										}
+									);
 								}
 							}
 							if ( m_on_players_list_update ) {
-								m_on_players_list_update();
+								m_on_players_list_update( m_slot );
 							}
 							break;
 						}
@@ -93,12 +111,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 							if ( !ok ) {
 								break; // something went wrong
 							}
-							//m_state->m_settings.global.Unserialize( types::Buffer( packet.data.str ) );
-							m_state->Unserialize( types::Buffer( packet.data.str ) );
+							//m_state->m_settings.global.Deserialize( types::Buffer( packet.data.str ) );
+							m_state->Deserialize( types::Buffer( packet.data.str ) );
 							if ( m_on_global_settings_update ) {
 								m_on_global_settings_update();
 							}
 							m_are_global_settings_received = true;
+							OnOpen();
 							break;
 						}
 						case types::Packet::PT_SLOT_UPDATE:
@@ -125,7 +144,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 									? slot.HasPlayerFlag( slot::PF_READY ) // check readyness of player
 									: m_state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY ) // check readyness of host
 								;
-								slot.Unserialize( packet.data.str );
+								slot.Deserialize( packet.data.str );
 								if ( m_game_state == GS_LOBBY ) {
 									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
 										if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
@@ -163,12 +182,19 @@ void Client::ProcessEvent( const network::Event& event ) {
 							break;
 						}
 						case types::Packet::PT_GAME_STATE: {
-							Log( "Got game state: " + std::to_string( packet.data.num ) );
+							Log( "Got game state: " + std::to_string( packet.udata.game_state.state ) );
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
 								if ( m_on_game_state_change ) {
 									m_on_game_state_change( m_game_state );
 								}
+								WTrigger(
+									"game_state", ARGS_F( this ) {
+										{
+											"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
+										}
+									}; }
+								);
 							}
 							break;
 						}
@@ -228,21 +254,31 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							break;
 						}
-						case types::Packet::PT_GAME_EVENTS: {
-							Log( "Got game events packet" );
-							if ( m_on_game_event_validate && m_on_game_event_apply ) {
-								auto buf = types::Buffer( packet.data.str );
-								std::vector< backend::event::Event* > game_events = {};
-								backend::event::Event::UnserializeMultiple( buf, game_events );
-								for ( const auto& game_event : game_events ) {
-									Log( "Got game event: " + game_event->ToString() );
-									m_on_game_event_validate( game_event );
-									m_on_game_event_apply( game_event );
+						case types::Packet::PT_GAME_EVENT: {
+							//Log( "Got game event packet" );
+							m_state->WithGSE(
+								this,
+								[ packet ]( GSE_CALLABLE ) {
+									auto buf = types::Buffer( packet.data.str );
+									auto* const game = g_engine->GetGame();
+									game->AddEvent( event::Event::Deserialize( game, event::Event::ES_SERVER, GSE_CALL, buf.ReadString() ) );
 								}
-							}
-							else {
-								Log( "WARNING: game event handler not set" );
-							}
+							);
+							break;
+						}
+						case types::Packet::PT_GAME_EVENT_RESPONSE: {
+							//Log( "Got game event response packet" );
+							m_state->WithGSE(
+								this,
+								[ packet ]( GSE_CALLABLE ) {
+									gse::Value* resolved = nullptr;
+									if ( !packet.data.str2.empty() ) {
+										auto buf = types::Buffer( packet.data.str2 );
+										resolved = gse::Value::Deserialize( GSE_CALL, &buf, g_engine->GetGame() );
+									}
+									g_engine->GetGame()->AddEventResponse( packet.data.str, packet.data.boolean, resolved );
+								}
+							);
 							break;
 						}
 						default: {
@@ -272,9 +308,13 @@ void Client::ProcessEvent( const network::Event& event ) {
 
 void Client::SendGameEvents( const game_events_t& game_events ) {
 	Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
-	types::Packet p( types::Packet::PT_GAME_EVENTS );
-	p.data.str = backend::event::Event::SerializeMultiple( game_events ).ToString();
-	m_network->MT_SendPacket( &p );
+	for ( const auto& event : game_events ) {
+		types::Buffer buf;
+		buf.WriteString( event.serialized_data );
+		types::Packet p( types::Packet::PT_GAME_EVENT );
+		p.data.str = buf.ToString();
+		m_network->MT_SendPacket( &p );
+	}
 }
 
 void Client::UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags ) {

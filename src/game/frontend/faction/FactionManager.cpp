@@ -13,6 +13,12 @@ FactionManager::FactionManager( Game* game )
 
 }
 
+FactionManager::~FactionManager() {
+	for ( const auto& faction : m_factions ) {
+		DELETE( faction.second );
+	}
+}
+
 void FactionManager::DefineFaction( const backend::faction::Faction* def ) {
 	ASSERT( def, "faction is null" );
 	ASSERT( m_factions.find( def->m_id ) == m_factions.end(), "faction already defined" );

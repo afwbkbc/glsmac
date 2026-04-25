@@ -6,13 +6,10 @@
 #include "scene/actor/Actor.h"
 #include "scene/actor/Mesh.h"
 #include "scene/actor/Instanced.h"
-#include "graphics/Graphics.h"
 #include "graphics/opengl/OpenGL.h"
 #include "graphics/opengl/FBO.h"
 #include "graphics/opengl/shader_program/Orthographic.h"
 #include "graphics/opengl/shader_program/OrthographicData.h"
-#include "graphics/opengl/shader_program/Simple2D.h"
-#include "graphics/opengl/shader_program/World.h"
 #include "rr/GetData.h"
 #include "rr/Capture.h"
 #include "types/Matrix44.h"
@@ -20,7 +17,6 @@
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
 #include "engine/Engine.h"
-#include "ui_legacy/UI.h"
 
 namespace graphics {
 namespace opengl {
@@ -124,7 +120,7 @@ void Mesh::LoadTexture() {
 	auto* texture = GetMeshActor()->GetTexture();
 
 	if ( texture ) {
-		g_engine->GetGraphics()->LoadTexture( texture );
+		g_engine->GetGraphics()->LoadTexture( texture, true );
 	}
 }
 
@@ -228,6 +224,8 @@ void Mesh::OnWindowResize() {
 
 void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camera* camera ) {
 
+	ASSERT( shader_program, "shader program is null" );
+
 	l_draw_begin:
 
 	//Log( "Drawing" );
@@ -255,7 +253,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 	else {
 
 		if ( mesh_actor->RR_HasRequests< rr::Capture >() ) {
-			Log( "Creating FBO for capture" );
+			//Log( "Creating FBO for capture" );
 
 			// process only one per Draw() because cameras may differ
 			// in vast majority of cases only one call will be here anyway
@@ -283,28 +281,16 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 					g_engine->GetGraphics()->WithTexture(
 						texture, [ this, &shader_program, &flags, &mesh_actor, &capture_request, &camera ]() {
 
-							switch ( shader_program->GetType() ) {
-								case ( shader_program::ShaderProgram::TYPE_SIMPLE2D ) : {
-									auto* sp = (shader_program::Simple2D*)shader_program;
-									glUniform1ui( sp->uniforms.flags, flags );
-									if ( flags & scene::actor::Actor::RF_USE_TINT ) {
-										glUniform4fv( sp->uniforms.tint_color, 1, (const GLfloat*)&mesh_actor->GetTintColor().value );
-									}
-									if ( flags & scene::actor::Actor::RF_USE_AREA_LIMITS ) {
-										const auto& limits = mesh_actor->GetAreaLimits();
-										glUniform3fv( sp->uniforms.area_limits.min, 1, (const GLfloat*)&limits.first );
-										glUniform3fv( sp->uniforms.area_limits.max, 1, (const GLfloat*)&limits.second );
-									}
-									if ( flags & scene::actor::Actor::RF_USE_2D_POSITION ) {
-										glUniform2fv( sp->uniforms.position, 1, (const GLfloat*)&mesh_actor->GetPosition() );
-									}
-									glDrawElements( GL_TRIANGLES, m_ibo_size, GL_UNSIGNED_INT, (void*)( 0 ) );
-									break;
-								}
+							const auto sptype = shader_program->GetType();
+							switch ( sptype ) {
 								case ( shader_program::ShaderProgram::TYPE_ORTHO ):
 								case ( shader_program::ShaderProgram::TYPE_ORTHO_DATA ): {
-									auto* sp = (shader_program::Orthographic*)shader_program;
-									auto* sp_data = (shader_program::OrthographicData*)shader_program;
+									auto* sp = sptype == shader_program::ShaderProgram::TYPE_ORTHO
+										? (shader_program::Orthographic*)shader_program
+										: nullptr;
+									auto* sp_data = sptype == shader_program::ShaderProgram::TYPE_ORTHO_DATA
+										? (shader_program::OrthographicData*)shader_program
+										: nullptr;
 
 									GLuint ibo_size;
 
@@ -359,6 +345,9 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 
 									// TODO: instanced capture_request ?
 									if ( !ignore_camera ) {
+
+										ASSERT( camera || capture_request, "neither camera nor capture request set" );
+
 										glUniformMatrix4fv(
 											shader_program->GetType() == shader_program::ShaderProgram::TYPE_ORTHO_DATA
 												? sp_data->uniforms.world
@@ -373,7 +362,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 										types::Matrix44 matrix;
 										ASSERT( !capture_request, "non-instanced captures not implemented" );
 										if ( ignore_camera ) {
-											matrix = g_engine->GetUI()->GetWorldUIMatrix();
+											matrix = {};
 										}
 										else {
 											matrix = m_actor->GetWorldMatrix();
@@ -417,14 +406,6 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 
 									break;
 								}
-								case ( shader_program::ShaderProgram::TYPE_PERSP ): {
-
-									// TODO
-									THROW( "perspective projection not implemented yet" );
-
-									break;
-
-								}
 								default: {
 									THROW( "shader program type " + std::to_string( shader_program->GetType() ) + " not implemented" );
 								}
@@ -467,7 +448,7 @@ void Mesh::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Camer
 			capture_request->texture = fbo->CaptureToTexture();
 			capture_request->SetProcessed();
 
-			Log( "Destroying FBO for capture" );
+			//Log( "Destroying FBO for capture" );
 			DELETE( fbo );
 
 			// this draw was captured into texture, draw for real now (or process next capture if there are more)

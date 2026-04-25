@@ -74,9 +74,8 @@ const float Random::GetFloat( const float min, const float max ) {
 
 	value_t value = Generate();
 
-	const float small_value = 0.00001f;
+	float ret = min + ( ( (float)value / (float)UINT32_MAX ) * ( max - min ) );
 
-	float ret = (float)( ( min + small_value ) * FLOAT_PRECISION + value % (value_t)( ( max - min - small_value * 2 ) * FLOAT_PRECISION ) ) / FLOAT_PRECISION;
 	ASSERT( ret >= min, "GetFloat ret < min ( " + std::to_string( ret ) + " < " + std::to_string( min ) + " )" );
 	ASSERT( ret <= max, "GetFloat ret > max ( " + std::to_string( ret ) + " > " + std::to_string( max ) + " )" );
 	return ret;

@@ -1,5 +1,9 @@
 #pragma once
 
+namespace gc {
+class Space;
+}
+
 namespace gse {
 
 class ExecutionPointer;
@@ -10,7 +14,7 @@ class Context;
 
 class Bindings {
 public:
-	virtual void AddToContext( context::Context* ctx, ExecutionPointer& ep ) = 0;
+	virtual void AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) = 0;
 };
 
 }

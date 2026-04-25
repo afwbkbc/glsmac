@@ -1,18 +1,29 @@
 #include "UI.h"
 
-#include "dom/Root.h"
+#include <algorithm>
 
+#include "dom/Root.h"
+#include "dom/Widget.h"
+#include "types/texture/Texture.h"
 #include "scene/Scene.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
 #include "input/Input.h"
 #include "Class.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
+#include "dom/Focusable.h"
+#include "gse/value/Bool.h"
+#include "geometry/Geometry.h"
+#include "scene/actor/Actor.h"
 
 namespace ui {
 
 UI::UI( GSE_CALLABLE )
-	: m_scene(new scene::Scene( "Scene::UI", scene::SCENE_TYPE_UI ) ){
+	: gse::GCWrappable( gc_space )
+	, m_ctx( ctx )
+	, m_gc_space( gc_space )
+	, m_scene( new scene::Scene( "UI", scene::SCENE_TYPE_UI ) ) {
 
 	m_clamp.x.SetRange(
 		{
@@ -38,42 +49,75 @@ UI::UI( GSE_CALLABLE )
 	);
 
 	g_engine->GetGraphics()->AddScene( m_scene );
-	m_root = new dom::Root( GSE_CALL, this );
+
+	m_gc_space->Accumulate( this, [ this, GSE_CALL ] () {
+		auto ep2 = ep;
+		Clear( gc_space, ctx, si, ep2 );
+	});
+
 	Resize();
 
-	g_engine->GetInput()->AddHandler( this, [ this, &ctx, &si ]( const input::Event& event ){
-		if ( event.type == input::EV_MOUSE_MOVE ) {
-			m_last_mouse_position = {
-				event.data.mouse.x,
-				event.data.mouse.y
-			};
-		}
-		try {
+	g_engine->GetInput()->AddHandler( this, [ this, gc_space, ctx, si ]( const input::Event& event ){
+		bool result = false;
+		m_gc_space->Accumulate( this, [ this, &ctx, &gc_space, &si, &event, &result ] () {
 			gse::ExecutionPointer ep;
-			m_root->ProcessEvent( GSE_CALL, event );
-		}
-		catch ( gse::Exception& e ) {
-			const auto msg = e.ToString();
-			Log( msg );
-			throw std::runtime_error( msg );
-		}
+			if ( event.type == input::EV_MOUSE_MOVE ) {
+				// need to save last mouse position to be able to trigger mouseover/mouseout events for objects that will move/resize themselves later
+				m_last_mouse_position = {
+					event.data.mouse.x,
+					event.data.mouse.y
+				};
+			}
+
+			// custom early handlers
+			if ( RunGlobalHandlers( GSE_CALL, event, GH_BEFORE ) ) {
+				result = true;
+			}
+
+			// toggle fullscreen
+			if (
+				!result &&
+				event.type == input::EV_KEY_DOWN &&
+				( event.data.key.modifiers & input::KM_ALT ) &&
+				event.data.key.code == input::K_ENTER
+			) {
+				g_engine->GetGraphics()->ToggleFullscreen();
+				result = true;
+			}
+
+			// process by DOM element focus logic
+			if (
+				!result &&
+				event.type == input::EV_KEY_DOWN &&
+				event.data.key.modifiers == input::KM_NONE &&
+				event.data.key.code == input::K_TAB &&
+				!m_focusable_elements.empty()
+				) {
+				FocusNext();
+				result = true;
+			}
+
+			// process by DOM
+			if ( !result ) {
+				result = m_root->ProcessEvent( GSE_CALL, event );
+			}
+
+			// custom late handlers
+			if ( !result && RunGlobalHandlers( GSE_CALL, event, GH_AFTER ) ) {
+				result = true;
+			}
+		}, nullptr, true );
+		return result;
 	});
 }
 
 UI::~UI() {
-
 	g_engine->GetInput()->RemoveHandler( this );
 
-	for ( const auto& it : m_classes ) {
-		Log( "Destroying UI class: " + it.first );
-		delete it.second;
-	}
-
 	g_engine->GetGraphics()->RemoveScene( m_scene );
-	DELETE( m_scene );
+	delete m_scene;
 
 	g_engine->GetGraphics()->RemoveOnWindowResizeHandler( this );
-
 }
 
 void UI::Iterate() {
@@ -84,9 +128,24 @@ void UI::Iterate() {
 
 WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 			{
 				"root",
-				m_root->Wrap( true )
+				m_root->Wrap( GSE_CALL, true )
+			},
+			{
+				"get_width",
+				NATIVE_CALL() {
+					N_EXPECT_ARGS( 0 );
+					return VALUE( gse::value::Int,, g_engine->GetGraphics()->GetViewportWidth() );
+				} )
+			},
+			{
+				"get_height",
+				NATIVE_CALL() {
+					N_EXPECT_ARGS( 0 );
+					return VALUE( gse::value::Int,, g_engine->GetGraphics()->GetViewportHeight() );
+				} )
 			},
 			{
 				"class",
@@ -96,12 +155,12 @@ WRAPIMPL_BEGIN( UI )
 					auto it = m_classes.find( name );
 					if ( it == m_classes.end() ) {
 						Log( "Creating UI class: " + name );
-						it = m_classes.insert({ name, new ui::Class( this, name, true ) }).first;
+						it = m_classes.insert({ name, new ui::Class( gc_space, this, name ) }).first;
 						if ( arguments.size() >= 2 ) {
-							const gse::type::object_properties_t* properties = nullptr;
+							const gse::value::object_properties_t* properties = nullptr;
 							const std::string* parent_class = nullptr;
 							if ( arguments.size() == 2 ) {
-								if ( arguments.at(1).Get()->type == gse::type::Type::T_STRING ) {
+								if ( arguments.at(1)->type == gse::VT_STRING ) {
 									N_GETVALUE( s, 1, String );
 									parent_class = &s;
 								}
@@ -128,7 +187,34 @@ WRAPIMPL_BEGIN( UI )
 						// passing parent class or properties in constructor works only if class didn't exist yet
 						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
 					}
-					return it->second->Wrap( true );
+					return it->second->Wrap( GSE_CALL, true );
+				} )
+			},
+			{
+				"error",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 2 );
+					N_GETVALUE( errmsg, 0, String );
+					N_GET_CALLABLE( on_close, 1 );
+					Persist( on_close );
+
+					Trigger( GSE_CALL, "error", ARGS_F( this, &errmsg, on_close ) {
+						{
+							"error",
+							VALUEEXT( gse::value::String, m_gc_space, errmsg ),
+						},
+						{
+							"on_close",
+							VALUE( gse::callable::Native,, ctx, [ this, on_close ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value* {
+								if ( IsPersisted( on_close ) ) {
+									on_close->Run( GSE_CALL, {} );
+									Unpersist( on_close );
+								}
+								return VALUE( gse::value::Bool,, true );
+							} )
+						},
+					}; } );
+					return VALUE( gse::value::Undefined );
 				} )
 			},
 		};
@@ -136,6 +222,10 @@ WRAPIMPL_END_PTR()
 
 void UI::Resize() {
 	const auto& g = g_engine->GetGraphics();
+
+	const auto w = g->GetViewportWidth();
+	const auto h = g->GetViewportHeight();
+
 /*#ifdef DEBUG
 			for ( auto& it : m_debug_frames ) {
 				ResizeDebugFrame( it.first, &it.second );
@@ -144,16 +234,25 @@ void UI::Resize() {
 	m_clamp.x.SetSrcRange(
 		{
 			0.0,
-			(float)g->GetViewportWidth()
+			(float)w
 		}
 	);
 	m_clamp.y.SetSrcRange(
 		{
 			0.0,
-			(float)g->GetViewportHeight()
+			(float)h
 		}
 	);
 	m_root->Resize( g->GetViewportWidth(), g->GetViewportHeight() );
+	WithGSE(
+		[ this, w, h ]( GSE_CALLABLE ) {
+			gse::value::object_properties_t event_data = {
+				{ "width",  VALUE( gse::value::Int,, w ) },
+				{ "height", VALUE( gse::value::Int,, h ) },
+			};
+			Trigger( GSE_CALL, "resize", ARGS( event_data ) );
+		}
+	);
 }
 
 const types::mesh::coord_t UI::ClampX( const coord_t& x ) const {
@@ -187,7 +286,36 @@ const types::Vec2< ssize_t >& UI::GetLastMousePosition() const {
 
 void UI::Destroy( GSE_CALLABLE ) {
 	m_root->Destroy( GSE_CALL );
-	delete this;
+}
+
+void UI::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "UI" );
+
+	GC_REACHABLE( m_root );
+
+	GC_DEBUG_BEGIN( "classes" );
+	for ( const auto& it : m_classes ) {
+		GC_REACHABLE( it.second );
+	}
+	GC_DEBUG_END();
+
+	{
+		GC_DEBUG_BEGIN( "widgets" );
+		std::lock_guard guard( m_widgets_mutex );
+		for ( const auto& it : m_widgets ) {
+			for ( const auto& it2 : it.second ) {
+				GC_REACHABLE( it2.first );
+				if ( it2.second.data ) {
+					GC_REACHABLE( it2.second.data );
+				}
+			}
+		}
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_END();
 }
 
 void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
@@ -198,6 +326,284 @@ void UI::AddIterable( const dom::Object* const obj, const f_iterable_t& f ) {
 void UI::RemoveIterable( const dom::Object* const obj ) {
 	ASSERT( m_iterables.find( obj ) != m_iterables.end(), "iterable not found" );
 	m_iterables.erase( obj );
+}
+
+const bool UI::RunGlobalHandlers( GSE_CALLABLE, const input::Event& event, const ui::UI::global_handler_type_t type ) {
+	const auto& handlers_it = m_global_handlers_by_type.find( type );
+	if ( handlers_it != m_global_handlers_by_type.end() ) {
+		for ( const auto& it : handlers_it->second ) {
+			ASSERT( m_global_handlers.find( it ) != m_global_handlers.end(), "global handler not found" );
+			if ( m_global_handlers.at( it ).second( GSE_CALL, event ) ) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+scene::Scene* const UI::GetScene() const {
+	ASSERT( m_scene, "ui scene not set" );
+	return m_scene;
+}
+
+gc::Space* const UI::GetGCSpace() const {
+	return m_gc_space;
+}
+
+void UI::WithGSE( const gse_func_t& f ) {
+	m_gc_space->Accumulate(
+		nullptr,
+		[ this, f ]() {
+			gse::ExecutionPointer ep;
+			f( m_gc_space, m_ctx, {}, ep );
+		}
+	);
+}
+
+dom::Root* const UI::GetRoot() const {
+	return m_root;
+}
+
+void UI::AddFocusable( dom::Focusable* const element ) {
+	ASSERT( element, "element is null" );
+	ASSERT( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) == m_focusable_elements.end(), "focusable already exists");
+	ASSERT( m_focusable_elements_idx.find( element ) == m_focusable_elements_idx.end(), "focusable idx already exists");
+	m_focusable_elements_idx.insert({ element, m_focusable_elements_idx.size() });
+	m_focusable_elements.push_back( element );
+	if ( !m_focused_element ) {
+		Focus( element );
+	}
+}
+
+void UI::RemoveFocusable( dom::Focusable* const element ) {
+	ASSERT( element, "element is null" );
+	const auto& it = m_focusable_elements_idx.find( element );
+	ASSERT( it != m_focusable_elements_idx.end(), "focusable idx not found");
+	ASSERT( std::find( m_focusable_elements.begin(), m_focusable_elements.end(), element ) != m_focusable_elements.end(), "focusable not found");
+	const auto idx = it->second;
+	ASSERT( idx < m_focusable_elements.size(), "focusable idx overflow" );
+	m_focusable_elements.erase( m_focusable_elements.begin() + idx );
+	m_focusable_elements_idx.erase( it );
+	for ( auto& e : m_focusable_elements_idx ) {
+		if ( e.second >= idx ) {
+			e.second--;
+		}
+	}
+	if ( element == m_focused_element ) {
+		Defocus( element );
+		FocusNext();
+	}
+}
+
+void UI::Focus( dom::Focusable* const element ) {
+	ASSERT( element, "element is null" );
+	if ( m_focused_element ) {
+		Defocus( m_focused_element );
+	}
+	m_focused_element = element;
+	m_focused_element->OnFocus();
+}
+
+void UI::FocusNext() {
+	ASSERT( !m_focused_element || !m_focusable_elements.empty(), "something is focused but focusable elements empty" );
+	ASSERT( m_focusable_elements.size() == m_focusable_elements_idx.size(), "focusables size mismatch" );
+	const auto idx = m_focused_element ? m_focusable_elements_idx.at( m_focused_element ) : 0;
+	const auto nextidx = idx < m_focusable_elements_idx.size() - 1 ? idx + 1 : 0;
+	if ( nextidx < m_focusable_elements.size() ) {
+		Focus( m_focusable_elements.at( nextidx ) );
+	}
+}
+
+const size_t UI::AddGlobalHandler( const global_handler_type_t type, const global_handler_t& global_handler ) {
+	const auto handler_id = m_next_global_handler_id++;
+	ASSERT( m_global_handlers.find( handler_id ) == m_global_handlers.end(), "global handler already set" );
+	m_global_handlers.insert({ handler_id, { type, global_handler } } );
+	auto it = m_global_handlers_by_type.find( type );
+	if ( it == m_global_handlers_by_type.end() ) {
+		it = m_global_handlers_by_type.insert({ type, {}} ).first;
+	}
+	it->second.insert( handler_id );
+	return handler_id;
+}
+
+void UI::RemoveGlobalHandler( const size_t handler_id ) {
+	ASSERT( m_global_handlers.find( handler_id ) != m_global_handlers.end(), "global handler not found" );
+	const auto h = m_global_handlers.at( handler_id );
+	const auto& ht = m_global_handlers_by_type.find( h.first );
+	ht->second.erase( handler_id );
+	if ( ht->second.empty() ) {
+		m_global_handlers_by_type.erase( ht );
+	}
+	m_global_handlers.erase( handler_id );
+}
+
+void UI::RegisterWidget( const widget_type_t type, const widget_config_t& config ) {
+	ASSERT( m_widget_configs.find( type ) == m_widget_configs.end(), "widget type already registered" );
+	ASSERT( m_widget_strs.find( config.str ) == m_widget_strs.end(), "widget str already registered" );
+	m_widget_configs.insert({ type, config });
+	m_widget_strs.insert({ config.str, type } );
+}
+
+void UI::UnregisterWidget( const ui::widget_type_t type ) {
+	const auto& it = m_widget_configs.find( type );
+	ASSERT( it != m_widget_configs.end(), "widget config not registered" );
+	ASSERT( m_widget_strs.find( it->second.str ) != m_widget_strs.end(), "widget str not registered" );
+	m_widget_strs.erase( it->second.str );
+	m_widget_configs.erase( type );
+}
+
+const widget_type_t UI::GetWidgetTypeByString( GSE_CALLABLE, const std::string& str ) const {
+	const auto& it = m_widget_strs.find( str );
+	if ( it == m_widget_strs.end() ) {
+		std::string errstr = "Unknown widget type: " + str + " . Available types:";
+		for ( const auto& s : m_widget_strs ) {
+			errstr += " " +s.first;
+		}
+		GSE_ERROR( gse::EC.GAME_ERROR, errstr );
+	}
+	return it->second;
+}
+
+void UI::AttachWidget( dom::Widget* const widget, const widget_type_t type ) {
+	std::lock_guard guard( m_widgets_mutex );
+	ASSERT( m_widget_configs.find( type ) != m_widget_configs.end(), "widget config not found" );
+	ASSERT( m_widget_types.find( widget ) == m_widget_types.end(), "widget already attached" );
+	auto it = m_widgets.find( type );
+	if ( it == m_widgets.end() ) {
+		it = m_widgets.insert({ type, {} } ).first;
+	}
+	ASSERT( it->second.find( widget ) == it->second.end(), "widget already attached" );
+	widget_state_t state = {};
+	state.config = &m_widget_configs.at( type );
+	it->second.insert( { widget, state } );
+	m_widget_types.insert({ widget, type } );
+	ASSERT( state.config->f_init, "widget init not defined" );
+	state.config->f_init( widget );
+}
+
+void UI::DetachWidget( dom::Widget* const widget, const widget_type_t type  ) {
+	std::lock_guard guard( m_widgets_mutex );
+	const auto& config_it = m_widget_configs.find( type );
+	if ( config_it != m_widget_configs.end() ) {
+		ASSERT( config_it->second.f_deinit, "widget deinit not defined" );
+		config_it->second.f_deinit( widget );
+	}
+	const auto& it = m_widget_types.find( widget );
+	ASSERT( it != m_widget_types.end(), "widget not attached" );
+	const auto& widgets = m_widgets.find( it->second );
+	ASSERT( widgets != m_widgets.end(), "widget type not attached" );
+	ASSERT( widgets->second.find( widget ) != widgets->second.end(), "widget not attached" );
+	widget->Clear();
+	widgets->second.erase( widget );
+	if ( widgets->second.empty() ) {
+		m_widgets.erase( it->second );
+	}
+	m_widget_types.erase( widget );
+}
+
+void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value::Object* const data ) {
+	const auto& data_it = m_widget_configs.find( type );
+	if ( data_it != m_widget_configs.end() ) {
+		if ( data == nullptr ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing" );
+		}
+		for ( const auto& d : data->value ) {
+			const auto& data_it2 = data_it->second.data_config.find( d.first );
+			if ( data_it2 == data_it->second.data_config.end() ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data: " + d.first );
+			}
+			if ( data_it2->second.type != d.second->type ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be " + gse::Value::GetTypeStringStatic( data_it2->second.type ) + ", got " + d.second->GetTypeString() );
+			}
+			if ( data_it2->second.type == gse::VT_OBJECT && data_it2->second.object_class != ((gse::value::Object*)d.second)->object_class ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data " + d.first + " is expected to be of class " + data_it2->second.object_class + ", got " + ((gse::value::Object*)d.second)->object_class );
+			}
+		}
+		for ( const auto& d : data_it->second.data_config ) {
+			if ( data->value.find( d.first ) == data->value.end() ) {
+				GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing: " + d.first );
+			}
+		}
+	}
+	else {
+		if ( data != nullptr && !data->value.empty() ) {
+			GSE_ERROR( gse::EC.UI_ERROR, "Unexpected widget data" );
+		}
+	}
+}
+
+void UI::SetWidgetData( dom::Widget* const widget, gse::value::Object* const data ) {
+	std::lock_guard guard( m_widgets_mutex );
+	const auto& it = m_widget_types.find( widget );
+	ASSERT( it != m_widget_types.end(), "widget type not found" );
+	const auto& it2 = m_widgets.find( it->second );
+	ASSERT( it2 != m_widgets.end(), "widget not found" );
+	const auto& it3 = it2->second.find( widget );
+	ASSERT( it3 != it2->second.end(), "widget not found" );
+	it3->second.data = data;
+}
+
+void UI::WithWidget( const widget_type_t type, const f_with_widget_t& f ) {
+	std::lock_guard guard( m_widgets_mutex );
+	const auto& it = m_widgets.find( type );
+	if ( it != m_widgets.end() ) {
+		for ( const auto& it2 : it->second ) {
+			const auto& widget = it2.first;
+			const auto* const g = widget->GetGeometry();
+			if ( g->GetWidth() > 0 && g->GetHeight() > 0 ) {
+				f( widget );
+				widget->Refresh();
+			}
+		}
+	}
+}
+
+void UI::Clear( GSE_CALLABLE ) {
+	ClearHandlers();
+
+	if ( !m_root ) {
+		m_root = new dom::Root( GSE_CALL, this );
+	}
+	else {
+		m_root->Clear( GSE_CALL );
+	}
+
+	Log( "Clearing UI classes" );
+	m_classes.clear();
+}
+
+void UI::Defocus( dom::Focusable* const element ) {
+	ASSERT( element, "element is null" );
+	if ( element == m_focused_element ) {
+		m_focused_element->OnDefocus();
+		m_focused_element = nullptr;
+	}
+}
+
+void UI::SetGlobalSingleton( GSE_CALLABLE, dom::Object* const object, const std::function< void() >& f_on_deglobalize ) {
+	ASSERT( object, "object is null" );
+	if ( m_global_singleton != object ) {
+		if ( m_global_singleton ) {
+			RemoveGlobalSingleton( GSE_CALL, m_global_singleton );
+		}
+		m_global_singleton = object;
+		m_f_global_singleton_on_deglobalize = f_on_deglobalize;
+		m_global_singleton->Show();
+		m_root->AddChild( GSE_CALL, m_global_singleton, false );
+	}
+}
+
+void UI::RemoveGlobalSingleton( GSE_CALLABLE, dom::Object* const object ) {
+	ASSERT( object, "object is null" );
+	if ( m_global_singleton == object ) {
+		if ( m_f_global_singleton_on_deglobalize ) {
+			m_f_global_singleton_on_deglobalize();
+		}
+		m_root->RemoveChild( GSE_CALL, m_global_singleton, true );
+		m_global_singleton->Hide();
+		m_global_singleton = nullptr;
+		m_f_global_singleton_on_deglobalize = nullptr;
+	}
 }
 
 }

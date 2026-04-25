@@ -58,6 +58,7 @@ CLASS( BaseManager, common::Class )
 	base::Base* GetBaseById( const size_t id ) const;
 
 	void DefinePop( const backend::base::PopDef* def );
+	void UndefinePop( const std::string& id );
 
 	const std::vector< std::string >& GetPopDefOrder() const;
 	PopDef* GetPopDef( const std::string& id ) const;
@@ -69,7 +70,7 @@ CLASS( BaseManager, common::Class )
 		const ::types::Vec3& render_coords,
 		const std::string& name
 	);
-	// TODO void DespawnBase( const size_t base_id );
+	void DespawnBase( const size_t base_id );
 	void RefreshBase( Base* base );
 
 	SlotBadges* GetSlotBadges( const size_t slot_index ) const;

@@ -1,5 +1,4 @@
 SUBDIR( map )
-SUBDIR( map_editor )
 SUBDIR( resource )
 SUBDIR( rules )
 SUBDIR( settings )

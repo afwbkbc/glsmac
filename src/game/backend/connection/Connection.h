@@ -1,11 +1,17 @@
 #pragma once
 
 #include <vector>
+#include <unordered_set>
+#include <mutex>
 
-#include "common/Module.h"
+#include "gse/GCWrappable.h"
 
 #include "game/backend/slot/Types.h"
 #include "network/Types.h"
+
+namespace gc {
+class Space;
+}
 
 namespace network {
 class Network;
@@ -36,7 +42,8 @@ class Client;
 
 class Server;
 
-CLASS( Connection, common::Module )
+class Connection : public gse::GCWrappable {
+public:
 
 	enum game_state_t : uint8_t {
 		GS_NONE,
@@ -45,24 +52,24 @@ CLASS( Connection, common::Module )
 		GS_RUNNING,
 	};
 
-	Connection( const network::connection_mode_t connection_mode, settings::LocalSettings* const settings );
+	Connection( gc::Space* const gc_space, const network::connection_mode_t connection_mode, settings::LocalSettings* const settings );
 	virtual ~Connection();
 
 	std::function< void() > m_on_connect = nullptr;
 
 	// return true if connection should be destroyed afterwards
-	std::function< bool() > m_on_cancel = nullptr;
-	std::function< bool() > m_on_disconnect = nullptr;
+	std::function< void() > m_on_cancel = nullptr;
+	std::function< void() > m_on_disconnect = nullptr;
 	std::function< bool( const std::string& message ) > m_on_error = nullptr;
 
 	std::function< void() > m_on_global_settings_update = nullptr;
-	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_join = nullptr;
-	std::function< void( const size_t slot_num, slot::Slot* slot, const Player* player ) > m_on_player_leave = nullptr;
+
 	std::function< void( const size_t slot_num, slot::Slot* slot ) > m_on_slot_update = nullptr;
 	std::function< void( const size_t slot_num, slot::Slot* slot, const slot::player_flag_t old_flags, const slot::player_flag_t new_flags ) > m_on_flags_update = nullptr;
 	std::function< void( const std::string& message ) > m_on_message = nullptr;
 	std::function< void( backend::event::Event* event ) > m_on_game_event_validate = nullptr;
 	std::function< void( backend::event::Event* event ) > m_on_game_event_apply = nullptr;
+	std::function< void( backend::event::Event* event ) > m_on_game_event_rollback = nullptr;
 
 	void SetState( State* state );
 
@@ -71,7 +78,7 @@ CLASS( Connection, common::Module )
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
-	void Iterate() override;
+	const bool IterateAndMaybeDelete();
 
 	Client* AsClient() const; // for client-specific calls
 	void IfClient( std::function< void( Client* client ) > cb ); // call cb if client
@@ -86,6 +93,8 @@ CLASS( Connection, common::Module )
 	const size_t GetSlotNum() const;
 	const Player* GetPlayer() const;
 
+	WRAPDEFS_PTR( Connection );
+
 	virtual void UpdateSlot( const size_t slot_num, slot::Slot* slot, const bool only_flags = false ) = 0;
 	virtual void SendMessage( const std::string& message ) = 0;
 
@@ -96,6 +105,8 @@ protected:
 
 	virtual void ProcessEvent( const network::Event& event );
 
+	gc::Space* const GetGCSpace() const;
+
 	bool m_is_connected = false;
 	bool m_is_canceled = false; // canceled by user
 
@@ -103,12 +114,22 @@ protected:
 	settings::LocalSettings* m_settings = nullptr;
 	State* m_state = nullptr;
 
-protected:
-	typedef std::vector< backend::event::Event* > game_events_t;
+	struct game_event_t {
+		size_t caller;
+		std::string name;
+		std::string serialized_data;
+	};
+	typedef std::vector< game_event_t > game_events_t;
 	game_state_t m_game_state = GS_NONE;
+
+	const std::string& GetGameStateStr( const game_state_t game_state ) const;
 
 	size_t m_slot = 0;
 	backend::Player* m_player = nullptr;
+
+	void WTrigger( const std::string& event, const gse::f_args_t& fargs, const std::function< void() >& f_after = nullptr );
+	void OnOpen();
+	void IgnoreCID( const network::cid_t cid );
 
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
 
@@ -122,10 +143,19 @@ private:
 
 	// buffer events for optimization
 	const size_t PENDING_GAME_EVENTS_LIMIT = 256;
+
 	game_events_t m_pending_game_events = {};
+
+	gse::value::Callable* m_f_on_open = nullptr;
 
 	void ProcessPending();
 	void ClearPending();
+
+	gc::Space* const m_gc_space;
+
+	std::unordered_set< network::cid_t > m_ignored_cids = {};
+
+	bool m_is_destroying = false;
 
 };
 

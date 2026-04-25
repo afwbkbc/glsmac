@@ -35,7 +35,7 @@ public:
 	const std::string ToString( const std::string& prefix = "" ) const;
 
 	static const types::Buffer Serialize( const PopDef* def );
-	static PopDef* Unserialize( types::Buffer& buf );
+	static PopDef* Deserialize( types::Buffer& buf );
 
 private:
 	const std::string InfosToString( const std::string& prefix, const std::string& name, const pop_render_infos_t& infos ) const;

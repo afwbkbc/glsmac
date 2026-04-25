@@ -15,6 +15,7 @@
 #define UNTEST_OBJECT( _obj )
 #define TEST_BREAKPOINT( _obj )
 #define IS_TESTING( _obj ) false
+#define SET_TRACE_DATA( _obj, _data )
+#define GET_TRACE_DATA( _obj ) ""
 
 #endif
-

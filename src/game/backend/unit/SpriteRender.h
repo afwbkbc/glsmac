@@ -29,7 +29,7 @@ private:
 	friend class Render;
 
 	static void Serialize( types::Buffer& buf, const SpriteRender* render );
-	static SpriteRender* Unserialize( types::Buffer& buf );
+	static SpriteRender* Deserialize( types::Buffer& buf );
 
 };
 

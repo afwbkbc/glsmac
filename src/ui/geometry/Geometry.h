@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "env/Env.h"
 
 #include <cstdint>
@@ -15,6 +17,11 @@
 namespace ui {
 
 class UI;
+
+namespace dom {
+class Area;
+class Object;
+}
 
 namespace geometry {
 
@@ -52,6 +59,12 @@ public:
 		ALIGN_BOTTOM_CENTER = ALIGN_BOTTOM | ALIGN_HCENTER,
 	};
 
+	enum overflow_mode_t {
+		OM_VISIBLE,
+		OM_HIDDEN,
+		OM_SCROLLABLE,
+	};
+
 	enum position_t {
 		POSITION_RELATIVE,
 		POSITION_ABSOLUTE,
@@ -60,17 +73,27 @@ public:
 	Rectangle* AsRectangle() const;
 	Text* AsText() const;
 
+	void SetParent( Geometry* const other );
+
 	void SetLeft( const coord_t px );
+	const coord_t GetLeft() const;
 	void SetTop( const coord_t px );
+	const coord_t GetTop() const;
 	void SetRight( const coord_t px );
 	void SetBottom( const coord_t px );
 	void SetWidth( const coord_t px );
+	const coord_t GetWidth() const;
+	const coord_t GetInnerWidth() const;
 	void SetHeight( const coord_t px );
+	const coord_t GetHeight() const;
+	const coord_t GetInnerHeight() const;
 	void SetPadding( const coord_t px );
 	void SetAlign( const align_t align );
 	void SetPosition( const position_t position );
 	void SetZIndex( const coord_t zindex );
-	void SetOverflowAllowed( const bool is_overflow_allowed );
+	void SetOverflowMode( const overflow_mode_t mode );
+
+	const coord_t GetZIndex() const;
 
 	void NeedUpdate();
 
@@ -128,19 +151,28 @@ public:
 	void Show();
 	void Hide();
 
+	void Detach();
+
+	void Destroy();
+
+	const bool IsDestroying() const;
+
 protected:
+	friend class Rectangle;
 
 	virtual void UpdateImpl() = 0;
 
 	const UI* const m_ui;
+	Geometry* m_parent;
+	overflow_mode_t m_overflow_mode = OM_VISIBLE;
 
 private:
 	bool m_is_visible = false;
+	bool m_is_destroying = false;
 	const geometry_type_t m_type;
 
-	void Update();
+	void Update( const bool is_update_from_parent );
 
-	Geometry* const m_parent;
 	std::unordered_set< Geometry* > m_children = {};
 
 	enum stick_bits_t : uint8_t {
@@ -164,10 +196,9 @@ private:
 	uint8_t m_align = ALIGN_LEFT | ALIGN_TOP;
 	position_t m_position = POSITION_RELATIVE;
 	coord_t m_zindex = 0.5f;
-	bool m_is_overflow_allowed = true;
 
 	void UpdateArea();
-	void UpdateEffectiveArea();
+	void UpdateEffectiveArea( const bool is_update_from_parent );
 
 	void FixArea( area_t& area );
 
@@ -177,6 +208,33 @@ private:
 	std::unordered_map< geometry_handler_type_t, std::unordered_map< geometry_handler_id_t, std::function< void() > > > m_handlers = {};
 	std::unordered_map< geometry_handler_id_t, geometry_handler_type_t > m_handler_types = {};
 	void RunHandlers( const geometry_handler_type_t type ) const;
+
+	struct boundary_t {
+		Geometry* child = nullptr;
+		coord_t value = 0.0f;
+	};
+	struct {
+		struct {
+			boundary_t low = {};
+			boundary_t high = {};
+		} x;
+		struct {
+			boundary_t low = {};
+			boundary_t high = {};
+		} y;
+		coord_t width = 0.0f;
+		coord_t height = 0.0f;
+	} m_boundaries = {};
+	void AddBoundaries( Geometry* const g );
+	void RemoveBoundaries( Geometry* const g );
+	void ResizeAreaFromChildren();
+
+private:
+	friend class ui::dom::Area;
+	friend class ui::dom::Object;
+	typedef std::function< void( const size_t width, const size_t height, const bool is_update_from_parent ) > f_on_resize_t;
+	f_on_resize_t m_on_resize = nullptr;
+
 };
 
 }

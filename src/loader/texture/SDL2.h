@@ -19,8 +19,8 @@ CLASS( SDL2, TextureLoader )
 
 protected:
 
-	types::texture::Texture* LoadTextureImpl( const std::string& filename ) override;
-	types::texture::Texture* LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) override;
+	types::texture::Texture* LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) override;
+	types::texture::Texture* LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value, const types::texture::texture_flag_t texture_flags ) override;
 
 	// cache all textures for future use
 	typedef std::unordered_map< std::string, types::texture::Texture* > texture_map_t;

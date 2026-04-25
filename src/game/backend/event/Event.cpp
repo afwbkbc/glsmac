@@ -1,157 +1,132 @@
 #include "Event.h"
 
-#include "DefineResource.h"
-#include "DefineAnimation.h"
-#include "DefineMorales.h"
-#include "DefineUnit.h"
-#include "SpawnUnit.h"
-#include "DespawnUnit.h"
-#include "MoveUnit.h"
-#include "AttackUnit.h"
-#include "SkipUnitTurn.h"
-#include "DefinePop.h"
-#include "SpawnBase.h"
-#include "CompleteTurn.h"
-#include "UncompleteTurn.h"
-#include "FinalizeTurn.h"
-#include "TurnFinalized.h"
-#include "AdvanceTurn.h"
-#include "RequestTileLocks.h"
-#include "LockTiles.h"
-#include "RequestTileUnlocks.h"
-#include "UnlockTiles.h"
+#include "game/backend/Game.h"
+#include "gse/value/Object.h"
 
 namespace game {
 namespace backend {
 namespace event {
 
-Event::Event( const size_t initiator_slot, const event_type_t type )
-	: m_initiator_slot( initiator_slot )
-	, m_type( type ) {
-	//
+Event::Event( Game* game, const source_t source, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data, const std::string& id )
+	: gc::Object( gc_space )
+	, m_game( game )
+	, m_source( source )
+	, m_caller( caller )
+	, m_id(
+		id.empty()
+			? game->GenerateEventId()
+			: id
+	)
+	, m_name( name )
+	, m_original_data( data ) {
+	UpdateData( GSE_CALL );
 }
 
-const types::Buffer Event::Serialize( const Event* event ) {
+const types::Buffer Event::Serialize() {
 	types::Buffer buf;
-	buf.WriteInt( event->m_initiator_slot );
-	buf.WriteInt( event->m_type );
-#define SERIALIZE( _type, _class ) \
-    case _type: { \
-        _class::Serialize( buf, (_class*)event ); \
-        break; \
-    }
-	switch ( event->m_type ) {
-		SERIALIZE( ET_RESOURCE_DEFINE, DefineResource )
-		SERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
-		SERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
-		SERIALIZE( ET_UNIT_DEFINE, DefineUnit )
-		SERIALIZE( ET_UNIT_SPAWN, SpawnUnit )
-		SERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
-		SERIALIZE( ET_UNIT_MOVE, MoveUnit )
-		SERIALIZE( ET_UNIT_ATTACK, AttackUnit )
-		SERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
-		SERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
-		SERIALIZE( ET_BASE_SPAWN, SpawnBase )
-		SERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
-		SERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
-		SERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
-		SERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
-		SERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
-		SERIALIZE( ET_REQUEST_TILE_LOCKS, RequestTileLocks )
-		SERIALIZE( ET_LOCK_TILES, LockTiles )
-		SERIALIZE( ET_REQUEST_TILE_UNLOCKS, RequestTileUnlocks )
-		SERIALIZE( ET_UNLOCK_TILES, UnlockTiles )
-		default:
-			THROW( "unknown event type on write: " + std::to_string( event->m_type ) );
+
+	buf.WriteString( m_id );
+	buf.WriteString( m_name );
+	buf.WriteInt( m_caller );
+	buf.WriteInt( m_original_data.size() );
+	for ( const auto& it : m_original_data ) {
+		buf.WriteString( it.first );
+		it.second->Serialize( &buf, it.second );
 	}
-#undef SERIALIZE
+	{
+		std::lock_guard guard( m_resolved_mutex );
+		if ( m_resolved ) {
+			buf.WriteBool( true );
+			m_resolved->Serialize( &buf, m_resolved );
+		}
+		else {
+			buf.WriteBool( false );
+		}
+	}
 	return buf;
 }
 
-Event* Event::Unserialize( types::Buffer& buf ) {
-	const auto initiator_slot = buf.ReadInt();
-	const auto type = buf.ReadInt();
-	Event* result = nullptr;
-#define UNSERIALIZE( _type, _class ) \
-    case _type: { \
-        result = _class::Unserialize( buf, initiator_slot ); \
-        break; \
-    }
-	switch ( type ) {
-		UNSERIALIZE( ET_RESOURCE_DEFINE, DefineResource )
-		UNSERIALIZE( ET_ANIMATION_DEFINE, DefineAnimation )
-		UNSERIALIZE( ET_UNIT_DEFINE_MORALES, DefineMorales )
-		UNSERIALIZE( ET_UNIT_DEFINE, DefineUnit )
-		UNSERIALIZE( ET_UNIT_SPAWN, SpawnUnit )
-		UNSERIALIZE( ET_UNIT_DESPAWN, DespawnUnit )
-		UNSERIALIZE( ET_UNIT_MOVE, MoveUnit )
-		UNSERIALIZE( ET_UNIT_ATTACK, AttackUnit )
-		UNSERIALIZE( ET_UNIT_SKIP_TURN, SkipUnitTurn )
-		UNSERIALIZE( ET_BASE_DEFINE_POP, DefinePop )
-		UNSERIALIZE( ET_BASE_SPAWN, SpawnBase )
-		UNSERIALIZE( ET_COMPLETE_TURN, CompleteTurn )
-		UNSERIALIZE( ET_UNCOMPLETE_TURN, UncompleteTurn )
-		UNSERIALIZE( ET_FINALIZE_TURN, FinalizeTurn )
-		UNSERIALIZE( ET_TURN_FINALIZED, TurnFinalized )
-		UNSERIALIZE( ET_ADVANCE_TURN, AdvanceTurn )
-		UNSERIALIZE( ET_REQUEST_TILE_LOCKS, RequestTileLocks )
-		UNSERIALIZE( ET_LOCK_TILES, LockTiles )
-		UNSERIALIZE( ET_REQUEST_TILE_UNLOCKS, RequestTileUnlocks )
-		UNSERIALIZE( ET_UNLOCK_TILES, UnlockTiles )
-		default:
-			THROW( "unknown event type on read: " + std::to_string( type ) );
+Event* const Event::Deserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer ) {
+	const auto id = buffer.ReadString();
+	const auto name = buffer.ReadString();
+	const auto caller = buffer.ReadInt();
+	gse::value::object_properties_t data = {};
+	const auto sz = buffer.ReadInt();
+	for ( auto i = 0 ; i < sz ; i++ ) {
+		const auto k = buffer.ReadString();
+		data.insert( { k, gse::Value::Deserialize( GSE_CALL, &buffer, game ) } );
 	}
-#undef UNSERIALIZE
-	return result;
-}
-
-const types::Buffer Event::SerializeMultiple( const std::vector< Event* >& events ) {
-	types::Buffer buf;
-	buf.WriteInt( events.size() );
-	for ( const auto& event : events ) {
-		buf.WriteString( backend::event::Event::Serialize( event ).ToString() );
+	auto* event = new Event( game, source, caller, GSE_CALL, name, data, id );
+	if ( buffer.ReadBool() ) {
+		event->SetResolved( gse::Value::Deserialize( GSE_CALL, &buffer, game ) );
 	}
-	const auto serialized_events = buf.ToString();
-	return buf;
+	return event;
 }
 
-void Event::UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& events_out ) {
-	const auto count = buf.ReadInt();
-	for ( auto i = 0 ; i < count ; i++ ) {
-		auto event_buf = types::Buffer( buf.ReadString() );
-		events_out.push_back( backend::event::Event::Unserialize( event_buf ) );
+const std::string Event::ToString() const {
+	return "Event#" + m_id + "( " + m_name + " )"; // TODO
+}
+
+void Event::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gc::Object::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "Event" );
+
+	GC_DEBUG_BEGIN( "data" );
+	for ( const auto& it : m_data ) {
+		GC_REACHABLE( it.second );
 	}
-}
+	GC_DEBUG_END();
 
-const bool Event::IsBroadcastable( const event_type_t type ) {
-	switch ( type ) {
-		case ET_REQUEST_TILE_LOCKS:
-		case ET_REQUEST_TILE_UNLOCKS:
-			return false;
-		default:
-			return true;
+	{
+		std::lock_guard guard( m_resolved_mutex );
+		if ( m_resolved ) {
+			GC_DEBUG_BEGIN( "resolved" );
+			GC_REACHABLE( m_resolved );
+			GC_DEBUG_END();
+		}
 	}
+
+	GC_DEBUG_END();
 }
 
-void Event::SetDestinationSlot( const uint8_t destination_slot ) {
-	m_is_public = false;
-	m_destination_slot = destination_slot;
+const size_t Event::GetCaller() const {
+	return m_caller;
 }
 
-const bool Event::IsProcessableBy( const uint8_t destination_slot ) const {
-	return m_is_public || m_destination_slot == destination_slot;
-};
-
-const bool Event::IsSendableTo( const uint8_t destination_slot ) const {
-	return IsBroadcastable( m_type ) && IsProcessableBy( destination_slot );
+const Event::source_t Event::GetSource() const {
+	return m_source;
 }
 
-const std::string* Event::Ok() const {
-	return nullptr;
+const std::string& Event::GetId() const {
+	return m_id;
 }
 
-const std::string* Event::Error( const std::string& text ) const {
-	return new std::string( text );
+const std::string& Event::GetEventName() const {
+	return m_name;
+}
+
+const gse::value::object_properties_t& Event::GetData() const {
+	return m_data;
+}
+
+void Event::SetResolved( gse::Value* const resolved ) {
+	std::lock_guard guard( m_resolved_mutex );
+	ASSERT( !m_resolved, "event already resolved" );
+	m_resolved = resolved;
+}
+
+gse::Value* Event::GetResolved() {
+	std::lock_guard guard( m_resolved_mutex );
+	return m_resolved;
+}
+
+void Event::UpdateData( GSE_CALLABLE ) {
+	m_data = {
+		{ "game", m_game->Wrap( GSE_CALL, true ) },
+		{ "caller", VALUE( gse::value::Int, , m_caller ) },
+		{ "data",   VALUE( gse::value::Object, , GSE_CALL_NOGC, m_original_data ) },
+	};
 }
 
 }

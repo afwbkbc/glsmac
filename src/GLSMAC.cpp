@@ -1,14 +1,12 @@
 #include "GLSMAC.h"
 
-#include <iostream>
-
 #include "util/FS.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
-#include "task/game/Game.h"
-#include "task/common/Common.h"
 #include "scheduler/Scheduler.h"
+#include "util/LogHelper.h"
+#include "gc/Space.h"
 
 #include "ui/UI.h"
 
@@ -18,17 +16,24 @@
 #include "gse/context/GlobalContext.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
+#include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/slot/Slots.h"
 #include "game/backend/Player.h"
+#include "game/backend/faction/Faction.h"
+#include "game/backend/faction/FactionManager.h"
+#include "game/backend/connection/Server.h"
+#include "game/backend/connection/Client.h"
 
 #include "game/frontend/Game.h"
 
 static GLSMAC* s_glsmac = nullptr;
 
-GLSMAC::GLSMAC() {
+GLSMAC::GLSMAC()
+	: gse::GCWrappable( nullptr ) {
+
 	// there can only be one GLSMAC
 	ASSERT( !s_glsmac, "GLSMAC already defined" );
 	s_glsmac = this;
@@ -37,9 +42,10 @@ GLSMAC::GLSMAC() {
 
 	// scripting stuff
 	NEW( m_gse, gse::GSE );
+	m_gse->AddRootObject( this );
 	m_gse->AddBindings( this );
 	m_ctx = m_gse->CreateGlobalContext();
-	m_ctx->IncRefs();
+	m_gc_space = m_gse->GetGCSpace();
 
 	const auto& c = g_engine->GetConfig();
 
@@ -48,29 +54,31 @@ GLSMAC::GLSMAC() {
 			{
 				c->GetDataPath(),
 				"default", // only 'default' mod for now
-				c->GetNewUIMainScript() // script name (extension is appended automatically)
+				c->GetMainScript() // script name (extension is appended automatically)
 			}, gse::GSE::PATH_SEPARATOR
 		)
 	;
 
 	{
-		gse::ExecutionPointer ep;
+		m_gc_space->Accumulate( this, [ this, &entry_script ]() {
+			gse::ExecutionPointer ep;
 
-		// global objects
-		NEW( m_ui, ui::UI, m_ctx, { "" }, ep );
+			// global objects
+			m_ui = new ui::UI( m_gc_space, m_ctx, { "" }, ep );
 
-		// run main(s)
-		m_gse->RunScript( m_ctx, {}, ep, entry_script );
-		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-			m_gse->RunScript(
-				m_ctx, {}, ep, util::FS::GeneratePath(
-					{
-						mod_path,
-						"main"
-					}
-				)
-			);
-		}
+			// run main(s)
+			m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
+			for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+				m_gse->RunScript(
+					m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
+						{
+							mod_path,
+							"main"
+						}
+					)
+				);
+			}
+		});
 	}
 }
 
@@ -93,18 +101,12 @@ GLSMAC::~GLSMAC() {
 		delete m_game;
 	}
 
-	if ( m_state ) {
-		delete m_state;
-	}
-
-	m_ctx->DecRefs();
-
 	m_gse->GetAsync()->StopTimers();
 
-	{
+	m_gc_space->Accumulate( this, [ this ](){
 		gse::ExecutionPointer ep;
-		m_ui->Destroy( m_ctx, { "" }, ep );
-	}
+		m_ui->Destroy( m_gc_space, m_ctx, { "" }, ep );
+	}, nullptr, true);
 
 	DELETE( m_gse );
 
@@ -127,12 +129,14 @@ void GLSMAC::Iterate() {
 	}
 	if ( m_load_thread ) {
 		if ( !m_is_loading ) {
-			ASSERT_NOLOG( m_f_after_load, "f_after_load not set" );
+			ASSERT( m_f_after_load, "f_after_load not set" );
 			m_load_thread.load()->join();
 			delete m_load_thread;
 			m_load_thread = nullptr;
-			HideLoader();
-			m_f_after_load();
+			m_gc_space->Accumulate( this, [ this ](){
+				HideLoader();
+				m_f_after_load();
+			});
 			m_f_after_load = nullptr;
 		}
 	}
@@ -141,20 +145,35 @@ void GLSMAC::Iterate() {
 	if ( m_game ) {
 		m_game->Iterate();
 	}
+	if ( m_reset_needed ) {
+		m_reset_needed = false;
+		auto* game = g_engine->GetGame();
+		const auto mt_id = game->MT_Reset();
+		const auto& response = game->MT_WaitResponse( mt_id );
+		ASSERT( response.result == game::backend::R_SUCCESS, "failed to reset game thread" );
+		game->MT_DestroyResponse( response );
+		RunMain();
+	}
 }
 
 WRAPIMPL_BEGIN( GLSMAC )
+	auto* game = g_engine->GetGame();
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
+		{
+			"config",
+			g_engine->GetConfig()->Wrap( GSE_CALL, true ),
+		},
 		{
 			"ui",
-			m_ui->Wrap( true )
+			m_ui->Wrap( GSE_CALL, true )
 		},
 		{
 			"run",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				S_Init( GSE_CALL, {} );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -162,7 +181,14 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				g_engine->ShutDown();
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"mainmenu", NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				S_MainMenu( GSE_CALL );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
@@ -170,34 +196,62 @@ WRAPIMPL_BEGIN( GLSMAC )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				DeinitGameState( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
-			"init_single_player",
+			"init",
 			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 1 );
-				N_PERSIST_CALLABLE( on_complete, 0 );
-				InitGameState( GSE_CALL, [ this, on_complete, ctx, si, ep ] () {
-					m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
-					m_state->m_settings.global.Initialize();
-					auto ep2 = ep;
-					on_complete->Run( ctx, si, ep2, {} );
-					N_UNPERSIST_CALLABLE( on_complete );
-				} );
-				return VALUE( gse::type::Undefined );
+				N_EXPECT_ARGS( 0 );
+				InitGameState( GSE_CALL );
+				return VALUE( gse::value::Undefined );
+			} ),
+		},
+		{
+			"reset",
+			NATIVE_CALL( this ) {
+				S_Reset( GSE_CALL );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 		{
-			"randomize_settings",
+			"game",
+			game->Wrap( GSE_CALL, true ),
+		},
+		{
+			"connect",
 			NATIVE_CALL( this ) {
-				RandomizeSettings( GSE_CALL );
-				return VALUE( gse::type::Undefined );
-			} )
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				if ( m_state->GetConnection() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Connection is already established" );
+				}
+				if ( m_is_game_running ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+				}
+				game::backend::connection::Connection* connection = nullptr;
+				switch ( m_state->m_settings.local.network_role ) {
+					case game::backend::settings::LocalSettings::NR_SERVER: {
+						NEW( connection, game::backend::connection::Server, gc_space, &m_state->m_settings.local );
+						break;
+					}
+					case game::backend::settings::LocalSettings::NR_CLIENT: {
+						NEW( connection, game::backend::connection::Client, gc_space, &m_state->m_settings.local );
+						break;
+					}
+					default:
+						GSE_ERROR( gse::EC.GAME_ERROR, "Network role not set" );
+				}
+				m_state->SetConnection( connection );
+				return connection->Wrap( GSE_CALL, true );
+			} ),
 		},
 		{
 			"start_game",
 			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
@@ -207,9 +261,11 @@ WRAPIMPL_BEGIN( GLSMAC )
 				if ( m_is_loading ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game still initializing" );
 				}
-				AddSinglePlayerSlot();
+				if ( m_state->m_slots->GetSlots().empty() ) {
+					AddSinglePlayerSlot( nullptr );
+				}
 				StartGame( GSE_CALL );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};
@@ -223,8 +279,13 @@ void GLSMAC::ShowLoader( const std::string& text ) {
 		m_loader_text = text;
 		m_loader_dots = 1;
 		m_loader_dots_timer.SetInterval( 100 );
-		gse::ExecutionPointer ep;
-		Trigger( m_ctx, {}, ep, "loader_show", {} );
+		m_gc_space->Accumulate( this, [ this ] () {
+			try {
+				TriggerObject( m_ui, "loader_show" );
+			} catch ( const gse::Exception& e ) {
+				// tmp fix gdb race conditions // TODO
+			}
+		});
 	}
 	UpdateLoaderText();
 }
@@ -243,14 +304,66 @@ void GLSMAC::HideLoader() {
 	if ( m_is_loader_shown ) {
 		m_is_loader_shown = false;
 		m_loader_dots_timer.Stop();
-		gse::ExecutionPointer ep;
-		Trigger( m_ctx, {}, ep, "loader_hide", {} );
+		m_gc_space->Accumulate( this, [ this ](){
+			try {
+				TriggerObject( m_ui, "loader_hide" );
+			} catch ( const gse::Exception& e ) {
+				// tmp fix gdb race conditions // TODO
+			}
+		});
 	}
 }
 
+void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
+	Log( text );
+	m_gc_space->Accumulate( this, [ this ](){
+		TriggerObject( m_ui, "error_popup" );
+	});
+}
+
+gse::Value* const GLSMAC::TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args ) {
+	gse::ExecutionPointer ep;
+	return object->Trigger( m_gc_space, m_ctx, {}, ep, event, f_args );
+}
+
+void GLSMAC::WithGSE( const std::function<void( GSE_CALLABLE )>& f ) {
+	m_state->WithGSE( this, f );
+}
+
+void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	g_engine->GetGame()->GetReachableObjects( reachable_objects );
+
+	if ( m_state ) {
+		GC_DEBUG_BEGIN( "state" );
+		GC_REACHABLE( m_state );
+		GC_DEBUG_END();
+	}
+
+	if ( m_wrapobj ) {
+		GC_DEBUG_BEGIN( "wrapobj" );
+		GC_REACHABLE( m_wrapobj );
+		GC_DEBUG_END();
+	}
+
+	if ( m_ui ) {
+		GC_DEBUG_BEGIN( "ui" );
+		GC_REACHABLE( m_ui );
+		GC_DEBUG_END();
+	}
+
+	GC_DEBUG_BEGIN( "main callables" );
+	for ( const auto& m : m_main_callables ) {
+		GC_REACHABLE( m );
+	}
+	GC_DEBUG_END();
+
+}
+
 void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& f, const std::function< void() >& f_after_load ) {
-	ASSERT_NOLOG( !m_load_thread, "load thread already set" );
-	ASSERT_NOLOG( !m_f_after_load, "f_after load already set" );
+	ASSERT( !m_load_thread, "load thread already set" );
+	ASSERT( !m_f_after_load, "f_after load already set" );
 	m_is_loading = true;
 	m_f_after_load = f_after_load;
 	ShowLoader( text );
@@ -263,41 +376,120 @@ void GLSMAC::AsyncLoad( const std::string& text, const std::function< void() >& 
 void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	const auto& c = g_engine->GetConfig();
 	auto* r = g_engine->GetResourceManager();
-	try {
-		if ( path.has_value() ) {
-			r->Init( { path.value() }, config::ST_AUTO );
+	if ( !m_state || r->GetDetectedSMACType() == config::ST_UNKNOWN ) {
+		if ( !m_state ) {
+			m_state = new game::backend::State( m_gc_space, m_ctx, this );
+			m_state->m_settings.global.Initialize();
 		}
-		else {
-			r->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
-		}
-	} catch ( const std::runtime_error& e ) {
-		gse::type::object_properties_t args = {
-			{
-				"set_smacpath", VALUE( gse::callable::Native, [ this ]( GSE_CALLABLE, const gse::type::function_arguments_t& arguments ) -> gse::Value {
-					N_EXPECT_ARGS( 1 );
-					N_GETVALUE( path, 0, String );
-					S_Init( GSE_CALL, path );
-					return VALUE( gse::type::Undefined );
-				} )
+		try {
+			if ( path.has_value() ) {
+				r->Init( { path.value() }, config::ST_AUTO );
 			}
-		};
-		if ( path.has_value() ) {
-			args.insert({ "last_failed_path", VALUE( gse::type::String, path.value() ) } );
+			else {
+				r->Init( c->GetPossibleSMACPaths(), c->GetSMACType() );
+			}
+		} catch ( const std::runtime_error& e ) {
+			gse::value::object_properties_t args = {
+				{
+					"set_smacpath", NATIVE_CALL( this ) {
+						N_EXPECT_ARGS( 1 );
+						N_GETVALUE( path, 0, String );
+						S_Init( GSE_CALL, path );
+						return VALUE( gse::value::Undefined );
+					} )
+				}
+			};
+			if ( path.has_value() ) {
+				args.insert({ "last_failed_path", VALUE( gse::value::String,, path.value() ) } );
+			}
+			TriggerObject( this, "smacpath_prompt", ARGS( args ) );
+			return;
 		}
-		Trigger( GSE_CALL, "smacpath_prompt", args );
-		return;
+		if ( path.has_value() ) {
+			c->SetSMACPath( path.value() );
+		}
 	}
-	if ( path.has_value() ) {
-		c->SetSMACPath( path.value() );
+	Reset( GSE_CALL );
+}
+
+void GLSMAC::S_Reset( GSE_CALLABLE ) {
+	ClearHandlers();
+	m_ui->Clear( GSE_CALL );
+	auto* game = g_engine->GetGame();
+	game->ClearHandlers();
+	game->ClearEvents();
+	m_reset_needed = true;
+}
+
+void GLSMAC::S_Intro( GSE_CALLABLE ) {
+	TriggerObject( this, "intro" );
+}
+
+void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
+	TriggerObject( this, "mainmenu_show", ARGS_F( this ) {
+		{
+			"settings",
+			m_state->m_settings.Wrap( GSE_CALL, true ),
+		}
+	}; } );
+}
+
+void GLSMAC::S_Game( GSE_CALLABLE ) {
+	TriggerObject( this, "mainmenu_hide", {} );
+	m_game->Start();
+}
+
+void GLSMAC::UpdateLoaderText() {
+	ASSERT( m_is_loader_shown, "loader not shown" );
+	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
+	m_gc_space->Accumulate( this, [ this, &text ]() {
+		try {
+			TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
+				{
+					"text", VALUEEXT( gse::value::String, m_gc_space, text )
+				}
+			}; } );
+		} catch ( const gse::Exception& e ) {
+			// tmp fix gdb race conditions // TODO
+		}
+	});
+}
+
+void GLSMAC::Reset( GSE_CALLABLE ) {
+	const auto& c = g_engine->GetConfig();
+
+	HideLoader();
+	m_is_game_running = false;
+
+	if ( m_game ) {
+		m_game->Stop();
 	}
 
 	if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-		THROW( "TODO: QUICKSTART" );
+		InitGameState( GSE_CALL );
+		m_state->m_settings.local.game_mode = game::backend::settings::LocalSettings::GM_SINGLEPLAYER;
+		m_state->m_settings.global.Initialize();
+		game::backend::faction::Faction* faction = nullptr;
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
+			const auto* fm = m_state->GetFM();
+			ASSERT( fm, "fm is null" );
+			faction = fm->Get( c->GetQuickstartFaction() );
+			if ( !faction ) {
+				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
+				for ( const auto& f : fm->GetAll() ) {
+					errmsg += " " + f->m_id;
+				}
+				THROW( errmsg );
+			}
+		}
+		AddSinglePlayerSlot( faction );
+		auto ep2 = ep;
+		StartGame( m_gc_space, ctx, si, ep2 );
 	}
 	else if (
 		c->HasLaunchFlag( config::Config::LF_SKIPINTRO ) ||
-		r->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
-	) {
+			g_engine->GetResourceManager()->GetDetectedSMACType() == config::ST_LEGACY // it doesn't have firaxis logo image
+		) {
 		S_MainMenu( GSE_CALL );
 	}
 	else {
@@ -305,61 +497,31 @@ void GLSMAC::S_Init( GSE_CALLABLE, const std::optional< std::string >& path ) {
 	}
 }
 
-void GLSMAC::S_Intro( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "intro", {
-		{
-			"mainmenu",
-			NATIVE_CALL( this ) {
-				N_EXPECT_ARGS( 0 );
-				S_MainMenu( GSE_CALL );
-				return VALUE( gse::type::Undefined );
-			} )
-		}
-	} );
-}
-
-void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "mainmenu_show", {} );
-}
-
-void GLSMAC::S_Game( GSE_CALLABLE ) {
-	Trigger( GSE_CALL, "mainmenu_hide", {} );
-	m_game->Start();
-}
-
-void GLSMAC::UpdateLoaderText() {
-	ASSERT( m_is_loader_shown, "loader not shown" );
-	gse::ExecutionPointer ep;
-	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	Trigger( m_ctx, {}, ep, "loader_text", {
-		{
-			"text", VALUE( gse::type::String, text )
-		}
-	} );
-}
-
 void GLSMAC::DeinitGameState( GSE_CALLABLE ) {
 	if ( m_state ) {
 		if ( m_is_game_running ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Game is still running" );
 		}
-		delete m_state;
-		m_state = nullptr;
+		m_state->Reset();
 	}
 }
 
-void GLSMAC::InitGameState( GSE_CALLABLE, const f_t& on_complete  ) {
-	if ( m_state ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already initialized" );
-	}
+void GLSMAC::InitGameState( GSE_CALLABLE ) {
 	if ( m_is_game_running ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
 	}
-	AsyncLoad( "Initializing game state", [ this ] {
-		m_state = new game::backend::State();
-		m_state->InitBindings();
-		m_state->Configure();
-	}, on_complete );
+	auto* game = g_engine->GetGame();
+	m_state->Reset();
+	m_state->SetGame( game );
+	game->SetState( m_state );
+	m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
+		TriggerObject( this, "configure_state", ARGS_F( this ) {
+			{
+				"fm",
+				m_state->GetFM()->Wrap( GSE_CALL, true ),
+			}
+		}; } );
+	});
 }
 
 void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
@@ -371,14 +533,14 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 	}
 }
 
-void GLSMAC::AddSinglePlayerSlot() {
+void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
 	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
-	const auto& rules = m_state->m_settings.global.game_rules;
+	const auto& rules = m_state->m_settings.global.rules;
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,
 		::game::backend::Player::PR_SINGLE,
-		{},
+		faction,
 		rules.GetDefaultDifficultyLevel() // TODO: make configurable
 	);
 	m_state->AddPlayer( player );
@@ -387,6 +549,7 @@ void GLSMAC::AddSinglePlayerSlot() {
 	auto& slot = m_state->m_slots->GetSlot( slot_num );
 	slot.SetPlayer( player, 0, "" );
 	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
+	slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {
@@ -394,40 +557,62 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	// save it as backup, then make temporary shallow copy (no connection, players etc)
 	//   just for the sake of passing settings to previous menu
 	auto* real_state = m_state;
-	m_state = nullptr;
+
+	//m_state = nullptr; // TODO: why?
+
 	m_is_game_running = true;
 
-	m_game = new ::game::frontend::Game( nullptr, this, real_state, UH( this, ctx, si, ep ) {
-		//g_engine->GetScheduler()->RemoveTask( this );
-		auto ep2 = ep;
-		Trigger( ctx, si, ep2, "game", {} );
-	}, UH( this, real_state ) {
-		//m_menu_object->MaybeClose();
-		THROW( "TODO: cancel" );
-	} );
+	auto* game = g_engine->GetGame();
+	ASSERT( game, "game not set" );
+
+	if ( m_game ) {
+		m_game->Stop();
+		delete m_game;
+	}
+	m_game = new ::game::frontend::Game(
+		this, real_state, m_ui, [ this, si, ep ] () {
+			m_gc_space->Accumulate(
+				this, [ this ]() {
+					TriggerObject( this, "start_game" );
+				}
+			);
+		}, [] () {
+			// THROW( "TODO: cancel" );
+		}
+	);
 
 	S_Game( GSE_CALL );
+
+	TriggerObject( this, "configure_game", ARGS_F( &game ) {
+		{
+			"game",
+			game->Wrap( GSE_CALL, true ),
+		}
+	}; } );
 }
 
 void GLSMAC::RunMain() {
-	try {
-		for ( const auto& main : m_main_callables ) {
-			ASSERT_NOLOG( main.Get()->type == gse::type::Type::T_CALLABLE, "main not callable" );
+	ASSERT( m_gc_space, "gc space is null" );
+	for ( const auto& main : m_main_callables ) {
+		ASSERT( main->type == gse::VT_CALLABLE, "main not callable" );
+		m_gc_space->Accumulate( this, [ this, &main ] (){
 			gse::ExecutionPointer ep;
-			( (gse::type::Callable*)main.Get() )->Run( m_ctx, {}, ep, { Wrap() } );
-		}
-	} catch ( gse::Exception& e ) {
-		std::cout << e.ToString() << std::endl;
-		throw e;
+			if ( !m_wrapobj ) {
+				m_wrapobj = Wrap( m_gc_space, m_ctx, {}, ep );
+			}
+			( (gse::value::Callable*)main )->Run( m_gc_space, m_ctx, {}, ep, {
+				m_wrapobj
+			} );
+		});
 	}
 }
 
-void GLSMAC::AddToContext( gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
+void GLSMAC::AddToContext( gc::Space* const gc_space, gse::context::Context* ctx, gse::ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( "main", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 1 );
 		const auto& main = arguments.at(0);
-		N_CHECKARG( main.Get(), 0, Callable );
+		N_CHECKARG( main, 0, Callable );
 		m_main_callables.push_back( main );
-		return VALUE( gse::type::Undefined );
+		return VALUE( gse::value::Undefined );
 	} ), ep );
 }

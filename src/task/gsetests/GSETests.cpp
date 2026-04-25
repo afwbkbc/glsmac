@@ -1,5 +1,3 @@
-#include <iostream> // not using Log() everywhere because important stuff should be printed with --quiet too
-
 #include "GSETests.h"
 
 #include "gse/GSE.h"
@@ -7,20 +5,18 @@
 #include "gse/tests/Tests.h"
 #include "engine/Engine.h"
 #include "gse/program/Program.h"
-#include "gse/tests/Tests.h"
+#include "util/LogHelper.h"
+#include "gse/context/GlobalContext.h"
+#include "gc/Space.h"
 
 namespace gse::tests {
-const gse::program::Program* GetTestProgram();
-const gse::program::Program* g_test_program = nullptr;
+const gse::program::Program* GetTestProgram( gc::Space* const gc_space );
 }
 
 namespace task {
 namespace gsetests {
 
 void GSETests::Start() {
-	ASSERT( !gse::tests::g_test_program, "test program already set" );
-	gse::tests::g_test_program = gse::tests::GetTestProgram();
-	Log( "Loading tests" );
 	gse::tests::AddTests( this );
 }
 
@@ -34,17 +30,21 @@ void GSETests::Stop() {
 	m_tests.clear();
 	m_stats.passed = 0;
 	m_stats.failed = 0;
-	ASSERT( gse::tests::g_test_program, "test program not set" );
-	delete gse::tests::g_test_program;
-	gse::tests::g_test_program = nullptr;
 }
 
 void GSETests::Iterate() {
 	if ( current_test_index < m_tests.size() ) {
-		gse::GSE gse;
 		const auto& it = m_tests[ current_test_index++ ];
 		LogTest( "  " + it.first + "..." );
-		const auto errmsg = it.second( &gse );
+		gse::GSE gse;
+		gse::context::GlobalContext* ctx;
+		gse.GetGCSpace()->Accumulate(
+			nullptr,
+			[ &gse, &ctx ]() {
+				ctx = gse.CreateGlobalContext();
+			}
+		);
+		const auto errmsg = it.second( &gse, ctx );
 		if ( errmsg.empty() ) {
 			m_stats.passed++;
 		}
@@ -73,7 +73,7 @@ void GSETests::LogTest( const std::string& text, bool is_debug ) {
 		Log( text );
 	}
 	else {
-		std::cout << text << std::endl;
+		util::LogHelper::Println( text );
 	}
 }
 

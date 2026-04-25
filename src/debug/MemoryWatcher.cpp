@@ -1,12 +1,13 @@
 #ifdef DEBUG
 
 #include <unordered_map>
-#include <iostream>
 #include <algorithm>
 #include <string>
 #include <sstream>
 
 #include "MemoryWatcher.h"
+
+#include "util/LogHelper.h"
 
 // to avoid being intercepted by macros in Base.h again
 
@@ -20,6 +21,10 @@ void* realloc_real( void* ptr, const size_t size ) {
 
 void free_real( void* ptr ) {
 	free( ptr );
+}
+
+SDL_GLContext SDL_GL_CreateContext_real( SDL_Window* window ) {
+	return SDL_GL_CreateContext( window );
 }
 
 void glGenBuffers_real( GLsizei n, GLuint* buffers ) {
@@ -157,7 +162,7 @@ void MemoryWatcher::New( const void* object, const size_t size, const std::strin
 		return;
 	}
 
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( m_allocated_objects.find( object ) == m_allocated_objects.end(), "new double-allocation detected @" + source );
@@ -177,12 +182,29 @@ void MemoryWatcher::New( const void* object, const size_t size, const std::strin
 	//Log( "Allocated " + std::to_string( size ) + "b for " + object->GetNamespace() + " @" + source );
 }
 
+void MemoryWatcher::MaybeDelete( const void* object ) {
+	if ( !m_memory_debug ) {
+		return;
+	}
+
+	std::lock_guard guard( m_mutex );
+
+	auto it = m_allocated_objects.find( object );
+	if ( it != m_allocated_objects.end() ) {
+		auto& obj = it->second;
+		DEBUG_STAT_INC( objects_destroyed );
+		DEBUG_STAT_DEC( objects_active );
+		DEBUG_STAT_CHANGE_BY( heap_allocated_size, -obj.size );
+		m_allocated_objects.erase( it );
+	}
+}
+
 void MemoryWatcher::Delete( const void* object, const std::string& file, const size_t line ) {
 	if ( !m_memory_debug ) {
 		return;
 	}
 
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	auto it = m_allocated_objects.find( object );
@@ -205,7 +227,7 @@ void* MemoryWatcher::Malloc( const size_t size, const std::string& file, const s
 		return malloc_real( size );
 	}
 
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( size > 0, "allocation of size 0 @" + source );
@@ -234,7 +256,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 		return realloc_real( ptr, size );
 	}
 
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( ptr, "reallocation of null @" + source );
@@ -272,7 +294,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 
 unsigned char* MemoryWatcher::Ptr( unsigned char* ptr, const size_t offset, const size_t size, const std::string& file, const size_t line ) {
 	if ( m_memory_debug ) {
-		std::lock_guard< std::mutex > guard( m_mutex );
+		std::lock_guard guard( m_mutex );
 		const std::string source = file + ":" + std::to_string( line );
 
 		ASSERT( ptr, "ptr is null @" + source );
@@ -293,7 +315,7 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 		return;
 	}
 
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	auto it = m_allocated_memory.find( ptr );
@@ -313,9 +335,20 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 	m_allocated_memory.erase( it );
 }
 
-void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+SDL_GLContext MemoryWatcher::SDLGLCreateContext( SDL_Window* window, const std::string& file, const size_t line ) {
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	ASSERT( !m_gl_thread_id, "gl thread already exists @" + source );
+	m_gl_thread_id = std::hash< std::thread::id >()( std::this_thread::get_id() );
+	return SDL_GL_CreateContext_real( window );
+}
+
+void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
+	std::lock_guard guard( m_mutex );
+	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glGenBuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -341,8 +374,10 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string&
 }
 
 void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER,
 		"glBindBuffer unknown target " + std::to_string( target ) + " @" + source
@@ -419,8 +454,10 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::strin
 }
 
 void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* data, GLenum usage, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT(
 		target == GL_ARRAY_BUFFER ||
@@ -461,8 +498,10 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* da
 }
 
 void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glDeleteBuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -510,8 +549,10 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std
 }
 
 void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glGenTextures with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -539,8 +580,10 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::strin
 }
 
 void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_TEXTURE_2D, "glBindTexture unknown target " + std::to_string( target ) + " @" + source );
 
@@ -585,8 +628,10 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 }
 
 void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexImage2D unknown level " + std::to_string( level ) + " @" + source );
@@ -665,8 +710,10 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 }
 
 void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_TEXTURE_2D, "glTexSubImage2D unknown target " + std::to_string( target ) + " @" + source );
 	ASSERT( level == 0, "glTexSubImage2D unknown level " + std::to_string( level ) + " @" + source );
@@ -694,8 +741,10 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 }
 
 void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glDeleteTextures with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -736,8 +785,10 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::st
 }
 
 void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glGenFramebuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -751,8 +802,10 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::st
 }
 
 void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER,
 		"glBindFramebuffer unknown target " + std::to_string( target ) + " @" + source
@@ -809,8 +862,10 @@ void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::
 }
 
 void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( target == GL_FRAMEBUFFER,
 		"glFramebufferTexture2D unknown target " + std::to_string( target ) + " @" + source
@@ -856,8 +911,10 @@ void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GL
 }
 
 void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( n == 1, "glDeleteFramebuffers with size " + std::to_string( n ) + ", suspicious, is it a typo? @" + source );
 
@@ -880,8 +937,10 @@ void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, cons
 }
 
 GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glCreateProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glCreateProgram while some framebuffer is bound @" + source );
@@ -897,8 +956,10 @@ GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t lin
 }
 
 void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glLinkProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glLinkProgram while some framebuffer is bound @" + source );
@@ -915,8 +976,10 @@ void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, cons
 }
 
 void MemoryWatcher::GLValidateProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glValidateProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glValidateProgram while some framebuffer is bound @" + source );
@@ -934,8 +997,10 @@ void MemoryWatcher::GLValidateProgram( GLuint program, const std::string& file, 
 }
 
 void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	if ( program ) {
 		ASSERT( !m_opengl.current_program, "glUseProgram starting but other program is already active @" + source );
@@ -953,8 +1018,10 @@ void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const
 }
 
 void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( !m_opengl.current_program, "glDeleteProgram while some program is already active @" + source );
 	ASSERT( !m_opengl.current_framebuffer, "glDeleteProgram while some framebuffer is bound @" + source );
@@ -970,8 +1037,10 @@ void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, co
 }
 
 void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void* indices, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( mode == GL_QUADS || mode == GL_TRIANGLES, "glDrawElements unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( type == GL_UNSIGNED_INT, "glDrawElements unknown type " + std::to_string( type ) + " @" + source );
@@ -992,8 +1061,10 @@ void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, con
 }
 
 void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void* indices, GLsizei primcount, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
+
+	CheckGLThread( source );
 
 	ASSERT( mode == GL_QUADS || mode == GL_TRIANGLES, "glDrawElementsInstanced unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( type == GL_UNSIGNED_INT, "glDrawElementsInstanced unknown type " + std::to_string( type ) + " @" + source );
@@ -1014,9 +1085,11 @@ void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum 
 }
 
 void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
+	CheckGLThread( source );
+	
 	ASSERT( mode == GL_TRIANGLE_STRIP, "glDrawArrays unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawArrays vertex buffer not bound @" + source );
 	ASSERT( !m_opengl.current_index_buffer, "glDrawArrays index buffer is bound but not supposed to be @" + source );
@@ -1033,7 +1106,7 @@ struct sort_method {
 };
 
 const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumerClasses( size_t count ) {
-	std::lock_guard< std::mutex > guard( m_mutex );
+	std::lock_guard guard( m_mutex );
 
 	statistics_t stats;
 	statistics_t::iterator it_dst;
@@ -1074,11 +1147,15 @@ void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 	if ( !m_is_quiet || is_important ) {
 		g_debug_stats._mutex.lock();
 		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-			std::cout << "<MemoryWatcher> " << text << std::endl;
+			util::LogHelper::Println( "<MemoryWatcher> " + text );
 			fflush( stdout );
 		}
 		g_debug_stats._mutex.unlock();
 	}
+}
+
+void MemoryWatcher::CheckGLThread( const std::string& source ) {
+	ASSERT( m_gl_thread_id == std::hash< std::thread::id >()( std::this_thread::get_id() ), "gl thread mismatch @" + source );
 }
 
 }

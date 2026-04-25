@@ -3,15 +3,16 @@
 #include "Faction.h"
 
 #include "gse/callable/Native.h"
-#include "gse/type/Bool.h"
-#include "gse/type/Float.h"
-#include "gse/type/Array.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
 
 #include "engine/Engine.h"
 #include "loader/txt/TXTLoaders.h"
 #include "loader/txt/FactionTXTLoader.h"
 #include "loader/texture/TextureLoader.h"
 #include "types/texture/Texture.h"
+#include "types/texture/LazyTexture.h"
 
 namespace game {
 namespace backend {
@@ -58,11 +59,11 @@ Faction* FactionManager::Get( const std::string& id ) const {
 }
 
 const std::vector< Faction* > FactionManager::GetAll() const {
-	ASSERT_NOLOG( m_factions.size() == m_factions_order.size(), "factions order size mismatch" );
+	ASSERT( m_factions.size() == m_factions_order.size(), "factions order size mismatch" );
 	std::vector< Faction* > result = {};
 	result.reserve( m_factions.size() );
 	for ( const auto& it : m_factions_order ) {
-		ASSERT_NOLOG( m_factions.find( it.second ) != m_factions.end(), "faction not found" );
+		ASSERT( m_factions.find( it.second ) != m_factions.end(), "faction not found" );
 		result.push_back( m_factions.at( it.second ).faction );
 	}
 	return result;
@@ -70,27 +71,28 @@ const std::vector< Faction* > FactionManager::GetAll() const {
 
 WRAPIMPL_BEGIN( FactionManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"import_base_names",
 			NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
 				const auto& data = g_engine->GetTXTLoaders()->factions->GetFactionData( filename );
-				std::vector< gse::Value > land_names = {};
+				std::vector< gse::Value* > land_names = {};
 				land_names.reserve( data.bases_names.land.size() );
 				for ( const auto& name : data.bases_names.land ) {
-					land_names.push_back( VALUE( gse::type::String, name ) );
+					land_names.push_back( VALUE( gse::value::String,, name ) );
 				}
-				std::vector< gse::Value > water_names = {};
+				std::vector< gse::Value* > water_names = {};
 				water_names.reserve( data.bases_names.water.size() );
 				for ( const auto& name : data.bases_names.water ) {
-					water_names.push_back( VALUE( gse::type::String, name ) );
+					water_names.push_back( VALUE( gse::value::String,, name ) );
 				}
-				const auto properties = gse::type::object_properties_t{
-					{ "land", VALUE( gse::type::Array, land_names ) },
-					{ "water", VALUE( gse::type::Array, water_names ) },
+				const auto properties = gse::value::object_properties_t{
+					{ "land", VALUE( gse::value::Array,, land_names ) },
+					{ "water", VALUE( gse::value::Array,, water_names ) },
 				};
-				return VALUE( gse::type::Object, nullptr, properties );
+				return VALUEEXT( gse::value::Object, GSE_CALL, properties );
 			} )
 			},
 			{
@@ -98,17 +100,20 @@ WRAPIMPL_BEGIN( FactionManager )
 				NATIVE_CALL() {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( filename, 0, String );
-				const auto* texture = g_engine->GetTextureLoader()->LoadCustomTexture( filename );
-				const auto properties = gse::type::object_properties_t{
-					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap() },
-					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap() },
-					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap() },
-					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap() },
-					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap() },
-					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap() },
-					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap() },
+				const auto* texture = g_engine->GetTextureLoader()->TryLoadCustomTexture( filename );
+				if ( !texture ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Could not import colors from file: " + filename );
+				}
+				const auto properties = gse::value::object_properties_t{
+					{ "faction", types::Color::FromRGBA( texture->GetPixel( 4, 739 ) ).Wrap( GSE_CALL ) },
+					{ "faction_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 747 ) ).Wrap( GSE_CALL ) },
+					{ "text", types::Color::FromRGBA( texture->GetPixel( 4, 755 ) ).Wrap( GSE_CALL ) },
+					{ "text_shadow", types::Color::FromRGBA( texture->GetPixel( 4, 763 ) ).Wrap( GSE_CALL ) },
+					{ "border", types::Color::FromRGBA( texture->GetPixel( 161, 749 ) ).Wrap( GSE_CALL ) },
+					{ "border_alpha", types::Color::FromRGBA( texture->GetPixel( 161, 757 ) ).Wrap( GSE_CALL ) },
+					{ "vehicle", types::Color::FromRGBA( texture->GetPixel( 435, 744 ) ).Wrap( GSE_CALL ) },
 				};
-				return VALUE( gse::type::Object, nullptr, properties );
+				return VALUEEXT( gse::value::Object, GSE_CALL, properties );
 			} )
 		},
 		{
@@ -189,7 +194,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				}
 
 				Add( faction );
-				return faction->Wrap();
+				return faction->Wrap( GSE_CALL, gc_space );
 			} )
 		},
 		{
@@ -201,7 +206,19 @@ WRAPIMPL_BEGIN( FactionManager )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unknown faction: " + id );
 				}
 				Remove( id );
-				return VALUE( gse::type::Undefined );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"list",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				gse::value::array_elements_t arr = {};
+				for ( const auto& f : m_factions_order ) {
+					ASSERT( m_factions.find( f.second ) != m_factions.end(), "faction id not found: " + f.second );
+					arr.push_back( m_factions.at( f.second ).faction->Wrap( GSE_CALL ) );
+				}
+				return VALUE( gse::value::Array,, arr );
 			} )
 		},
 	};
@@ -222,14 +239,14 @@ const types::Buffer FactionManager::Serialize() const {
 	return buf;
 }
 
-void FactionManager::Unserialize( types::Buffer buf ) {
+void FactionManager::Deserialize( types::Buffer buf ) {
 	Clear();
 
 	const size_t factions_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
 		const auto faction_id = buf.ReadString();
-		ASSERT_NOLOG( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
-		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Unserialize( buf.ReadString() );
+		ASSERT( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
+		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Deserialize( buf.ReadString() );
 		m_factions_order.insert( { m_next_faction_idx, faction_id } );
 	}
 }

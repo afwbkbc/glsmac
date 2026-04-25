@@ -7,8 +7,9 @@
 namespace types {
 namespace mesh {
 
-Mesh::Mesh( const mesh_type_t mesh_type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count )
-	: m_mesh_type( mesh_type )
+Mesh::Mesh( const type_t type, const data_type_t data_type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count )
+	: m_type( type )
+	, m_data_type( data_type )
 	, VERTEX_SIZE( vertex_size )
 	, m_vertex_count( vertex_count )
 	, m_surface_count( surface_count )
@@ -18,7 +19,8 @@ Mesh::Mesh( const mesh_type_t mesh_type, const uint8_t vertex_size, const size_t
 }
 
 Mesh::Mesh( const Mesh& other )
-	: m_mesh_type( other.m_mesh_type )
+	: m_type( other.m_type )
+	, m_data_type( other.m_data_type )
 	, VERTEX_SIZE( other.VERTEX_SIZE )
 	, m_vertex_count( other.m_vertex_count )
 	, m_surface_count( other.m_surface_count )
@@ -84,6 +86,7 @@ void Mesh::SetSurface( const index_t index, const surface_t& surface ) {
 	ASSERT( index < m_surface_count, "surface out of bounds" );
 	// add triangle
 	memcpy( ptr( m_index_data, index * SURFACE_SIZE * sizeof( index_t ), sizeof( surface ) ), &surface, sizeof( surface ) );
+	Update();
 }
 
 void Mesh::Finalize() {
@@ -96,7 +99,7 @@ void Mesh::Finalize() {
 
 void Mesh::GetVertexCoord( const index_t index, types::Vec3* coord ) const {
 	ASSERT( index < m_vertex_count, "index out of bounds" );
-	memcpy( coord, ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
+	memcpy( ptr( coord, 0, sizeof( types::Vec3 ) ), ptr( m_vertex_data, index * VERTEX_SIZE * sizeof( coord_t ), sizeof( types::Vec3 ) ), sizeof( types::Vec3 ) );
 }
 
 const size_t Mesh::GetVertexCount() const {
@@ -135,14 +138,19 @@ const size_t Mesh::UpdatedCount() const {
 	return m_update_counter;
 }
 
-const Mesh::mesh_type_t Mesh::GetType() const {
-	return m_mesh_type;
+const Mesh::type_t Mesh::GetType() const {
+	return m_type;
+}
+
+const Mesh::data_type_t Mesh::GetDataType() const {
+	return m_data_type;
 }
 
 const types::Buffer Mesh::Serialize() const {
 	types::Buffer buf;
 
-	buf.WriteInt( m_mesh_type );
+	buf.WriteInt( m_type );
+	buf.WriteInt( m_data_type );
 
 	buf.WriteInt( m_vertex_count );
 	buf.WriteInt( m_vertex_i );
@@ -158,11 +166,16 @@ const types::Buffer Mesh::Serialize() const {
 	return buf;
 }
 
-void Mesh::Unserialize( types::Buffer buf ) {
+void Mesh::Deserialize( types::Buffer buf ) {
 
-	auto mesh_type = (mesh_type_t)buf.ReadInt();
-	if ( mesh_type != m_mesh_type ) {
+	auto type = (type_t)buf.ReadInt();
+	if ( type != m_type ) {
 		THROW( "mesh type mismatch" );
+	}
+
+	auto data_type = (data_type_t)buf.ReadInt();
+	if ( data_type != m_data_type ) {
+		THROW( "mesh data type mismatch" );
 	}
 
 	size_t vertex_count = buf.ReadInt();

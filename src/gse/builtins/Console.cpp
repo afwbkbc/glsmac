@@ -1,60 +1,59 @@
 #include "Console.h"
 
-#include <iostream>
-
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Undefined.h"
 
 #include "logger/Stdout.h"
+#include "util/LogHelper.h"
 
 namespace gse {
 namespace builtins {
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 static bool s_is_capturing = false;
 static std::string s_capture_buffer = "";
 void Console::CaptureStart() const {
-	ASSERT_NOLOG( !s_is_capturing, "already capturing" );
+	ASSERT( !s_is_capturing, "already capturing" );
 	s_capture_buffer.clear();
 	s_is_capturing = true;
 }
 const std::string& Console::CaptureStopGet() const {
-	ASSERT_NOLOG( s_is_capturing, "not capturing" );
+	ASSERT( s_is_capturing, "not capturing" );
 	s_is_capturing = false;
 	return s_capture_buffer;
 }
 #endif
 
-void Console::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Console::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
-	ctx->CreateBuiltin( "print", NATIVE_CALL( this ) {
+	ctx->CreateBuiltin( "print", NATIVE_CALL() {
 		std::string line = "";
 		for ( const auto& it : arguments ) {
 			if ( !line.empty() ) {
 				line += " ";
 			}
-			line += it.Get()->ToString();
+			line += it->ToString();
 		}
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 		if ( s_is_capturing ) {
 			s_capture_buffer += line + "\n";
 		}
 #endif
-		std::cout << "    " << si.ToString() << " " << line << std::endl;
-		return VALUE( type::Undefined );
+		util::LogHelper::Println( "    " + si.ToString() + " " + line );
+		return VALUE( value::Undefined );
 	} ), ep );
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 	ctx->CreateBuiltin( "global_mute", NATIVE_CALL() {
 		logger::g_is_muted = true;
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 	ctx->CreateBuiltin( "global_unmute", NATIVE_CALL() {
 		logger::g_is_muted = false;
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 #endif

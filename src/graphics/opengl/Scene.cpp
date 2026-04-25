@@ -38,12 +38,12 @@ Actor* Scene::CreateActor( scene::actor::Actor* const actor ) const {
 	switch ( actor->GetType() ) {
 		case scene::actor::Actor::TYPE_SPRITE:
 		case scene::actor::Actor::TYPE_INSTANCED_SPRITE: {
-			NEW( gl_actor, Sprite, m_opengl, (scene::actor::Sprite*)actor );
+			NEW( gl_actor, Sprite, m_opengl, actor );
 			break;
 		}
 		case scene::actor::Actor::TYPE_MESH:
 		case scene::actor::Actor::TYPE_INSTANCED_MESH: {
-			NEW( gl_actor, Mesh, m_opengl, (scene::actor::Mesh*)actor );
+			NEW( gl_actor, Mesh, m_opengl, actor );
 			break;
 		}
 		case scene::actor::Actor::TYPE_TEXT: {
@@ -161,11 +161,6 @@ void Scene::Update() {
 		}
 	}
 
-	// remove missing actors
-	for ( const auto& o : actors_to_remove ) {
-		int a = 5;
-	}
-
 	for ( auto it = actors_to_remove.rbegin() ; it != actors_to_remove.rend() ; it++ ) {
 		auto& o = *it;
 		Actor* gl_actor = o->GetDstObject< Actor >();
@@ -174,34 +169,36 @@ void Scene::Update() {
 	}
 
 	// add new actors
-	common::ObjectLink* obj;
+	m_scene->WithActors(
+		[ this ]( const std::vector< scene::actor::Actor* >& actors ) {
 
-	auto* actors = GetScene()->GetActors();
-	for ( auto it = actors->begin() ; it < actors->end() ; it++ ) {
-		obj = ( *it )->m_graphics_object;
-		if ( obj == NULL ) {
+			for ( auto it = actors.begin() ; it < actors.end() ; it++ ) {
+				auto* obj = ( *it )->m_graphics_object;
+				if ( obj == NULL ) {
 
-			auto* gl_actor = CreateActor( *it );
+					auto* gl_actor = CreateActor( *it );
 
-			if ( gl_actor ) {
-				NEWV( obj, common::ObjectLink, *it, gl_actor );
-				( *it )->m_graphics_object = obj;
-				m_gl_actors.push_back( obj );
-				AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
+					if ( gl_actor ) {
+						NEW( obj, common::ObjectLink, *it, gl_actor );
+						( *it )->m_graphics_object = obj;
+						m_gl_actors.push_back( obj );
+						AddActorToZIndexSet( gl_actor ); // TODO: only Simple2D
+					}
+
+				}
 			}
 
-		}
-	}
-
 #ifdef DEBUG
-	size_t gl_actors_by_zindex_count = 0;
-	for ( auto& actors : m_gl_actors_by_zindex ) {
-		gl_actors_by_zindex_count += actors.second.size();
-	}
-	if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
-		THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + std::to_string( gl_actors_by_zindex_count ) + " , " + std::to_string( m_gl_actors.size() ) + " )" );
-	}
+			size_t gl_actors_by_zindex_count = 0;
+			for ( auto& actors : m_gl_actors_by_zindex ) {
+				gl_actors_by_zindex_count += actors.second.size();
+			}
+			if ( gl_actors_by_zindex_count != m_gl_actors.size() ) {
+				THROW( "gl_actors_by_zindex count does not match gl_actors count ( " + std::to_string( gl_actors_by_zindex_count ) + " , " + std::to_string( m_gl_actors.size() ) + " )" );
+			}
 #endif
+		}
+	);
 }
 
 scene::Scene* Scene::GetScene() const {

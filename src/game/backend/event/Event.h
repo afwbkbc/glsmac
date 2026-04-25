@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-
-#include "types/Buffer.h"
+#include "gc/Object.h"
+#include "gse/value/Types.h"
 #include "gse/Value.h"
+#include "types/Buffer.h"
 
 namespace game {
 namespace backend {
@@ -12,64 +12,48 @@ class Game;
 
 namespace event {
 
-class Event {
+class Event : public gc::Object {
 public:
-	enum event_type_t {
-		ET_NONE,
-		ET_RESOURCE_DEFINE,
-		ET_ANIMATION_DEFINE,
-		ET_UNIT_DEFINE_MORALES,
-		ET_UNIT_DEFINE,
-		ET_UNIT_SPAWN,
-		ET_UNIT_DESPAWN,
-		ET_UNIT_MOVE,
-		ET_UNIT_ATTACK,
-		ET_UNIT_SKIP_TURN,
-		ET_BASE_DEFINE_POP,
-		ET_BASE_SPAWN,
-		ET_COMPLETE_TURN,
-		ET_UNCOMPLETE_TURN,
-		ET_FINALIZE_TURN,
-		ET_TURN_FINALIZED,
-		ET_ADVANCE_TURN,
-		ET_REQUEST_TILE_LOCKS,
-		ET_LOCK_TILES,
-		ET_REQUEST_TILE_UNLOCKS,
-		ET_UNLOCK_TILES,
+
+	enum source_t {
+		ES_LOCAL,
+		ES_SERVER,
+		ES_CLIENT,
 	};
 
-	Event( const size_t initiator_slot, const event_type_t type );
-	virtual ~Event() = default;
+	Event( Game* game, const source_t source, const size_t caller, GSE_CALLABLE, const std::string& name, const gse::value::object_properties_t& data, const std::string& id = "" );
 
-	static const types::Buffer Serialize( const Event* event );
-	static Event* Unserialize( types::Buffer& buf );
+	const types::Buffer Serialize();
+	static Event* const Deserialize( Game* const game, const source_t source, GSE_CALLABLE, types::Buffer buffer );
 
-	static const types::Buffer SerializeMultiple( const std::vector< Event* >& events );
-	static void UnserializeMultiple( types::Buffer& buf, std::vector< Event* >& events_out );
+	const std::string ToString() const;
 
-	static const bool IsBroadcastable( const event_type_t type );
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
-	const event_type_t m_type;
-	const size_t m_initiator_slot;
+	const source_t GetSource() const;
+	const size_t GetCaller() const;
+	const std::string& GetId() const;
+	const std::string& GetEventName() const;
+	const gse::value::object_properties_t& GetData() const;
 
-	void SetDestinationSlot( const uint8_t destination_slot );
-	const bool IsProcessableBy( const uint8_t destination_slot ) const;
-	const bool IsSendableTo( const uint8_t destination_slot ) const;
-
-	virtual const std::string* Validate( Game* game ) const = 0;
-	virtual void Resolve( Game* game ) {};
-	virtual const gse::Value Apply( Game* game ) const = 0;
-	virtual const std::string ToString( const std::string& prefix = "" ) const = 0;
-
-	bool m_is_validated = false;
-
-protected:
-	const std::string* Ok() const;
-	const std::string* Error( const std::string& text ) const;
+	void SetResolved( gse::Value* const resolved );
+	gse::Value* GetResolved();
 
 private:
-	bool m_is_public = true;
-	uint8_t m_destination_slot = 0;
+	Game* const m_game = nullptr;
+	const source_t m_source = ES_LOCAL;
+	const size_t m_caller = 0;
+	std::string m_id = 0;
+	std::string m_name = "";
+	gse::value::object_properties_t m_original_data = {};
+	gse::value::object_properties_t m_data = {};
+	gse::value::function_arguments_t m_args = {};
+
+	std::mutex m_resolved_mutex;
+	gse::Value* m_resolved = nullptr;
+
+	void UpdateData( GSE_CALLABLE );
+
 };
 
 }

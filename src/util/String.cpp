@@ -93,6 +93,23 @@ const std::string String::Join( const std::vector< std::string >& input, const c
 	return result;
 }
 
+const std::string String::ToHexString( const uint64_t num ) {
+	const size_t hex_len = sizeof( uint64_t ) << 1;
+	static const char* digits = "0123456789abcdef";
+	std::string rc( hex_len, '0' );
+	for ( size_t i = 0, j = ( hex_len - 1 ) * 4 ; i < hex_len ; ++i, j -= 4 ) {
+		rc[ i ] = digits[ ( num >> j ) & 0x0f ];
+	}
+	size_t cutpos = 0;
+	for ( size_t i = 0 ; i < rc.length() ; i++ ) {
+		if ( rc.at( i ) != '0' ) {
+			break;
+		}
+		cutpos++;
+	}
+	return "0x" + rc.substr( cutpos );
+}
+
 void String::Trim( std::string& s ) {
 	trim( s );
 }
@@ -271,6 +288,26 @@ const bool String::ParseColorHex( const std::string& s, types::Color& result ) {
 		? gethexfloat( str + 7 )
 		: 1.0f;
 	return true;
+}
+
+const std::string String::FloatToString( const float& f ) {
+	std::string result = std::to_string( f );
+	auto pos = result.find( '.' );
+	if ( pos != std::string::npos ) {
+		// filter trailing zeroes (but keep at least one digit after .)
+		const auto begin = result.begin() + pos + 1;
+		if ( begin != result.end() ) {
+			auto zbegin = result.end() - 1;
+			while ( zbegin > begin ) {
+				if ( ( *zbegin ) != '0' ) {
+					break;
+				}
+				zbegin--;
+			}
+			result.erase( zbegin + 1, result.end() );
+		}
+	}
+	return result;
 }
 
 }

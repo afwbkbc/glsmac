@@ -1,8 +1,7 @@
 #include <thread>
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined ( FASTDEBUG )
 
-#include <iostream>
 #include <string>
 #include <stdlib.h>
 
@@ -18,9 +17,7 @@
 
 #endif
 
-#include "logger/Console.h"
-
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 #include "logger/Stdout.h"
 #include "graphics/Null.h"
@@ -44,21 +41,15 @@
 #include "network/simpletcp/SimpleTCP.h"
 
 #include "scheduler/Simple.h"
-#include "ui_legacy/Default.h"
 
-#include "task/common/Common.h"
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
-#ifdef DEBUG
 #include "task/gseprompt/GSEPrompt.h"
 #include "task/gsetests/GSETests.h"
+
 #endif
 
-#include "task/console/Console.h"
-
 #include "task/main/Main.h"
-#include "task/intro/Intro.h"
-#include "task/mainmenu/MainMenu.h"
-#include "task/game/Game.h"
 
 #include "game/backend/Game.h"
 
@@ -76,19 +67,22 @@
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
 #define VSYNC true
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 #define START_FULLSCREEN false
 #else
 #define START_FULLSCREEN true
 #endif
 
 #include "util/FS.h"
+#include "util/LogHelper.h"
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
+#include "util/System.h"
+#endif
 
 #ifdef DEBUG
 
-#include "util/System.h"
 #include "debug/MemoryWatcher.h"
-#include "debug/DebugOverlay.h"
 
 #endif
 
@@ -98,15 +92,12 @@ int main( const int argc, const char* argv[] ) {
 
 	config.Init( argc, argv );
 
-	// this changes the whole flow
-	const auto newui = config.HasLaunchFlag( config::Config::LF_NEWUI );
-
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
 		if ( !util::System::AreWeUnderGDB() && util::System::IsGDBAvailable() ) {
-			std::cout << "Restarting process under GDB..." << std::endl;
+			util::LogHelper::Println( "Restarting process under GDB..." );
 
 			std::string cmdline = "printf \"r\\nbt\\n\" | gdb --args";
 			for ( int c = 0 ; c < argc ; c++ ) {
@@ -114,30 +105,32 @@ int main( const int argc, const char* argv[] ) {
 			}
 			cmdline += " 2>&1 | tee debug.log";
 
-			std::cout << cmdline << std::endl;
+			util::LogHelper::Println( cmdline );
 			int status = system( cmdline.c_str() );
 			if ( status < 0 ) {
-				std::cout << "Error: " << strerror( errno ) << std::endl;
+				util::LogHelper::Println( (std::string)"Error: " + strerror( errno ) );
 				exit( EXIT_FAILURE );
 			}
 			else if ( WIFEXITED( status ) ) {
-				std::cout << "Process finished, output saved to debug.log" << std::endl;
+				util::LogHelper::Println( "Process finished, output saved to debug.log" );
 				exit( EXIT_SUCCESS );
 			}
 			else {
-				std::cout << "Process finished, output saved to debug.log" << std::endl;
+				util::LogHelper::Println( "Process finished, output saved to debug.log" );
 				exit( EXIT_FAILURE );
 			}
 		}
 #else
-		std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+		util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 #endif
 	}
+#ifdef DEBUG
 	debug::MemoryWatcher memory_watcher( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ), config.HasDebugFlag( config::Config::DF_QUIET ) );
+#endif
 #endif
 
 	util::FS::CreateDirectoryIfNotExists( config.GetPrefix() );
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	util::FS::CreateDirectoryIfNotExists( config.GetDebugPath() );
 #endif
 
@@ -147,12 +140,9 @@ int main( const int argc, const char* argv[] ) {
 
 	std::vector< logger::Logger* > loggers = {};
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		loggers.push_back( new logger::Stdout() );
-	}
-	if ( !newui ) {
-		loggers.push_back( new logger::Console() );
 	}
 #endif
 
@@ -163,17 +153,16 @@ int main( const int argc, const char* argv[] ) {
 #endif
 
 	auto title = GLSMAC_VERSION_FULL;
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	title += "-debug";
 #elif PORTABLE
 	title += "-portable";
 #endif
 
 	network::simpletcp::SimpleTCP network;
-	ui_legacy::Default ui;
 	scheduler::Simple scheduler;
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
 
 		loader::font::Null font_loader;
@@ -206,7 +195,6 @@ int main( const int argc, const char* argv[] ) {
 			&graphics,
 			&audio,
 			&network,
-			&ui,
 			nullptr
 		);
 
@@ -247,17 +235,6 @@ int main( const int argc, const char* argv[] ) {
 		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
 		audio::sdl2::SDL2 audio;
 
-		if ( !newui ) {
-#ifdef DEBUG
-			NEWV( debug_overlay, debug::DebugOverlay );
-			scheduler.AddTask( debug_overlay );
-#endif
-
-			// game common stuff
-			NEWV( task_common, task::Common );
-			scheduler.AddTask( task_common );
-		}
-
 		// game entry point
 		common::Task* task = nullptr;
 
@@ -275,58 +252,10 @@ int main( const int argc, const char* argv[] ) {
 			&graphics,
 			&audio,
 			&network,
-			&ui,
 			&game
 		);
 
-		if ( !newui ) {
-			NEWV( console_task, task::console::Console );
-			scheduler.AddTask( console_task );
-		}
-
-		if ( newui ) {
-			NEW( task, task::main::Main );
-		}
-		else if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
-			NEWV( state, game::backend::State ); // TODO: initialize settings randomly
-			state->m_settings.global.game_rules.Initialize();
-			state->InitBindings();
-			state->Configure();
-			const auto& rules = state->m_settings.global.game_rules;
-			game::backend::faction::Faction* faction = nullptr;
-			if ( config.HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
-				faction = state->GetFM()->Get( config.GetQuickstartFaction() );
-				if ( !faction ) {
-					std::string errmsg = "Faction \"" + config.GetQuickstartFaction() + "\" does not exist. Available factions:";
-					for ( const auto& f : state->GetFM()->GetAll() ) {
-						errmsg += " " + f->m_id;
-					}
-					THROW( errmsg );
-				}
-			}
-			NEWV(
-				player, game::backend::Player,
-				"Player",
-				game::backend::Player::PR_HOST,
-				faction,
-				rules.GetDefaultDifficultyLevel()
-			);
-			state->AddPlayer( player );
-			state->AddCIDSlot( 0, 0 );
-			state->m_slots->Resize( 1 );
-			auto& slot = state->m_slots->GetSlot( 0 );
-			slot.SetPlayer( player, 0, "" );
-			slot.SetLinkedGSID( state->m_settings.local.account.GetGSID() );
-			NEW( task, task::game::Game, state, 0, UH() {
-				g_engine->ShutDown();
-			} );
-		}
-		else if ( config.HasLaunchFlag( config::Config::LF_SKIPINTRO ) ) {
-			NEW( task, task::mainmenu::MainMenu );
-		}
-		else {
-			NEW( task, task::intro::Intro );
-		}
+		NEW( task, task::main::Main );
 
 		scheduler.AddTask( task );
 

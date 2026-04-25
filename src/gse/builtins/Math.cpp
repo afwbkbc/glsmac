@@ -6,36 +6,44 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/Undefined.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+#include "gse/value/Undefined.h"
+#include "util/random/Random.h"
 
 namespace gse {
 namespace builtins {
 
-void Math::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+Math::Math() {
+	m_random = new util::random::Random();
+}
+Math::~Math() {
+	delete m_random;
+}
+
+void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 #define AB( _name, _f_int, _f_float ) \
 	ctx->CreateBuiltin( _name, NATIVE_CALL() { \
 		N_EXPECT_ARGS( 2 ); \
 		for ( uint8_t i = 0 ; i < 2 ; i++ ) { \
-			const auto& value = arguments.at(i).Get(); \
-			if ( value->type != type::Type::T_INT && value->type != type::Type::T_FLOAT ) { \
-				throw Exception( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + type::Type::GetTypeString( type::Type::T_INT ) + " or " + type::Type::GetTypeString( type::Type::T_FLOAT ) + ", found: " + type::Type::GetTypeString( value->type ), GSE_CALL ); \
+			const auto& value = arguments.at(i); \
+			if ( value->type != VT_INT && value->type != VT_FLOAT ) { \
+				GSE_ERROR( EC.INVALID_CALL, "Argument " + std::to_string( i ) + " is expected to be " + Value::GetTypeStringStatic( VT_INT ) + " or " + Value::GetTypeStringStatic( VT_FLOAT ) + ", found: " + value->GetTypeString() ); \
 			} \
 		} \
-		const auto& a = arguments.at(0).Get(); \
-		const auto& b = arguments.at(1).Get(); \
+		const auto& a = arguments.at(0); \
+		const auto& b = arguments.at(1); \
 		if ( a->type != b->type ) { \
-			throw Exception( EC.INVALID_CALL, "Arguments are of different types: " + type::Type::GetTypeString( a->type ) + ", " + type::Type::GetTypeString( b->type ), GSE_CALL ); \
+			GSE_ERROR( EC.INVALID_CALL, "Arguments are of different types: " + a->GetTypeString() + ", " + b->GetTypeString() ); \
 		} \
 		switch ( a->type ) { \
-			case type::Type::T_INT: \
-				return VALUE( type::Int, _f_int( ((type::Int*)a)->value, ((type::Int*)b)->value ) ); \
-			case type::Type::T_FLOAT: \
-				return VALUE( type::Float, _f_float( ((type::Float*)a)->value, ((type::Float*)b)->value ) ); \
+			case VT_INT: \
+				return VALUE( value::Int,, _f_int( ((value::Int*)a)->value, ((value::Int*)b)->value ) ); \
+			case VT_FLOAT: \
+				return VALUE( value::Float,, _f_float( ((value::Float*)a)->value, ((value::Float*)b)->value ) ); \
 			default: \
-				THROW( "unexpected type: " + type::Type::GetTypeString( a->type ) ); \
+				THROW( "unexpected type: " + a->GetTypeString() ); \
 		} \
 	} ), ep );
 	AB( "min", std::min, std::fmin )
@@ -46,13 +54,33 @@ void Math::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 	ctx->CreateBuiltin( #_func, NATIVE_CALL() { \
 		N_EXPECT_ARGS( 1 ); \
 		N_GETVALUE( v, 0, _in_type ); \
-		return VALUE( type::_out_type, std::_func( v ) ); \
+		return VALUE( value::_out_type,, std::_func( v ) ); \
 	} ), ep );
 	F( floor, Float, Int )
 	F( round, Float, Int )
 	F( ceil, Float, Int )
 	F( sqrt, Float, Float )
 #undef F
+
+	ctx->CreateBuiltin( "random_int", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( min, 0, Int );
+		N_GETVALUE( max, 1, Int );
+		if ( min > max ) {
+			GSE_ERROR( EC.INVALID_CALL, "Min is larger than max ( " + std::to_string( min ) + " > " + std::to_string( max ) + " )" );
+		}
+		return VALUE( value::Int,, m_random->GetInt64( min, max ) );
+	} ), ep );
+
+	ctx->CreateBuiltin( "random_float", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		N_GETVALUE( min, 0, Float );
+		N_GETVALUE( max, 1, Float );
+		if ( min > max ) {
+			GSE_ERROR( EC.INVALID_CALL, "Min is larger than max ( " + std::to_string( min ) + " > " + std::to_string( max ) + " )" );
+		}
+		return VALUE( value::Float,, m_random->GetFloat( min, max ) );
+	} ), ep );
 
 }
 

@@ -3,8 +3,10 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <mutex>
 
 #define SDL_MAIN_HANDLED 1
+
 #include <SDL.h>
 
 #include <GL/glew.h>
@@ -17,10 +19,8 @@
 
 namespace graphics {
 namespace opengl {
-
 class Scene;
 class FBO;
-
 namespace shader_program {
 class ShaderProgram;
 }
@@ -54,7 +54,7 @@ CLASS( OpenGL, Graphics )
 	const unsigned short GetViewportWidth() const override;
 	const unsigned short GetViewportHeight() const override;
 
-	void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) override;
+	void LoadTexture( types::texture::Texture* texture, const bool smoothen ) override;
 	void UnloadTexture( const types::texture::Texture* texture ) override;
 
 	void WithTexture( const types::texture::Texture* texture, const f_t& f ) override;
@@ -65,8 +65,6 @@ CLASS( OpenGL, Graphics )
 	const bool IsFullscreen() const override;
 	void SetFullscreen() override;
 	void SetWindowed() override;
-
-	void RedrawOverlay() override;
 
 	const bool IsMouseLocked() const override;
 
@@ -84,6 +82,8 @@ CLASS( OpenGL, Graphics )
 	void CaptureToTexture( types::texture::Texture* const texture, const types::Vec2< size_t >& top_left, const types::Vec2< size_t >& bottom_right, const f_t& f );
 	const types::Vec2< types::mesh::coord_t > GetGLCoords( const types::Vec2< size_t >& xy ) const;
 
+	void NoRender( const std::function< void() >& f ) override;
+
 protected:
 	struct {
 		std::string title;
@@ -99,8 +99,6 @@ protected:
 	std::vector< shader_program::ShaderProgram* > m_shader_programs;
 
 	std::vector< routine::Routine* > m_routines;
-	// some routines are special
-	routine::Overlay* m_routine_overlay = nullptr;
 
 	void OnWindowResize() override;
 
@@ -129,6 +127,13 @@ private:
 	} m_px_to_gl_clamp = {};
 
 	void UpdateViewportSize( const size_t width, const size_t height );
+
+	// unload requests can be done from multiple threads but actual unloading done from main one
+	std::mutex m_texture_objs_to_unload_mutex;
+	std::vector< const types::texture::Texture* > m_texture_objs_to_unload = {};
+	void ProcessPendingUnloads();
+
+	std::mutex m_render_mutex;
 };
 
 }

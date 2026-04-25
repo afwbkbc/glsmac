@@ -75,7 +75,7 @@ void FramesRow::Serialize( types::Buffer& buf, const FramesRow* def ) {
 	buf.WriteInt( def->m_render.frames_per_row );
 }
 
-FramesRow* FramesRow::Unserialize(
+FramesRow* FramesRow::Deserialize(
 	types::Buffer& buf,
 	const std::string& id,
 	const float scale_x,

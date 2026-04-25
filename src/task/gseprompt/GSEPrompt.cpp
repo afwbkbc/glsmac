@@ -3,10 +3,11 @@
 #define isatty _isatty
 #define fileno _fileno
 #else
+
 #include <unistd.h>
+
 #endif
 
-#include <iostream>
 #include <cstring>
 
 #include "GSEPrompt.h"
@@ -14,6 +15,7 @@
 #include "gse/Exception.h"
 #include "engine/Engine.h"
 #include "util/String.h"
+#include "util/LogHelper.h"
 #include "gse/GSE.h"
 #include "gse/context/GlobalContext.h"
 #include "gse/context/ChildContext.h"
@@ -21,55 +23,58 @@
 #include "gse/parser/Parser.h"
 #include "gse/program/Program.h"
 #include "gse/ExecutionPointer.h"
+#include "gc/Space.h"
 
 namespace task {
 namespace gseprompt {
 
 GSEPrompt::GSEPrompt( const std::string& syntax )
-	: m_syntax( syntax )
-	, m_is_tty( isatty( fileno( stdin ) ) )
-	, m_gse( new gse::GSE() ) {
+	: gc::Object( nullptr )
+	, m_syntax( syntax )
+	, m_is_tty(
+#ifndef _WIN32
+		isatty( fileno( stdin ) )
+#else
+		false // TODO
+#endif
+	) {}
 
-}
-
-GSEPrompt::~GSEPrompt() {
-	if ( m_gse_context ) {
-		delete m_gse_context;
-	}
-	delete m_gse;
-}
+GSEPrompt::~GSEPrompt() {}
 
 void GSEPrompt::Start() {
-	Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
-
+	Task::Log( "Starting GSE prompt (syntax: " + m_syntax + ")" );
+	m_gse = new gse::GSE();
+	m_gse->AddRootObject( this );
+	m_gc_space = m_gse->GetGCSpace();
 	m_runner = m_gse->GetRunner();
 	if ( m_is_tty ) {
 		m_runner->EnableScopeContextJoins();
 	}
 	m_gse_context = m_gse->CreateGlobalContext();
-	m_gse_context->IncRefs();
 	m_is_running = true;
 	if ( m_is_tty ) {
-		std::cout << std::endl;
+		util::LogHelper::Println( "" );
 	}
 	PrintPrompt();
 }
 
 void GSEPrompt::Stop() {
-	Log( "Exiting GSE prompt" );
+	Task::Log( "Exiting GSE prompt" );
 	for ( const auto& it : m_programs ) {
 		delete ( it );
 	}
-	m_programs.clear();
-	m_gse_context->DecRefs();
-	m_gse_context = nullptr;
-	delete m_runner;
-	m_runner = nullptr;
 	m_input.clear();
+	m_programs.clear();
+	m_gse_context = nullptr;
+	m_runner = nullptr;
+	delete m_gse;
+	m_gse = nullptr;
+	m_gc_space = nullptr;
 }
 
 void GSEPrompt::Iterate() {
 	if ( m_is_running ) {
+		m_gse->Iterate();
 		FD_ZERO( &rfds );
 		FD_SET( 0, &rfds );
 		retval = select( 1, &rfds, NULL, NULL, &tv );
@@ -78,7 +83,8 @@ void GSEPrompt::Iterate() {
 			if ( !fgets( buff, sizeof( buff ), stdin ) ) {
 				m_is_running = false;
 				if ( m_is_tty ) {
-					std::cout << std::endl << std::endl;
+					util::LogHelper::Println( "" );
+					util::LogHelper::Println( "" );
 				}
 				else {
 					ProcessInput();
@@ -109,83 +115,99 @@ void GSEPrompt::Iterate() {
 	}
 }
 
+void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	GC_DEBUG_BEGIN( "GSEPrompt" );
+	
+	if ( m_parser ) {
+		GC_REACHABLE( m_parser );
+	}
+	
+	if ( m_runner ) {
+		GC_REACHABLE( m_runner );
+	}
+	
+	GC_DEBUG_END();
+}
+
 void GSEPrompt::PrintPrompt() {
 	if ( m_is_tty ) {
-		std::cout << m_syntax << "> " << std::flush;
+		util::LogHelper::Print( m_syntax + "> " );
+		util::LogHelper::Flush();
 	}
 }
 
 void GSEPrompt::ProcessInput() {
-	std::string source = m_input;
-
-	if ( m_is_tty ) {
-		m_lines_count++;
-	}
-
-	auto* parser = m_gse->GetParser(
-		"<STDIN>.gls." + m_syntax, source, m_is_tty
-			? m_lines_count
-			: 1
-	);
-
-	const gse::program::Program* program = nullptr;
-	gse::context::Context* context = nullptr;
-	try {
-		program = parser->Parse();
-		if ( m_is_tty ) {
-			const gse::si_t si = {
-				"",
-				{
-					m_lines_count,
-					1
-				},
-				{
-					m_lines_count,
-					1
-				}
-			};
-			{
-				gse::ExecutionPointer ep;
-				context = m_gse_context->ForkContext( nullptr, si, ep, {} );
+	
+	m_gc_space->Accumulate(
+		this,
+		[ this ]() {
+			std::string source = m_input;
+			
+			if ( m_is_tty ) {
+				m_lines_count++;
 			}
-			context->IncRefs();
+			auto* parser = m_gse->CreateParser(
+				"<STDIN>.gls." + m_syntax, source, m_is_tty
+					? m_lines_count
+					: 1
+			);
+			
+			const gse::program::Program* program = nullptr;
+			gse::Value* result = nullptr;
+			try {
+				program = parser->Parse();
+				if ( m_is_tty ) {
+					const gse::si_t si = {
+						"",
+						{
+							m_lines_count,
+							1
+						},
+						{
+							m_lines_count,
+							1
+						}
+					};
+					{
+						gse::ExecutionPointer ep;
+						m_gse_context->ForkAndExecute(
+							m_gc_space, m_gse_context, si, ep, false, [ this, &result, &ep, &program ]( gse::context::ChildContext* const subctx ) {
+								result = m_runner->Execute( subctx, ep, program );
+								subctx->JoinContext();
+							}
+						);
+					}
+				}
+				else {
+					m_gse_context->Execute(
+						[ this, &result, &program ] {
+							gse::ExecutionPointer ep;
+							result = m_runner->Execute( m_gse_context, ep, program );
+						}
+					);
+				}
+				if ( result ) {
+					util::LogHelper::Println( result->Dump() );
+				}
+			}
+			catch ( const gse::Exception& e ) {
+				util::LogHelper::Println( e.ToString() );
+			}
+			catch ( std::runtime_error& e ) {
+				util::LogHelper::Println( (std::string)"Internal error: " + e.what() );
+			}
+			if ( m_is_tty ) {
+				util::LogHelper::Println( "" );
+			}
+			
+			if ( program ) {
+				// can't delete here because program may have contained some functions that are still bound to context
+				// TODO: think how to deal with it
+				//DELETE( program );
+				m_programs.push_back( program );
+			}
 		}
-		else {
-			context = m_gse_context;
-		}
-		auto result = VALUE( gse::type::Undefined );
-		{
-			gse::ExecutionPointer ep;
-			result = m_runner->Execute( context, ep, program );
-		}
-
-		if ( m_is_tty ) {
-			( (gse::context::ChildContext*)context )->JoinContext();
-		}
-		std::cout << result.Dump() << std::endl;
-	}
-	catch ( gse::Exception& e ) {
-		std::cout << e.ToString() << std::endl;
-		context = nullptr;
-	}
-	catch ( std::runtime_error& e ) {
-		std::cout << "Internal error: " << e.what() << std::endl;
-	}
-	if ( m_is_tty ) {
-		if ( context ) {
-			context->DecRefs();
-		}
-		std::cout << std::endl;
-	}
-
-	DELETE( parser );
-	if ( program ) {
-		// can't delete here because program may have contained some functions that are still bound to context
-		// TODO: think how to deal with it
-		//DELETE( program );
-		m_programs.push_back( program );
-	}
-
+	);
 	m_input.clear();
 }
 

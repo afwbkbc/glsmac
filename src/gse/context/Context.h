@@ -5,28 +5,36 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
+#include <mutex>
+#include <atomic>
+
+#include "gc/Object.h"
 
 #include "gse/Types.h"
-#include "gse/type/Types.h"
+#include "gse/value/Types.h"
 
 #include "gse/Value.h"
+
+#define CONTEXT_GSE_CALLABLE const si_t& si, gse::ExecutionPointer& ep
+#define CONTEXT_GSE_CALL this, si, ep
 
 namespace gse {
 
 class GSE;
 
-namespace type {
+namespace value {
 class Object;
+class ValueRef;
 }
 
 namespace context {
 
 class ChildContext;
 
-class Context {
+class Context : public gc::Object {
 protected:
 	struct var_info_t {
-		Value value;
+		Value* value;
 		bool is_const;
 	};
 	struct script_info_t {
@@ -41,35 +49,29 @@ public:
 
 	GSE* GetGSE() const;
 
-	void Begin();
-	const bool End();
-
-	void IncRefs();
-	const bool DecRefs();
-
-	void WithRefs( const std::function< void() >& f );
-	const gse::Value WithRefsV( const std::function< const gse::Value() >& f );
-
 	const bool HasVariable( const std::string& name );
-	const Value GetVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
-	void SetVariable( const std::string& name, const var_info_t& var_info );
-	void CreateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateConst( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
-	void UpdateVariable( const std::string& name, const Value& value, const si_t& si, gse::ExecutionPointer& ep );
-	void DestroyVariable( const std::string& name, const si_t& si, gse::ExecutionPointer& ep );
-	void CreateBuiltin( const std::string& name, const Value& value, gse::ExecutionPointer& ep );
-	void PersistValue( const Value& value );
-	void UnpersistValue( const Value& value );
-	void UnpersistValue( const type::Type* type );
+	Value* const GetVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
+	void CreateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void CreateConst( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void UpdateVariable( const std::string& name, Value* const value, CONTEXT_GSE_CALLABLE );
+	void DestroyVariable( const std::string& name, CONTEXT_GSE_CALLABLE );
+	void CreateBuiltin( const std::string& name, Value* const value, gse::ExecutionPointer& ep );
 
-	ChildContext* const ForkContext(
+	value::ValueRef* const GetThis() const;
+	value::ValueRef* const GetParent() const;
+
+	void Execute( const std::function< void() >& f );
+
+	ChildContext* const ForkAndExecute(
 		GSE_CALLABLE,
 		const bool is_traceable,
-		const std::vector< std::string > parameters = {},
-		const type::function_arguments_t& arguments = {}
+		const std::function< void( ChildContext* const subctx ) >& f
 	);
 
 	void Clear();
+	void UnrefVariable( const std::string& name );
+
+	virtual void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 	virtual Context* GetParentContext() const = 0;
 	virtual const bool IsTraceable() const = 0;
@@ -78,19 +80,22 @@ public:
 	virtual const script_info_t& GetScriptInfo() const = 0;
 
 protected:
+
 	GSE* m_gse;
-	size_t m_refs = 0;
 
 	typedef std::unordered_map< std::string, var_info_t > variables_t;
 	variables_t m_variables = {};
 	typedef std::unordered_map< std::string, Context* > ref_contexts_t;
 	ref_contexts_t m_ref_contexts = {};
 
-	std::unordered_map< const type::Type*, Value > m_persisted_values = {};
-
 private:
 	std::unordered_set< ChildContext* > m_child_contexts = {};
-	std::unordered_set< type::Type* > m_child_objects = {};
+	std::unordered_set< Value* > m_child_objects = {};
+
+	value::ValueRef* m_this = nullptr;
+	value::ValueRef* m_parent = nullptr;
+
+	void CheckVariableName( const std::string& name, GSE_CALLABLE_NOGC );
 
 private:
 	friend class ChildContext;
@@ -98,9 +103,8 @@ private:
 	void RemoveChildContext( ChildContext* const child );
 
 private:
-	friend class type::Object;
-	void AddChildObject( type::Type* const child );
-	void RemoveChildObject( type::Type* const child );
+	friend class value::Object;
+	void SetThis( value::ValueRef* const _this );
 
 };
 

@@ -38,7 +38,7 @@ CLASS( Graphics, common::Module )
 	virtual const unsigned short GetViewportWidth() const = 0;
 	virtual const unsigned short GetViewportHeight() const = 0;
 
-	virtual void LoadTexture( types::texture::Texture* texture, const bool smoothen = true ) = 0;
+	virtual void LoadTexture( types::texture::Texture* texture, const bool smoothen ) = 0;
 	virtual void UnloadTexture( const types::texture::Texture* texture ) = 0;
 
 	virtual void WithTexture( const types::texture::Texture* texture, const f_t& f ) = 0;
@@ -46,8 +46,6 @@ CLASS( Graphics, common::Module )
 	virtual const bool IsFullscreen() const = 0;
 	virtual void SetFullscreen() = 0;
 	virtual void SetWindowed() = 0;
-
-	virtual void RedrawOverlay() = 0;
 
 	virtual const bool IsMouseLocked() const = 0;
 
@@ -64,6 +62,8 @@ CLASS( Graphics, common::Module )
 
 	void Lock();
 	void Unlock();
+
+	virtual void NoRender( const std::function< void() >& f );
 
 protected:
 

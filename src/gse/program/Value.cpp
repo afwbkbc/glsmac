@@ -3,15 +3,17 @@
 namespace gse {
 namespace program {
 
-Value::Value( const si_t& si, const gse::Value& value )
+Value::Value( const si_t& si, gse::Value* const value )
 	: Operand( si, OT_VALUE )
 	, value( value ) {}
 
 const std::string Value::ToString() const {
-	return value.ToString();
+	return value
+		? value->ToString()
+		: "nothing";
 }
 const std::string Value::Dump( const size_t depth ) const {
-	return Formatted( "Value" + m_si.ToString() + "( " + value.ToString() + " )", depth );
+	return Formatted( "Value" + m_si.ToString() + "( " + ToString() + " )", depth );
 }
 
 }

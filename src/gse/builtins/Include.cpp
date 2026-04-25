@@ -4,15 +4,15 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/String.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/String.h"
 
 #include "util/FS.h"
 
 namespace gse {
 namespace builtins {
 
-void Include::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Include::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "include", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );

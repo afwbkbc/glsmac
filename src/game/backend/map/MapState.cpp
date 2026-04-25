@@ -102,7 +102,7 @@ const types::Buffer MapState::Serialize() const {
 	return buf;
 }
 
-void MapState::Unserialize( types::Buffer buf ) {
+void MapState::Deserialize( types::Buffer buf ) {
 
 	first_run = buf.ReadBool();
 	coord = buf.ReadVec2f();
@@ -115,7 +115,7 @@ void MapState::Unserialize( types::Buffer buf ) {
 
 	for ( auto y = 0 ; y < dimensions.y ; y++ ) {
 		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
-			At( x, y )->Unserialize( buf.ReadString() );
+			At( x, y )->Deserialize( buf.ReadString() );
 		}
 	}
 

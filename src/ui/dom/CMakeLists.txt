@@ -2,6 +2,7 @@ SET( SRC ${SRC}
 
 	${PWD}/Object.cpp
 	${PWD}/Drawable.cpp
+	${PWD}/Focusable.cpp
 	${PWD}/Area.cpp
 	${PWD}/Container.cpp
 	${PWD}/Group.cpp
@@ -13,5 +14,11 @@ SET( SRC ${SRC}
 	${PWD}/Button.cpp
 	${PWD}/Input.cpp
 	${PWD}/Sound.cpp
+	${PWD}/ChoiceList.cpp
+	${PWD}/Select.cpp
+	${PWD}/Scrollbar.cpp
+	${PWD}/Scrollview.cpp
+	${PWD}/Listview.cpp
+	${PWD}/Widget.cpp
 
 	PARENT_SCOPE )

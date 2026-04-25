@@ -148,12 +148,7 @@ void Coastlines1::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			s_consts.coastlines.coast_water_alpha
 		);*/
 
-		ts->layers[ tile::LAYER_WATER_SURFACE ].colors.center =
-			ts->layers[ tile::LAYER_WATER_SURFACE ].colors.left =
-				ts->layers[ tile::LAYER_WATER_SURFACE ].colors.top =
-					ts->layers[ tile::LAYER_WATER_SURFACE ].colors.right =
-						ts->layers[ tile::LAYER_WATER_SURFACE ].colors.bottom =
-							s_consts.coastlines.coastline_tint;
+		ts->layers[ tile::LAYER_WATER_SURFACE ].colors.Set( s_consts.coastlines.coastline_tint );
 	}
 
 	if ( tile->is_water_tile && (
@@ -173,28 +168,28 @@ void Coastlines1::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.left.value.alpha = 0.0f;
 		}
 		else {
-			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.left = s_consts.coastlines.coastline_tint;
+			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.left.Set( s_consts.coastlines.coastline_tint );
 		}
 
 		if ( tile->N->is_water_tile && tile->NW->is_water_tile && tile->NE->is_water_tile ) {
 			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.top.value.alpha = 0.0f;
 		}
 		else {
-			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.top = s_consts.coastlines.coastline_tint;
+			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.top.Set( s_consts.coastlines.coastline_tint );
 		}
 
 		if ( tile->E->is_water_tile && tile->NE->is_water_tile && tile->SE->is_water_tile ) {
 			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.right.value.alpha = 0.0f;
 		}
 		else {
-			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.right = s_consts.coastlines.coastline_tint;
+			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.right.Set( s_consts.coastlines.coastline_tint );
 		}
 
 		if ( tile->S->is_water_tile && tile->SW->is_water_tile && tile->SE->is_water_tile ) {
 			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.bottom.value.alpha = 0.0f;
 		}
 		else {
-			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.bottom = s_consts.coastlines.coastline_tint;
+			ts->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.bottom.Set( s_consts.coastlines.coastline_tint );
 		}
 
 		m_map->AddTexture(

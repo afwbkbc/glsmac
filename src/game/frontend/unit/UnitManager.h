@@ -31,10 +31,6 @@ namespace faction {
 class Faction;
 }
 
-namespace ui_legacy {
-class ObjectsList;
-}
-
 namespace unit {
 
 class Unit;
@@ -52,6 +48,7 @@ CLASS( UnitManager, common::Class )
 	Unit* GetUnitById( const size_t id ) const;
 
 	void DefineUnit( const backend::unit::Def* def );
+	void UndefineUnit( const std::string& id );
 	void SpawnUnit(
 		const size_t unit_id,
 		const std::string& unitdef_name,
@@ -66,7 +63,6 @@ CLASS( UnitManager, common::Class )
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );
 	void MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t animation_id );
-	void MoveUnit_deprecated( Unit* unit, tile::Tile* dst_tile, const types::Vec3& dst_render_coords );
 
 	Unit* GetSelectedUnit() const;
 	void SelectUnit( Unit* unit, const bool actually_select_unit );
@@ -84,8 +80,6 @@ private:
 
 	Game* m_game;
 	sprite::InstancedSpriteManager* m_ism;
-
-	const size_t m_slot_index;
 
 	Unit* m_selected_unit = nullptr;
 

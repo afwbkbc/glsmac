@@ -43,7 +43,7 @@ public:
 	const std::string ToString( const std::string& prefix = "" ) const;
 
 	static const types::Buffer Serialize( const Resource* resource );
-	static Resource* Unserialize( types::Buffer& buf );
+	static Resource* Deserialize( types::Buffer& buf );
 
 };
 

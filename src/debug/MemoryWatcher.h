@@ -5,7 +5,9 @@
 #include <unordered_set>
 #include <vector>
 #include <mutex>
+#include <SDL2/SDL_video.h>
 #include <GL/glew.h>
+#include <thread>
 
 namespace debug {
 
@@ -17,6 +19,7 @@ public:
 
 	// memory stuff
 	void New( const void* object, const size_t size, const std::string& file, const size_t line );
+	void MaybeDelete( const void* object );
 	void Delete( const void* object, const std::string& file, const size_t line );
 	void* Malloc( const size_t size, const std::string& file, const size_t line );
 	void* Realloc( void* ptr, const size_t size, const std::string& file, const size_t line );
@@ -24,6 +27,7 @@ public:
 	void Free( void* ptr, const std::string& file, const size_t line );
 
 	// opengl stuff
+	SDL_GLContext SDLGLCreateContext( SDL_Window* window, const std::string& file, const size_t line );
 	void GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line );
 	void GLBindBuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line );
 	void GLBufferData( GLenum target, GLsizeiptr size, const void* data, GLenum usage, const std::string& file, const size_t line );
@@ -116,6 +120,8 @@ private:
 		std::unordered_map< GLuint, program_t > programs = {};
 	} m_opengl = {};
 
+	size_t m_gl_thread_id = {};
+	void CheckGLThread( const std::string& source );
 };
 
 extern MemoryWatcher* g_memory_watcher;

@@ -11,11 +11,17 @@ namespace mesh {
 
 CLASS( Mesh, Serializable )
 
-	enum mesh_type_t {
-		MT_BARE, // coordinates only
-		MT_SIMPLE, // coordinates, texture
-		MT_RENDER, // coordinates, texture, tint, normals
-		MT_DATA // coordinates, data
+	enum type_t {
+		MT_NONE,
+		MT_RECTANGLE,
+		MT_RENDER,
+		MT_DATA,
+	};
+
+	enum data_type_t {
+		DT_BARE, // coordinates only
+		DT_RENDER, // coordinates, texture, tint, normals
+		DT_DATA // coordinates, data
 	};
 
 	const uint8_t VERTEX_SIZE; // set in constructor
@@ -28,7 +34,7 @@ CLASS( Mesh, Serializable )
 		const index_t v3;
 	};
 
-	Mesh( const mesh_type_t type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
+	Mesh( const type_t type, const data_type_t data_type, const uint8_t vertex_size, const size_t vertex_count, const size_t surface_count );
 	Mesh( const Mesh& other ); // copy from other
 	~Mesh();
 
@@ -56,14 +62,16 @@ CLASS( Mesh, Serializable )
 	void Update();
 	const size_t UpdatedCount() const;
 
-	const mesh_type_t GetType() const;
+	const type_t GetType() const;
+	const data_type_t GetDataType() const;
 
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
 
 protected:
 
-	const mesh_type_t m_mesh_type = MT_BARE;
+	const type_t m_type = MT_NONE;
+	const data_type_t m_data_type = DT_BARE;
 
 	bool m_is_final = false;
 

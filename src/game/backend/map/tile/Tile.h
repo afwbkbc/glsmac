@@ -34,8 +34,6 @@ public:
 
 	coords_t coord;
 
-	static const std::string TilePositionsToString( const positions_t& tile_positions, std::string prefx = "" );
-
 	// when reading or writing elevation - work only with values, make sure to not modify pointers themselves!
 	// pointers are set only once by Tiles and are not to be changed after
 	struct {
@@ -94,13 +92,16 @@ public:
 	void Clear();
 
 	const bool IsAdjactentTo( const Tile* other ) const;
+	const size_t GetDistanceTo( const Tile* other ) const;
 
 	const types::Buffer Serialize() const;
-	void Unserialize( types::Buffer data );
+	void Deserialize( types::Buffer data );
 
 	const std::string ToString() const;
 
 	WRAPDEFS_PTR( Tile );
+
+	WRAPDEF_SERIALIZABLE;
 
 	void Lock( const size_t initiator_slot );
 	void Unlock();
@@ -110,6 +111,9 @@ public:
 private:
 	bool m_is_locked = false;
 	size_t m_lock_initiator_slot = 0;
+
+	gse::Value* const GetFeatures( GSE_CALLABLE ) const;
+	gse::Value* const GetResources( GSE_CALLABLE ) const;
 };
 
 }

@@ -4,59 +4,62 @@
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
-#include "gse/type/Undefined.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
-#include "gse/type/String.h"
+#include "gse/value/Undefined.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+#include "gse/value/String.h"
 
 #include "types/Color.h"
 
 namespace gse {
 namespace builtins {
 
-void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
+void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
-#define CONVERSION_ERROR( _type ) throw Exception( EC.CONVERSION_ERROR, "Could not convert " + v->GetTypeString(v->type) + " to " + _type + ": " + v->ToString(), GSE_CALL );
+#define CONVERSION_ERROR( _type ) GSE_ERROR( EC.CONVERSION_ERROR, "Could not convert " + ( v ? v->GetTypeString() : "Undefined" ) + " to " + _type + ": " + ( v ? v->ToString() : "Undefined" ) )
 
 #define CONVERT_COLOR( _type, _constructor, _min, _max ) { \
 	N_GETVALUE( r, 0, _type ); \
-    if ( r < _min || r > _max ) throw Exception( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ), GSE_CALL ); \
+    if ( r < _min || r > _max ) GSE_ERROR( EC.INVALID_CALL, "Red value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( r ) ); \
 	N_GETVALUE( g, 1, _type ); \
-    if ( g < _min || g > _max ) throw Exception( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ), GSE_CALL ); \
+    if ( g < _min || g > _max ) GSE_ERROR( EC.INVALID_CALL, "Green value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( g ) ); \
 	N_GETVALUE( b, 2, _type ); \
-    if ( b < _min || b > _max ) throw Exception( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ), GSE_CALL ); \
+    if ( b < _min || b > _max ) GSE_ERROR( EC.INVALID_CALL, "Blue value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( b ) ); \
 	if ( arguments.size() == 4 ) { \
 		N_GETVALUE( a, 3, _type ); \
-	    if ( a < _min || a > _max ) throw Exception( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ), GSE_CALL ); \
-		return _constructor( r, g, b, a ).Wrap(); \
+	    if ( a < _min || a > _max ) GSE_ERROR( EC.INVALID_CALL, "Alpha value should be between " + std::to_string( _min ) + " and " + std::to_string( _max ) + ": " + std::to_string( a ) ); \
+		return _constructor( r, g, b, a ).Wrap( GSE_CALL ); \
 	} \
-	return _constructor( r, g, b ).Wrap(); \
+	return _constructor( r, g, b ).Wrap( GSE_CALL ); \
 }
 
 	ctx->CreateBuiltin( "to_string", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
-		N_GET( v, 0 );
-		return VALUE( type::String, v.ToString() );
+		N_GET_ANY( v, 0 );
+		return VALUE( value::String,, v->ToString() );
 	} ), ep );
 
 	ctx->CreateBuiltin( "to_dump", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
-		N_GET( v, 0 );
-		return VALUE( type::String, v.Dump() );
+		N_GET_ANY( v, 0 );
+		return VALUE( value::String,, v->Dump() );
 	} ), ep );
 
 	ctx->CreateBuiltin( "to_int", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
+		if ( !v ) {
+			CONVERSION_ERROR( "Int" )
+		}
 		int64_t value = 0;
 		switch ( v->type ) {
-			case type::Type::T_INT: {
-				value = ( (type::Int*)v )->value;
+			case VT_INT: {
+				value = ( (value::Int*)v )->value;
 				break;
 			}
-			case type::Type::T_STRING: {
+			case VT_STRING: {
 				try {
-					value = std::stol( ((type::String*)v)->value );
+					value = std::stol( ((value::String*)v)->value );
 				}
 				catch ( std::logic_error const& ex ) {
 					CONVERSION_ERROR( "Int" )
@@ -66,25 +69,28 @@ void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			default:
 				CONVERSION_ERROR( "Int" );
 		}
-		return VALUE( type::Int, value );
+		return VALUE( value::Int,, value );
 	} ), ep );
 
 	ctx->CreateBuiltin( "to_float", NATIVE_CALL() {
 		N_EXPECT_ARGS( 1 );
 		N_GETPTR( v, 0 );
+		if ( !v ) {
+			CONVERSION_ERROR( "Float" )
+		}
 		float value = 0.0f;
 		switch ( v->type ) {
-			case type::Type::T_FLOAT: {
-				value = ( (type::Float*)v)->value;
+			case VT_FLOAT: {
+				value = ( (value::Float*)v)->value;
 				break;
 			}
-			case type::Type::T_INT: {
-				value = ( (type::Int*)v)->value;
+			case VT_INT: {
+				value = ( (value::Int*)v)->value;
 				break;
 			}
-			case type::Type::T_STRING: {
+			case VT_STRING: {
 				try {
-					value = std::stof( ((type::String*)v)->value );
+					value = std::stof( ((value::String*)v)->value );
 				}
 				catch ( std::logic_error const& ex ) {
 					CONVERSION_ERROR( "Float" )
@@ -94,22 +100,22 @@ void Conversions::AddToContext( context::Context* ctx, ExecutionPointer& ep ) {
 			default:
 				CONVERSION_ERROR( "Float" );
 		}
-		return VALUE( type::Float, value );
+		return VALUE( value::Float,, value );
 	} ), ep );
 
 	ctx->CreateBuiltin( "to_color", NATIVE_CALL() {
 		N_EXPECT_ARGS_MIN_MAX( 3, 4 );
 		const auto f_err = [ &ctx, &si, &ep ] () {
-			throw Exception( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)", GSE_CALL );
+			GSE_ERROR( EC.INVALID_CALL, "Color can be specified either by floats (0.0 to 1.0) or by ints (0 to 255)" );
 		};
 
-		switch ( arguments.at( 0 ).Get()->type ) {
-			case type::Type::T_FLOAT: CONVERT_COLOR( Float, types::Color, 0.0f, 1.0f );
-			case type::Type::T_INT: CONVERT_COLOR( Int, types::Color::FromRGBA, 0, 255 );
+		switch ( arguments.at( 0 )->type ) {
+			case VT_FLOAT: CONVERT_COLOR( Float, types::Color, 0.0f, 1.0f );
+			case VT_INT: CONVERT_COLOR( Int, types::Color::FromRGBA, 0, 255 );
 			default:
 				f_err();
 		}
-		return VALUE( type::Undefined );
+		return VALUE( value::Undefined );
 	} ), ep );
 
 #undef CONVERT_COLOR

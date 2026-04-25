@@ -186,11 +186,12 @@ const std::vector< sprite::InstancedSprite* > InstancedFont::GetSymbolSprites( c
 	std::vector< sprite::InstancedSprite* > sprites = {};
 	auto* texture = GetColorizedTexture( color, shadow_color );
 	for ( const auto symbol : text ) {
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
+		const auto& key = "InstancedFont_" + m_name + "_sym_" + std::to_string( symbol ) + "_" + std::to_string( color.GetRGBA() ) + "_" + std::to_string( shadow_color.GetRGBA() );
 		sprites.push_back(
 			m_ism->GetInstancedSprite(
-				"InstancedFont_" + m_name + "_sym_" + std::to_string( symbol ),
+				key,
 				texture,
 				pos.src.top_left,
 				pos.src.width_height,
@@ -213,7 +214,7 @@ const std::vector< types::Vec2< float > > InstancedFont::GetSymbolOffsets( const
 	const size_t middle = text.size() / 2 - 1;
 	for ( size_t i = 0 ; i < text.size() ; i++ ) {
 		const auto symbol = text.at( i );
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 
 		const float ox = (float)pos.src.width_height.x + pos.dst.top_left.x;
@@ -253,7 +254,7 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 	uint32_t w = 0;
 	uint32_t h = 0;
 	for ( const auto symbol : text ) {
-		ASSERT_NOLOG( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
+		ASSERT( m_symbol_positions.find( symbol ) != m_symbol_positions.end(), "invalid/unsupported symbol: " + std::to_string( symbol ) );
 		const auto& pos = m_symbol_positions.find( symbol )->second;
 		w += pos.src.width_height.x;
 		h = std::max( h, pos.src.width_height.y );
@@ -261,9 +262,9 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 	w += margin * 2 + 1; // some symbols like '1' or '4' look shifted to the left without + 1 // TODO: investigate
 	h += margin * 2;
 
-	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h );
+	NEWV( texture, types::texture::Texture, "Texture_" + m_name + "_" + std::to_string( s_text_texture_id++ ), w, h, types::texture::TF_MIPMAPS );
 
-	texture->Fill( 0, 0, texture->m_width - 1, texture->m_height - 1, background );
+	texture->Fill( 0, 0, texture->GetWidth() - 1, texture->GetHeight() - 1, background );
 
 	uint32_t x = margin;
 	uint32_t y = margin;
@@ -278,15 +279,16 @@ types::texture::Texture* InstancedFont::GetTextTexture(
 }
 
 types::texture::Texture* InstancedFont::GetColorizedTexture( const types::Color& color, const types::Color& shadow_color ) {
-	const auto texture_key = color.GetRGBA();
+	const uint64_t texture_key = (uint64_t)color.GetRGBA() << 32 | shadow_color.GetRGBA();
 	auto texture_it = m_color_textures.find( texture_key );
 	if ( texture_it == m_color_textures.end() ) {
 		NEWV(
 			texture,
 			types::texture::Texture,
 			"InstancedFont_" + m_name + "_" + std::to_string( texture_key ),
-			m_base_texture->m_width,
-			m_base_texture->m_height
+			m_base_texture->GetWidth(),
+			m_base_texture->GetHeight(),
+			types::texture::TF_MIPMAPS
 		);
 		texture->ColorizeFrom( m_base_texture, color, shadow_color );
 		texture_it = m_color_textures.insert(

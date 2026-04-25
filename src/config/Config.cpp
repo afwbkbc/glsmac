@@ -1,4 +1,3 @@
-#include <iostream>
 #include <stdexcept>
 #include <sstream>
 
@@ -8,16 +7,29 @@
 
 #include "util/ConfigManager.h"
 #include "util/FS.h"
+#include "util/String.h"
 #include "util/random/Random.h"
+#include "util/LogHelper.h"
 
 namespace config {
 
+WRAPIMPL_BEGIN( Config )
+	WRAPIMPL_PROPS};
+	for ( const auto& it : m_manager->GetSettings() ) {
+		properties.insert( { it.first, VALUE( gse::value::String, , it.second.second ) } );
+	}
+WRAPIMPL_END_PTR()
+
+UNWRAPIMPL_PTR( Config )
+
 void Config::Error( const std::string& error ) {
-	std::cout << std::endl
-		<< "ERROR: " << error << std::endl
-		<< std::endl
-		<< m_manager->GetUnknownArgumentNote() << std::endl
-		<< std::endl;
+	util::LogHelper::Println(
+		(std::string)
+			"\n" +
+			+"ERROR: " + error + "\n" +
+			+"\n"
+			+ m_manager->GetUnknownArgumentNote() + "\n"
+	);
 	exit( EXIT_FAILURE );
 };
 
@@ -57,7 +69,7 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"help", "Show this message", AH( this ) {
-			std::cout << m_manager->GetHelpString() << std::endl;
+			util::LogHelper::Println( m_manager->GetHelpString() );
 			exit( EXIT_SUCCESS );
 		}
 	);
@@ -109,12 +121,13 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"version", "Show version of GLSMAC", AH() {
-			std::cout
-				<< std::endl
-				<< GLSMAC_VERSION_FULL << ' ' << GLSMAC_URL << std::endl
-				<< std::endl
-				<< GLSMAC_LICENSE << std::endl
-				<< std::endl;
+			util::LogHelper::Println(
+				(std::string)
+					"\n"
+					+ GLSMAC_VERSION_FULL + ' ' + GLSMAC_URL + "\n"
+					+ "\n"
+					+ GLSMAC_LICENSE + "\n"
+			);
 			exit( EXIT_SUCCESS );
 		}
 	);
@@ -175,62 +188,38 @@ Config::Config( const std::string& path )
 		}
 	);
 	const auto f_add_map_parameter_option =
-		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::vector< std::string >& values, const std::string& desc, launch_flag_t flag, game::backend::settings::map_config_value_t* out_param )
+		[ this, s_quickstart_argument_missing ]( const std::string& name, const std::string& desc, launch_flag_t flag, float* out_param )
 			-> void {
-			ASSERT( values.size() == 3, "values size mismatch" );
 			m_manager->AddRule(
-				name, values[ 0 ] + "|" + values[ 1 ] + "|" + values[ 2 ], "Generate map with specific " + desc + " setting",
-				AH( this, name, values, s_quickstart_argument_missing, out_param, &desc, flag ) {
+				name, "PERCENTAGE", "Generate map with specific " + desc,
+				AH( this, name, s_quickstart_argument_missing, out_param, &desc, flag ) {
 					if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
 						Error( s_quickstart_argument_missing );
 					}
-					if ( value == values[ 0 ] ) {
-						*out_param = 1;
+					long int i = 0;
+					if ( !util::String::ParseInt( value, i ) || i < 0 || i > 100 ) {
+						Error( "Invalid --" + name + " value specified! Expected number ( 0 to 100 ), got: " + value );
 					}
-					else if ( value == values[ 1 ] ) {
-						*out_param = 2;
-					}
-					else if ( value == values[ 2 ] ) {
-						*out_param = 3;
-					}
-					else {
-						Error( "Invalid --" + name + " value specified! Possible choices: " + values[ 0 ] + " " + values[ 1 ] + " " + values[ 2 ] );
-					}
+					*out_param = (float)i / 100;
 					m_launch_flags |= flag;
 				}
 			);
 		};
 	f_add_map_parameter_option(
-		"quickstart-map-ocean", {
-			"low",
-			"medium",
-			"high"
-		}, "ocean coverage",
-		LF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean
+		"quickstart-map-ocean", "ocean coverage",
+		LF_QUICKSTART_MAP_OCEAN, &m_quickstart_map_ocean_coverage
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-erosive", {
-			"strong",
-			"average",
-			"weak"
-		}, "erosive forces",
-		LF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive
+		"quickstart-map-erosive", "erosive forces",
+		LF_QUICKSTART_MAP_EROSIVE, &m_quickstart_map_erosive_forces
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-lifeforms", {
-			"rare",
-			"average",
-			"abundant"
-		}, "native lifeforms",
-		LF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_lifeforms
+		"quickstart-map-lifeforms", "native lifeforms",
+		LF_QUICKSTART_MAP_LIFEFORMS, &m_quickstart_map_native_lifeforms
 	);
 	f_add_map_parameter_option(
-		"quickstart-map-clouds", {
-			"sparse",
-			"average",
-			"dense"
-		}, "cloud cover",
-		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_clouds
+		"quickstart-map-clouds", "cloud cover",
+		LF_QUICKSTART_MAP_CLOUDS, &m_quickstart_map_cloud_cover
 	);
 	m_manager->AddRule(
 		"quickstart-faction", "FACTION", "Play as specific faction", AH( this, s_quickstart_argument_missing ) {
@@ -268,33 +257,57 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"newui", "Use new (experimental/unfinished) UI, development purposes only", AH( this ) {
-			m_launch_flags |= LF_NEWUI;
+		"playername", "PLAYER NAME", "Specify player name for hosting or joining games", AH( this ) {
+			m_launch_flags |= LF_PLAYERNAME;
 		}
 	);
 	m_manager->AddRule(
-		"newui-mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
-			if ( !HasLaunchFlag( LF_NEWUI ) ) {
-				Error( "--newui-mainscript requires --newui argument!" );
+		"gamename", "GAME NAME", "Specify game name for hosting game", AH( this ) {
+			m_launch_flags |= LF_GAMENAME;
+		}
+	);
+	m_manager->AddRule(
+		"host", "Host a TCP/IP game", AH( this ) {
+			if ( HasLaunchFlag( LF_JOIN ) ) {
+				Error( "Using --host with --join is not allowed" );
 			}
-			m_newui_mainscript = value;
+			m_launch_flags |= LF_HOST;
+		}
+	);
+	m_manager->AddRule(
+		"join", "ADDRESS", "Join a TCP/IP game", AH( this ) {
+			if ( HasLaunchFlag( LF_HOST ) ) {
+				Error( "Using --host with --join is not allowed" );
+			}
+			m_launch_flags |= LF_JOIN;
+			m_join_address = value;
+		}
+	);
+	m_manager->AddRule(
+		"maxips", "IPS", "Maximum allowed IPS (iterations per second, determine FPS, default: 500)", AH( this ) {
+			m_launch_flags |= LF_MAXIPS;
+			long int maxips = 0;
+			if ( !util::String::ParseInt( value, maxips ) || maxips < 1 || maxips > 1000 ) {
+				Error( "--maxips value must be a number from 1 to 1000" );
+			}
+			m_maxips = maxips;
+		}
+	);
+	m_manager->AddRule(
+		"mainscript", "SCRIPT_NAME", "Specify alternate main script to run (default: main)", AH( this ) {
+			m_mainscript = value;
+		}
+	);
+	m_manager->AddRule(
+		"worldscript", "SCRIPT_NAME", "Specify alternate world generator script to run (default: default)", AH( this ) {
+			m_worldscript = value;
 		}
 	);
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 	m_manager->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
 			m_debug_flags |= DF_GDB;
-		}
-	);
-	m_manager->AddRule(
-		"mapdump", "Save map dump upon loading map", AH( this ) {
-			m_debug_flags |= DF_MAPDUMP;
-		}
-	);
-	m_manager->AddRule(
-		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
-			m_debug_flags |= DF_MEMORYDEBUG;
 		}
 	);
 	m_manager->AddRule(
@@ -303,15 +316,13 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
-		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
-			}
-			if ( !util::FS::FileExists( value ) ) {
-				Error( "Map dump file \"" + value + "\" not found!" );
-			}
-			m_quickstart_mapdump = value;
-			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
+		"verbose-gc", "Output extra logs from garbage collector (spammy!)", AH( this ) {
+			m_debug_flags |= DF_VERBOSE_GC;
+		}
+	);
+	m_manager->AddRule(
+		"no-gc", "Disable garbage collection (will leak memory!)", AH( this ) {
+			m_debug_flags |= DF_NO_GC;
 		}
 	);
 	m_manager->AddRule(
@@ -338,6 +349,36 @@ Config::Config( const std::string& path )
 			m_gse_tests_script = value;
 		}
 	);
+	m_manager->AddRule(
+		"single-thread", "Run everything in same thread", AH( this ) {
+			m_debug_flags |= DF_SINGLE_THREAD;
+		}
+	);
+
+#ifdef DEBUG
+	m_manager->AddRule(
+		"mapdump", "Save map dump upon loading map", AH( this ) {
+			m_debug_flags |= DF_MAPDUMP;
+		}
+	);
+	m_manager->AddRule(
+		"memorydebug", "Add extra memory checks and tracking (slow!)", AH( this ) {
+			m_debug_flags |= DF_MEMORYDEBUG;
+		}
+	);
+	m_manager->AddRule(
+		"quickstart-mapdump", "MAP_DUMP_FILE", "Load from existing map dump file (*.gsmd)", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			if ( !util::FS::FileExists( value ) ) {
+				Error( "Map dump file \"" + value + "\" not found!" );
+			}
+			m_quickstart_mapdump = value;
+			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
+		}
+	);
+#endif
 
 #endif
 
@@ -372,7 +413,7 @@ const std::string& Config::GetPrefix() const {
 	return m_prefix;
 }
 
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
@@ -423,20 +464,20 @@ const types::Vec2< size_t >& Config::GetQuickstartMapSize() const {
 	return m_quickstart_mapsize;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapOcean() const {
-	return m_quickstart_map_ocean;
+const float Config::GetQuickstartMapOceanCoverage() const {
+	return m_quickstart_map_ocean_coverage;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapErosive() const {
-	return m_quickstart_map_erosive;
+const float Config::GetQuickstartMapErosiveForces() const {
+	return m_quickstart_map_erosive_forces;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapLifeforms() const {
-	return m_quickstart_map_lifeforms;
+const float Config::GetQuickstartMapNativeLifeforms() const {
+	return m_quickstart_map_native_lifeforms;
 }
 
-const game::backend::settings::map_config_value_t Config::GetQuickstartMapClouds() const {
-	return m_quickstart_map_clouds;
+const float Config::GetQuickstartMapCloudCover() const {
+	return m_quickstart_map_cloud_cover;
 }
 
 const std::string& Config::GetQuickstartFaction() const {
@@ -447,11 +488,23 @@ const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
 }
 
-const std::string& Config::GetNewUIMainScript() const {
-	return m_newui_mainscript;
+const std::string& Config::GetJoinAddress() const {
+	return m_join_address;
 }
 
-#ifdef DEBUG
+const std::string& Config::GetMainScript() const {
+	return m_mainscript;
+}
+
+const std::string& Config::GetWorldScript() const {
+	return m_worldscript;
+}
+
+const uint16_t Config::GetMaxIPS() const {
+	return m_maxips;
+}
+
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
 	return m_debug_flags & flag;

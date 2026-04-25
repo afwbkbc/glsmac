@@ -17,7 +17,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Simple;
+class Render;
 }
 }
 
@@ -80,20 +80,14 @@ public:
 	void Update();
 
 	struct meshtex_t {
-		const types::mesh::Simple* mesh = nullptr;
+		const types::mesh::Render* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
-		meshtex_t base;
-		meshtex_t badge;
+		meshtex_t base = {};
+		meshtex_t badge = {};
 	};
 	const render_data_t& GetRenderData() const;
-
-	void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const override;
-	void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const override;
-	void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const override;
-	void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const override;
-	const bool OnBottomBarListActivate( Game* game ) override;
 
 	typedef std::vector< Pop > pops_t;
 	const pops_t& GetPops() const;
@@ -137,7 +131,7 @@ private:
 	void ShowBadge();
 	void HideBadge();
 
-	meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
+	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 };
 
 }

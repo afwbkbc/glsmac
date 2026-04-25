@@ -121,6 +121,10 @@ void ConfigManager::UpdateSetting( const std::string& key, const std::string& va
 	Save();
 }
 
+const ConfigManager::settings_t& ConfigManager::GetSettings() const {
+	return m_settings;
+}
+
 const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable ) {
 	const auto& it = m_arg_rules.find( k );
 	if ( it == m_arg_rules.end() ) {
@@ -133,7 +137,9 @@ const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager
 	m_settings.insert_or_assign(
 		k, std::make_pair(
 			is_saveable,
-			v.value_or( "" )
+			it->second.has_value
+				? v.value_or( "" )
+				: ""
 		)
 	);
 	return it;

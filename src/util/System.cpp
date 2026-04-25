@@ -1,4 +1,4 @@
-#ifdef DEBUG
+#if defined( DEBUG ) || defined( FASTDEBUG )
 
 #ifdef __linux__
 
@@ -8,17 +8,11 @@
 
 #endif
 
-#include <iostream>
-
-#endif
-
-#include <algorithm>
-
 #include "System.h"
 
-namespace util {
+#include "util/LogHelper.h"
 
-#ifdef DEBUG
+namespace util {
 
 // from https://stackoverflow.com/questions/3596781/how-to-detect-if-the-current-process-is-being-run-by-gdb
 bool System::AreWeUnderGDB() {
@@ -29,7 +23,7 @@ bool System::AreWeUnderGDB() {
 
 	if ( pid == -1 ) {
 		perror( "fork" );
-		std::cout << "WARNING: gdb check failed" << std::endl;
+		util::LogHelper::Println( "WARNING: gdb check failed" );
 		return false;
 	}
 
@@ -63,7 +57,7 @@ bool System::AreWeUnderGDB() {
 	return res;
 
 #else
-	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+	util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 	return false;
 #endif
 }
@@ -72,11 +66,12 @@ bool System::IsGDBAvailable() {
 #ifdef __linux__
 	return ( !system( "which gdb > /dev/null 2>&1" ) );
 #else
-	std::cout << "WARNING: gdb check skipped due to unsupported platform" << std::endl;
+	util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 	return false;
 #endif
+
+}
+
 }
 
 #endif
-
-}

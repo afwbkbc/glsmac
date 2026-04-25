@@ -1,0 +1,27 @@
+#pragma once
+
+#include <cstdint>
+
+#include "gse/Value.h"
+
+namespace gse {
+namespace value {
+
+class Int : public Value {
+public:
+
+	static const value_type_t GetType() { return VT_INT; }
+
+	Int( gc::Space* const gc_space, const int64_t initial_value )
+		: Value( gc_space, GetType() )
+		, value( initial_value ) {}
+
+	int64_t value;
+
+	Int( gc::Space* const gc_space, const Int& other )
+		: Int( gc_space, other.value ) {}
+
+};
+
+}
+}

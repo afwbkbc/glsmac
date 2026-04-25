@@ -12,10 +12,13 @@ class Area : public Drawable {
 public:
 	Area( DOM_ARGS_T );
 
+	typedef std::function< void( const size_t, const size_t ) > f_on_resize_t;
+	f_on_resize_t m_on_resize = nullptr;
+
 protected:
 	virtual const bool IsEventRelevant( const input::Event& event ) const override;
 
-	virtual void SerializeEvent( const input::Event& event, gse::type::object_properties_t& event_data ) const override;
+	virtual void WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_properties_t& event_data ) const override;
 
 };
 

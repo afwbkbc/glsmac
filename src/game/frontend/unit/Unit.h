@@ -15,7 +15,7 @@ namespace texture {
 class Texture;
 }
 namespace mesh {
-class Mesh;
+class Render;
 }
 }
 
@@ -107,21 +107,15 @@ public:
 	const bool IsMoving() const;
 
 	struct meshtex_t {
-		const types::mesh::Mesh* mesh = nullptr;
+		const types::mesh::Render* mesh = nullptr;
 		types::texture::Texture* texture = nullptr;
 	};
 	struct render_data_t {
-		meshtex_t unit;
-		meshtex_t badge;
-		meshtex_t healthbar;
+		meshtex_t unit = {};
+		meshtex_t badge = {};
+		meshtex_t healthbar = {};
 	};
 	const render_data_t& GetRenderData() const;
-
-	void* CreateOnBottomBarList( ui_legacy::ObjectsListItem* element ) const override;
-	void DestroyOnBottomBarList( ui_legacy::ObjectsListItem* element, void* state ) const override;
-	void* CreateOnBottomBarPreview( ui_legacy::ObjectPreview* element ) const override;
-	void DestroyOnBottomBarPreview( ui_legacy::ObjectPreview* element, void* state ) const override;
-	const bool OnBottomBarListActivate( Game* game ) override;
 
 protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
@@ -171,7 +165,7 @@ private:
 
 	util::Scroller< types::Vec3 > m_mover;
 
-	Unit::meshtex_t GetMeshTex( const sprite::InstancedSprite* sprite );
+	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 };
 
 }

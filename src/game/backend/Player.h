@@ -3,11 +3,12 @@
 #include <string>
 
 #include "types/Serializable.h"
-
-#include "game/backend/rules/DifficultyLevel.h"
+#include "gse/Wrappable.h"
 
 namespace game {
 namespace backend {
+
+class Game;
 
 namespace faction {
 class Faction;
@@ -17,7 +18,7 @@ namespace slot {
 class Slot;
 }
 
-CLASS( Player, types::Serializable )
+CLASS2( Player, types::Serializable, gse::Wrappable )
 
 	enum role_t {
 		PR_NONE,
@@ -31,8 +32,9 @@ CLASS( Player, types::Serializable )
 		const std::string& name,
 		const role_t role,
 		faction::Faction* faction,
-		const rules::DifficultyLevel& difficulty_level
+		const std::string& difficulty_level
 	);
+	Player( const Player* const other );
 
 	const std::string& GetPlayerName() const;
 	const std::string GetFullName() const;
@@ -45,8 +47,8 @@ CLASS( Player, types::Serializable )
 	void ClearFaction();
 	faction::Faction* GetFaction();
 
-	void SetDifficultyLevel( const rules::DifficultyLevel& difficulty_level );
-	const rules::DifficultyLevel& GetDifficultyLevel() const;
+	void SetDifficultyLevel( const std::string& difficulty_level );
+	const std::string& GetDifficultyLevel() const;
 
 	void SetSlot( slot::Slot* slot );
 	slot::Slot* GetSlot() const;
@@ -57,8 +59,12 @@ CLASS( Player, types::Serializable )
 	void CompleteTurn();
 	void UncompleteTurn();
 
+	WRAPDEFS_PTR( Player );
+
 	const types::Buffer Serialize() const override;
-	void Unserialize( types::Buffer buf ) override;
+	void Deserialize( types::Buffer buf ) override;
+
+	WRAPDEF_SERIALIZABLE;
 
 private:
 
@@ -68,9 +74,10 @@ private:
 	role_t m_role = PR_NONE;
 
 	slot::Slot* m_slot = nullptr;
+	size_t m_slotnum = 0;
 
 	faction::Faction* m_faction = {};
-	rules::DifficultyLevel m_difficulty_level = {};
+	std::string m_difficulty_level = "";
 
 	bool m_is_turn_completed = false;
 };

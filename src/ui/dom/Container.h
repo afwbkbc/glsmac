@@ -1,11 +1,14 @@
 #pragma once
 
 #include <unordered_set>
+#include <unordered_map>
+#include <set>
 #include <map>
 #include <vector>
+#include <functional>
+#include <optional>
 
 #include "Area.h"
-#include "gse/Value.h"
 
 #include "types/Vec2.h"
 
@@ -14,13 +17,18 @@ class Cache;
 }
 
 namespace ui {
+
+class UI;
+
 namespace dom {
 
-#define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, this, p ); })
+class Button;
+
+#define FACTORY( _name, _class ) Factory( GSE_CALL, _name, [ this ]( GSE_CALLABLE, const properties_t& p ) { return new _class( GSE_CALL, m_ui, m_factory_owner, p ); })
 
 class Container : public Area {
 public:
-	Container( DOM_ARGS_T, const bool factories_allowed );
+	Container( DOM_ARGS_T, const bool factories_allowed, const bool has_body );
 
 	void ForwardFactories( GSE_CALLABLE, Object* child );
 	void Embed( Object* object, const bool is_visible = true );
@@ -31,41 +39,57 @@ public:
 
 	const bool ProcessEvent( GSE_CALLABLE, const input::Event& event ) override;
 
-	void Destroy( GSE_CALLABLE ) override;
+	virtual void Show() override;
+	virtual void Destroy( GSE_CALLABLE ) override;
+
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
+	void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) override;
+
+	virtual void Clear( GSE_CALLABLE );
 
 protected:
+	friend class Scrollview;
+	friend class Listview;
+
+	Container* m_factory_owner = this;
+
+	std::function< void( const bool is_from_factory ) > m_on_before_add_child = nullptr;
+	std::function< void( Object* const obj, const bool is_from_factory ) > m_on_add_child = nullptr;
+	std::function< void( Object* const obj ) > m_on_remove_child = nullptr;
 
 	virtual ~Container();
 
-	void WrapSet( const std::string& key, const gse::Value& value, GSE_CALLABLE ) override;
-
-	void Property( GSE_CALLABLE, const std::string& name, const gse::type::Type::type_t& type, const gse::Value& default_value = VALUE( gse::type::Undefined ), const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
+	void Property( GSE_CALLABLE, const std::string& name, const gse::value_type_t& type, gse::Value* const default_value = nullptr, const property_flag_t flags = PF_NONE, const f_on_set_t& f_on_set = nullptr, const f_on_unset_t& f_on_unset = nullptr ) override;
 	void ForwardProperty( GSE_CALLABLE, const std::string& name, Object* const target );
 	void ForwardProperty( GSE_CALLABLE, const std::string& srcname, const std::string& dstname, Object* const target );
 
 	void Factory( GSE_CALLABLE, const std::string& name, const std::function< Object*( GSE_CALLABLE, const properties_t& ) >& f );
 
-	void OnPropertyChange( GSE_CALLABLE, const std::string& key, const gse::Value& value ) const override;
-	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) const override;
+	void OnPropertyChange( GSE_CALLABLE, const std::string& key, gse::Value* const value ) override;
+	void OnPropertyRemove( GSE_CALLABLE, const std::string& key ) override;
+
+	const bool m_has_body;
 
 private:
 	friend class Root;
 
-	bool m_is_processing_children_events = false;
-
-	std::map< id_t, Object* > m_children = {};
+	struct child_t {
+		Object* object;
+		bool is_embed;
+	};
+	std::map< dom_id_t, child_t > m_children = {};
+	std::map< coord_t, std::set< dom_id_t > > m_children_by_zindex = {};
 	std::vector< std::pair< Object*, bool > > m_embedded_objects = {};
-	std::map< std::string, std::pair< Object*, std::string > > m_forwarded_properties = {};
+	std::vector< Object* > m_lazy_embedded_objects = {};
+	std::map< std::string, std::vector< std::pair< Object*, std::string > > > m_forwarded_properties = {};
 
 	void InitAndValidate( GSE_CALLABLE ) override;
-
-	std::unordered_set< Object* > m_children_to_remove = {};
-	void ProcessPendingDeletes( GSE_CALLABLE );
 
 protected:
 	friend class ui::Class;
 
-	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, const gse::Value& value, const class_modifier_t modifier ) override;
+	void SetPropertyFromClass( GSE_CALLABLE, const std::string& key, gse::Value* const value, const class_modifier_t modifier ) override;
 	void UnsetPropertyFromClass( GSE_CALLABLE, const std::string& key ) override;
 
 private:
@@ -74,9 +98,31 @@ private:
 
 	void SetMouseOverChild( GSE_CALLABLE, Object* obj, const types::Vec2< ssize_t >& mouse_coords );
 
+	struct button_group_t {
+		Button* active_button;
+		std::unordered_set< Button* > buttons;
+	};
+	std::unordered_map< std::string, button_group_t > m_button_groups;
+
 private:
+	friend class Button;
+	void AddToButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button );
+	void RemoveFromButtonGroup( GSE_CALLABLE, const std::string& group, Button* const button );
+	void SetButtonGroupActive( GSE_CALLABLE, const std::string& group, Button* const button );
+
+protected:
 	friend class Object;
-	void RemoveChild( GSE_CALLABLE, Object* obj );
+	friend class Listview;
+	void AddChild( GSE_CALLABLE, Object* obj, const bool is_visible, const bool is_embed = false );
+	void RemoveChild( GSE_CALLABLE, Object* obj, const bool nodestroy = false );
+
+protected:
+	friend class ui::UI;
+	void DetachUI() override;
+
+private:
+	friend class Drawable;
+	void UpdateChildZIndex( const dom_id_t id, const std::optional< coord_t > old_zindex, const std::optional< coord_t > new_index );
 
 };
 

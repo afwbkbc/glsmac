@@ -8,13 +8,16 @@
 
 namespace gse {
 class GSE;
+namespace context {
+class Context;
+}
 }
 
 namespace task {
 namespace gsetests {
 
-typedef std::function< std::string( gse::GSE* gse ) > gse_test_t;
-#define GT( ... ) [ __VA_ARGS__ ]( gse::GSE* gse ) -> std::string
+typedef std::function< std::string( gse::GSE* gse, gse::context::Context* ctx ) > gse_test_t;
+#define GT( ... ) [ __VA_ARGS__ ]( gse::GSE* gse, gse::context::Context* ctx ) -> std::string
 
 #define GT_LOG( _text ) { \
     task->LogTest( _text );\

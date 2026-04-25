@@ -2,9 +2,13 @@
 
 #include "Render.h"
 
-#include "gse/type/Bool.h"
-#include "gse/type/Int.h"
-#include "gse/type/Float.h"
+#include "gse/value/Bool.h"
+#include "gse/value/Int.h"
+#include "gse/value/Float.h"
+
+#include "engine/Engine.h"
+#include "game/backend/Game.h"
+#include "UnitManager.h"
 
 namespace game {
 namespace backend {
@@ -34,7 +38,7 @@ const std::unordered_map< movement_type_t, std::string > StaticDef::s_movement_t
 };
 const std::string& StaticDef::GetMovementTypeString( const movement_type_t movement_type ) {
 	const auto& it = s_movement_type_str.find( movement_type );
-	ASSERT_NOLOG( it != s_movement_type_str.end(), "unknown movement type: " + std::to_string( movement_type ) );
+	ASSERT( it != s_movement_type_str.end(), "unknown movement type: " + std::to_string( movement_type ) );
 	return it->second;
 }
 
@@ -76,22 +80,24 @@ void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	Render::Serialize( buf, def->m_render );
 }
 
-StaticDef* StaticDef::Unserialize( types::Buffer& buf, const std::string& id, const MoraleSet* moraleset, const std::string& name ) {
+StaticDef* StaticDef::Deserialize( types::Buffer& buf, const std::string& id, const std::string& moraleset_name, const std::string& name ) {
 	const auto movement_type = (movement_type_t)buf.ReadInt();
 	const auto movement_per_turn = buf.ReadFloat();
-	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Unserialize( buf ) );
+	const auto* moraleset = g_engine->GetGame()->GetUM()->GetMoraleSet( moraleset_name );
+	ASSERT( moraleset, "could not find morale set: " + moraleset_name );
+	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Deserialize( buf ) );
 }
 
 WRAPIMPL_BEGIN( StaticDef )
 	WRAPIMPL_PROPS
-		WRAPIMPL_GET( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
-		WRAPIMPL_GET( "is_land", Bool, m_movement_type == MT_LAND )
-		WRAPIMPL_GET( "is_water", Bool, m_movement_type == MT_WATER )
-		WRAPIMPL_GET( "is_air", Bool, m_movement_type == MT_AIR )
-		WRAPIMPL_GET( "movement_per_turn", Float, m_movement_per_turn )
-		WRAPIMPL_GET( "health_per_turn", Float, HEALTH_PER_TURN )
-		WRAPIMPL_GET( "health_max", Float, HEALTH_MAX )
-	};
+			WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_movement_type == MT_IMMOVABLE )
+			WRAPIMPL_GET_CUSTOM( "is_land", Bool, m_movement_type == MT_LAND )
+			WRAPIMPL_GET_CUSTOM( "is_water", Bool, m_movement_type == MT_WATER )
+			WRAPIMPL_GET_CUSTOM( "is_air", Bool, m_movement_type == MT_AIR )
+			WRAPIMPL_GET_CUSTOM( "movement_per_turn", Float, m_movement_per_turn )
+			WRAPIMPL_GET_CUSTOM( "health_per_turn", Float, HEALTH_PER_TURN )
+			WRAPIMPL_GET_CUSTOM( "health_max", Float, HEALTH_MAX )
+		};
 	WRAPIMPL_PROPS_EXTEND( Def )
 WRAPIMPL_END_PTR()
 

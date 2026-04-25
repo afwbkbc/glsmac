@@ -4,49 +4,135 @@
 #include <unordered_map>
 #include <map>
 #include <optional>
+#include <functional>
+#include <mutex>
 
-#include "type/Types.h"
-#include "type/Int.h"
-#include "type/String.h"
-#include "type/Undefined.h"
+#include "value/Types.h"
+#include "value/Int.h"
+#include "value/String.h"
+#include "value/Undefined.h"
+#include "value/Object.h"
 #include "callable/Native.h"
 #include "Exception.h"
 #include "Value.h"
 
+#include "util/Struct.h"
+
 namespace gse {
 
-namespace type {
+namespace ui::dom {
 class Object;
 }
 
 class Wrappable {
 public:
+
+	template< typename T >
+	class wrapmap_t {
+	public:
+		typedef const std::unordered_map< T, std::string > t_type_to_string;
+		typedef const std::unordered_map< std::string, T > t_string_to_type;
+
+		wrapmap_t()
+			: m_type_to_string( {} )
+			, m_string_to_type( {} ) {}
+
+		wrapmap_t( const t_type_to_string& type_to_string )
+			: m_type_to_string( type_to_string )
+			, m_string_to_type( util::Struct::FlipMap( type_to_string ) ) {}
+
+		const t_type_to_string& GetVK() const {
+			return m_type_to_string;
+		}
+
+		const t_string_to_type& GetKV() const {
+			return m_string_to_type;
+		}
+
+		const T& GetValue( GSE_CALLABLE, const std::string& str ) const {
+			const auto& it = m_string_to_type.find( str );
+			if ( it == m_string_to_type.end() ) {
+				std::string supported_values = "";
+				for ( const auto& v : m_string_to_type ) {
+					supported_values += " " + v.first;
+				}
+				GSE_ERROR( EC.INVALID_DEFINITION, "Unknown value '" + str + "', supported values:" + supported_values );
+			}
+			return it->second;
+		}
+
+		const std::string& GetString( const T& value ) const {
+			ASSERT( m_type_to_string.find( value ) != m_type_to_string.end(), "value not in wrapmap" );
+			return m_type_to_string.at( value );
+		}
+
+		const T& GetValueUnsafe( const std::string& value ) const {
+			ASSERT( m_string_to_type.find( value ) != m_string_to_type.end(), "string not in wrapmap" );
+			return m_string_to_type.at( value );
+		}
+
+		Value* const Get( GSE_CALLABLE, const T& value ) const {
+			return VALUE( value::String, , GetString( value ) );
+		}
+
+	private:
+		const t_type_to_string m_type_to_string;
+		const t_string_to_type m_string_to_type;
+	};
+
+	Wrappable() = default;
+	Wrappable( const Wrappable& other );
+	Wrappable& operator=( const Wrappable& other );
 	virtual ~Wrappable();
 
-	virtual const gse::Value Wrap( const bool dynamic = false ) = 0;
+	virtual Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) = 0;
 
-	void Link( type::Object* wrapobj );
-	void Unlink( type::Object* wrapobj );
+	virtual void NotifyDependencyDestruction( const Wrappable* const dependency ) {}
+
+	void Link( value::Object* wrapobj );
+	void Unlink( value::Object* wrapobj );
+
+	void Depend( Wrappable* other );
+	void Undepend( Wrappable* other );
 
 	typedef uint16_t callback_id_t;
-	const callback_id_t On( GSE_CALLABLE, const std::string& event, const gse::Value& callback );
-	void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
+	typedef std::function< void() > f_cleanup_t;
+	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, value::Callable* const callback );
+	virtual void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
+	virtual const bool HasHandlers( const std::string& event );
+	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, const f_args_t& f_args = nullptr, const std::optional< value_type_t > expected_return_type = {} );
+	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< value_type_t > expected_return_type = {} );
+	virtual void ClearHandlers();
 
-	const bool HasHandlers( const std::string& event ) const;
-	const Value Trigger( GSE_CALLABLE, const std::string& event, const type::object_properties_t& args, const std::optional< type::Type::type_t > expected_return_type = {} );
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
 
 protected:
-	std::unordered_set< type::Object* > m_wrapobjs = {};
+	// TODO: wrapobjs mutex
+	std::unordered_set< value::Object* > m_wrapobjs = {};
 
-private:
+protected:
 	struct callback_t {
-		gse::Value callable;
-		gse::context::Context* ctx;
+		Value* callable;
+		context::Context* ctx;
 		si_t si;
 	};
 	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;
+	std::mutex m_callbacks_mutex = {};
+
+	bool m_catchall = false;
+
+	void CustomSet( const std::string& key, Value* const value );
+	Value* const CustomGet( const std::string& key );
+
+private:
+	std::mutex m_dependent_wrappables_mutex;
+	std::unordered_map< Wrappable*, size_t > m_dependent_wrappables = {};
+
+	std::mutex m_globals_mutex;
+	std::unordered_map< std::string, gse::Value* > m_globals = {};
+
 };
 
 }

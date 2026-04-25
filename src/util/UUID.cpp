@@ -37,7 +37,7 @@ static std::uniform_int_distribution<> dis2( 8, 11 );
 #endif
 
 const std::string UUID::Generate( unsigned int mode ) {
-	std::lock_guard< std::mutex > guard( s_uuid_state_mutex );
+	std::lock_guard guard( s_uuid_state_mutex );
 
 #ifndef _WIN32// TODO: make ossp-uuid buildable on windows
 	uuid_rc_t rc;

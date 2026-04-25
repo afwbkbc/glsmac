@@ -57,7 +57,6 @@ void Actor::SetScene( Scene* scene ) {
 }
 
 Scene* Actor::GetScene() {
-	ASSERT( m_scene, "scene not set" );
 	return m_scene;
 }
 
@@ -85,9 +84,15 @@ const Actor::render_flag_t Actor::GetRenderFlags() const {
 }
 
 void Actor::SetCacheParent( Cache* const cache_parent ) {
-	ASSERT( !m_cache_parent, "cache parent already set" );
-	m_cache_parent = cache_parent;
-	m_cache_parent->AddCacheChild( this );
+	if ( m_cache_parent != cache_parent ) {
+		if ( m_cache_parent ) {
+			m_cache_parent->RemoveCacheChild( this );
+		}
+		m_cache_parent = cache_parent;
+		if ( m_cache_parent ) {
+			m_cache_parent->AddCacheChild( this );
+		}
+	}
 }
 
 const Cache* const Actor::GetCacheParent() const {
@@ -116,8 +121,8 @@ const types::Buffer Actor::Serialize() const {
 	return buf;
 }
 
-void Actor::Unserialize( types::Buffer buf ) {
-	Entity::Unserialize( buf );
+void Actor::Deserialize( types::Buffer buf ) {
+	Entity::Deserialize( buf );
 	// HACK! TODO: refactor
 	buf.ReadVec3();
 	buf.ReadVec3();

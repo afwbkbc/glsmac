@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "SDL2.h"
 
 #include "util/FS.h"
@@ -29,7 +27,7 @@ void SDL2::Iterate() {
 
 }
 
-types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
+types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {
 
 	texture_map_t::iterator it = m_textures.find( filename );
 	if ( it != m_textures.end() ) {
@@ -41,13 +39,14 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 		ASSERT( image, IMG_GetError() );
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format
-			SDL_Surface* old = image;
+			SDL_Surface * old = image;
 			image = SDL_ConvertSurfaceFormat( old, SDL_PIXELFORMAT_RGBA32, 0 );
 			ASSERT( image, IMG_GetError() );
 			SDL_FreeSurface( old );
 		}
 
-		NEWV( texture, types::texture::Texture, filename, image->w, image->h );
+		NEWV( texture, types::texture::Texture, filename, image->w, image->h, flags );
+		texture->SetBitmap( image->pixels );
 		ASSERT( texture->m_bpp == image->format->BitsPerPixel / 8, "unsupported texture bpp" );
 		memcpy( ptr( texture->m_bitmap, 0, texture->m_bitmap_size ), image->pixels, texture->m_bitmap_size );
 		SDL_FreeSurface( image );
@@ -71,7 +70,7 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename ) {
 
 }
 
-types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value ) {
+types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const size_t x1, const size_t y1, const size_t x2, const size_t y2, const uint8_t flags, const float value, const types::texture::texture_flag_t texture_flags ) {
 	ASSERT( x1 <= x2, "LoadTexture x overflow ( " + std::to_string( x1 ) + " > " + std::to_string( x2 ) + " )" );
 	ASSERT( y1 <= y2, "LoadTexture y overflow ( " + std::to_string( y1 ) + " > " + std::to_string( y2 ) + " )" );
 
@@ -90,29 +89,29 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& name, const s
 	}
 	else {
 
-		auto* full_texture = LoadTextureImpl( name );
+		auto* full_texture = LoadTextureImpl( name, texture_flags );
 
 		NEWV( subtexture, types::texture::Texture, subtexture_key, x2 - x1 + 1, y2 - y1 + 1 );
 
 		subtexture->AddFrom( full_texture, types::texture::AM_DEFAULT, x1, y1, x2, y2 );
-		if ( ( flags & ui_legacy::LT_ROTATE ) == ui_legacy::LT_ROTATE ) {
+		if ( flags & types::texture::LT_ROTATE ) {
 			subtexture->Rotate();
 		}
-		if ( ( flags & ui_legacy::LT_FLIPV ) == ui_legacy::LT_FLIPV ) {
+		if ( flags & types::texture::LT_FLIPV ) {
 			subtexture->FlipV();
 		}
 
-		if ( ( flags & ui_legacy::LT_ALPHA ) == ui_legacy::LT_ALPHA ) {
+		if ( flags & types::texture::LT_ALPHA ) {
 			subtexture->SetAlpha( value );
 		}
-		if ( ( flags & ui_legacy::LT_CONTRAST ) == ui_legacy::LT_CONTRAST ) {
+		if ( flags & types::texture::LT_CONTRAST ) {
 			subtexture->SetContrast( value );
 		}
 
-		if ( ( flags & ui_legacy::LT_TILED ) == ui_legacy::LT_TILED ) {
+		if ( flags & types::texture::LT_TILED ) {
 			subtexture->m_is_tiled = true;
 		}
-
+		
 		// needed?
 		FixTransparency( subtexture );
 		//FixYellowShadows( subtexture );

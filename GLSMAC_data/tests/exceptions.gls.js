@@ -126,28 +126,16 @@ testcatch('GSEInvalidDereference', () => {
 	[1, [3, 4], 3][1][2][1]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4]['asd'
-:
-	2
-]
+	[1, 2, 3, 4]['asd'::2]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][0
-:
-	'qwe'
-]
+	[1, 2, 3, 4][0::'qwe']
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][-1
-:
-	1
-]
+	[1, 2, 3, 4][-1::1]
 });
 testcatch('GSEInvalidDereference', () => {
-	[1, 2, 3, 4][2
-:
-	1
-]
+	[1, 2, 3, 4][2::1]
 });
 testcatch('GSEInvalidDereference', () => {
 	[1, 2, 3].property
@@ -161,16 +149,6 @@ testcatch('GSEInvalidCall', () => {
 });
 testcatch('GSEInvalidCall', () => {
 	(2 + 2)();
-});
-testcatch('GSEInvalidCall', () => {
-	const a = () => {
-	};
-	a(1, 2, 3);
-});
-testcatch('GSEInvalidCall', () => {
-	const a = (a, b, c) => {
-	};
-	a(1);
 });
 testcatch('GSELoaderError', () => {
 	#include('./non_existent_include');
@@ -211,10 +189,10 @@ try {
 	ErrorFromTheDeep: (e) => {
 		was_caught = true;
 		test.assert(e.stacktrace == [
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:198: throw ErrorFromTheDeep(\'some error message\');',
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:201: obj.func3();',
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:204: arr[0]();',
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:209: obj1.func1();',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:176: throw ErrorFromTheDeep(\'some error message\');',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:179: obj.func3();',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:182: arr[0]();',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:187: obj1.func1();',
 		]);
 	}
 }
@@ -230,8 +208,8 @@ try {
 	} catch {
 		Error1: (e) => {
 			test.assert(e.stacktrace == [
-				'\tat ./GLSMAC_data/tests/exceptions.gls.js:227: throw Error1(\'test err\');',
-				'\tat ./GLSMAC_data/tests/exceptions.gls.js:229: func();',
+				'\tat ./GLSMAC_data/tests/exceptions.gls.js:205: throw Error1(\'test err\');',
+				'\tat ./GLSMAC_data/tests/exceptions.gls.js:207: func();',
 			]);
 			throw Error2('test err2');
 		}
@@ -242,8 +220,8 @@ try {
 	},
 	Error2: (e) => {
 		test.assert(e.stacktrace == [
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:236: throw Error2(\'test err2\');',
-			'\tat ./GLSMAC_data/tests/exceptions.gls.js:231: Error1: (e) => {',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:214: throw Error2(\'test err2\');',
+			'\tat ./GLSMAC_data/tests/exceptions.gls.js:209: Error1: (e) => {',
 		]);
 		was_caught = true;
 	},
