@@ -30,13 +30,8 @@ ADD_SUBDIRECTORY( tools )
 SET( EMBED_CPP "src/tmp/embed.cpp" )
 SET( EMBED_FILES
 	"resource/font/terminus/TerminusTTF-4.49.3-minified.ttf"
+	"GLSMAC_data/default"
 )
-ADD_CUSTOM_COMMAND(
-	OUTPUT ${EMBED_CPP}
-	DEPENDS ${EMBED_FILES} embedder
-	COMMAND "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" "${EMBED_CPP}" "${PROJECT_SOURCE_DIR}" "${EMBED_FILES}"
-)
-ADD_CUSTOM_TARGET( embed ALL DEPENDS ${EMBED_FILES} "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" )
 
 FUNCTION( SUBDIR DIR )
 	SET( PWD "${PWD}/${DIR}" )
@@ -92,6 +87,13 @@ ELSE ()
 		MESSAGE( FATAL_ERROR "Invalid CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\", use one of: \nDebug\nRelease\nPortable32\nPortable64" )
 	ENDIF ()
 ENDIF ()
+
+ADD_CUSTOM_COMMAND(
+	OUTPUT ${EMBED_CPP}
+	DEPENDS ${EMBED_FILES} embedder
+	COMMAND "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" "${EMBED_CPP}" "${PROJECT_SOURCE_DIR}" ${EMBED_FILES}
+)
+ADD_CUSTOM_TARGET( embed ALL DEPENDS ${EMBED_FILES} "${CMAKE_CURRENT_BINARY_DIR}/tools/bin/embedder" )
 
 INCLUDE_DIRECTORIES( "src" )
 

@@ -78,7 +78,7 @@ public:
 	void Connect();
 	void Disconnect( const std::string& message = "" );
 
-	const bool IterateAndMaybeDelete();
+	const bool IterateAndMaybeDelete( const bool send_allowed = true );
 
 	Client* AsClient() const; // for client-specific calls
 	void IfClient( std::function< void( Client* client ) > cb ); // call cb if client
@@ -148,14 +148,12 @@ private:
 
 	gse::value::Callable* m_f_on_open = nullptr;
 
-	void ProcessPending();
+	void ProcessPending( const bool nosend );
 	void ClearPending();
 
 	gc::Space* const m_gc_space;
 
 	std::unordered_set< network::cid_t > m_ignored_cids = {};
-
-	bool m_is_destroying = false;
 
 };
 

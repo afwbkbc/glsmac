@@ -53,10 +53,12 @@ types::Font* FontLoader::GetBuiltinFont( const unsigned char size ) {
 	auto it = m_builtin_fonts.find( size );
 	if ( it == m_builtin_fonts.end() ) {
 		const auto font_key = "<BUILTIN>:" + std::to_string( size );
+		std::vector< unsigned char > buffer = {};
+		util::FS::ReadFile( buffer, "resource/font/terminus/TerminusTTF-4.49.3-minified.ttf" );
 		it = m_builtin_fonts.insert(
 			{
 				size,
-				LoadFontImpl( "<BUILTIN>", util::FS::GetEmbeddedFile( "resource_font_terminus_TerminusTTF_4_49_3_minified_ttf" ), size )
+				LoadFontImpl( "<BUILTIN>", buffer, size )
 			}
 		).first;
 	}

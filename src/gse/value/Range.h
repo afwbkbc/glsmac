@@ -10,6 +10,8 @@ namespace value {
 class Range : public Value {
 public:
 
+	virtual ~Range() = default;
+
 	static const value_type_t GetType() { return VT_RANGE; }
 
 	Range( gc::Space* const gc_space, const std::optional< size_t > from, const std::optional< size_t > to )

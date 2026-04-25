@@ -55,7 +55,7 @@ Config::Config( const std::string& path )
 	, m_data_path( "GLSMAC_data" )
 	, m_prefix( DEFAULT_GLSMAC_PREFIX + util::FS::PATH_SEPARATOR ) {
 
-	m_manager = new util::ConfigManager( path, GetPrefix() + "config.yml" );
+	m_manager = new util::ConfigManager( path, this );
 
 	m_manager->AddRule(
 		"benchmark", "Disable VSync and FPS limit", AH( this ) {
@@ -391,8 +391,8 @@ Config::~Config() {
 void Config::Init( const int argc, const char* argv[] ) {
 	ASSERT( m_manager, "parser not set" );
 	try {
-		m_manager->ParseFile();
 		m_manager->ParseArgs( argc, argv );
+		m_manager->ParseFile();
 	}
 	catch ( std::runtime_error& e ) {
 		Error( e.what() );

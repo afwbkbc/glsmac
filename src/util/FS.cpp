@@ -26,8 +26,8 @@ const char FS::PATH_SEPARATOR =
 	'/'
 #endif
 ;
-
 const char FS::EXTENSION_SEPARATOR = '.';
+const std::string FS::UP_DIR_STR = "..";
 
 const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path, const std::string& case_insensitive_path ) {
 
@@ -90,14 +90,11 @@ const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path
 }
 
 const std::string FS::NormalizePath( const std::string& path, const char path_separator ) {
-	if ( path_separator == PATH_SEPARATOR ) {
-		return path;
-	}
-	else {
-		std::string result = path;
+	std::string result = std::filesystem::weakly_canonical( path );
+	if ( path_separator != PATH_SEPARATOR ) {
 		std::replace( result.begin(), result.end(), path_separator, PATH_SEPARATOR );
-		return result;
 	}
+	return result;
 }
 
 const std::string FS::ConvertPath( const std::string& path, const char path_separator ) {
@@ -109,10 +106,6 @@ const std::string FS::ConvertPath( const std::string& path, const char path_sepa
 		std::replace( result.begin(), result.end(), PATH_SEPARATOR, path_separator );
 		return result;
 	}
-}
-
-const std::string FS::GetUpDirString() {
-	return "..";
 }
 
 const std::string FS::GeneratePath( const std::vector< std::string >& parts, const char path_separator ) {
@@ -252,11 +245,23 @@ const std::vector< std::string > FS::GetExtensions( const std::string& path, con
 }
 
 const bool FS::Exists( const std::string& path, const char path_separator ) {
-	return std::filesystem::exists( NormalizePath( path, path_separator ) );
+	if ( s_embedded_files.find( NormalizePath( path ) ) != s_embedded_files.end() ) {
+		return true;
+	}
+	if ( std::filesystem::exists( NormalizePath( path, path_separator ) ) ) {
+		return true;
+	}
+	return false;
 }
 
 const bool FS::IsFile( const std::string& path, const char path_separator ) {
-	return std::filesystem::is_regular_file( NormalizePath( path, path_separator ) );
+	if ( s_embedded_files.find( NormalizePath( path ) ) != s_embedded_files.end() ) {
+		return true;
+	}
+	if ( std::filesystem::is_regular_file( NormalizePath( path, path_separator ) ) ) {
+		return true;
+	}
+	return false;
 }
 
 const bool FS::FileExists( const std::string& path, const char path_separator ) {
@@ -335,25 +340,47 @@ std::vector< std::string > FS::ListDirectory( const std::string& directory, cons
 }
 
 void FS::ReadFile( std::vector< unsigned char >& buffer, const std::string& path, const char path_separator ) {
+
 	//Log( "Reading file: " + path );
-	ASSERT( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
-	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
-	in.seekg( 0, std::ios::end );
-	const auto sz = in.tellg();
-	in.seekg( 0, std::ios::beg );
-	buffer.resize( sz );
-	in.read( (char*)&buffer[ 0 ], sz );
-	in.close();
+	if ( std::filesystem::is_regular_file( NormalizePath( path, path_separator ) ) ) {
+		std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
+		in.seekg( 0, std::ios::end );
+		const auto sz = in.tellg();
+		in.seekg( 0, std::ios::beg );
+		buffer.resize( sz );
+		in.read( (char*)&buffer[ 0 ], sz );
+		in.close();
+		return;
+	}
+
+	const auto& it = s_embedded_files.find( NormalizePath( path ) );
+	if ( it != s_embedded_files.end() ) {
+		buffer.resize( it->second.size() );
+		std::copy( it->second.begin(), it->second.end(), buffer.begin() );
+		return;
+	}
+
+	THROW( "file \"" + path + "\" does not exist or is not a file" );
+
 }
 
 const std::string FS::ReadTextFile( const std::string& path, const char path_separator ) {
+
 	//Log( "Reading file: " + path );
-	ASSERT( FileExists( path, path_separator ), "file \"" + path + "\" does not exist or is not a file" );
-	std::stringstream data;
-	std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
-	while ( data << in.rdbuf() ) {}
-	in.close();
-	return data.str();
+	if ( std::filesystem::is_regular_file( NormalizePath( path, path_separator ) ) ) {
+		std::stringstream data;
+		std::ifstream in( NormalizePath( path, path_separator ), std::ios_base::binary );
+		while ( data << in.rdbuf() ) {}
+		in.close();
+		return data.str();
+	}
+
+	const auto& it = s_embedded_files.find( NormalizePath( path ) );
+	if ( it != s_embedded_files.end() ) {
+		return std::string( it->second.begin(), it->second.end() );
+	}
+
+	THROW( "file \"" + path + "\" does not exist or is not a file" );
 }
 
 const void FS::WriteFile( const std::string& path, const std::string& data, const char path_separator ) {
@@ -361,12 +388,6 @@ const void FS::WriteFile( const std::string& path, const std::string& data, cons
 	std::ofstream out( NormalizePath( path, path_separator ), std::ios_base::binary );
 	out << data;
 	out.close();
-}
-
-const std::vector< unsigned char >& FS::GetEmbeddedFile( const std::string& key ) {
-	//Log( "Reading embedded file: " + key );
-	ASSERT( s_embedded_files.find( key ) != s_embedded_files.end(), "embedded file \"" + key + "\" does not exist" );
-	return s_embedded_files.at( key );
 }
 
 }

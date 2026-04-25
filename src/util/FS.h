@@ -11,14 +11,14 @@ CLASS( FS, Util )
 
 	static const char PATH_SEPARATOR;
 	static const char EXTENSION_SEPARATOR;
+	static const std::string UP_DIR_STR;
 
 	// to workaround uppercase or lowercase filenames
 	static const std::string GetExistingCaseSensitivePath( const std::string& base_path, const std::string& case_insensitive_path );
 
-	static const std::string NormalizePath( const std::string& path, const char path_separator );
-	static const std::string ConvertPath( const std::string& path, const char path_separator );
+	static const std::string NormalizePath( const std::string& path, const char path_separator = PATH_SEPARATOR );
+	static const std::string ConvertPath( const std::string& path, const char path_separator = PATH_SEPARATOR );
 
-	static const std::string GetUpDirString();
 	static const std::string GeneratePath( const std::vector< std::string >& parts, const char path_separator = PATH_SEPARATOR );
 
 #ifdef _WIN32
@@ -55,8 +55,6 @@ CLASS( FS, Util )
 	static void ReadFile( std::vector< unsigned char >& buffer, const std::string& path, const char path_separator = PATH_SEPARATOR );
 	static const std::string ReadTextFile( const std::string& path, const char path_separator = PATH_SEPARATOR );
 	static const void WriteFile( const std::string& path, const std::string& data, const char path_separator = PATH_SEPARATOR );
-
-	static const std::vector< unsigned char >& GetEmbeddedFile( const std::string& key );
 
 };
 

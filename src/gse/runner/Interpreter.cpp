@@ -699,29 +699,22 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		}
 		case OT_AT: {
 			ASSERT( expression->a, "parent array expected" );
-			std::optional< size_t > index, from, to;
+			std::optional< size_t > index = {}, from = {}, to = {};
 			std::optional< std::string > key;
+
 			const auto* val = EvaluateRange( ctx, ep, expression->b );
 			switch ( val->type ) {
 				case gse::VT_INT: {
 					index = ( (Int*)val )->value;
-					from = std::nullopt;
-					to = std::nullopt;
-					key = std::nullopt;
 					break;
 				}
 				case gse::VT_RANGE: {
 					const auto* range = (Range*)val;
-					index = std::nullopt;
 					from = range->from;
 					to = range->to;
-					key = std::nullopt;
 					break;
 				}
 				case gse::VT_STRING: {
-					index = std::nullopt;
-					from = std::nullopt;
-					to = std::nullopt;
 					key = ( (String*)val )->value;
 					break;
 				}
@@ -897,8 +890,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		}
 		case OT_RANGE: {
 
-			std::optional< size_t > from = std::nullopt;
-			std::optional< size_t > to = std::nullopt;
+			std::optional< size_t > from = {};
+			std::optional< size_t > to = {};
 
 			if ( expression->a ) {
 				const auto* fromr = EvaluateRange( ctx, ep, expression->a, true );
@@ -1039,43 +1032,46 @@ gse::Value* const Interpreter::EvaluateOperand( context::Context* ctx, Execution
 
 gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPointer& ep, const Operand* operand, const bool only_index ) {
 	CHECKACCUM( m_gc_space );
-	auto* gc_space = m_gc_space;
 	ASSERT( operand, "index operand missing" );
-	const auto& get_index = [ &ctx, &ep, &operand, only_index, &gc_space ]( gse::Value* const value ) -> gse::Value* {
-		switch ( value->type ) {
-			case gse::VT_INT:
-			case gse::VT_STRING:
-				return value;
-			case gse::VT_RANGE: {
-				ASSERT( !only_index, "range not allowed here" );
-				const auto* range = (Range*)value;
-				return VALUE( Range, , range->from, range->to );
-			}
-			default:
-				throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid index - expected int or string, got: " + value->ToString(), ctx, operand->m_si, ep );
-		}
-	};
+	gse::Value* value = nullptr;
 	switch ( operand->type ) {
 		case Operand::OT_VALUE: {
-			return get_index( ( (program::Value*)operand )->value );
+			value = ( (program::Value*)operand )->value;
+			break;
 		}
 		case Operand::OT_VARIABLE: {
-			return get_index( ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep ) );
+			value = ctx->GetVariable( ( (Variable*)operand )->name, operand->m_si, ep );
+			break;
 		}
 		case Operand::OT_EXPRESSION: {
-			return get_index( Deref( ctx, operand->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)operand ) ) );
+			value = Deref( ctx, operand->m_si, ep, EvaluateExpression( ctx, ep, (Expression*)operand ) );
+			break;
 		}
 		default: {
 			THROW( "unexpected index type: " + operand->ToString() );
 		}
 	}
+	switch ( value->type ) {
+		case gse::VT_INT:
+		case gse::VT_STRING:
+			return value;
+		case gse::VT_RANGE: {
+			ASSERT( !only_index, "range not allowed here" );
+			return value->Clone(); // TODO: do we need to clone?
+		}
+		default:
+			throw gse::Exception( EC.INVALID_DEREFERENCE, "Invalid index - expected int or string, got: " + value->ToString(), ctx, operand->m_si, ep );
+	}
 }
 
 const bool Interpreter::EvaluateBool( context::Context* ctx, ExecutionPointer& ep, const Operand* operand ) {
-	const auto result = Deref( ctx, operand->m_si, ep, EvaluateOperand( ctx, ep, operand ) );
+	CHECKACCUM( m_gc_space );
+	auto* const v = EvaluateOperand( ctx, ep, (Expression*)operand );
+	auto* result = Deref( ctx, operand->m_si, ep, v );
 	if ( result->type != gse::VT_BOOL ) {
 		throw gse::Exception( EC.TYPE_ERROR, "Expected bool, found: " + operand->ToString(), ctx, operand->m_si, ep );
 	}
+	m_gc_space->Remove( v );
 	return ( (Bool*)result )->value;
 }
 

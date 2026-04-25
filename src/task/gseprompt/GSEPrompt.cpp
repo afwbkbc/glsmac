@@ -117,15 +117,15 @@ void GSEPrompt::Iterate() {
 
 void GSEPrompt::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
 	GC_DEBUG_BEGIN( "GSEPrompt" );
-	
+
 	if ( m_parser ) {
 		GC_REACHABLE( m_parser );
 	}
-	
+
 	if ( m_runner ) {
 		GC_REACHABLE( m_runner );
 	}
-	
+
 	GC_DEBUG_END();
 }
 
@@ -137,12 +137,12 @@ void GSEPrompt::PrintPrompt() {
 }
 
 void GSEPrompt::ProcessInput() {
-	
+
 	m_gc_space->Accumulate(
 		this,
 		[ this ]() {
 			std::string source = m_input;
-			
+
 			if ( m_is_tty ) {
 				m_lines_count++;
 			}
@@ -151,7 +151,7 @@ void GSEPrompt::ProcessInput() {
 					? m_lines_count
 					: 1
 			);
-			
+
 			const gse::program::Program* program = nullptr;
 			gse::Value* result = nullptr;
 			try {
@@ -199,7 +199,7 @@ void GSEPrompt::ProcessInput() {
 			if ( m_is_tty ) {
 				util::LogHelper::Println( "" );
 			}
-			
+
 			if ( program ) {
 				// can't delete here because program may have contained some functions that are still bound to context
 				// TODO: think how to deal with it

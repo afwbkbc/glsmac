@@ -35,7 +35,7 @@ GSE::~GSE() {
 		for ( auto& it : m_include_cache ) {
 			it.second.Cleanup( this );
 		}
-		
+
 		// make everything unreachable so that gc could clean it
 		m_global_contexts.clear();
 		m_parsers.clear();
@@ -67,11 +67,11 @@ parser::Parser* GSE::CreateParser( const std::string& filename, const std::strin
 	const auto extensions = util::FS::GetExtensions( filename, PATH_SEPARATOR );
 	ASSERT( extensions.size() == 2 && extensions.at( 0 ) == ".gls", "unsupported file name ( " + filename + " ), expected: *.gls.*" );
 	const auto& ext = extensions.at( 1 );
-	
+
 	if ( ext == ".js" ) {
 		parser = new parser::JS( m_gc_space, filename, source, initial_line_num );
 	}
-	
+
 	ASSERT( parser, "could not find parser for '.gls" + ext + "' extension" );
 	return parser;
 }
@@ -144,7 +144,7 @@ void GSE::AddModule( const std::string& path, value::Callable* module ) {
 
 void GSE::Run() {
 	Log( "GSE started" );
-	
+
 	// execute all modules in loading order
 	std::unordered_map< std::string, value::Callable* >::const_iterator it;
 	for ( auto& i : m_modules_order ) {
@@ -160,7 +160,7 @@ void GSE::Run() {
 			}
 		);
 	}
-	
+
 	Log( "GSE finished" );
 }
 
@@ -277,37 +277,37 @@ gc::Space* const GSE::GetGCSpace() const {
 }
 
 void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
-	
+
 	GC_DEBUG_BEGIN( "runner" );
 	if ( m_runner ) {
 		GC_REACHABLE( m_runner );
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "parsers" );
 	for ( const auto& it : m_parsers ) {
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "global_contexts" );
 	for ( const auto& context : m_global_contexts ) {
 		GC_REACHABLE( context );
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "async" );
 	if ( m_async ) {
 		GC_REACHABLE( m_async );
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "modules" );
 	for ( const auto& it : m_modules ) {
 		GC_REACHABLE( it.second );
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "include cache" );
 	for ( const auto& it : m_include_cache ) {
 		if ( it.second.result ) {
@@ -315,13 +315,13 @@ void GSE::GetReachableObjects( std::unordered_set< Object* >& reachable_objects 
 		}
 	}
 	GC_DEBUG_END();
-	
+
 	GC_DEBUG_BEGIN( "root_objects" );
 	for ( const auto& object : m_root_objects ) {
 		GC_REACHABLE( object );
 	}
 	GC_DEBUG_END();
-	
+
 }
 
 void GSE::include_cache_t::Cleanup( GSE* const gse ) {

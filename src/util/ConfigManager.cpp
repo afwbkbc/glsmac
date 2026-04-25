@@ -4,12 +4,13 @@
 
 #include "util/FS.h"
 #include "util/String.h"
+#include "config/Config.h"
 
 namespace util {
 
-ConfigManager::ConfigManager( const std::string& path, const std::string& config_path )
+ConfigManager::ConfigManager( const std::string& path, const config::Config* const config )
 	: m_path( path )
-	, m_config_path( config_path ) {}
+	, m_config( config ) {}
 
 void ConfigManager::AddRule( const std::string& argument, const std::string& description, const arg_handler_t handler ) {
 	m_arg_rules[ argument ] = {
@@ -90,7 +91,7 @@ void ConfigManager::ParseArgs( const int argc, const char* argv[] ) {
 				v = {};
 			}
 		}
-		const auto& it = Set( k, v, s_errprefix_args, false );
+		const auto& it = Set( k, v, s_errprefix_args, false, true );
 		if ( it->second.has_value ) {
 			i++;
 		}
@@ -99,7 +100,7 @@ void ConfigManager::ParseArgs( const int argc, const char* argv[] ) {
 
 void ConfigManager::ParseFile( const std::string& path ) {
 	const auto& p = path.empty()
-		? m_config_path
+		? GetConfigPath()
 		: path;
 	if ( util::FS::FileExists( p ) ) {
 		const auto errprefix = "setting " + p + ": ";
@@ -107,10 +108,10 @@ void ConfigManager::ParseFile( const std::string& path ) {
 		for ( const auto& it : root ) {
 			const auto& k = it.first.as< std::string >();
 			if ( !it.second.IsNull() ) {
-				Set( k, it.second.as< std::string >(), errprefix, true );
+				Set( k, it.second.as< std::string >(), errprefix, true, false );
 			}
 			else {
-				Set( k, {}, errprefix, true );
+				Set( k, {}, errprefix, true, false );
 			}
 		}
 	}
@@ -125,13 +126,16 @@ const ConfigManager::settings_t& ConfigManager::GetSettings() const {
 	return m_settings;
 }
 
-const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable ) {
+const std::map< std::string, ConfigManager::arg_rule_t >::iterator ConfigManager::Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable, const bool can_override ) {
 	const auto& it = m_arg_rules.find( k );
 	if ( it == m_arg_rules.end() ) {
 		throw std::runtime_error( (std::string)"invalid " + err_prefix + k );
 	}
 	if ( it->second.has_value && !v.has_value() ) {
 		throw std::runtime_error( (std::string)err_prefix + k + " requires a value!" );
+	}
+	if ( !can_override && m_settings.find( k ) != m_settings.end() ) {
+		return it;
 	}
 	it->second.handler( v.value_or( "" ) );
 	m_settings.insert_or_assign(
@@ -152,7 +156,11 @@ void ConfigManager::Save() {
 			root[ kv.first ] = kv.second.second;
 		}
 	}
-	util::FS::WriteFile( m_config_path, Dump( root ) + util::String::EOLN() );
+	util::FS::WriteFile( GetConfigPath(), Dump( root ) + util::String::EOLN() );
+}
+
+const std::string ConfigManager::GetConfigPath() const {
+	return m_config->GetPrefix() + "config.yml";
 }
 
 }
