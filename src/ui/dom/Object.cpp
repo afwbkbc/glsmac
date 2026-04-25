@@ -258,6 +258,8 @@ void Object::Destroy( GSE_CALLABLE ) {
 
 	Trigger( GSE_CALL, "remove" );
 
+	Hide();
+
 	if ( m_is_globalized ) {
 		Deglobalize( GSE_CALL );
 	}
@@ -265,7 +267,6 @@ void Object::Destroy( GSE_CALLABLE ) {
 	if ( g ) {
 		g->Destroy();
 	}
-	Hide();
 	if ( m_ui ) {
 		SetClasses( GSE_CALL, {} );
 		if ( m_is_iterable_set ) {

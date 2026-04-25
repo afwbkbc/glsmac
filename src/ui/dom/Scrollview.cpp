@@ -100,6 +100,8 @@ Scrollview::Scrollview( DOM_ARGS_T, const bool factories_allowed )
 				case input::EV_MOUSE_SCROLL: {
 					return true;
 				};
+				default: {
+				}
 			}
 		}
 		return false;
@@ -151,6 +153,8 @@ const bool Scrollview::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 					m_drag.is_dragging = false;
 				}
 				return false;
+			}
+			default: {
 			}
 		}
 	}

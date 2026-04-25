@@ -155,6 +155,8 @@ public:
 
 	void Destroy();
 
+	const bool IsDestroying() const;
+
 protected:
 	friend class Rectangle;
 

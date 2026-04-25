@@ -102,6 +102,9 @@ Text::~Text() {
 }
 
 void Text::SetText( const std::string& text ) {
+	if ( m_geometry->IsDestroying() ) {
+		return;
+	}
 	std::string transformed_text = text;
 	switch ( m_transform ) {
 		case T_LOWERCASE: {
@@ -131,6 +134,9 @@ void Text::SetTransform( const transform_t transform ) {
 }
 
 void Text::UpdateFont() {
+	if ( m_geometry->IsDestroying() ) {
+		return;
+	}
 	types::Font* font = nullptr;
 	if ( m_fontsize > 0 ) {
 		if ( m_fontname.empty() ) {

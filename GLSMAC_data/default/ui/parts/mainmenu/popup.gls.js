@@ -116,7 +116,7 @@ return (m) => {
 							) {
 								m.glsmac.exit();
 							} else {
-								parent.back();
+								parent.parent.back();
 							}
 							return true;
 						},

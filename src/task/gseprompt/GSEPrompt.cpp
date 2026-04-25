@@ -31,7 +31,13 @@ namespace gseprompt {
 GSEPrompt::GSEPrompt( const std::string& syntax )
 	: gc::Object( nullptr )
 	, m_syntax( syntax )
-	, m_is_tty( isatty( fileno( stdin ) ) ) {}
+	, m_is_tty(
+#ifndef _WIN32
+		isatty( fileno( stdin ) )
+#else
+		false // TODO
+#endif
+	) {}
 
 GSEPrompt::~GSEPrompt() {}
 

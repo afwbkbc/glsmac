@@ -42,7 +42,7 @@ private:
 	void SetItemClass( GSE_CALLABLE, const std::string& cls );
 	void SetItemHeight( GSE_CALLABLE, const size_t px );
 	void SetItemPadding( GSE_CALLABLE, const size_t px );
-	void Clear( GSE_CALLABLE );
+	void Clear( GSE_CALLABLE ) override;
 	void SetItems( GSE_CALLABLE, const gse::value::array_elements_t& items );
 	void SetValue( GSE_CALLABLE, const std::string& value );
 	void SetKeyboard( GSE_CALLABLE, const bool value );

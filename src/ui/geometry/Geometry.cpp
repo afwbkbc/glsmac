@@ -285,6 +285,10 @@ void Geometry::Destroy() {
 	}
 }
 
+const bool Geometry::IsDestroying() const {
+	return m_is_destroying;
+}
+
 void Geometry::Update( const bool is_update_from_parent ) {
 	if ( m_is_destroying ) {
 		return;

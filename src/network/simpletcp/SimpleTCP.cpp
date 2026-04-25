@@ -389,7 +389,8 @@ void SimpleTCP::Iterate() {
 				data.buffer.ptr = data.buffer.data;
 				data.fd = m_server.tmp.newfd;
 
-				data.remote_address = inet_ntoa( ( (struct sockaddr_in*)&m_server.tmp.client_addr )->sin_addr );
+				char str[ INET_ADDRSTRLEN ];
+				data.remote_address = inet_ntop( AF_INET, &( (struct sockaddr_in*)&m_server.tmp.client_addr )->sin_addr, str, INET_ADDRSTRLEN );
 
 				data.last_data_at = m_tmp.now;
 				data.ping_needed = false;

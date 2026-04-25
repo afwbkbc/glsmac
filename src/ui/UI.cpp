@@ -106,7 +106,7 @@ UI::UI( GSE_CALLABLE )
 			if ( !result && RunGlobalHandlers( GSE_CALL, event, GH_AFTER ) ) {
 				result = true;
 			}
-		});
+		}, nullptr, true );
 		return result;
 	});
 }

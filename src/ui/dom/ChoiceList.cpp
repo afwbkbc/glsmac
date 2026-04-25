@@ -129,6 +129,7 @@ void ChoiceList::Clear( GSE_CALLABLE ) {
 	m_choices.clear();
 	m_choices_order.clear();
 	m_selected_choice = nullptr;
+	Container::Clear( GSE_CALL );
 }
 
 void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& items ) {

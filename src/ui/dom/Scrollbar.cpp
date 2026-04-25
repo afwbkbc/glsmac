@@ -155,6 +155,8 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 				case input::EV_MOUSE_SCROLL: {
 					return true;
 				};
+				default: {
+				}
 			}
 		}
 		return false;

@@ -29,4 +29,6 @@ typedef long long ptr_int_t;
 #undef CALLBACK
 #undef MB_RIGHT
 
+#define strdup _strdup
+
 #endif
