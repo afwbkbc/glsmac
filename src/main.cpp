@@ -108,7 +108,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hpInstance, LPSTR nCmdLine, i
 		wcstombs( argv[ i ], argw[ i ], sz + 1 );
 	}
 #else
-int main( const int argc, const char* argv[] ) {
+int main( const int argc, char* const argv[] ) {
 #endif
 
 	config::Config config( argv[ 0 ] );
