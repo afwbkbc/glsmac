@@ -14,9 +14,11 @@ GLSMAC discord : https://discord.gg/fWG3xK7cUx
 
 1) Download [latest stable release](https://github.com/afwbkbc/glsmac/releases/latest) or [latest development build](https://github.com/afwbkbc/glsmac/releases/tag/development) for your OS (only 64-bit windows and ubuntu for now)
 
-2) Unpack all files into your SMAC directory (must have SMACX expansion too)
+2) Unpack GLSMAC anywhere
 
-3) Run GLSMAC
+2a) (optional) also unpack GLSMAC_data in same directory if you're (future) modder and want to tweak or change game scripts
+
+3) Run (on first launch it will ask you for SMAC installation path)
 
 ### Why?
 

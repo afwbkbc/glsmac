@@ -90,7 +90,7 @@ const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path
 }
 
 const std::string FS::NormalizePath( const std::string& path, const char path_separator ) {
-	std::string result = std::filesystem::weakly_canonical( path );
+	std::string result = std::filesystem::weakly_canonical( path ).string();
 	if ( path_separator != PATH_SEPARATOR ) {
 		std::replace( result.begin(), result.end(), path_separator, PATH_SEPARATOR );
 	}
