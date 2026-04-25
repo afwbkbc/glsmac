@@ -56,6 +56,9 @@ CLASS( FS, Util )
 	static const std::string ReadTextFile( const std::string& path, const char path_separator = PATH_SEPARATOR );
 	static const void WriteFile( const std::string& path, const std::string& data, const char path_separator = PATH_SEPARATOR );
 
+private:
+	static const std::string GetEmbedPath( const std::string& path );
+
 };
 
 }

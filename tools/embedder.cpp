@@ -100,7 +100,7 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 )";
 
 	for ( size_t i = 3 ; i < argc ; i++ ) {
-		Embed( out, srcdir, argv[ i ] );
+		Embed( out, srcdir.string(), argv[ i ] );
 	}
 
 	out << R"(};

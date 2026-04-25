@@ -63,7 +63,7 @@ const std::string ConfigManager::GetUnknownArgumentNote() const {
 }
 
 static const std::string s_errprefix_args = "argument --";
-void ConfigManager::ParseArgs( const int argc, const char* argv[] ) {
+void ConfigManager::ParseArgs( const int argc, char* const argv[] ) {
 	ASSERT( argc >= 1, "argc is zero" );
 
 	const char* c;

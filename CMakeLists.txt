@@ -7,8 +7,12 @@ SET( CMAKE_MODULE_PATH "." )
 
 SET( EXECUTABLE_OUTPUT_PATH "bin" )
 
+IF ( WIN32 )
+SET( SRC "WIN32" )
+ELSE ()
 SET( SRC "" )
-
+ENDIF ()
+SET( SRC ${SRC} resource/icon/glsmac.rc )
 SET( PWD "." )
 
 ADD_CUSTOM_TARGET( glsmac_version )

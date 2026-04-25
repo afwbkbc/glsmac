@@ -23,7 +23,7 @@ CLASS2( Config, common::Module, gse::Wrappable )
 	Config( const std::string& path );
 	~Config();
 
-	void Init( const int argc, const char* argv[] );
+	void Init( const int argc, char* const argv[] );
 
 	enum launch_flag_t : uint32_t {
 		LF_NONE = 0,
