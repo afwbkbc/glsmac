@@ -67,8 +67,6 @@ static const std::unordered_map< value::Object::object_class_t, custom_deseriali
 #undef X_CUSTOM_CLASS
 };
 
-Value::~Value() {}
-
 const std::string& Value::GetTypeStringStatic( const value_type_t type ) {
 	switch ( type ) {
 		case VT_UNDEFINED:
@@ -489,8 +487,10 @@ Value* const Value::New( const Value* value ) {
 			// no need to keep ref to old value if it's a copy
 			return Deref();
 		}
-		case VT_RANGE:
-			THROW( "ranges are not supposed to be cloned" );
+		case VT_RANGE: {
+			const auto* range = (value::Range*)value;
+			return VALUE( value::Range, , range->from, range->to );
+		}
 		case VT_LOOPCONTROL:
 			THROW( "loop controls are not supposed to be cloned" );
 		default: {

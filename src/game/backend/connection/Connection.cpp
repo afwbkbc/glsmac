@@ -49,15 +49,12 @@ Connection::Connection( gc::Space* const gc_space, const network::connection_mod
 	, m_gc_space( gc_space )
 	, m_connection_mode( connection_mode )
 	, m_settings( settings )
-	, m_network( g_engine->GetNetwork() ) {
-	//
-}
+	, m_network( g_engine->GetNetwork() ) {}
 
 Connection::~Connection() {
-	m_is_destroying = true;
 	if ( m_mt_ids.disconnect ) {
 		for ( uint8_t tries = 25 ; tries > 0 ; tries-- ) {
-			IterateAndMaybeDelete();
+			IterateAndMaybeDelete( false );
 			if ( m_mt_ids.disconnect ) {
 				std::this_thread::sleep_for( std::chrono::milliseconds( 40 ) );
 			}
@@ -106,7 +103,7 @@ void Connection::Connect() {
 	);*/
 }
 
-const bool Connection::IterateAndMaybeDelete() {
+const bool Connection::IterateAndMaybeDelete( const bool send_allowed ) {
 
 	if ( m_mt_ids.connect ) {
 		auto result = m_network->MT_GetResult( m_mt_ids.connect );
@@ -195,7 +192,7 @@ const bool Connection::IterateAndMaybeDelete() {
 				}
 			}
 		}
-		ProcessPending();
+		ProcessPending( send_allowed );
 	}
 
 	if ( m_mt_ids.disconnect ) {
@@ -403,9 +400,9 @@ void Connection::Disconnect( const std::string& reason ) {
 	m_mt_ids.disconnect = m_network->MT_Disconnect();
 }
 
-void Connection::ProcessPending() {
+void Connection::ProcessPending( const bool send_allowed ) {
 	if ( !m_pending_game_events.empty() ) {
-		if ( !m_is_destroying ) {
+		if ( send_allowed ) {
 			SendGameEvents( m_pending_game_events );
 		}
 		m_pending_game_events.clear();

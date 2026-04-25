@@ -39,6 +39,8 @@ CLASS( Space, common::Class )
 	void SetThreadId( const std::thread::id& thread_id );
 	void ProcessAccumulations(); // scripts will actually execute here
 
+	void Remove( Object* object );
+
 private:
 	// if true - it means space is about to be destroyed and doing final cleanups/collects
 	std::atomic< bool > m_is_destroying = false;

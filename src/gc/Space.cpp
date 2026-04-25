@@ -121,6 +121,14 @@ void Space::ProcessAccumulations() {
 	m_pending_accumulations.clear();
 }
 
+void Space::Remove( Object* object ) {
+	// this does nothing and exists to solve false positives from scanbuild
+	// when he thinks some gse::Value (which inherits gc::Object) is memory leak
+	// calling this method makes 'leak' message go away lol
+	// in reality gc::Object can't produce leaks because they register at gc space and are deleted when
+	// unreachable, except for a handful of 'root' objects that own gc space (these are known and deleted properly)
+}
+
 void Space::AccumulateImpl( const f_accum_t& f ) {
 	bool is_accumulating;
 	const auto tid = std::this_thread::get_id();

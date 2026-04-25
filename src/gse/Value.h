@@ -254,7 +254,7 @@ _type _type::Unwrap( gse::Value* const value ) { \
 class Value : public gc::Object {
 public:
 
-	virtual ~Value();
+	virtual ~Value() = default;
 
 	static const std::string& GetTypeStringStatic( const value_type_t type );
 	const std::string& GetTypeString() const;

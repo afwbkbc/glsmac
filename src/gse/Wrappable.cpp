@@ -2,6 +2,8 @@
 
 #include "gse/value/Bool.h"
 
+#include "gc/Space.h"
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
 #include "engine/Engine.h"
 #endif
@@ -123,6 +125,7 @@ Value* const Wrappable::Trigger( GSE_CALLABLE, const std::string& event, const f
 		}
 		auto* args_obj = VALUEEXT( gse::value::Object, GSE_CALL, args );
 		result = Trigger( GSE_CALL, event, args_obj, expected_return_type );
+		gc_space->Remove( args_obj );
 		if ( result ) {
 			return result;
 		}

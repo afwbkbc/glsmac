@@ -109,7 +109,7 @@ Mesh::data_response_t Mesh::GetDataResponse( const rr::id_t request_id ) {
 	else {
 		return {
 			false,
-			std::nullopt
+			{}
 		};
 	}
 }
