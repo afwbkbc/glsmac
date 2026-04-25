@@ -4,6 +4,67 @@
 #include <algorithm>
 #include <filesystem>
 
+void Embed( std::ofstream& dst, const std::string& srcdir, const std::string& path ) {
+
+	const auto full_path = (std::filesystem::path)srcdir / path;
+
+	if ( std::filesystem::is_directory( full_path ) ) {
+		for ( const auto& entry : std::filesystem::directory_iterator( full_path ) ) {
+			const auto relpath = entry.path().string().substr( srcdir.length() + 1 );
+			Embed( dst, srcdir, relpath );
+		}
+	}
+	else if ( std::filesystem::is_regular_file( full_path ) ) {
+
+		std::string key = "";
+		key.reserve( path.size() );
+		for ( const auto& c : path ) {
+			switch ( c ) {
+				case '\\': {
+					key += '/';
+					break;
+				}
+				default:
+					key += c;
+			}
+		}
+
+		dst << "	{ \"" + key + "\", {";
+
+		std::ifstream in( full_path, std::ios::binary );
+		if ( !in.is_open() ) {
+			std::cout << "Could not open file for reading: " << full_path << std::endl;
+			exit( 1 );
+		}
+		std::stringstream buffer;
+		buffer << in.rdbuf();
+		in.close();
+		const auto& str = buffer.str();
+
+#ifdef DEBUG
+		std::cout << "	Embedding " << path << " as " << key << " (" << std::to_string( str.size() ) << " bytes)" << std::endl;
+#endif
+
+		bool first = true;
+		for ( const auto& c : str ) {
+			if ( first ) {
+				first = false;
+			}
+			else {
+				dst << ",";
+			}
+			dst << " " << std::to_string( (unsigned char)c );
+		}
+
+		dst << R"( } },
+)";
+
+	}
+	else {
+		std::cout << "	Skipping " << path << " because it's neither file nor directory" << std::endl;
+	}
+}
+
 int main( int argc, char* argv[] ) {
 
 	if ( argc < 3 ) {
@@ -26,7 +87,10 @@ int main( int argc, char* argv[] ) {
 		std::cout << "Could not open file for writing: " << out_file << std::endl;
 		exit( 1 );
 	}
+
+#ifdef DEBUG
 	std::cout << "Creating " << out_file << "..." << std::endl;
+#endif
 
 	out << R"(#include <unordered_map>
 #include <string>
@@ -36,51 +100,7 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 )";
 
 	for ( size_t i = 3 ; i < argc ; i++ ) {
-		const std::string filename = argv[ i ];
-		std::string key = "";
-		key.reserve( filename.size() );
-		bool first = true;
-		for ( const auto& c : filename ) {
-			switch ( c ) {
-				case '.':
-				case '/':
-				case '\\':
-				case '-': {
-					key += '_';
-					break;
-				}
-				default:
-					key += c;
-			}
-		}
-
-		out << "	{ \"" + key + "\", {";
-
-		std::ifstream in( srcdir / filename, std::ios::binary );
-		if ( !in.is_open() ) {
-			std::cout << "Could not open file for reading: " << ( srcdir / filename ) << std::endl;
-			exit( 1 );
-		}
-		std::stringstream buffer;
-		buffer << in.rdbuf();
-		in.close();
-		const auto& str = buffer.str();
-		std::cout << "	Embedding " << filename << " as " << key << " (" << std::to_string( str.size() ) << " bytes)" << std::endl;
-
-		first = true;
-		for ( const auto& c : str ) {
-			if ( first ) {
-				first = false;
-			}
-			else {
-				out << ",";
-			}
-			out << " " << std::to_string( (unsigned char)c );
-		}
-
-		out << R"( } },
-)";
-
+		Embed( out, srcdir, argv[ i ] );
 	}
 
 	out << R"(};
@@ -91,7 +111,10 @@ static const std::unordered_map< std::string, std::vector< unsigned char > > s_e
 
 )";
 	out.close();
+	
+#ifdef DEBUG
 	std::cout << argv[ 1 ] << " created successfully" << std::endl;
+#endif
 
 	return 0;
 }

@@ -17,7 +17,7 @@ namespace util {
 
 CLASS( ConfigManager, Util )
 
-	ConfigManager( const std::string& path, const std::string& config_path );
+	ConfigManager( const std::string& path, const config::Config* const config );
 
 	typedef std::function< void( const std::string& value ) > arg_handler_t;
 
@@ -46,18 +46,20 @@ private:
 
 private:
 
+	const config::Config* const m_config = nullptr;
+
 	settings_t m_settings = {};
 
 	const std::string m_path;
-	const std::string m_config_path;
 
 	std::map< std::string, arg_rule_t > m_arg_rules;
 	const size_t m_offset_step = 8;
 	size_t m_offset = 0;
 
-	const std::map< std::string, arg_rule_t >::iterator Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable );
+	const std::map< std::string, arg_rule_t >::iterator Set( const std::string& k, const std::optional< std::string >& v, const std::string& err_prefix, const bool is_saveable, const bool can_override );
 
 	void Save();
+	const std::string GetConfigPath() const;
 };
 
 }

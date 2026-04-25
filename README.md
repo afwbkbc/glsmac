@@ -46,11 +46,11 @@ Mod compatibility - it should work with asset mods that replace .PCX, .WAV or ot
 
 Early stage of modding support is already here. Under the hood GLSMAC loads ".gls.js" scripts (language similar to JavaScript but simplified and optimized for our needs) for game logic decisions.
 
-You can check core scripts here: https://github.com/afwbkbc/glsmac/tree/main/GLSMAC_data/default
+All UI and game logic is now written in scripts, for maximum tweaking/modding potential. Communication with game engine is done by writing event handlers and calling specific bindings as needed.
 
-I also made 'demo mod' to demonstrate how scripting can be used: https://github.com/afwbkbc/glsmac-demo-mod , I'll keep updating it as GLSMAC scripting gets more features over time.
+You can check core scripts here: https://github.com/afwbkbc/glsmac/tree/main/GLSMAC_data/default . They are embedded into GLSMAC binary so it can work just by itself, but if it sees `GLSMAC_data` in working directory it will read and use them instead (so download them too if you want to play around).
 
-Some things are still hardcoded in C++ for now, but in the end everything will be exposed to scripts, for maximum tweaking potential.
+I also made 'demo mod' to demonstrate how scripting can be used: https://github.com/afwbkbc/glsmac-demo-mod ( it's a bit outdated atm and doesn't work with recent GLSMAC ).
 
 ### Other improvements?
 
@@ -230,11 +230,13 @@ It should open `launch.vs.json` file, make it look similar to this (debug and re
 }
 ```
 
-Replace the path to SMAC installation with your own path to the game. Then you are done and can run the game in Visual Studio.
+Replace the path to SMAC installation with your own path to the game. It's not required anymore because GLSMAC will show prompt asking where is your SMAC installation, on first launch. 
 
-`currentDir` above is required because GLSMAC will load scripts from `./GLSMAC_data` in runtime.
+Alternatively, set working directory to that of your SMAC installation, it will work without `--smacpath` argument then.
 
-Alternatively, set working directory to that of your SMAC installation (you'll need to copy `GLSMAC_data` directory there), it will work without `--smacpath` argument then.
+`currentDir` above is needed because GLSMAC will load scripts from `./GLSMAC_data` in runtime so you can tweak and change them and see changes reflected immediately after game restart. Portable builds have GLSMAC_data embedded, but if you are building GLSMAC manually they have to exist during compilation.
+
+Then you are done and can run the game in Visual Studio.
 
 #### MinGW
 
@@ -246,15 +248,15 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 ### Launch
 
-Note: GLSMAC needs `GLSMAC_data` directory to be in working directory from where it's run, it loads scripts from there in runtime (later some of them will be built into binary so this step won't be needed).
+Just run GLSMAC	binary without arguments.
 
-Just run ./GLSMAC --smacpath <smac_directory>
+If this is your first launch it will ask you for SMAC location and save it in profile. Just can also specify smac location on command line: ./GLSMAC --smacpath <smac_directory>
 
-Or copy `GLSMAC` file and `GLSMAC_data` directory into your SMAC directory and run without arguments from there.
+You can also put `GLSMAC` file into your SMAC directory and it will detect SMAC installation.
 
-Run ./bin/GLSMAC --help to see more options. Debug builds have extra options that aren't available for release builds.
+Run ./bin/GLSMAC --help to see full list of options. Debug builds have extra options that aren't available for release builds.
 
-Supported SMAC releases: GOG, Steam, Loki, Legacy (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue)
+Supported SMAC releases: GOG, Steam (Planetary Pack), Loki, Legacy (if you have something else and it doesn't work - double-check that you have SMACX expansion and then create issue with details of your specific SMAC version)
 
 ### Reporting problems
 
