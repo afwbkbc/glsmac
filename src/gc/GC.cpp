@@ -35,7 +35,7 @@ void GC::Iterate() {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 thread_local static uint8_t s_gc_debug_offset = 0;
-static std::mutex s_gc_debug_mutex;
+static std::shared_mutex s_gc_debug_mutex;
 
 const bool GC::IsDebugEnabled() {
 	ASSERT( g_engine, "engine not set" );

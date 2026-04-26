@@ -2,7 +2,7 @@
 
 #ifdef DEBUG
 
-#include <mutex>
+#include <shared_mutex>
 
 #include "debug/MemoryWatcher.h"
 
@@ -38,7 +38,7 @@
     } _stat;
 
 struct debug_stats_t {
-	std::mutex _mutex; \
+	std::shared_mutex _mutex; \
         bool _readonly = false;
 	DEBUG_STATS
 };

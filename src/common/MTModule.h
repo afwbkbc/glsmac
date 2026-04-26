@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mutex>
+#include <shared_mutex>
 #include <atomic>
 #include <functional>
 #include <map>
@@ -11,7 +11,7 @@
 
 namespace common {
 
-static std::mutex s_next_mt_id_mutex;
+static std::shared_mutex s_next_mt_id_mutex;
 static mt_id_t s_next_mt_id = 0;
 
 // requests and responses should be structs that contain operation type and unions of variables for every op type
@@ -210,7 +210,7 @@ private:
 	}
 
 	typedef std::map< mt_id_t, mt_state_t > mt_states_t;
-	std::mutex m_mt_states_mutex;
+	std::shared_mutex m_mt_states_mutex;
 	mt_states_t m_mt_states = {};
 	mt_flag_t m_is_canceled = false;
 	std::atomic< mt_id_t > m_current_request_id = 0;

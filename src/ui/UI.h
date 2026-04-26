@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <functional>
 #include <vector>
-#include <mutex>
+#include <shared_mutex>
 
 #include "gse/GCWrappable.h"
 
@@ -162,7 +162,7 @@ private:
 	typedef std::unordered_map< dom::Widget*, widget_state_t > widgets_t;
 	std::unordered_map< widget_type_t, widgets_t > m_widgets = {};
 	std::unordered_map< dom::Widget*, widget_type_t > m_widget_types = {};
-	std::mutex m_widgets_mutex;
+	std::shared_mutex m_widgets_mutex;
 
 	std::unordered_map< widget_type_t, widget_config_t > m_widget_configs = {};
 	std::unordered_map< std::string, widget_type_t > m_widget_strs = {};

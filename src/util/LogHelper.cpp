@@ -1,11 +1,11 @@
 #include "LogHelper.h"
 
-#include <mutex>
+#include <shared_mutex>
 #include <iostream>
 
 namespace util {
 
-static std::mutex s_cout_mutex;
+static std::shared_mutex s_cout_mutex;
 
 void LogHelper::Print( const std::string& text ) {
 	std::lock_guard guard( s_cout_mutex );

@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
-#include <mutex>
+#include <shared_mutex>
 #include <atomic>
 
 #include "gc/Object.h"

@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <unordered_set>
-#include <mutex>
+#include <shared_mutex>
 
 #include "gse/GCWrappable.h"
 

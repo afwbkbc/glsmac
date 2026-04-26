@@ -1,6 +1,6 @@
 #include "UUID.h"
 
-#include <mutex>
+#include <shared_mutex>
 
 #ifdef _WIN32
 #include <random>
@@ -9,7 +9,7 @@
 
 namespace util {
 
-static std::mutex s_uuid_state_mutex;
+static std::shared_mutex s_uuid_state_mutex;
 
 #ifndef _WIN32// TODO: make ossp-uuid buildable on windows
 

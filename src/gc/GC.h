@@ -1,6 +1,6 @@
 #pragma once
 
-#include <mutex>
+#include <shared_mutex>
 #include <unordered_set>
 
 #include "common/Module.h"
@@ -41,7 +41,7 @@ CLASS( GC, common::Module )
 #endif
 
 private:
-	std::mutex m_spaces_mutex;
+	std::shared_mutex m_spaces_mutex;
 	std::unordered_set< Space* > m_spaces = {};
 
 private:

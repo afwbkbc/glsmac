@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <mutex>
+#include <shared_mutex>
 #include <SDL2/SDL_video.h>
 #include <GL/glew.h>
 #include <thread>
@@ -65,7 +65,7 @@ public:
 private:
 	bool m_memory_debug = false;
 	bool m_is_quiet = false;
-	std::mutex m_mutex;
+	std::shared_mutex m_mutex;
 	void Log( const std::string& text, const bool is_important = false );
 
 	struct object_info_t {

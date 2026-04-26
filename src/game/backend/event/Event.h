@@ -49,7 +49,7 @@ private:
 	gse::value::object_properties_t m_data = {};
 	gse::value::function_arguments_t m_args = {};
 
-	std::mutex m_resolved_mutex;
+	std::shared_mutex m_resolved_mutex;
 	gse::Value* m_resolved = nullptr;
 
 	void UpdateData( GSE_CALLABLE );

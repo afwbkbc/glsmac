@@ -399,17 +399,17 @@ private:
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
-	std::mutex m_event_handlers_mutex;
+	std::shared_mutex m_event_handlers_mutex;
 
 	std::vector< event::Event* > m_pending_events = {};
-	std::mutex m_pending_events_mutex;
+	std::shared_mutex m_pending_events_mutex;
 
 	struct event_waiting_for_response_t {
 		event::Event* event;
 		gse::Value* rollback_data;
 	};
 	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};
-	std::mutex m_events_waiting_for_responses_mutex;
+	std::shared_mutex m_events_waiting_for_responses_mutex;
 
 	struct pending_event_response_t {
 		std::string event_id;
@@ -417,7 +417,7 @@ private:
 		gse::Value* resolved;
 	};
 	std::vector< pending_event_response_t > m_pending_event_responses = {};
-	std::mutex m_pending_event_responses_mutex;
+	std::shared_mutex m_pending_event_responses_mutex;
 
 	std::atomic< uint64_t > m_next_event_id = 0;
 

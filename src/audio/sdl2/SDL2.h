@@ -5,7 +5,7 @@
 #define SDL_MAIN_HANDLED 1
 #include <SDL_audio.h>
 
-#include <mutex>
+#include <shared_mutex>
 
 #include "audio/Audio.h"
 
@@ -42,7 +42,7 @@ protected:
 private:
 	bool m_is_sound_enabled = false;
 
-	std::mutex m_actors_mutex;
+	std::shared_mutex m_actors_mutex;
 	std::unordered_map< scene::actor::Sound*, sdl2::Sound* > m_actors = {};
 
 	size_t m_buffer_length = 0;

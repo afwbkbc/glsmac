@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <unordered_set>
-#include <mutex>
+#include <shared_mutex>
 #include <functional>
 
 #include "common/Common.h"
@@ -49,7 +49,7 @@ protected:
 
 	const scene_type_t m_scene_type = SCENE_TYPE_NONE;
 
-	std::mutex m_actors_mutex;
+	std::shared_mutex m_actors_mutex;
 	std::vector< actor::Actor* > m_actors = {};
 
 	Camera* m_camera = nullptr;

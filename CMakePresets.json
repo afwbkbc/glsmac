@@ -55,6 +55,14 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
+        },
+        {
+            "name": "x64-portable64-win-clang",
+            "displayName": "x64 Portable64",
+            "inherits": "windows-clang-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Portable64"
+            }
         }
     ]
 }

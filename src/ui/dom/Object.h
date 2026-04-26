@@ -3,7 +3,7 @@
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
-#include <mutex>
+#include <shared_mutex>
 
 #include "env/Env.h"
 
@@ -157,7 +157,7 @@ private:
 	std::vector< ui::Class* > m_classes = {};
 
 	std::vector< scene::actor::Actor* > m_actors = {};
-	std::mutex m_actors_mutex;
+	std::shared_mutex m_actors_mutex;
 
 	void SetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key, gse::Value* const value );
 	void UnsetProperty( GSE_CALLABLE, properties_t* const properties, const std::string& key );
@@ -171,7 +171,7 @@ private:
 	bool m_is_iterable_set = false;
 	bool m_is_globalized = false;
 
-	std::mutex m_listeners_mutex;
+	std::shared_mutex m_listeners_mutex;
 	gse::Wrappable::callback_id_t m_next_listener_id = 1;
 	struct listener_t {
 		gse::Wrappable* object;
@@ -183,7 +183,7 @@ private:
 	const gse::Wrappable::callback_id_t AddListener( GSE_CALLABLE, gse::Wrappable* const object, const std::string& event, gse::value::Callable* const callback );
 	void RemoveListener( GSE_CALLABLE, const gse::Wrappable::callback_id_t listen_id );
 
-	std::mutex m_timer_ids_mutex;
+	std::shared_mutex m_timer_ids_mutex;
 	std::unordered_set< gse::timer_id_t > m_timer_ids = {};
 
 private:
