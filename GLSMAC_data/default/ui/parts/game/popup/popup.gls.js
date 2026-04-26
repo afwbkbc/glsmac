@@ -6,10 +6,10 @@ return {
 		'base_screen',
 	],
 
-	no_sliding: true, // disable sliding until more optimizations
+	no_sliding: false, // disable sliding until more optimizations
 
-	sliding_interval: 1,
-	sliding_time: 20,
+	sliding_interval: 10,
+	sliding_time: 100,
 
 	calculate_sliding_speed: (top) => {
 		this.sliding_speed = (this.viewport_size.height - top) / (this.sliding_time / this.sliding_interval);
@@ -241,7 +241,9 @@ return {
 			return;
 		}
 
-		if (this.sliding_timer != null) {
+		const was_sliding = this.sliding_timer != null;
+		const was_sliding_down = was_sliding && this.target_top > data.el.top;
+		if (was_sliding) {
 			// if canceled early - start from where it is
 			this.target_top = data.el.top;
 		}
@@ -252,7 +254,9 @@ return {
 		}
 
 		this.target_top = this.viewport_size.height;
-		this.sound_down.play();
+		if (!was_sliding_down) {
+			this.sound_down.play();
+		}
 
 		const f_done = () => {
 			data.el.top = this.target_top;

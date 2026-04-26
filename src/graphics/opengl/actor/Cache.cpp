@@ -84,7 +84,10 @@ const bool Cache::UpdateCacheImpl( shader_program::ShaderProgram* shader_program
 		m_is_update_needed = oldw != neww || oldh != newh;
 	}
 
-	if ( m_top_left != top_left || m_bottom_right != bottom_right ) {
+	if ( m_is_update_needed || // on window resize tl and br may change while m_top_left and m_bottom_right stay the same
+		m_top_left != top_left ||
+		m_bottom_right != bottom_right
+		) {
 		m_top_left = top_left;
 		m_bottom_right = bottom_right;
 		auto tl = m_opengl->GetGLCoords( m_top_left );
