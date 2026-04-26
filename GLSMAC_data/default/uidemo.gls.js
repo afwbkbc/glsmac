@@ -56,7 +56,7 @@
 	const tex = 'textures/demotex.png';
 
 	// recursive panels
-	const parent = root.panel({
+	const parentp = root.panel({
 		align: 'top right',
 		right: 40,
 		top: 40,
@@ -64,7 +64,8 @@
 		height: 200,
 		background: tex + ':tint(#00ff00,0.08):stretch',
 	});
-	const child1 = parent.panel({
+
+	const child1 = parentp.panel({
 		left: 0,
 		top: 0,
 		width: 100,
@@ -103,7 +104,7 @@
 		height: 40,
 		background: tex + ':tint(#008800,0.6)',
 	});
-	const child2 = parent.panel({
+	const child2 = parentp.panel({
 		align: 'bottom right',
 		right: 10,
 		bottom: 10,
@@ -111,7 +112,7 @@
 		height: 60,
 		background: tex + ':tint(#aa0000,0.2)',
 	});
-	const child3 = parent.panel({
+	const child3 = parentp.panel({
 		align: 'top right',
 		right: -10,
 		top: -10,
@@ -119,7 +120,7 @@
 		height: 60,
 		background: tex + ':tint(#0000ff,0.2):crop(5,5,8,8)',
 	});
-	const child4 = parent.panel({
+	const child4 = parentp.panel({
 		align: 'bottom left',
 		left: -10,
 		bottom: -10,
@@ -808,8 +809,8 @@
 		width: 180,
 		height: 180,
 	});
-	const recursive_panel = (parent, depth) => {
-		const child = parent.panel({
+	const recursive_panel = (parentp, depth) => {
+		const child = parentp.panel({
 			background: '#44444422',
 			align: 'center',
 			top: depth,

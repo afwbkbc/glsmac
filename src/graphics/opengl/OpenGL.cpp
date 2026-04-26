@@ -77,14 +77,23 @@ void OpenGL::Start() {
 
 	Log( "Initializing OpenGL" );
 
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
-	SDL_GL_SetSwapInterval( (char)m_options.vsync );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 ); 
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+	SDL_GL_SetSwapInterval( ( char ) m_options.vsync );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
+
+	SDL_GL_MakeCurrent( m_window, m_gl_context );
+
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
@@ -135,12 +144,17 @@ void OpenGL::Start() {
 	glViewport( 0, 0, m_viewport_size.x, m_viewport_size.y );
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClearDepth( 1.0f );
+
+	glEnable( GL_BLEND );
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
+	glEnable( GL_DEPTH_TEST );
 	glDepthMask( GL_TRUE );
 	glDepthFunc( GL_LEQUAL );
+
 	glCullFace( GL_FRONT );
-	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
+	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST );
+
 
 	// generate 'empty' texture (transparent 1x1)
 	glActiveTexture( GL_TEXTURE0 );
@@ -206,18 +220,11 @@ void OpenGL::Iterate() {
 
 	Graphics::Iterate();
 
-	glEnable( GL_DEPTH_TEST );
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
 		( *it )->Iterate();
 	}
-
-	glDisable( GL_DEPTH_TEST );
-	glDisable( GL_BLEND );
 
 	SDL_GL_SwapWindow( m_window );
 
