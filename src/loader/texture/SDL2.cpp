@@ -27,6 +27,12 @@ void SDL2::Iterate() {
 
 }
 
+SDL_Surface* load_image( const std::vector< unsigned char >& buffer ) {
+	SDL_RWops* rw = SDL_RWFromConstMem( buffer.data(), buffer.size() );
+	ASSERT( rw, "rw is null" );
+	return IMG_Load_RW( rw, 1 );
+}
+
 types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, const types::texture::texture_flag_t flags ) {
 
 	texture_map_t::iterator it = m_textures.find( filename );
@@ -35,7 +41,9 @@ types::texture::Texture* SDL2::LoadTextureImpl( const std::string& filename, con
 	}
 	else {
 		Log( "Loading texture \"" + filename + "\"" );
-		auto* image = IMG_Load( filename.c_str() );
+		std::vector< unsigned char > buffer = {};
+		util::FS::ReadFile( buffer, filename );
+		auto* image = load_image( buffer );
 		ASSERT( image, IMG_GetError() );
 		if ( image->format->format != SDL_PIXELFORMAT_RGBA32 ) {
 			// we must have all images in same format

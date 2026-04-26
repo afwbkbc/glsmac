@@ -18,10 +18,26 @@ SDL2::~SDL2() {
 
 }
 
+int filter( void* userdata, SDL_Event* event ) {
+	switch ( event->type ) {
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+		case SDL_MOUSEMOTION:
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEWHEEL:
+		case SDL_QUIT:
+		case SDL_WINDOWEVENT:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
 void SDL2::Start() {
 	Log( "Initializing SDL2" );
 	SDL_Init( SDL_INIT_EVENTS );
-
+	SDL_SetEventFilter( (SDL_EventFilter)&filter, nullptr );
 }
 
 void SDL2::Stop() {
