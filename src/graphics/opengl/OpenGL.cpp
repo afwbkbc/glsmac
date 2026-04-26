@@ -86,7 +86,6 @@ void OpenGL::Start() {
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
 	SDL_GL_SetSwapInterval( ( char ) m_options.vsync );
-	SDL_GL_SetSwapInterval( false );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
