@@ -9,6 +9,9 @@
 
 namespace config {
 class Config;
+namespace wrapped {
+class Config;
+}
 }
 
 namespace util {
@@ -41,6 +44,7 @@ CLASS( ConfigManager, Util )
 
 private:
 	friend class config::Config;
+	friend class config::wrapped::Config;
 	typedef std::map< std::string, std::pair< bool, std::string > > settings_t;
 	const settings_t& GetSettings() const;
 

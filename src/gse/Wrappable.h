@@ -5,7 +5,8 @@
 #include <map>
 #include <optional>
 #include <functional>
-#include <shared_mutex>
+
+#include "common/Mutex.h"
 
 #include "value/Types.h"
 #include "value/Int.h"
@@ -119,7 +120,7 @@ protected:
 	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;
-	std::shared_mutex m_callbacks_mutex = {};
+	common::Mutex m_callbacks_mutex;
 
 	bool m_catchall = false;
 
@@ -127,10 +128,10 @@ protected:
 	Value* const CustomGet( const std::string& key );
 
 private:
-	std::shared_mutex m_dependent_wrappables_mutex;
+	common::Mutex m_dependent_wrappables_mutex;
 	std::unordered_map< Wrappable*, size_t > m_dependent_wrappables = {};
 
-	std::shared_mutex m_globals_mutex;
+	common::Mutex m_globals_mutex;
 	std::unordered_map< std::string, gse::Value* > m_globals = {};
 
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shared_mutex>
+#include "common/Mutex.h"
 
 #include "gse/GCWrappable.h"
 
@@ -52,7 +52,7 @@ private:
 	size_t m_next_running_animation_id = 1;
 	std::unordered_map< size_t, cb_oncomplete > m_running_animations_callbacks = {};
 
-	std::shared_mutex m_animation_sequences_mutex;
+	common::Mutex m_animation_sequences_mutex;
 	std::unordered_map< size_t, AnimationSequence* > m_animation_sequences = {};
 	size_t m_next_animation_sequence_id = 1;
 

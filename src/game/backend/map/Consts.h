@@ -458,15 +458,14 @@ struct Consts {
 		0.0f,
 		0.0f
 	};
-	const types::Color underwater_tint = {
+	const types::Color::color_t underwater_tint = {
 		0.0f,
 		0.2f,
 		0.5f,
 		1.0f
 	};
 	const struct {
-		//const types::Color coastline_tint = { 0.7f, 0.7f, 0.7f, 1.0f };
-		const types::Color coastline_tint = {
+		const types::Color::color_t coastline_tint = {
 			1.0f,
 			1.0f,
 			1.0f,
@@ -475,7 +474,7 @@ struct Consts {
 		const float coast_water_alpha = 0.4f;
 		const float coast_water_center_alpha = coast_water_alpha / 1.5f;
 		const float coast_water_center_alpha_corner_mod = 0.7f;
-		const types::Color border_color = {
+		const types::Color::color_t border_color = {
 			0.425f,
 			0.378f,
 			0.311f,

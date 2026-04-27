@@ -471,7 +471,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 				if ( flags & types::texture::AM_COASTLINE_BORDER ) {
 					if ( d >= r - game::backend::map::s_consts.coastlines.perlin.round_range ) {
 						// TODO: fix for types::texture::AM_INVERT
-						mix_color = game::backend::map::s_consts.coastlines.border_color.GetRGBA();
+						mix_color = types::Color::ToRGBA( game::backend::map::s_consts.coastlines.border_color );
 					}
 				}
 			}
@@ -544,7 +544,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 
 				if ( perlin_need_border ) {
 					is_pixel_needed = true;
-					mix_color = game::backend::map::s_consts.coastlines.border_color.GetRGBA();
+					mix_color = types::Color::ToRGBA( game::backend::map::s_consts.coastlines.border_color );
 				}
 
 			}

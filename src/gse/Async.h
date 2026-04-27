@@ -39,7 +39,7 @@ private:
 
 	gc::Space* const m_gc_space = nullptr;
 	std::atomic< bool > m_is_stopping = false;
-	std::shared_mutex m_process_timers_mutex;
+	common::Mutex m_process_timers_mutex;
 
 	struct timer_t {
 		size_t ms;

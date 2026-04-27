@@ -1,18 +1,18 @@
 #pragma once
 
-#include <shared_mutex>
+#include "Module.h"
+
 #include <atomic>
 #include <functional>
 #include <map>
 #include <thread>
 
-#include "Module.h"
 #include "MTTypes.h"
+#include "common/Mutex.h"
 
 namespace common {
 
-static std::shared_mutex s_next_mt_id_mutex;
-static mt_id_t s_next_mt_id = 0;
+static std::atomic< mt_id_t > s_next_mt_id = 0;
 
 // requests and responses should be structs that contain operation type and unions of variables for every op type
 // if you need to pass something non-trivial - use raw pointers
@@ -41,9 +41,7 @@ public:
 	// use these to pass data from/to other threads
 	mt_id_t MT_CreateRequest( const REQUEST_TYPE& data ) {
 		mt_state_t state = {};
-		s_next_mt_id_mutex.lock();
 		mt_id_t mt_id = ++s_next_mt_id;
-		s_next_mt_id_mutex.unlock();
 		state.is_executed = false;
 		state.request = data;
 		{
@@ -210,7 +208,7 @@ private:
 	}
 
 	typedef std::map< mt_id_t, mt_state_t > mt_states_t;
-	std::shared_mutex m_mt_states_mutex;
+	common::Mutex m_mt_states_mutex;
 	mt_states_t m_mt_states = {};
 	mt_flag_t m_is_canceled = false;
 	std::atomic< mt_id_t > m_current_request_id = 0;

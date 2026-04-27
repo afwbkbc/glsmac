@@ -3,7 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
-#include <shared_mutex>
+#include "common/Mutex.h"
 
 #define SDL_MAIN_HANDLED 1
 
@@ -129,11 +129,11 @@ private:
 	void UpdateViewportSize( const size_t width, const size_t height );
 
 	// unload requests can be done from multiple threads but actual unloading done from main one
-	std::shared_mutex m_texture_objs_to_unload_mutex;
+	common::Mutex m_texture_objs_to_unload_mutex;
 	std::vector< const types::texture::Texture* > m_texture_objs_to_unload = {};
 	void ProcessPendingUnloads();
 
-	std::shared_mutex m_render_mutex;
+	common::Mutex m_render_mutex;
 };
 
 }

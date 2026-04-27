@@ -1,24 +1,34 @@
 #include "LogHelper.h"
 
-#include <shared_mutex>
+#include "common/Mutex.h"
+#include "common/Assert.h"
+
 #include <iostream>
 
 namespace util {
 
-static std::shared_mutex s_cout_mutex;
+static common::Mutex* s_mutex = nullptr;
+
+void LogHelper::Init() {
+	ASSERT( !s_mutex, "mutex already initialized" );
+	s_mutex = new common::Mutex();
+}
 
 void LogHelper::Print( const std::string& text ) {
-	std::lock_guard guard( s_cout_mutex );
+	ASSERT( s_mutex, "mutex not initialized" );
+	std::lock_guard guard( *s_mutex );
 	std::cout << text;
 }
 
 void LogHelper::Println( const std::string& text ) {
-	std::lock_guard guard( s_cout_mutex );
+	ASSERT( s_mutex, "mutex not initialized" );
+	std::lock_guard guard( *s_mutex );
 	std::cout << text << std::endl;
 }
 
 void LogHelper::Flush() {
-	std::lock_guard guard( s_cout_mutex );
+	ASSERT( s_mutex, "mutex not initialized" );
+	std::lock_guard guard( *s_mutex );
 	std::cout << std::flush;
 }
 

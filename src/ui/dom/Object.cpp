@@ -500,7 +500,7 @@ const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::C
 	// color names
 	const auto it = s_color_map.find( str );
 	if ( it != s_color_map.end() ) {
-		color = it->second;
+		color = types::Color::FromRGBA( it->second );
 		return true;
 	}
 	const auto is_rgb = str.substr( 0, 4 ) == "rgb(";

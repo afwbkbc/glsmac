@@ -69,6 +69,7 @@ Engine::Engine(
 	else {
 		t_main->SetIPS( m_config->GetMaxIPS() );
 	}
+	m_threads.push_back( t_main );
 	t_main->AddModule( m_config );
 	t_main->AddModule( m_error_handler );
 	t_main->AddModule( m_font_loader );
@@ -86,31 +87,25 @@ Engine::Engine(
 	t_main->AddModule( m_input );
 	t_main->AddModule( m_graphics );
 	t_main->AddModule( m_audio );
-	t_main->AddModule( m_scheduler );
-	m_threads.push_back( t_main );
+
+	const bool is_single_thread = m_config->HasLaunchFlag( config::Config::LF_SINGLE_THREAD );
 
 	common::Thread* t_network;
-#if defined( DEBUG ) || defined ( FASTDEBUG )
-	if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+	if ( is_single_thread ) {
 		t_network = t_main;
 	}
-	else
-#endif
-	{
+	else {
 		NEW( t_network, common::Thread, "NETWORK" );
 		m_threads.push_back( t_network );
 	}
-	t_network->SetIPS( 100 );
+	t_network->SetIPS( 250 );
 	t_network->AddModule( m_network );
 
 	common::Thread* t_gc;
-#if defined( DEBUG ) || defined ( FASTDEBUG )
-	if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+	if ( is_single_thread ) {
 		t_gc = t_main;
 	}
-	else
-#endif
-	{
+	else {
 		NEW( t_gc, common::Thread, "GC" );
 		m_threads.push_back( t_gc );
 	}
@@ -118,21 +113,20 @@ Engine::Engine(
 	NEW( m_gc, gc::GC );
 	t_gc->AddModule( m_gc );
 
-	common::Thread* t_game;
 	if ( m_game ) {
-#if defined( DEBUG ) || defined ( FASTDEBUG )
-		if ( m_config->HasDebugFlag( config::Config::DF_SINGLE_THREAD ) ) {
+		common::Thread* t_game;
+		if ( is_single_thread ) {
 			t_game = t_main;
 		}
-		else
-#endif
-		{
+		else {
 			NEW( t_game, common::Thread, "GAME" );
 			m_threads.push_back( t_game );
 		}
 		t_game->SetIPS( m_config->GetMaxIPS() );
 		t_game->AddModule( m_game );
 	}
+
+	t_main->AddModule( m_scheduler );
 };
 
 Engine::~Engine() {

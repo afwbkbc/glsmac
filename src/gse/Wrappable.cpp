@@ -1,7 +1,7 @@
 #include "Wrappable.h"
 
+#include "common/Mutex.h"
 #include "gse/value/Bool.h"
-
 #include "gc/Space.h"
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

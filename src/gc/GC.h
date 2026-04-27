@@ -1,6 +1,6 @@
 #pragma once
 
-#include <shared_mutex>
+#include "common/Mutex.h"
 #include <unordered_set>
 
 #include "common/Module.h"
@@ -32,6 +32,7 @@ CLASS( GC, common::Module )
 	void Iterate() override;
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
+	static void DebugInit();
 	static const bool IsDebugEnabled();
 	static void DebugLock();
 	static void DebugBegin( const std::string& what );
@@ -41,7 +42,7 @@ CLASS( GC, common::Module )
 #endif
 
 private:
-	std::shared_mutex m_spaces_mutex;
+	common::Mutex m_spaces_mutex;
 	std::unordered_set< Space* > m_spaces = {};
 
 private:
