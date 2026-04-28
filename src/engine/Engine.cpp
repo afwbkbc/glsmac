@@ -210,6 +210,19 @@ void Engine::Log( const std::string& text ) const {
 	for ( const auto& logger : m_loggers ) {
 		logger->Log( text );
 	}
+	for ( const auto& it : m_log_callbacks ) {
+		it.second( text );
+	}
+}
+
+void Engine::AddLogCallback( void* const obj, const f_log_t& logfunc ) {
+	ASSERT( m_log_callbacks.find( obj ) == m_log_callbacks.end(), "log callback object already exists" );
+	m_log_callbacks.insert( { obj, logfunc } );
+}
+
+void Engine::RemoveLogCallback( void* const obj ) {
+	ASSERT( m_log_callbacks.find( obj ) != m_log_callbacks.end(), "log callback object not found" );
+	m_log_callbacks.erase( obj );
 }
 
 }
