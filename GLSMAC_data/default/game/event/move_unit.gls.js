@@ -37,6 +37,7 @@ const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 return {
 
 	validate: (e) => {
+
 		if (e.data.unit.owner != e.caller) {
 			return 'Unit can only be moved by it\'s owner';
 		}
@@ -58,7 +59,7 @@ return {
 		if (e.data.unit.is_immovable) {
 			return 'Unit is immovable';
 		}
-		if (e.data.unit.movement == 0.0) {
+		if (e.data.unit.get_movement() == 0.0) {
 			return 'Unit is out of moves';
 		}
 		if (src_tile == dst_tile) {
@@ -88,7 +89,10 @@ return {
 	},
 
 	resolve: (e) => {
-		if (e.data.unit.movement == 0.0) {
+
+		const movement = e.data.unit.get_movement();
+
+		if (movement == 0.0) {
 			// no moves left
 			return false;
 		}
@@ -100,21 +104,24 @@ return {
 
 		return {
 			is_movement_successful:
-				(e.data.unit.movement >= movement_cost) // unit has enough moves
+				(movement >= movement_cost) // unit has enough moves
 				||
-				(e.game.random.get_float(0.0, movement_cost) < e.data.unit.movement) // unit doesn't have enough moves but was lucky
+				(e.game.random.get_float(0.0, movement_cost) < movement) // unit doesn't have enough moves but was lucky
 		};
 	},
 
 	apply: (e) => {
+
 		const unit = e.data.unit;
 		const src_tile = unit.get_tile();
 		const dst_tile = e.data.tile;
 
+		const movement = unit.get_movement();
+
 		const result = {
 			orig: {
 				tile: src_tile,
-				movement: unit.movement,
+				movement: movement,
 				moved_this_turn: unit.moved_this_turn,
 			}
 		};
@@ -123,10 +130,10 @@ return {
 
 		let next = () => {
 			// reduce remaining movement points (even if failed)
-			if (unit.movement >= movement_cost) {
-				unit.movement = unit.movement - movement_cost;
+			if (movement >= movement_cost) {
+				unit.set_movement(movement - movement_cost);
 			} else {
-				unit.movement = 0.0;
+				unit.set_movement(0.0);
 			}
 			unit.moved_this_turn = true;
 		};
@@ -141,10 +148,11 @@ return {
 	},
 
 	rollback: (e) => {
+
 		const unit = e.data.unit;
 		const orig = e.applied.orig;
 		unit.move_to_tile(orig.tile, () => {
-			unit.movement = orig.movement;
+			unit.set_movement(orig.movement);
 			unit.moved_this_turn = orig.moved_this_turn;
 		});
 	},

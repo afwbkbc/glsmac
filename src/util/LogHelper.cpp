@@ -20,10 +20,15 @@ void LogHelper::Print( const std::string& text ) {
 	std::cout << text;
 }
 
-void LogHelper::Println( const std::string& text ) {
-	ASSERT( s_mutex, "mutex not initialized" );
-	std::lock_guard guard( *s_mutex );
+void LogHelper::Println( const std::string& text, const bool nomutex ) {
+	if ( !nomutex ) {
+		ASSERT( s_mutex, "mutex not initialized" );
+		s_mutex->lock();
+	}
 	std::cout << text << std::endl;
+	if ( !nomutex ) {
+		s_mutex->unlock();
+	}
 }
 
 void LogHelper::Flush() {

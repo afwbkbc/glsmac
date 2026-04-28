@@ -413,7 +413,7 @@ void Game::Iterate() {
 					const std::string* errptr = nullptr;
 					for ( const auto& event : events ) {
 #if defined(DEBUG) || defined(FASTDEBUG)
-						MTModule::Log( "Processing event: " + event->ToString() );
+						MTModule::Log( "Event begin: " + event->ToString() );
 #endif
 						auto* obj = VALUE( gse::value::Object, , GSE_CALL_NOGC, event->GetData() );
 						const auto fargs = gse::value::function_arguments_t{ obj };
@@ -517,6 +517,9 @@ void Game::Iterate() {
 							}
 							delete ( errptr );
 						}
+#if defined(DEBUG) || defined(FASTDEBUG)
+						MTModule::Log( "Event end: " + event->ToString() );
+#endif
 					}
 				});
 			}

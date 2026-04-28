@@ -127,7 +127,7 @@ void Console::Enable() {
 		return;
 	}
 
-	Log( "Opening console" );
+	//Log( "Opening console" );
 
 	m_scene = new scene::Scene( "Console", scene::SCENE_TYPE_UI );
 
@@ -152,7 +152,7 @@ void Console::Disable() {
 		return;
 	}
 
-	Log( "Closing console" );
+	//Log( "Closing console" );
 
 	m_is_enabled = false;
 	HideLines();

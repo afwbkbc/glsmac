@@ -20,7 +20,8 @@ void Config::Error( const std::string& error ) {
 			"\n" +
 			+"ERROR: " + error + "\n" +
 			+"\n"
-			+ m_manager->GetUnknownArgumentNote() + "\n"
+			+ m_manager->GetUnknownArgumentNote() + "\n",
+		true
 	);
 	exit( EXIT_FAILURE );
 };
@@ -61,7 +62,7 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"help", "Show this message", AH( this ) {
-			util::LogHelper::Println( m_manager->GetHelpString() );
+			util::LogHelper::Println( m_manager->GetHelpString(), true );
 			exit( EXIT_SUCCESS );
 		}
 	);

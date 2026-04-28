@@ -1162,7 +1162,7 @@ const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumer
 void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 	if ( !m_is_quiet || is_important ) {
 		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-			util::LogHelper::Println( "<MemoryWatcher> " + text );
+			util::LogHelper::Println( "<MemoryWatcher> " + text, m_mutex == nullptr );
 			fflush( stdout );
 		}
 	}

@@ -85,7 +85,7 @@ void OpenGL::Start() {
 	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-	SDL_GL_SetSwapInterval( ( char ) m_options.vsync );
+	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
@@ -241,7 +241,7 @@ void OpenGL::Iterate() {
 }
 
 void OpenGL::AddScene( scene::Scene* scene ) {
-	Log( "Adding scene [" + scene->GetName() + "]" );
+	//Log( "Adding scene [" + scene->GetName() + "]" );
 
 #ifdef DEBUG
 	bool added = false;
@@ -262,7 +262,7 @@ void OpenGL::AddScene( scene::Scene* scene ) {
 }
 
 void OpenGL::RemoveScene( scene::Scene* scene ) {
-	Log( "Removing scene [" + scene->GetName() + "]" );
+	//Log( "Removing scene [" + scene->GetName() + "]" );
 
 #ifdef DEBUG
 	bool removed = false;

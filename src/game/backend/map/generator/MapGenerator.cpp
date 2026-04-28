@@ -20,7 +20,7 @@ MapGenerator::MapGenerator( Game* game, util::random::Random* random )
 }
 
 void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* map_settings, MT_CANCELABLE ) {
-	float desired_land_amount = map_settings->ocean_coverage;
+	float desired_land_amount = 1.0f - map_settings->ocean_coverage;
 
 	bool need_generation = true;
 	size_t regenerations_asked = 0;
