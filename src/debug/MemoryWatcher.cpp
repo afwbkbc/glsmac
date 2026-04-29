@@ -1,11 +1,13 @@
 #ifdef DEBUG
 
+#include "MemoryWatcher.h"
+
 #include <unordered_map>
 #include <algorithm>
 #include <string>
 #include <sstream>
 
-#include "MemoryWatcher.h"
+#include "common/Mutex.h"
 
 #include "util/LogHelper.h"
 
@@ -124,6 +126,10 @@ MemoryWatcher::MemoryWatcher() {
 
 MemoryWatcher::~MemoryWatcher() {
 
+	if ( m_mutex ) {
+		delete m_mutex;
+	}
+
 	Log( "Checking for possible memory/opengl leaks..." );
 
 	bool any_leaks = false;
@@ -160,7 +166,7 @@ void MemoryWatcher::New( const void* object, const size_t size, const std::strin
 		return;
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( m_allocated_objects.find( object ) == m_allocated_objects.end(), "new double-allocation detected @" + source );
@@ -185,7 +191,7 @@ void MemoryWatcher::MaybeDelete( const void* object ) {
 		return;
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 
 	auto it = m_allocated_objects.find( object );
 	if ( it != m_allocated_objects.end() ) {
@@ -202,7 +208,7 @@ void MemoryWatcher::Delete( const void* object, const std::string& file, const s
 		return;
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	auto it = m_allocated_objects.find( object );
@@ -225,7 +231,7 @@ void* MemoryWatcher::Malloc( const size_t size, const std::string& file, const s
 		return malloc_real( size );
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( size > 0, "allocation of size 0 @" + source );
@@ -254,7 +260,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 		return realloc_real( ptr, size );
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( ptr, "reallocation of null @" + source );
@@ -292,7 +298,7 @@ void* MemoryWatcher::Realloc( void* ptr, const size_t size, const std::string& f
 
 unsigned char* MemoryWatcher::Ptr( unsigned char* ptr, const size_t offset, const size_t size, const std::string& file, const size_t line ) {
 	if ( m_memory_debug ) {
-		std::lock_guard guard( m_mutex );
+		std::lock_guard guard( *m_mutex );
 		const std::string source = file + ":" + std::to_string( line );
 
 		ASSERT( ptr, "ptr is null @" + source );
@@ -313,7 +319,7 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 		return;
 	}
 
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	auto it = m_allocated_memory.find( ptr );
@@ -334,7 +340,7 @@ void MemoryWatcher::Free( void* ptr, const std::string& file, const size_t line 
 }
 
 SDL_GLContext MemoryWatcher::SDLGLCreateContext( SDL_Window* window, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	ASSERT( !m_gl_thread_id, "gl thread already exists @" + source );
@@ -343,7 +349,7 @@ SDL_GLContext MemoryWatcher::SDLGLCreateContext( SDL_Window* window, const std::
 }
 
 void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -372,7 +378,7 @@ void MemoryWatcher::GLGenBuffers( GLsizei n, GLuint* buffers, const std::string&
 }
 
 void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -452,7 +458,7 @@ void MemoryWatcher::GLBindBuffer( GLenum target, GLuint buffer, const std::strin
 }
 
 void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* data, GLenum usage, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -496,7 +502,7 @@ void MemoryWatcher::GLBufferData( GLenum target, GLsizeiptr size, const void* da
 }
 
 void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -547,7 +553,7 @@ void MemoryWatcher::GLDeleteBuffers( GLsizei n, const GLuint* buffers, const std
 }
 
 void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -578,7 +584,7 @@ void MemoryWatcher::GLGenTextures( GLsizei n, GLuint* textures, const std::strin
 }
 
 void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -626,7 +632,7 @@ void MemoryWatcher::GLBindTexture( GLenum target, GLuint texture, const std::str
 }
 
 void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -708,7 +714,7 @@ void MemoryWatcher::GLTexImage2D( GLenum target, GLint level, GLint internalform
 }
 
 void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void* pixels, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -739,7 +745,7 @@ void MemoryWatcher::GLTexSubImage2D( GLenum target, GLint level, GLint xoffset, 
 }
 
 void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -783,7 +789,7 @@ void MemoryWatcher::GLDeleteTextures( GLsizei n, GLuint* textures, const std::st
 }
 
 void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -800,7 +806,7 @@ void MemoryWatcher::GLGenFramebuffers( GLsizei n, GLuint* buffers, const std::st
 }
 
 void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -860,7 +866,7 @@ void MemoryWatcher::GLBindFramebuffer( GLenum target, GLuint buffer, const std::
 }
 
 void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -909,7 +915,7 @@ void MemoryWatcher::GLFramebufferTexture2D( GLenum target, GLenum attachment, GL
 }
 
 void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -935,7 +941,7 @@ void MemoryWatcher::GLDeleteFramebuffers( GLsizei n, const GLuint* buffers, cons
 }
 
 GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -954,7 +960,7 @@ GLuint MemoryWatcher::GLCreateProgram( const std::string& file, const size_t lin
 }
 
 void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -974,7 +980,7 @@ void MemoryWatcher::GLLinkProgram( GLuint program, const std::string& file, cons
 }
 
 void MemoryWatcher::GLValidateProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -995,7 +1001,7 @@ void MemoryWatcher::GLValidateProgram( GLuint program, const std::string& file, 
 }
 
 void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -1016,7 +1022,7 @@ void MemoryWatcher::GLUseProgram( GLuint program, const std::string& file, const
 }
 
 void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -1035,7 +1041,7 @@ void MemoryWatcher::GLDeleteProgram( GLuint program, const std::string& file, co
 }
 
 void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, const void* indices, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -1059,7 +1065,7 @@ void MemoryWatcher::GLDrawElements( GLenum mode, GLsizei count, GLenum type, con
 }
 
 void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void* indices, GLsizei primcount, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
@@ -1083,11 +1089,11 @@ void MemoryWatcher::GLDrawElementsInstanced( GLenum mode, GLsizei count, GLenum 
 }
 
 void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const std::string& file, const size_t line ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 	const std::string source = file + ":" + std::to_string( line );
 
 	CheckGLThread( source );
-	
+
 	ASSERT( mode == GL_TRIANGLE_STRIP, "glDrawArrays unknown mode " + std::to_string( mode ) + " @" + source );
 	ASSERT( m_opengl.current_vertex_buffer, "glDrawArrays vertex buffer not bound @" + source );
 	ASSERT( !m_opengl.current_index_buffer, "glDrawArrays index buffer is bound but not supposed to be @" + source );
@@ -1095,6 +1101,10 @@ void MemoryWatcher::GLDrawArrays( GLenum mode, GLint first, GLsizei count, const
 
 	DEBUG_STAT_INC( opengl_draw_calls );
 	glDrawArrays_real( mode, first, count );
+}
+
+void MemoryWatcher::Init() {
+	m_mutex = new common::Mutex();
 }
 
 void MemoryWatcher::EnableMemoryDebug() {
@@ -1112,7 +1122,7 @@ struct sort_method {
 };
 
 const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumerClasses( size_t count ) {
-	std::lock_guard guard( m_mutex );
+	std::lock_guard guard( *m_mutex );
 
 	statistics_t stats;
 	statistics_t::iterator it_dst;
@@ -1151,12 +1161,10 @@ const MemoryWatcher::statistics_result_t MemoryWatcher::GetLargestMemoryConsumer
 
 void MemoryWatcher::Log( const std::string& text, const bool is_important ) {
 	if ( !m_is_quiet || is_important ) {
-		g_debug_stats._mutex.lock();
 		if ( !g_debug_stats._readonly ) { // don't spam from debug overlay
-			util::LogHelper::Println( "<MemoryWatcher> " + text );
+			util::LogHelper::Println( "<MemoryWatcher> " + text, m_mutex == nullptr );
 			fflush( stdout );
 		}
-		g_debug_stats._mutex.unlock();
 	}
 }
 

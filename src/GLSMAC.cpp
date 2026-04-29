@@ -7,7 +7,7 @@
 #include "scheduler/Scheduler.h"
 #include "util/LogHelper.h"
 #include "gc/Space.h"
-
+#include "console/Console.h"
 #include "ui/UI.h"
 
 #include "gse/GSE.h"
@@ -59,27 +59,31 @@ GLSMAC::GLSMAC()
 		)
 	;
 
-	{
-		m_gc_space->Accumulate( this, [ this, &entry_script ]() {
-			gse::ExecutionPointer ep;
+	m_gc_space->Accumulate( this, [ this ]() {
+		gse::ExecutionPointer ep;
+		// init UI
+		m_ui = new ui::UI( m_gc_space, m_ctx, { "" }, ep );
+	}, nullptr, true);
 
-			// global objects
-			m_ui = new ui::UI( m_gc_space, m_ctx, { "" }, ep );
+	// init console
+	InitConsole();
 
-			// run main(s)
-			m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
-			for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
-				m_gse->RunScript(
-					m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
-						{
-							mod_path,
-							"main"
-						}
-					)
-				);
-			}
-		});
-	}
+	m_gc_space->Accumulate( this, [ this, &entry_script ]() {
+		gse::ExecutionPointer ep;
+		// load main scripts (will be run in RunMain())
+		m_gse->RunScript( m_gc_space, m_ctx, {}, ep, entry_script );
+		for ( const auto& mod_path : g_engine->GetConfig()->GetModPaths() ) {
+			m_gse->RunScript(
+				m_gc_space, m_ctx, {}, ep, util::FS::GeneratePath(
+					{
+						mod_path,
+						"main"
+					}
+				)
+			);
+		}
+	}, nullptr, true );
+
 }
 
 GLSMAC::~GLSMAC() {
@@ -102,6 +106,11 @@ GLSMAC::~GLSMAC() {
 	}
 
 	m_gse->GetAsync()->StopTimers();
+
+	if ( m_console ) {
+		m_console->Stop();
+		delete m_console;
+	}
 
 	m_gc_space->Accumulate( this, [ this ](){
 		gse::ExecutionPointer ep;
@@ -153,6 +162,9 @@ void GLSMAC::Iterate() {
 		ASSERT( response.result == game::backend::R_SUCCESS, "failed to reset game thread" );
 		game->MT_DestroyResponse( response );
 		RunMain();
+	}
+	if ( m_console ) {
+		m_console->Iterate();
 	}
 }
 
@@ -589,6 +601,12 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 			game->Wrap( GSE_CALL, true ),
 		}
 	}; } );
+}
+
+void GLSMAC::InitConsole() {
+	ASSERT( !m_console, "console already initialized" );
+	m_console = new console::Console();
+	m_console->Start();
 }
 
 void GLSMAC::RunMain() {

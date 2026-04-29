@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <atomic>
 #include <string>
+#include <functional>
 
 namespace common {
 class Thread;
@@ -110,7 +111,11 @@ public:
 
 	void Log( const std::string& text ) const;
 
-protected:
+	typedef std::function< void( const std::string& ) > f_log_t;
+	void AddLogCallback( void* const obj, const f_log_t& logfunc );
+	void RemoveLogCallback( void* const obj );
+
+private:
 
 	std::atomic< bool > m_is_shutting_down = false;
 
@@ -132,6 +137,7 @@ protected:
 	game::backend::Game* m_game = nullptr;
 	gc::GC* m_gc = nullptr;
 
+	std::unordered_map< void*, f_log_t > m_log_callbacks = {};
 };
 
 }

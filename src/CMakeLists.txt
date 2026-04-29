@@ -18,6 +18,7 @@ SUBDIR( ui )
 SUBDIR( engine )
 SUBDIR( gc )
 SUBDIR( rr )
+SUBDIR( console )
 SUBDIR( task )
 
 IF ( CMAKE_BUILD_TYPE STREQUAL "Debug" )

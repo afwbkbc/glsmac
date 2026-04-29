@@ -130,7 +130,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		{ "x", VALUE( gse::value::Int,, m_tile->coord.x ) },
 		{ "y", VALUE( gse::value::Int,, m_tile->coord.y ) },
 	} )
-	WRAPIMPL_GET_CUSTOM( "movement", Float, m_movement )
+	WRAPIMPL_GET_CUSTOM( "movement", Float, m_movement ) // TODO: fix
 	WRAPIMPL_GET_CUSTOM( "morale", Int, m_morale )
 	WRAPIMPL_GET_CUSTOM( "health", Float, m_health )
 	WRAPIMPL_GET_CUSTOM( "moved_this_turn", Bool, m_moved_this_turn )
@@ -164,8 +164,24 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			return VALUE( gse::value::Undefined );
 		} )
 	},
+	{
+		"get_movement",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return VALUE( gse::value::Float,, m_movement );
+		} )
+	},
+	{
+		"set_movement",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( movement, 0, Float );
+			m_movement = movement;
+			return VALUE( gse::value::Undefined );
+		} )
+	},
 WRAPIMPL_DYNAMIC_SETTERS( Unit )
-	WRAPIMPL_SET_CUSTOM( "movement", Float, m_movement )
+	WRAPIMPL_SET_CUSTOM( "movement", Float, m_movement ) // TODO: fix
 	WRAPIMPL_SET_CUSTOM( "health", Float, m_health )
 	WRAPIMPL_SET_CUSTOM( "moved_this_turn", Bool, m_moved_this_turn )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )

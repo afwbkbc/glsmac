@@ -19,7 +19,11 @@ class ConfigManager;
 
 namespace config {
 
-CLASS2( Config, common::Module, gse::Wrappable )
+namespace wrapped {
+class Config;
+}
+
+CLASS( Config, common::Module )
 	Config( const std::string& path );
 	~Config();
 
@@ -48,6 +52,7 @@ CLASS2( Config, common::Module, gse::Wrappable )
 		LF_HOST = 1 << 18,
 		LF_JOIN = 1 << 19,
 		LF_MAXIPS = 1 << 20,
+		LF_SINGLE_THREAD = 1 << 21,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
@@ -62,11 +67,10 @@ CLASS2( Config, common::Module, gse::Wrappable )
 		DF_NOPINGS = 1 << 6,
 		DF_VERBOSE_GC = 1 << 7,
 		DF_NO_GC = 1 << 8,
-		DF_SINGLE_THREAD = 1 << 9,
 #ifdef DEBUG
-		DF_MAPDUMP = 1 << 10,
-		DF_MEMORYDEBUG = 1 << 11,
-		DF_QUICKSTART_MAP_DUMP = 1 << 12,
+		DF_MAPDUMP = 1 << 9,
+		DF_MEMORYDEBUG = 1 << 10,
+		DF_QUICKSTART_MAP_DUMP = 1 << 11,
 #endif
 	};
 #endif
@@ -109,7 +113,7 @@ CLASS2( Config, common::Module, gse::Wrappable )
 
 #endif
 
-	WRAPDEFS_PTR( Config )
+	gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false );
 
 private:
 
@@ -156,6 +160,8 @@ private:
 	std::string m_gse_tests_script = "";
 
 #endif
+
+	wrapped::Config* m_wrapped_config = nullptr;
 
 };
 

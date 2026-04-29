@@ -24,7 +24,7 @@ bool Routine::AddScene( scene::Scene* scene ) {
 
 		m_gl_scenes.push_back( gl_scene );
 
-		Log( "Scene [" + scene->GetName() + "] added" );
+		//Log( "Scene [" + scene->GetName() + "] added" );
 
 		return true;
 	}
@@ -44,7 +44,7 @@ bool Routine::RemoveScene( scene::Scene* scene ) {
 			DELETE( *gl_scene_index );
 			m_gl_scenes.erase( gl_scene_index, gl_scene_index + 1 );
 
-			Log( "Scene [" + scene->GetName() + "] removed" );
+			//Log( "Scene [" + scene->GetName() + "] removed" );
 
 			return true;
 		}

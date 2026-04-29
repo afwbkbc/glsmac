@@ -1,6 +1,6 @@
 #include "UUID.h"
 
-#include <mutex>
+#include "common/Mutex.h"
 
 #ifdef _WIN32
 #include <random>
@@ -9,7 +9,7 @@
 
 namespace util {
 
-static std::mutex s_uuid_state_mutex;
+static common::Mutex* s_mutex = nullptr;
 
 #ifndef _WIN32// TODO: make ossp-uuid buildable on windows
 
@@ -36,8 +36,15 @@ static std::uniform_int_distribution<> dis2( 8, 11 );
 
 #endif
 
+void UUID::Init() {
+	ASSERT( !s_mutex, "mutex already initialized" );
+	s_mutex = new common::Mutex();
+}
+
 const std::string UUID::Generate( unsigned int mode ) {
-	std::lock_guard guard( s_uuid_state_mutex );
+	ASSERT( s_mutex, "mutex not initialized" );
+
+	std::lock_guard guard( *s_mutex );
 
 #ifndef _WIN32// TODO: make ossp-uuid buildable on windows
 	uuid_rc_t rc;

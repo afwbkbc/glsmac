@@ -10,17 +10,9 @@
 #include "util/String.h"
 #include "util/random/Random.h"
 #include "util/LogHelper.h"
+#include "config/WrappedConfig.h"
 
 namespace config {
-
-WRAPIMPL_BEGIN( Config )
-	WRAPIMPL_PROPS};
-	for ( const auto& it : m_manager->GetSettings() ) {
-		properties.insert( { it.first, VALUE( gse::value::String, , it.second.second ) } );
-	}
-WRAPIMPL_END_PTR()
-
-UNWRAPIMPL_PTR( Config )
 
 void Config::Error( const std::string& error ) {
 	util::LogHelper::Println(
@@ -28,7 +20,8 @@ void Config::Error( const std::string& error ) {
 			"\n" +
 			+"ERROR: " + error + "\n" +
 			+"\n"
-			+ m_manager->GetUnknownArgumentNote() + "\n"
+			+ m_manager->GetUnknownArgumentNote() + "\n",
+		true
 	);
 	exit( EXIT_FAILURE );
 };
@@ -69,7 +62,7 @@ Config::Config( const std::string& path )
 	);
 	m_manager->AddRule(
 		"help", "Show this message", AH( this ) {
-			util::LogHelper::Println( m_manager->GetHelpString() );
+			util::LogHelper::Println( m_manager->GetHelpString(), true );
 			exit( EXIT_SUCCESS );
 		}
 	);
@@ -304,6 +297,12 @@ Config::Config( const std::string& path )
 		}
 	);
 
+	m_manager->AddRule(
+		"single-thread", "Run everything in same thread", AH( this ) {
+			m_launch_flags |= LF_SINGLE_THREAD;
+		}
+	);
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
 	m_manager->AddRule(
 		"gdb", "Try to start within gdb (on supported platforms)", AH( this ) {
@@ -347,11 +346,6 @@ Config::Config( const std::string& path )
 			}
 			m_debug_flags |= DF_GSE_TESTS_SCRIPT;
 			m_gse_tests_script = value;
-		}
-	);
-	m_manager->AddRule(
-		"single-thread", "Run everything in same thread", AH( this ) {
-			m_debug_flags |= DF_SINGLE_THREAD;
 		}
 	);
 
@@ -519,5 +513,12 @@ const std::string& Config::GetGSETestsScript() const {
 }
 
 #endif
+
+gse::Value* const Config::Wrap( GSE_CALLABLE, const bool dynamic ) {
+	if ( !m_wrapped_config ) {
+		m_wrapped_config = new wrapped::Config( m_manager );
+	}
+	return m_wrapped_config->Wrap( GSE_CALL, dynamic );
+}
 
 }

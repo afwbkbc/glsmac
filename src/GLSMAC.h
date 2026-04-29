@@ -35,6 +35,10 @@ class Faction;
 class State;
 }
 
+namespace console {
+class Console;
+}
+
 CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	GLSMAC();
 	~GLSMAC();
@@ -62,6 +66,8 @@ private:
 	gc::Space* m_gc_space = nullptr;
 
 	gse::Value* m_wrapobj = nullptr;
+
+	console::Console* m_console = nullptr;
 
 	std::vector< gse::Value* > m_main_callables = {};
 
@@ -101,6 +107,8 @@ private:
 	game::frontend::Game* m_game = nullptr;
 
 	std::atomic< bool > m_reset_needed = false;
+
+	void InitConsole();
 
 private:
 	friend class task::main::Main;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/Mutex.h"
 #include <mutex>
 #include <atomic>
 #include <unordered_set>
@@ -53,22 +54,22 @@ private:
 	std::unordered_set< std::thread::id > m_accumulations = {};
 
 	// objects that have been accumulated but won't be collected until accumulator function finishes (that allows for temp values to move and assign where needed)
-	std::mutex m_accumulation_mutex;
+	common::Mutex m_accumulation_mutex;
 	std::unordered_set< Object* > m_accumulated_objects = {};
 
 	// objects that are already collectable
-	std::mutex m_objects_mutex;
+	common::Mutex m_objects_mutex;
 	std::unordered_set< Object* > m_objects = {};
 
 	// thread-safety of collection logic, to make sure only one thread can run collection of this space at any given time
-	std::mutex m_collect_mutex;
+	common::Mutex m_collect_mutex;
 
 	// to avoid reallocations
 	std::unordered_set< Object* > m_reachable_objects_tmp = {};
 
 	// for now let's isolate all script stuff to one thread
 	std::optional< std::thread::id > m_thread_id = {}; // callbacks from same thread will be executed immediately
-	std::mutex m_pending_accumulations_mutex; // callbacks from other threads will be deferred and executed on Iterate()
+	common::Mutex m_pending_accumulations_mutex; // callbacks from other threads will be deferred and executed on Iterate()
 	struct accum_info_t {
 		gc::Object* owner; // owning object that issued accumulation callback, will be kept alive until accumulation is executed
 		f_accum_t cleanup; // cleaner, executed after accumulation was called or when space is being destroyed

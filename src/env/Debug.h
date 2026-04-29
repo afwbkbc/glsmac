@@ -2,7 +2,9 @@
 
 #ifdef DEBUG
 
-#include <mutex>
+#include <atomic>
+
+#include "common/Mutex.h"
 
 #include "debug/MemoryWatcher.h"
 
@@ -33,13 +35,12 @@
     D( ui_elements_active )
 
 #define D( _stat ) struct { \
-        ssize_t total = 0; \
-        ssize_t current = 0; \
+        std::atomic< ssize_t > total = 0; \
+        std::atomic< ssize_t > current = 0; \
     } _stat;
 
 struct debug_stats_t {
-	std::mutex _mutex; \
-        bool _readonly = false;
+	std::atomic< bool > _readonly = false;
 	DEBUG_STATS
 };
 
@@ -48,37 +49,23 @@ struct debug_stats_t {
 extern debug_stats_t g_debug_stats;
 
 // to prevent debug overlay from polluting stats by it's own activity
-#define DEBUG_STATS_SET_RO() { \
-    g_debug_stats._mutex.lock(); \
-    g_debug_stats._readonly = true; \
-    g_debug_stats._mutex.unlock(); \
-}
-#define DEBUG_STATS_SET_RW() { \
-    g_debug_stats._mutex.lock(); \
-    g_debug_stats._readonly = false; \
-    g_debug_stats._mutex.unlock(); \
-}
+#define DEBUG_STATS_SET_RO() g_debug_stats._readonly = true
+#define DEBUG_STATS_SET_RW() g_debug_stats._readonly = false
 
 #define DEBUG_STAT_GET( _stat, _totalvar, _currentvar ) { \
-    g_debug_stats._mutex.lock(); \
     _totalvar = g_debug_stats._stat.total; \
     _currentvar = g_debug_stats._stat.current; \
-    g_debug_stats._mutex.unlock(); \
 }
 
 #define DEBUG_STAT_CLEAR( _stat ) { \
-    g_debug_stats._mutex.lock(); \
     g_debug_stats._stat.current = 0; \
-    g_debug_stats._mutex.unlock(); \
 }
 
 #define DEBUG_STAT_CHANGE_BY( _stat, _by ) { \
-    g_debug_stats._mutex.lock(); \
     if ( !g_debug_stats._readonly ) { \
         g_debug_stats._stat.total += _by; \
         g_debug_stats._stat.current += _by; \
     } \
-    g_debug_stats._mutex.unlock(); \
 }
 #define DEBUG_STAT_INC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, 1 )
 #define DEBUG_STAT_DEC( _stat ) DEBUG_STAT_CHANGE_BY( _stat, -1 )

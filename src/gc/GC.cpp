@@ -6,6 +6,7 @@
 #include "util/LogHelper.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
+#include "common/Mutex.h"
 #endif
 
 namespace gc {
@@ -35,7 +36,12 @@ void GC::Iterate() {
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 thread_local static uint8_t s_gc_debug_offset = 0;
-static std::mutex s_gc_debug_mutex;
+static common::Mutex* s_gc_debug_mutex = nullptr;
+
+void GC::DebugInit() {
+	ASSERT( !s_gc_debug_mutex, "gc debug mutex already initialized" );
+	s_gc_debug_mutex = new common::Mutex();
+}
 
 const bool GC::IsDebugEnabled() {
 	ASSERT( g_engine, "engine not set" );
@@ -45,7 +51,8 @@ const bool GC::IsDebugEnabled() {
 
 void GC::DebugLock() {
 	if ( IsDebugEnabled() ) {
-		s_gc_debug_mutex.lock();
+		ASSERT( s_gc_debug_mutex, "gc debug mutex not initialized" );
+		s_gc_debug_mutex->lock();
 	}
 }
 
@@ -72,7 +79,8 @@ void GC::DebugEnd() {
 
 void GC::DebugUnlock() {
 	if ( IsDebugEnabled() ) {
-		s_gc_debug_mutex.unlock();
+		ASSERT( s_gc_debug_mutex, "gc debug mutex not initialized" );
+		s_gc_debug_mutex->unlock();
 		ASSERT( s_gc_debug_offset == 0, "debug offset not zero, something's wrong" );
 		util::LogHelper::Flush();
 	}

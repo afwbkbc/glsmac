@@ -79,6 +79,7 @@
 
 #include "util/FS.h"
 #include "util/LogHelper.h"
+#include "util/UUID.h"
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 #include "util/System.h"
@@ -95,18 +96,18 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hpInstance, LPSTR nCmdLine, i
 #endif
 
 #ifdef DEBUG
-	debug::MemoryWatcher memory_watcher;
+debug::MemoryWatcher memory_watcher;
 #endif
 
 #ifdef _WIN32
-	int argc = 0;
-	const LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
-	char* argv[ argc ];
-	for ( int i = 0; i < argc; i++ ) {
-		const int sz = wcslen( argw[ i ] );
-		argv[ i ] = (char*)malloc( sz + 1 );
-		wcstombs( argv[ i ], argw[ i ], sz + 1 );
-	}
+int argc = 0;
+const LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
+char* argv[ argc ];
+for ( int i = 0; i < argc; i++ ) {
+	const int sz = wcslen( argw[ i ] );
+	argv[ i ] = (char*)malloc( sz + 1 );
+	wcstombs( argv[ i ], argw[ i ], sz + 1 );
+}
 #else
 int main( const int argc, char* const argv[] ) {
 #endif
@@ -114,7 +115,14 @@ int main( const int argc, char* const argv[] ) {
 	config::Config config( argv[ 0 ] );
 	config.Init( argc, argv );
 
+	common::Mutex::SetMutexMode(
+		config.HasLaunchFlag( config::Config::LF_SINGLE_THREAD )
+			? common::MM_NONE
+			: common::MM_DEFAULT
+	);
+
 #if defined( DEBUG ) || defined( FASTDEBUG )
+
 	if ( config.HasDebugFlag( config::Config::DF_GDB ) ) {
 #ifdef __linux__
 		// automatically start under gdb if possible
@@ -146,15 +154,20 @@ int main( const int argc, char* const argv[] ) {
 		util::LogHelper::Println( "WARNING: gdb check skipped due to unsupported platform" );
 #endif
 	}
-#ifdef DEBUG
 	if ( config.HasDebugFlag( config::Config::DF_MEMORYDEBUG ) ) {
 		memory_watcher.EnableMemoryDebug();
 	}
 	if ( config.HasDebugFlag( config::Config::DF_QUIET ) ) {
 		memory_watcher.EnableQuiet();
 	}
+
+	gc::GC::DebugInit();
+	memory_watcher.Init();
+
 #endif
-#endif
+
+	util::LogHelper::Init();
+	util::UUID::Init();
 
 	util::FS::CreateDirectoryIfNotExists( config.GetPrefix() );
 #if defined( DEBUG ) || defined( FASTDEBUG )

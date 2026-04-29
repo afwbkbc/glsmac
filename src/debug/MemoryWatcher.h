@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <mutex>
+#include "common/Mutex.h"
 #include <SDL2/SDL_video.h>
 #include <GL/glew.h>
 #include <thread>
@@ -59,13 +59,14 @@ public:
 	typedef std::vector< statistics_item_t > statistics_result_t;
 	const statistics_result_t GetLargestMemoryConsumerClasses( size_t count = 10 );
 
+	void Init();
 	void EnableMemoryDebug();
 	void EnableQuiet();
 
 private:
 	bool m_memory_debug = false;
 	bool m_is_quiet = false;
-	std::mutex m_mutex;
+	common::Mutex* m_mutex = nullptr;
 	void Log( const std::string& text, const bool is_important = false );
 
 	struct object_info_t {

@@ -134,6 +134,14 @@ Color::rgba_t Color::RGBA( const uint8_t red, const uint8_t green, const uint8_t
 	return red | ( green << 8 ) | ( blue << 16 ) | ( alpha << 24 );
 }
 
+Color::rgba_t Color::ToRGBA( const color_t& color ) {
+	return
+		( (uint8_t)( color.red * 256 ) ) |
+			( (uint8_t)( color.green * 256 ) >> 8 ) |
+			( (uint8_t)( color.blue * 256 ) >> 16 ) |
+			( (uint8_t)( color.alpha * 256 ) >> 24 );
+}
+
 Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t blue ) {
 	return RGBA( red, green, blue, 255 );
 }
