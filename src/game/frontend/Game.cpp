@@ -1497,7 +1497,7 @@ void Game::Initialize(
 												auto* u = game->GetUM()->GetUnit( unit->GetId() );
 												game->Event(
 													GSE_CALL, "unit_skip_turn", {
-														{ "unit", u->Wrap( GSE_CALL, true ) },
+														{ "unit", u->Wrap( GSE_CALL ) },
 													}
 												);
 											}
@@ -1548,8 +1548,8 @@ void Game::Initialize(
 												ASSERT( unit, "unit not found" );
 												game->Event(
 													GSE_CALL, "move_unit", {
-														{ "unit", unit->Wrap( GSE_CALL, true ) },
-														{ "tile", dst_tile->Wrap( GSE_CALL, true ) },
+														{ "unit", unit->Wrap( GSE_CALL ) },
+														{ "tile", dst_tile->Wrap( GSE_CALL ) },
 													}
 												);
 											}
@@ -1561,8 +1561,8 @@ void Game::Initialize(
 												ASSERT( attacker, "defender unit not found" );
 												game->Event(
 													GSE_CALL, "attack_unit", {
-														{ "attacker", attacker->Wrap( GSE_CALL, true ) },
-														{ "defender", defender->Wrap( GSE_CALL, true ) },
+														{ "attacker", attacker->Wrap( GSE_CALL ) },
+														{ "defender", defender->Wrap( GSE_CALL ) },
 													}
 												);
 											}

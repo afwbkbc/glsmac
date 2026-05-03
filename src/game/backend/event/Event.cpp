@@ -123,7 +123,7 @@ gse::Value* Event::GetResolved() {
 
 void Event::UpdateData( GSE_CALLABLE ) {
 	m_data = {
-		{ "game", m_game->Wrap( GSE_CALL, true ) },
+		{ "game", m_game->Wrap( GSE_CALL ) },
 		{ "caller", VALUE( gse::value::Int, , m_caller ) },
 		{ "data",   VALUE( gse::value::Object, , GSE_CALL_NOGC, m_original_data ) },
 	};

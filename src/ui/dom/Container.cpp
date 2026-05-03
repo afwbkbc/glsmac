@@ -360,7 +360,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		if ( geometry ) {
 			m_factory_owner->UpdateChildZIndex( obj->m_dom_id, {}, geometry->GetZIndex() );
 		}
-		return obj->Wrap( GSE_CALL, true );
+		return obj->Wrap( GSE_CALL );
 	} ) );
 }
 

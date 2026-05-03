@@ -41,6 +41,7 @@
 #include "gse/value/Range.h"
 #include "gse/value/LoopControl.h"
 #include "gse/value/Exception.h"
+#include "gse/value/Ptr.h"
 #include "gse/ExecutionPointer.h"
 
 #include "gc/Space.h"
@@ -792,6 +793,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						case gse::VT_LOOPCONTROL: {
 							THROW( "TODO: VT_LOOPCONTROL" );
 						}
+						case gse::VT_PTR: {
+							THROW( "TODO: VT_LOOPCONTROL" );
+						}
 						case gse::VT_OBJECTREF: {
 							return process_indexable( Deref( ctx, expression->a->m_si, ep, refv ) );
 						}
@@ -1111,6 +1115,10 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 			}
 			case gse::VT_VALUEREF: {
 				v = ( (ValueRef*)value )->target;
+				break;
+			}
+			case gse::VT_PTR: {
+				v = ( (Ptr*)value )->GetValue();
 				break;
 			}
 			default: {

@@ -150,7 +150,7 @@ WRAPIMPL_BEGIN( Player )
 				NATIVE_CALL( this ) {
 					N_EXPECT_ARGS( 0 );
 					return m_faction
-						? m_faction->Wrap( GSE_CALL, gc_space )
+						? m_faction->Wrap( GSE_CALL )
 						: VALUE( gse::value::Undefined );
 				} )
 			},

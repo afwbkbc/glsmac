@@ -192,7 +192,7 @@ WRAPIMPL_BEGIN( State )
 		WRAPIMPL_TRIGGERS
 		{
 			"fm",
-			m_fm->Wrap( GSE_CALL, true )
+			m_fm->Wrap( GSE_CALL )
 		},
 	};
 WRAPIMPL_END_PTR()

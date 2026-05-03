@@ -113,7 +113,7 @@ CLASS( Config, common::Module )
 
 #endif
 
-	gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false );
+	gse::Value* const Wrap( GSE_CALLABLE );
 
 private:
 

@@ -174,11 +174,11 @@ WRAPIMPL_BEGIN( GLSMAC )
 	WRAPIMPL_TRIGGERS
 		{
 			"config",
-			g_engine->GetConfig()->Wrap( GSE_CALL, true ),
+			g_engine->GetConfig()->Wrap( GSE_CALL ),
 		},
 		{
 			"ui",
-			m_ui->Wrap( GSE_CALL, true )
+			m_ui->Wrap( GSE_CALL )
 		},
 		{
 			"run",
@@ -228,7 +228,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 		},
 		{
 			"game",
-			game->Wrap( GSE_CALL, true ),
+			game->Wrap( GSE_CALL ),
 		},
 		{
 			"connect",
@@ -257,7 +257,7 @@ WRAPIMPL_BEGIN( GLSMAC )
 						GSE_ERROR( gse::EC.GAME_ERROR, "Network role not set" );
 				}
 				m_state->SetConnection( connection );
-				return connection->Wrap( GSE_CALL, true );
+				return connection->Wrap( GSE_CALL );
 			} ),
 		},
 		{
@@ -441,7 +441,7 @@ void GLSMAC::S_MainMenu( GSE_CALLABLE ) {
 	TriggerObject( this, "mainmenu_show", ARGS_F( this ) {
 		{
 			"settings",
-			m_state->m_settings.Wrap( GSE_CALL, true ),
+			m_state->m_settings.Wrap( GSE_CALL ),
 		}
 	}; } );
 }
@@ -530,7 +530,7 @@ void GLSMAC::InitGameState( GSE_CALLABLE ) {
 		TriggerObject( this, "configure_state", ARGS_F( this ) {
 			{
 				"fm",
-				m_state->GetFM()->Wrap( GSE_CALL, true ),
+				m_state->GetFM()->Wrap( GSE_CALL ),
 			}
 		}; } );
 	});
@@ -598,7 +598,7 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 	TriggerObject( this, "configure_game", ARGS_F( &game ) {
 		{
 			"game",
-			game->Wrap( GSE_CALL, true ),
+			game->Wrap( GSE_CALL ),
 		}
 	}; } );
 }

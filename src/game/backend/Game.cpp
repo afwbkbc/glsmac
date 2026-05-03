@@ -639,7 +639,7 @@ WRAPIMPL_BEGIN( Game )
 		},
 		{
 			"random",
-			m_random->Wrap( GSE_CALL, true )
+			m_random->Wrap( GSE_CALL )
 		},
 		{
 			"message",
@@ -788,7 +788,7 @@ WRAPIMPL_BEGIN( Game )
 				if ( !m_state ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
 				}
-				return m_state->m_settings.Wrap( GSE_CALL, true );
+				return m_state->m_settings.Wrap( GSE_CALL );
 			} )
 		},
 		{
@@ -798,7 +798,7 @@ WRAPIMPL_BEGIN( Game )
 				if ( !m_map ) {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Map not initialized" );
 				}
-				return m_map->Wrap( GSE_CALL, true );
+				return m_map->Wrap( GSE_CALL );
 			} )
 		},
 		{
@@ -873,7 +873,7 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
 				return m_state
-					? m_state->GetFM()->Wrap( GSE_CALL, true )
+					? m_state->GetFM()->Wrap( GSE_CALL )
 					: VALUE( gse::value::Undefined )
 					;
 			} )
@@ -884,7 +884,7 @@ WRAPIMPL_BEGIN( Game )
 			NATIVE_CALL( this ) { \
 				N_EXPECT_ARGS( 0 ); \
 				return m_##_x \
-					? m_##_x->Wrap( GSE_CALL, true ) \
+					? m_##_x->Wrap( GSE_CALL ) \
 					: VALUE( gse::value::Undefined ) \
 					; \
 			} ) \
@@ -940,7 +940,7 @@ WRAPIMPL_BEGIN( Game )
 		properties.insert(
 			{
 				"tm",
-				m_tm->Wrap( GSE_CALL, true )
+				m_tm->Wrap( GSE_CALL )
 			}
 		);
 	}
@@ -948,7 +948,7 @@ WRAPIMPL_BEGIN( Game )
 		properties.insert(
 			{
 				"rm",
-				m_rm->Wrap( GSE_CALL, true )
+				m_rm->Wrap( GSE_CALL )
 			}
 		);
 	}
@@ -956,7 +956,7 @@ WRAPIMPL_BEGIN( Game )
 		properties.insert(
 			{
 				"um",
-				m_um->Wrap( GSE_CALL, true )
+				m_um->Wrap( GSE_CALL )
 			}
 		);
 	}
@@ -965,7 +965,7 @@ WRAPIMPL_BEGIN( Game )
 
 			{
 				"bm",
-				m_bm->Wrap( GSE_CALL, true ),
+				m_bm->Wrap( GSE_CALL ),
 			}
 		);
 	}
@@ -973,7 +973,7 @@ WRAPIMPL_BEGIN( Game )
 		properties.insert(
 			{
 				"am",
-				m_am->Wrap( GSE_CALL, true )
+				m_am->Wrap( GSE_CALL )
 			}
 		);
 	}
@@ -1337,7 +1337,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 				m_um, "unit_turn", ARGS_F( &unit ) {
 					{
 						"unit",
-						unit->Wrap( GSE_CALL, true )
+						unit->Wrap( GSE_CALL )
 					},
 				}; }
 			);
@@ -1351,7 +1351,7 @@ void Game::AdvanceTurn( const size_t turn_id ) {
 				m_bm, "base_turn", ARGS_F( &base ) {
 					{
 						"base",
-						base->Wrap( GSE_CALL, true )
+						base->Wrap( GSE_CALL )
 					},
 				}; }
 			);

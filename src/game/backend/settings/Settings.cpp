@@ -116,7 +116,7 @@ WRAPMAP( network_role, LocalSettings::network_role_t,
 WRAPIMPL_DYNAMIC_GETTERS( LocalSettings )
 			{
 				"account",
-				account.Wrap( GSE_CALL, true ),
+				account.Wrap( GSE_CALL ),
 			},
 			WRAPIMPL_GET_MAPPED( game_mode )
 			WRAPIMPL_GET_MAPPED( network_type )
@@ -156,11 +156,11 @@ WRAPIMPL_BEGIN( Settings )
 	WRAPIMPL_PROPS
 			{
 				"global",
-				global.Wrap( GSE_CALL, true ),
+				global.Wrap( GSE_CALL ),
 			},
 			{
 				"local",
-				local.Wrap( GSE_CALL, true ),
+				local.Wrap( GSE_CALL ),
 			},
 		};
 WRAPIMPL_END_PTR()

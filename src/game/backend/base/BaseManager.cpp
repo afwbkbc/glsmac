@@ -372,7 +372,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				SpawnBase( GSE_CALL, base );
 
-				return base->Wrap( GSE_CALL, true );
+				return base->Wrap( GSE_CALL );
 			} )
 		},
 		{
@@ -402,7 +402,7 @@ WRAPIMPL_BEGIN( BaseManager )
 				gse::value::array_elements_t arr = {};
 				arr.reserve( m_bases.size() );
 				for ( const auto& it : m_bases ) {
-					arr.push_back( it.second->Wrap( GSE_CALL, true ) );
+					arr.push_back( it.second->Wrap( GSE_CALL ) );
 				}
 
 				return VALUE( gse::value::Array,, arr );

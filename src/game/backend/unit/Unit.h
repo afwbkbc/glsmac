@@ -48,9 +48,9 @@ public:
 	Def* m_def;
 	slot::Slot* m_owner;
 
-	movement_t m_movement;
-	morale_t m_morale;
-	health_t m_health;
+	std::atomic< movement_t > m_movement;
+	std::atomic< morale_t > m_morale;
+	std::atomic< health_t > m_health;
 	bool m_moved_this_turn;
 
 	size_t m_animation_id = 0;

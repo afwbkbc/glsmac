@@ -72,7 +72,7 @@ void Bindings::RunMain() {
 		ASSERT( gc_space, "gc space is null" );
 		for ( const auto& main : m_main_callables ) {
 			ASSERT( main->type == gse::VT_CALLABLE, "main not callable" );
-			auto gm = m_state->Wrap( GSE_CALL, gc_space );
+			auto gm = m_state->Wrap( GSE_CALL );
 			( (gse::value::Callable*)main )->Run( gc_space, m_gse_context, m_si_internal, ep, { gm } );
 		}
 	});

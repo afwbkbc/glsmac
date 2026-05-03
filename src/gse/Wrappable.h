@@ -86,7 +86,7 @@ public:
 	Wrappable& operator=( const Wrappable& other );
 	virtual ~Wrappable();
 
-	virtual Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) = 0;
+	virtual Value* const Wrap( GSE_CALLABLE ) = 0;
 
 	virtual void NotifyDependencyDestruction( const Wrappable* const dependency ) {}
 

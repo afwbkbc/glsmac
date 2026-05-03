@@ -55,7 +55,7 @@ const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::T
 		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( &tile, &slot, &it ) {
 			{
 				"tile",
-				tile->Wrap( GSE_CALL, gc_space )
+				tile->Wrap( GSE_CALL )
 			},
 			{
 				"resource",
@@ -63,7 +63,7 @@ const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::T
 			},
 			{
 				"player",
-				slot->Wrap( GSE_CALL, gc_space )
+				slot->Wrap( GSE_CALL )
 			},
 		}; } );
 		if ( result->type != gse::VT_INT ) {

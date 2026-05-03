@@ -46,6 +46,7 @@ enum value_type_t : uint8_t {
 	VT_VALUEREF,
 	VT_RANGE,
 	VT_LOOPCONTROL,
+	VT_PTR,
 };
 
 typedef size_t timer_id_t;
