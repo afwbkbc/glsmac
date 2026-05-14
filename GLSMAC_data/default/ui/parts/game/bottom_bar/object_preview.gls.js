@@ -5,7 +5,7 @@ return {
 			this.moralesets[type] = this.um.get_moraleset('NATIVE');
 		}
 		if (value >= #sizeof(this.moralesets[type])) {
-			console.warn('Morale not found: ' + type = '/' + #to_string(value));
+			#print('Morale not found: ' + type + '/' + #to_string(value));
 			return '(???)';
 		}
 		return this.moralesets[type][value];

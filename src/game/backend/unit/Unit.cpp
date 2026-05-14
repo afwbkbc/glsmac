@@ -130,8 +130,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		{ "x", VALUE( gse::value::Int,, m_tile->coord.x ) },
 		{ "y", VALUE( gse::value::Int,, m_tile->coord.y ) },
 	} )
-	WRAPIMPL_GET_CUSTOM( "movement", Ptr, gse::VT_FLOAT, &m_movement )
-	WRAPIMPL_GET_CUSTOM( "morale", Ptr, gse::VT_INT, &m_morale )
+	WRAPIMPL_GET_CUSTOM( "movement", Ptr, m_movement )
+	WRAPIMPL_GET_CUSTOM( "morale", Ptr, m_morale )
 	WRAPIMPL_GET_CUSTOM( "health", Float, m_health )
 	WRAPIMPL_GET_CUSTOM( "moved_this_turn", Bool, m_moved_this_turn )
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )

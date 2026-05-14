@@ -263,9 +263,9 @@ public:
 	const std::string Dump() const;
 
 	Value* const Deref();
-	Value* const Clone();
+	virtual Value* const Clone();
 
-#define OP( _op ) const bool operator _op( const Value& other ) const;
+#define OP( _op ) virtual const bool operator _op( const Value& other ) const;
 	OP( == )
 	OP( != )
 	OP( < )

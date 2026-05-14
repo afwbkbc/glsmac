@@ -504,7 +504,7 @@ Value* const Value::New( const Value* value ) {
 		case VT_LOOPCONTROL:
 			THROW( "loop controls are not supposed to be cloned" );
 		case VT_PTR:
-			return ( (value::Ptr*)value );
+			THROW( "we don't clone ptr" );
 		default: {
 			THROW( "unsupported value type: " + ToString() );
 		}

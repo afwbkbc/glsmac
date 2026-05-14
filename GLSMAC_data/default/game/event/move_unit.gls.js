@@ -59,7 +59,7 @@ return {
 		if (e.data.unit.is_immovable) {
 			return 'Unit is immovable';
 		}
-		if (e.data.unit.movement == 0.0) {
+		if (e.data.unit.movement <= 0.0) {
 			return 'Unit is out of moves';
 		}
 		if (src_tile == dst_tile) {

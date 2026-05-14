@@ -430,7 +430,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		}
 		case OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
-			auto result = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
+			auto* result = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;
@@ -1119,7 +1119,7 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 				break;
 			}
 			case gse::VT_PTR: {
-				v = ( (Ptr*)value )->GetValue();
+				v = ( (AnyPtr*)value )->Clone(); // TODO: not needed in some cases
 				break;
 			}
 			default: {
