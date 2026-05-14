@@ -1055,6 +1055,7 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 			THROW( "unexpected index type: " + operand->ToString() );
 		}
 	}
+	value = Deref( ctx, operand->m_si, ep, value );
 	switch ( value->type ) {
 		case gse::VT_INT:
 		case gse::VT_STRING:
