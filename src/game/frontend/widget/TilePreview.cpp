@@ -49,8 +49,10 @@ void TilePreview::Update( ui::dom::Widget* const widget, const void* const data 
 
 	// add tile texture
 	auto* const texture = m_game->GetTerrainTexture();
+	types::Color tint = { 1.5f, 1.5f, 1.5f, 1.0f }; // to compensate for lack of lighting
 	for ( auto& preview_mesh : render.preview_meshes ) {
-		AddMeshAndTexture( widget, index++, preview_mesh, texture );
+		auto* const actor = AddMeshAndTexture( widget, index++, preview_mesh, texture );
+		actor->SetTintColor( tint );
 	}
 
 	// add tile sprites

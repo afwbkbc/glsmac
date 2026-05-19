@@ -31,7 +31,7 @@ Widget::~Widget() {
 	m_ui->UnregisterWidget( m_type );
 }
 
-void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, const types::mesh::Render* const mesh, types::texture::Texture* const texture, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
+scene::actor::Mesh* const Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, const types::mesh::Render* const mesh, types::texture::Texture* const texture, const bool keep_tex, const types::Vec2< float >& scale, const types::Vec2< float >& offset ) {
 	auto* g = widget->GetGeometry()->AsRectangle();
 	ASSERT( g, "geometry is null or not rectangle" );
 	types::texture::Texture* t;
@@ -52,12 +52,14 @@ void Widget::AddMeshAndTexture( ui::dom::Widget* const widget, size_t index, con
 	}
 	g->AddMesh( m, keep_tex, scale, offset );
 	NEWV( actor, scene::actor::Mesh, "UI::Widget::Actor", m );
+	actor->SetRenderFlags( scene::actor::Actor::RF_IGNORE_LIGHTING );
 	g->AddActor( actor );
 	actor->SetTexture( t );
 	widget->SetActor( actor, index );
 	if ( !texture ) {
 		widget->SetTexture( t, index );
 	}
+	return actor;
 }
 
 void Widget::WithWidget( const ui::f_with_widget_t& f ) const {

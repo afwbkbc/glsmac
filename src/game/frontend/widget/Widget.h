@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+
 #include "common/Mutex.h"
 
 #include "common/Common.h"
@@ -15,6 +16,10 @@ class Render;
 namespace texture {
 class Texture;
 }
+}
+
+namespace scene::actor {
+class Mesh;
 }
 
 namespace gse::value {
@@ -53,7 +58,7 @@ protected:
 	ui::UI* const m_ui;
 	const ui::widget_type_t m_type;
 
-	void AddMeshAndTexture(
+	scene::actor::Mesh* const AddMeshAndTexture(
 		ui::dom::Widget* const widget,
 		size_t index,
 		const types::mesh::Render* const mesh = nullptr,
