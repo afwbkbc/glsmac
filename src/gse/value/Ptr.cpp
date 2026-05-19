@@ -2,6 +2,7 @@
 
 #include "gse/value/Float.h"
 #include "gse/value/Int.h"
+#include "gse/value/Bool.h"
 
 namespace gse {
 namespace value {
@@ -22,6 +23,7 @@ template<> Value* const Ptr< _type >::Clone() { \
 }
 CLONEIMPL( float, Float );
 CLONEIMPL( int64_t, Int );
+CLONEIMPL( bool, Bool );
 #undef CLONEIMPL
 
 // operators
@@ -52,6 +54,7 @@ DEFAULT_COMPARE_OP( _type, _gse_vt, _gse_type, <= ) \
 DEFAULT_COMPARE_OP( _type, _gse_vt, _gse_type, >= )
 DEFAULT_COMPARE( float, VT_FLOAT, Float );
 DEFAULT_COMPARE( int64_t, VT_INT, Int );
+DEFAULT_COMPARE( bool, VT_BOOL, Bool );
 #undef DEFAULT_COMPARE
 #undef DEFAULT_COMPARE_OP
 
@@ -62,10 +65,12 @@ template<> const value_type_t Ptr< _type >::GetPtrType() const { \
 }
 PTRTYPEIMPL( float, VT_FLOAT );
 PTRTYPEIMPL( int64_t, VT_INT );
+PTRTYPEIMPL( bool, VT_BOOL );
 #undef PTRTYPEIMPL
 
 template class Ptr< float >;
 template class Ptr< int64_t >;
+template class Ptr< bool >;
 
 }
 }

@@ -1131,7 +1131,8 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 			case VT_ARRAYREF:
 			case VT_ARRAYRANGEREF:
 			case VT_OBJECTREF:
-			case VT_VALUEREF: {
+			case VT_VALUEREF:
+			case VT_PTR: {
 				return Deref( ctx, si, ep, v );
 			}
 			default: {

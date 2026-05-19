@@ -180,6 +180,11 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         _key, \
         VALUE( gse::value::_type,, __VA_ARGS__ ) \
     },
+#define WRAPIMPL_GET_PTR( _key, ... ) \
+    { \
+        _key, \
+        VALUE( gse::value::Ptr,, __VA_ARGS__ ) \
+    },
 #define WRAPIMPL_GET( _property, _type ) WRAPIMPL_GET_CUSTOM( #_property, _type, _property )
 #define WRAPIMPL_GET_MAPPED_CUSTOM( _property, _map ) \
     { \
@@ -201,6 +206,16 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         }) \
     },
 
+#define WRAPIMPL_SET_PTR( _key, _type, _property ) \
+    if ( key == _key ) { \
+        if ( value->type != gse::value::_type::GetType() ) { \
+            GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString() ); \
+        } \
+        obj->_property.store( ((gse::value::_type*)value)->value ); /* enforce atomics */ \
+        obj->OnWrapSet( GSE_CALL, _key ); \
+        return; \
+    }
+
 #define WRAPIMPL_SET_CUSTOM( _key, _type, _property ) \
     if ( key == _key ) { \
         if ( value->type != gse::value::_type::GetType() ) { \
@@ -210,6 +225,8 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         obj->OnWrapSet( GSE_CALL, _key ); \
         return; \
     }
+
+// TODO: switch to PTR
 #define WRAPIMPL_SET( _property, _type ) WRAPIMPL_SET_CUSTOM( #_property, _type, _property )
 
 #define WRAPIMPL_SET_MAPPED_CUSTOM( _property, _map ) \
@@ -217,7 +234,7 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         if ( value->type != gse::VT_STRING ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: String, got: " + value->GetTypeString() ); \
         } \
-        obj->_property = _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
+        obj->_property.store( _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ) ); /* enforce atomics */ \
         obj->OnWrapSet( GSE_CALL, #_property ); \
         return; \
     }

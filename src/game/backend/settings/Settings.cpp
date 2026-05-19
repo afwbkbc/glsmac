@@ -3,6 +3,7 @@
 #include "util/FS.h"
 
 #include "gse/value/Float.h"
+#include "gse/value/Ptr.h"
 
 namespace game {
 namespace backend {
@@ -17,21 +18,21 @@ WRAPMAP( type, MapSettings::type_t,
 WRAPIMPL_DYNAMIC_GETTERS( MapSettings )
 			WRAPIMPL_GET_MAPPED( type )
 			WRAPIMPL_GET( filename, String )
-			WRAPIMPL_GET( size_x, Int )
-			WRAPIMPL_GET( size_y, Int )
-			WRAPIMPL_GET( ocean_coverage, Float )
-			WRAPIMPL_GET( erosive_forces, Float )
-			WRAPIMPL_GET( native_lifeforms, Float )
-			WRAPIMPL_GET( cloud_cover, Float )
+			WRAPIMPL_GET_PTR( "size_x", size_x )
+			WRAPIMPL_GET_PTR( "size_y", size_y )
+			WRAPIMPL_GET_PTR( "ocean_coverage", ocean_coverage )
+			WRAPIMPL_GET_PTR( "erosive_forces", erosive_forces )
+			WRAPIMPL_GET_PTR( "native_lifeforms", native_lifeforms )
+			WRAPIMPL_GET_PTR( "cloud_cover", cloud_cover )
 WRAPIMPL_DYNAMIC_SETTERS( MapSettings )
 	WRAPIMPL_SET_MAPPED( type )
 	WRAPIMPL_SET( filename, String )
-	WRAPIMPL_SET( size_x, Int )
-	WRAPIMPL_SET( size_y, Int )
-	WRAPIMPL_SET( ocean_coverage, Float )
-	WRAPIMPL_SET( erosive_forces, Float )
-	WRAPIMPL_SET( native_lifeforms, Float )
-	WRAPIMPL_SET( cloud_cover, Float )
+	WRAPIMPL_SET_PTR( "size_x", Int, size_x )
+	WRAPIMPL_SET_PTR( "size_y", Int, size_y )
+	WRAPIMPL_SET_PTR( "ocean_coverage", Float, ocean_coverage )
+	WRAPIMPL_SET_PTR( "erosive_forces", Float, erosive_forces )
+	WRAPIMPL_SET_PTR( "native_lifeforms", Float, native_lifeforms )
+	WRAPIMPL_SET_PTR( "cloud_cover", Float, cloud_cover )
 WRAPIMPL_DYNAMIC_ON_SET( MapSettings )
 WRAPIMPL_DYNAMIC_END()
 

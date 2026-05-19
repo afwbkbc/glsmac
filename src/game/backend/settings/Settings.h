@@ -2,6 +2,7 @@
 
 #include <set>
 #include <string>
+#include <atomic>
 
 #include "types/Serializable.h"
 
@@ -25,7 +26,7 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 		MT_CUSTOM,
 		MT_MAPFILE,
 	};
-	type_t type = MT_RANDOM;
+	std::atomic< type_t > type = MT_RANDOM;
 
 	std::string filename = "";
 
@@ -36,36 +37,36 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 		{ settings::MAP_CONFIG_LARGE,    { 140, 70 } },
 		{ settings::MAP_CONFIG_HUGE,     { 180, 90 } }
 	 */
-	size_t size_x = 112;
-	size_t size_y = 56;
+	std::atomic< int64_t > size_x = 112;
+	std::atomic< int64_t > size_y = 56;
 
 	/*
 	 	{ settings::MAP_CONFIG_OCEAN_LOW,    0.4f }, // '30-50% of surface'
 		{ settings::MAP_CONFIG_OCEAN_MEDIUM, 0.6f }, // '50-70% of surface'
 		{ settings::MAP_CONFIG_OCEAN_HIGH,   0.8f }  // '70-90% of surface'
 	 */
-	float ocean_coverage = 0.4f;
+	std::atomic< float > ocean_coverage = 0.4f;
 
 	/*
 	 	{ settings::MAP_CONFIG_EROSIVE_STRONG,  0.5f }, // 'strong'
 		{ settings::MAP_CONFIG_EROSIVE_AVERAGE, 0.75f }, // 'average'
 		{ settings::MAP_CONFIG_EROSIVE_WEAK,    1.0f }, // 'weak'
 	 */
-	float erosive_forces = 0.75f;
+	std::atomic< float > erosive_forces = 0.75f;
 
 	/*
  		{ settings::MAP_CONFIG_LIFEFORMS_RARE,     0.25f }, // 'rare'
 		{ settings::MAP_CONFIG_LIFEFORMS_AVERAGE,  0.5f }, // 'average'
 		{ settings::MAP_CONFIG_LIFEFORMS_ABUNDANT, 0.75f }, // 'abundant'
 	 */
-	float native_lifeforms = 0.5f;
+	std::atomic< float > native_lifeforms = 0.5f;
 
 	/*
 	 	{ settings::MAP_CONFIG_CLOUDS_SPARSE,  0.25f }, // 'sparse'
 		{ settings::MAP_CONFIG_CLOUDS_AVERAGE, 0.5f }, // 'average'
 		{ settings::MAP_CONFIG_CLOUDS_DENSE,   0.75f }, // 'dense'
 	 */
-	float cloud_cover = 0.5f;
+	std::atomic< float > cloud_cover = 0.5f;
 
 	WRAPDEFS_DYNAMIC( MapSettings );
 
@@ -81,7 +82,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	MapSettings map = {};
 
 	rules::Default rules = {}; // TODO: custom rules
-	int difficulty_level = rules.GetDefaultDifficultyLevelV();
+	std::atomic< int64_t > difficulty_level = rules.GetDefaultDifficultyLevelV();
 
 	std::string game_name = "";
 
@@ -104,21 +105,21 @@ public:
 		GM_MULTIPLAYER,
 		GM_SCENARIO,
 	};
-	game_mode_t game_mode = GM_SINGLEPLAYER;
+	std::atomic< game_mode_t > game_mode = GM_SINGLEPLAYER;
 
 	enum network_type_t {
 		NT_NONE,
 		NT_SIMPLE_TCPIP,
 		NT_HOTSEAT,
 	};
-	network_type_t network_type = NT_NONE;
+	std::atomic< network_type_t > network_type = NT_NONE;
 
 	enum network_role_t {
 		NR_NONE,
 		NR_SERVER,
 		NR_CLIENT,
 	};
-	network_role_t network_role = NR_NONE;
+	std::atomic< network_role_t > network_role = NR_NONE;
 
 	std::string player_name = "";
 	std::string remote_address = "127.0.0.1";
