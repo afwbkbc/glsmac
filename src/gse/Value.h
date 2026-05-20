@@ -206,12 +206,13 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         }) \
     },
 
+// TODO: automatic _type
 #define WRAPIMPL_SET_PTR( _key, _type, _property ) \
     if ( key == _key ) { \
         if ( value->type != gse::value::_type::GetType() ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString() ); \
         } \
-        obj->_property.store( ((gse::value::_type*)value)->value ); /* enforce atomics */ \
+        obj->_property = ((gse::value::_type*)value)->value; \
         obj->OnWrapSet( GSE_CALL, _key ); \
         return; \
     }
@@ -234,7 +235,7 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         if ( value->type != gse::VT_STRING ) { \
             GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: String, got: " + value->GetTypeString() ); \
         } \
-        obj->_property.store( _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ) ); /* enforce atomics */ \
+        obj->_property = _map.GetValue( GSE_CALL, ((gse::value::String*)value)->value ); \
         obj->OnWrapSet( GSE_CALL, #_property ); \
         return; \
     }

@@ -2,8 +2,6 @@
 
 #include "gse/Value.h"
 
-#include <atomic>
-
 namespace gse {
 namespace value {
 
@@ -29,7 +27,7 @@ public:
 template< typename T >
 class Ptr : public AnyPtr {
 public:
-	Ptr( gc::Space* const gc_space, std::atomic< T >& target );
+	Ptr( gc::Space* const gc_space, T& target );
 
 	Value* const Clone() override;
 
@@ -42,7 +40,7 @@ public:
 #undef OP
 
 private:
-	std::atomic< T >& m_target;
+	T& m_target;
 
 	const value_type_t GetPtrType() const;
 
