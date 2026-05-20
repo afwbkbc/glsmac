@@ -2,7 +2,7 @@ return (i) => {
 	const next = () => {
 		if (i.settings.global.map.type == 'random') {
 			i.steps.select_difficulty_level(i);
-		} else {
+		} else { // custom
 			i.steps.customize_ocean_coverage(i);
 		}
 	};
@@ -34,6 +34,6 @@ return (i) => {
 				i.settings.global.map.size_y = 90;
 				next();
 			}],
-		]
+		],
 	});
 };

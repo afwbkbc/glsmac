@@ -125,7 +125,11 @@ return (m) => {
 					((current_entries[active_entry_index]).obj).removeclass('menublock-item-active');
 				}
 				active_entry_index = index;
-				((current_entries[active_entry_index]).obj).addclass('menublock-item-active');
+				const entry = (current_entries[active_entry_index]);
+				(entry.obj).addclass('menublock-item-active');
+				if (#is_defined(entry.cb_on_active)) {
+					entry.cb_on_active();
+				}
 			}
 		},
 
@@ -188,6 +192,9 @@ return (m) => {
 					cb: cb,
 					index: index,
 				};
+				if (#is_defined(entry[2])) /* mouseover */ {
+					current_entry.cb_on_active = entry[2];
+				}
 				itembody.on('mousedown', (e) => {
 					if (menublock_animation == null) {
 						this.select(current_entry.index);

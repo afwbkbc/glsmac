@@ -13,7 +13,7 @@ return (m) => {
 
 		m.root.clear();
 
-		if ( !mainmenu_allowed ) {
+		if (!mainmenu_allowed) {
 			m.glsmac.exit();
 			return;
 		}
@@ -29,7 +29,96 @@ return (m) => {
 				e.settings.global.map.native_lifeforms = #random_float(0.25, 0.75);
 				e.settings.global.map.cloud_cover = #random_float(0.25, 0.75);
 			},
+			customize_preview_defaults: {
+				// copied from original SMAC
+				ocean_coverage_type: 3,
+				erosive_forces_type: 0,
+				native_lifeforms_type: 1,
+				cloud_cover_type: 2,
+			},
 		};
+
+		const resize_customize_preview = (width) => {
+			if (#is_defined(i.customize_preview)) {
+				i.customize_preview.width = #round(#to_float(width) * 404.0 / 1024.0);
+			}
+		};
+		const resize_customize_preview_moons = (width, height) => {
+			if (#is_defined(i.customize_preview_moons)) {
+				i.customize_preview_moons.width = #round(#to_float(width) * 450.0 / 1024.0);
+				i.customize_preview_moons.height = #round(#to_float(height) * 450.0 / 768.0);
+			}
+		};
+
+		i.unset_customize_preview = () => {
+			if (#is_defined(i.customize_preview)) {
+				i.customize_preview.remove();
+				i.customize_preview = #undefined;
+				i.customize_preview_data = #undefined;
+			}
+		};
+		i.set_customize_preview = (data) => {
+			if (!#is_defined(i.customize_preview_data)) {
+				i.customize_preview_data = #clone(i.customize_preview_defaults);
+			}
+			let planet_changed = false;
+			let moons_changed = false;
+			for (k in data) {
+				if (i.customize_preview_data[k] != data[k]) {
+					i.customize_preview_data[k] = data[k];
+					if (k == 'erosive_forces_type') {
+						moons_changed = true;
+					} else {
+						planet_changed = true;
+					}
+				}
+			}
+			if (planet_changed) {
+				const background = 'S' + #to_string(i.customize_preview_data.ocean_coverage_type) + 'L' + #to_string(i.customize_preview_data.native_lifeforms_type) + 'C' + #to_string(i.customize_preview_data.cloud_cover_type) + '.pcx:stretch()';
+				if (#is_defined(i.customize_preview)) {
+					i.customize_preview.background = background;
+				} else {
+					i.customize_preview = m.root.surface({
+						id: 'mainmenu-customize-preview',
+						align: 'right',
+						top: 0,
+						bottom: 0,
+						right: 0,
+						zindex: 0.3,
+						background: background,
+					});
+					resize_customize_preview(m.ui.get_width());
+				}
+			}
+			if (moons_changed) {
+				if (i.customize_preview_data.erosive_forces_type == 0) {
+					if (#is_defined(i.customize_preview_moons)) {
+						i.customize_preview_moons.remove();
+						i.customize_preview_moons = #undefined;
+					}
+				} else {
+					const background = 'moon' + #to_string(i.customize_preview_data.erosive_forces_type) + '.pcx:stretch()';
+					if (#is_defined(i.customize_preview_moons)) {
+						i.customize_preview_moons.background = background;
+					} else {
+						i.customize_preview_moons = m.root.surface({
+							id: 'mainmenu-customize-preview-moons',
+							align: 'top left',
+							top: 0,
+							left: 0,
+							zindex: 0.3,
+							background: background,
+						});
+						resize_customize_preview_moons(m.ui.get_width(), m.ui.get_height());
+					}
+				}
+			}
+		};
+
+		m.ui.on('resize', (wh) => {
+			resize_customize_preview(wh.width);
+			resize_customize_preview_moons(wh.width, wh.height);
+		});
 
 		background = m.root.surface({
 			id: 'mainmenu-background',
@@ -37,6 +126,7 @@ return (m) => {
 			left: 0,
 			right: 0,
 			bottom: 0,
+			zindex: 0.2,
 			background: 'openinga.pcx:stretch()',
 		});
 
@@ -72,10 +162,10 @@ return (m) => {
 		const c = m.glsmac.config;
 		if (#is_defined(c.host)) {
 			if (!#is_defined(c.gamename)) {
-				throw Error( '--host requires --gamename argument' );
+				throw Error('--host requires --gamename argument');
 			}
 			if (!#is_defined(c.playername)) {
-				throw Error( '--host requires --playername argument' );
+				throw Error('--host requires --playername argument');
 			}
 			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_type = 'simple_tcpip';
@@ -86,7 +176,7 @@ return (m) => {
 			i.steps.multiplayer_lobby(i);
 		} else if (#is_defined(c.join)) {
 			if (!#is_defined(c.playername)) {
-				throw Error( '--join requires --playername argument' );
+				throw Error('--join requires --playername argument');
 			}
 			mainmenu_allowed = false; // do not reopen menu next time
 			i.settings.local.network_role = 'client';
