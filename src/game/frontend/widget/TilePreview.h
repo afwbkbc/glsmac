@@ -11,7 +11,16 @@ class Texture;
 }
 
 namespace game {
+
+namespace backend::map::tile {
+class Tile;
+}
+
 namespace frontend {
+
+namespace tile {
+class Tile;
+}
 
 namespace widget {
 
@@ -19,7 +28,7 @@ CLASS( TilePreview, Widget )
 public:
 	TilePreview( Game* const game, ui::UI* const ui );
 
-	void Update( ui::dom::Widget* const widget, const void* const data ) override;
+	void Update( ui::dom::Widget* const widget, const void* const data ) override; // TODO: refactor to allow flexible parameters
 
 protected:
 	void Register( ui::dom::Widget* const widget ) override;
@@ -31,6 +40,12 @@ private:
 	};
 	std::vector< preview_layer_t > m_preview_layers = {}; // multiple layers of textures
 
+	struct update_data_t {
+		::game::backend::map::tile::Tile* t;
+		const tile::Tile* tile;
+		const bool show_resources;
+	};
+	update_data_t m_update_data = {};
 };
 
 }

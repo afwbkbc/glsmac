@@ -49,34 +49,8 @@ void ResourceManager::UndefineResource( const std::string& id ) {
 	m_resources.erase( id );
 }
 
-const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
-	map::tile::yields_t yields = {};
-	for ( const auto& it : m_resources ) {
-		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( &tile, &slot, &it ) {
-			{
-				"tile",
-				tile->Wrap( GSE_CALL )
-			},
-			{
-				"resource",
-				VALUE( gse::value::String,, it.first )
-			},
-			{
-				"player",
-				slot->Wrap( GSE_CALL )
-			},
-		}; } );
-		if ( result->type != gse::VT_INT ) {
-			GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
-		}
-		yields.insert(
-			{
-				it.first,
-				( (gse::value::Int*)result )->value
-			}
-		);
-	}
-	return yields;
+const ResourceManager::resource_definitions_t& ResourceManager::GetDefinedResources() const {
+	return m_resources;
 }
 
 WRAPIMPL_BEGIN( ResourceManager )

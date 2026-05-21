@@ -28,60 +28,64 @@ const result = {
 
 		const rm = game.get_rm();
 
-		rm.on('get_yield', (e) => {
+		rm.on('get_tile_resources', (e) => {
+			let result = {
+				NUTRIENTS: 0,
+				MINERALS: 0,
+				ENERGY: 0,
+			};
 
-			if (e.resource == 'Nutrients') {
-				if (!e.tile.features.xenofungus) {
-					if (e.tile.is_land) {
-						return e.tile.moisture - 1;
-					} else {
-						return 1;
-					}
+			// nutrients
+			if (!e.tile.features.xenofungus) {
+				if (e.tile.is_land) {
+					result.NUTRIENTS = e.tile.moisture - 1;
 				} else {
-					// TODO: fungus tiles
+					result.NUTRIENTS = 1;
 				}
-			}
-			if (e.resource == 'Minerals') {
-				if (!e.tile.features.xenofungus) {
-					if (e.tile.is_land) {
-						let result = 0;
-						if (e.tile.rockiness > 1) {
-							result = result + 1;
-						}
-						return result;
-					} else {
-						return 0;
-					}
-				} else {
-					// TODO: fungus tiles
-				}
-			}
-			if (e.resource == 'Energy') {
-				if (!e.tile.features.xenofungus) {
-					if (e.tile.is_land) {
-						let result = e.tile.elevation / 1000;
-						if (e.tile.features.river) {
-							result = result + 1;
-						}
-						return result;
-					} else {
-						return 1;
-					}
-				} else {
-					// TODO: fungus tiles
-				}
+			} else {
+				// TODO: fungus tiles
 			}
 
-			// unknown resource
-			return 0;
+			// minerals
+			if (!e.tile.features.xenofungus) {
+				if (e.tile.is_land) {
+					if (e.tile.rockiness > 1) {
+						result.MINERALS = 1;
+					}
+				} else {
 
+				}
+			} else {
+				// TODO: fungus tiles
+			}
+
+			// energy
+			if (!e.tile.features.xenofungus) {
+				if (e.tile.is_land) {
+					result.ENERGY = e.tile.elevation / 1000;
+					if (e.tile.features.river) {
+						result.ENERGY = result.ENERGY + 1; // TODO: fix += with properties
+					}
+				} else {
+					result.ENERGY = 1;
+				}
+			} else {
+				// TODO: fungus tiles
+			}
+
+			// TODO: bonuses
+
+			// TODO: terraforming
+
+			return result;
 		});
+
 	},
 
 	define: (game) => {
-		define(game, 'Nutrients', 304, 13);
-		define(game, 'Minerals', 345, 35);
-		define(game, 'Energy', 386, 59);
+		define(game, 'NUTRIENTS', 304, 13);
+		define(game, 'MINERALS', 345, 35);
+		define(game, 'ENERGY', 386, 59);
 	},
 
 };

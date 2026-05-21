@@ -451,6 +451,11 @@ void Game::Iterate() {
 	}
 }
 
+::game::backend::Game* const Game::GetBackend() const {
+	ASSERT( m_game, "backend not set" );
+	return m_game;
+}
+
 tile::TileManager* Game::GetTM() const {
 	ASSERT( m_tm, "tm not set" );
 	return m_tm;

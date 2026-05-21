@@ -54,6 +54,7 @@ enum widget_type_t {
 typedef std::function< void( ::ui::dom::Widget* const widget ) > f_with_widget_t;
 #define F_WITH_WIDGET( ... ) [ __VA_ARGS__ ]( ::ui::dom::Widget* const widget )
 struct widget_data_config_entry_t {
+	bool is_required;
 	gse::value_type_t type;
 	std::string object_class;
 };

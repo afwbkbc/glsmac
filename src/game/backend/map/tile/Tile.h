@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <string>
 
 #include "gse/Wrappable.h"
 
@@ -13,6 +14,10 @@
 
 namespace game {
 namespace backend {
+
+namespace slot {
+class Slot;
+}
 
 namespace unit {
 class Unit;
@@ -25,12 +30,18 @@ class Base;
 namespace map {
 namespace tile {
 
+class Tiles;
+
 // WARNING: for now everything is public (because it's not clear what should be hidden from what)
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
 class Tile : public gse::Wrappable {
 public:
+
+	typedef std::unordered_map< std::string, uint8_t > resources_t;
+
+	Tiles* tiles = nullptr;
 
 	coords_t coord;
 
@@ -92,7 +103,6 @@ public:
 	void Clear();
 
 	const bool IsAdjactentTo( const Tile* other ) const;
-	const size_t GetDistanceTo( const Tile* other ) const;
 
 	const types::Buffer Serialize() const;
 	void Deserialize( types::Buffer data );
@@ -108,12 +118,16 @@ public:
 	const bool IsLocked() const;
 	const bool IsLockedBy( const size_t initiator_slot ) const;
 
+	const resources_t GetResources( GSE_CALLABLE, slot::Slot* const slot );
+
 private:
 	bool m_is_locked = false;
 	size_t m_lock_initiator_slot = 0;
 
 	gse::Value* const GetFeatures( GSE_CALLABLE ) const;
-	gse::Value* const GetResources( GSE_CALLABLE ) const;
+	gse::Value* const GetBonuses( GSE_CALLABLE ) const;
+
+	gse::Value* const GetResourcesImpl( GSE_CALLABLE, slot::Slot* const slot );
 };
 
 }

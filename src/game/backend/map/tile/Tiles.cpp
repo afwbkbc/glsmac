@@ -11,7 +11,8 @@ namespace backend {
 namespace map {
 namespace tile {
 
-Tiles::Tiles( const uint32_t width, const uint32_t height ) {
+Tiles::Tiles( Map* const map, const uint32_t width, const uint32_t height )
+	: m_map( map ) {
 	if ( width || height ) {
 		Resize( width, height );
 	}
@@ -33,6 +34,9 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 		m_height = height;
 
 		m_data.resize( width * height );
+		for ( auto& tile : m_data ) {
+			tile.tiles = this;
+		}
 		m_top_vertex_row.resize( m_width * 2 );
 		m_top_right_vertex_row.resize( width );
 
@@ -287,6 +291,10 @@ const std::vector< Tile* > Tiles::GetVector( MT_CANCELABLE ) {
 	ASSERT( tiles.size() == tiles_count, "tiles count mismatch on load ( " + std::to_string( tiles.size() ) + " != " + std::to_string( tiles_count ) + " )" );
 
 	return tiles;
+}
+
+Map* const Tiles::GetMap() const {
+	return m_map;
 }
 
 const types::Buffer Tiles::Serialize() const {

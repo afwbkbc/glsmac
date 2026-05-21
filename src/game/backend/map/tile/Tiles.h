@@ -14,11 +14,14 @@ class Random;
 namespace game {
 namespace backend {
 namespace map {
+
+class Map;
+
 namespace tile {
 
 CLASS( Tiles, types::Serializable )
 
-	Tiles( const uint32_t width = 0, const uint32_t height = 0 );
+	Tiles( Map* const map, const uint32_t width = 0, const uint32_t height = 0 );
 	~Tiles();
 
 	// warning: this will reset all tiles
@@ -44,10 +47,15 @@ CLASS( Tiles, types::Serializable )
 
 	const std::vector< Tile* > GetVector( MT_CANCELABLE );
 
+	Map* const GetMap() const;
+
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
 
 private:
+
+	Map* const m_map = nullptr;
+
 	uint32_t m_width = 0;
 	uint32_t m_height = 0;
 

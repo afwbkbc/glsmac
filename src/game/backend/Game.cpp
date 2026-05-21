@@ -228,12 +228,6 @@ void Game::Iterate() {
 			m_response_map_data->sprites.actors = &m_map->m_sprite_actors;
 			m_response_map_data->sprites.instances = &m_map->m_sprite_instances;
 
-			m_state->WithGSE( this, [ this ]( GSE_CALLABLE ) {
-				for ( auto& tile : m_map->m_tiles->GetVector( m_init_cancel ) ) {
-					UpdateYields( GSE_CALL, tile );
-				}
-			});
-
 			m_response_map_data->tiles = m_map->GetTilesPtr()->GetTilesPtr();
 			m_response_map_data->tile_states = m_map->GetMapState()->GetTileStatesPtr();
 
@@ -1451,14 +1445,6 @@ const types::Vec3 Game::GetTileRenderCoords( const map::tile::Tile* tile ) {
 		-c.y,
 		c.z
 	};
-}
-
-void Game::UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const {
-	tile->yields = m_rm->GetYields(
-		GSE_CALL,
-		tile,
-		m_slot
-	);
 }
 
 void Game::WithRW( const std::function< void() >& f ) {

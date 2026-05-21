@@ -50,14 +50,15 @@ Game* State::GetGame() const {
 	return m_game;
 }
 
-void State::WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup ) {
+void State::WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup, const bool need_now ) {
 	m_gc_space->Accumulate(
 		owner,
 		[ this, f ]() {
 			gse::ExecutionPointer ep;
 			f( m_gc_space, m_ctx, {}, ep );
 		},
-		f_cleanup
+		f_cleanup,
+		need_now
 	);
 }
 

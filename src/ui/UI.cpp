@@ -520,7 +520,7 @@ void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value:
 			}
 		}
 		for ( const auto& d : data_it->second.data_config ) {
-			if ( data->value.find( d.first ) == data->value.end() ) {
+			if ( d.second.is_required && data->value.find( d.first ) == data->value.end() ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing: " + d.first );
 			}
 		}

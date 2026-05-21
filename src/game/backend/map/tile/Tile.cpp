@@ -5,14 +5,18 @@
 #include "gse/value/Int.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Null.h"
-#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 
+#include "Tiles.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/resource/ResourceManager.h"
+#include "game/backend/slot/Slot.h"
+#include "game/backend/State.h"
+#include "game/backend/Player.h"
 
 #include "util/String.h"
 
@@ -236,7 +240,7 @@ WRAPIMPL_BEGIN( Tile )
 			} )
 		},
 		{ "features", GetFeatures( GSE_CALL ) },
-		{ "resources", GetResources( GSE_CALL ) },
+		{ "bonuses", GetBonuses( GSE_CALL ) },
 		{
 			"get_units",
 			NATIVE_CALL( this ) {
@@ -260,6 +264,21 @@ WRAPIMPL_BEGIN( Tile )
 				}
 			} )
 		},
+		{
+			"get_resources",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS_MAX(1);
+				slot::Slot* slot;
+				if ( arguments.size() > 0 ) {
+					N_GETVALUE_UNWRAP( player, 0, Player );
+					slot = player->GetSlot();
+				}
+				else {
+					slot = tiles->GetMap()->GetGame()->GetPlayer()->GetSlot();
+				}
+				return GetResourcesImpl( GSE_CALL, slot );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR()
 
@@ -281,6 +300,15 @@ const bool Tile::IsLockedBy( const size_t initiator_slot ) const {
 	return m_is_locked && m_lock_initiator_slot == initiator_slot;
 }
 
+const Tile::resources_t Tile::GetResources( GSE_CALLABLE, slot::Slot* const slot ) {
+	auto* const result = GetResourcesImpl( GSE_CALL, slot );
+	resources_t resources = {};
+	for ( const auto& it : ((gse::value::Object*)result)->value ) {
+		resources.insert_or_assign( it.first, ((gse::value::Int*)it.second)->value );
+	}
+	return resources;
+}
+
 gse::Value* const Tile::GetFeatures( GSE_CALLABLE ) const {
 	gse::value::object_properties_t result = {};
 #define X_FEATURE( _x, _i ) \
@@ -293,7 +321,7 @@ X_FEATURES
 	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
 }
 
-gse::Value* const Tile::GetResources( GSE_CALLABLE ) const {
+gse::Value* const Tile::GetBonuses( GSE_CALLABLE ) const {
 	gse::value::object_properties_t result = {};
 #define X_BONUS( _x, _i ) \
 	result.insert_or_assign(   \
@@ -305,6 +333,47 @@ gse::Value* const Tile::GetResources( GSE_CALLABLE ) const {
 	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
 }
 
+gse::Value* const Tile::GetResourcesImpl( GSE_CALLABLE, slot::Slot* const slot ) {
+	ASSERT( tiles, "tiles not set" );
+	auto* const rm = tiles->GetMap()->GetGame()->GetRM();
+	auto* const result = rm->Trigger(
+		GSE_CALL, "get_tile_resources", ARGS_F( this, &slot ) {
+			{
+				"tile",
+				Wrap( GSE_CALL )
+			},
+			{
+				"player",
+				slot->Wrap( GSE_CALL )
+			},
+		}; }
+	);
+	ASSERT( result, "GetResources result is null" );
+	if ( result->type != gse::VT_OBJECT ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "get_tile_resources must return object, got: " + result->ToString() );
+	}
+	const auto& defined_resources = rm->GetDefinedResources();
+	auto* obj = ((gse::value::Object*)result);
+	auto& v = obj->value;
+	for ( const auto& it : v ) {
+		if ( defined_resources.find( it.first ) == defined_resources.end() ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "get_tile_resources returned unknown resource: " + it.first );
+		}
+		if ( it.second->type != gse::VT_INT ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "get_tile_resources returned invalid value for resource " + it.first + ", expected: Int, got " + it.second->GetTypeString() + ": " + it.second->ToString() );
+		}
+		const auto& value = ((gse::value::Int*)it.second)->value;
+		if ( value < 0 || value > 255 ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "get_tile_resources returned invalid value for resource " + it.first + ", must be between 0 and 255, got: " + std::to_string( value ) );
+		}
+	}
+	for ( const auto& it : defined_resources ) {
+		if ( v.find( it.first ) == v.end() ) {
+			obj->Assign( it.first, VALUE( gse::value::Int,, 0 ) );
+		}
+	}
+	return result;
+}
 
 }
 }

@@ -166,6 +166,7 @@ CLASS( Game, common::Module )
 	};
 	static const consts_t s_consts;
 
+	::game::backend::Game* const GetBackend() const;
 	tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;

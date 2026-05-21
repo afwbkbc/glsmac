@@ -28,6 +28,8 @@ class Resource;
 
 CLASS( ResourceManager, gse::GCWrappable )
 
+	typedef std::unordered_map< std::string, resource::Resource* > resource_definitions_t;
+
 	ResourceManager( Game* game );
 	~ResourceManager();
 
@@ -35,7 +37,7 @@ CLASS( ResourceManager, gse::GCWrappable )
 	void DefineResource( resource::Resource* resource );
 	void UndefineResource( const std::string& id );
 
-	const map::tile::yields_t GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot );
+	const resource_definitions_t& GetDefinedResources() const;
 
 	WRAPDEFS_PTR( ResourceManager )
 
@@ -45,7 +47,7 @@ CLASS( ResourceManager, gse::GCWrappable )
 private:
 	Game* m_game;
 
-	std::unordered_map< std::string, resource::Resource* > m_resources = {};
+	resource_definitions_t m_resources = {};
 };
 
 }

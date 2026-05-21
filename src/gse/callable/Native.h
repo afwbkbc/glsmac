@@ -29,6 +29,11 @@ namespace callable {
         GSE_ERROR( gse::EC.INVALID_CALL, "Expected at least " + std::to_string( _min ) + " arguments, found " + std::to_string( arguments.size() ) ); \
     } \
     N_ARGS
+#define N_EXPECT_ARGS_MAX( _max ) \
+    if ( arguments.size() > _max ) { \
+        GSE_ERROR( gse::EC.INVALID_CALL, "Expected at most " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ) ); \
+    } \
+    N_ARGS
 #define N_EXPECT_ARGS_MIN_MAX( _min, _max ) \
     if ( arguments.size() < _min || arguments.size() > _max ) { \
         GSE_ERROR( gse::EC.INVALID_CALL, "Expected " + std::to_string( _min ) + " to " + std::to_string( _max ) + " arguments, found " + std::to_string( arguments.size() ) ); \
