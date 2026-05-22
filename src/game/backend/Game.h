@@ -427,6 +427,8 @@ private:
 
 	void SetTurnStatus( const backend::turn::turn_status_t status );
 
+	void ProcessEvents();
+
 private:
 	friend class map::tile::TileManager;
 	friend class resource::ResourceManager;

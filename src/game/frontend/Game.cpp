@@ -21,6 +21,7 @@
 #include "game/frontend/unit/Unit.h"
 #include "game/frontend/base/BaseManager.h"
 #include "game/frontend/base/Base.h"
+#include "game/frontend/resource/ResourceManager.h"
 #include "game/frontend/faction/FactionManager.h"
 #include "game/frontend/faction/Faction.h"
 #include "game/frontend/sprite/InstancedSpriteManager.h"
@@ -54,10 +55,12 @@
 #include "ui/dom/Widget.h"
 #include "widget/Minimap.h"
 #include "widget/TilePreview.h"
+#include "widget/TileResources.h"
 #include "widget/UnitPreview.h"
 #include "widget/BasePreview.h"
 #include "gse/value/Null.h"
 #include "input/Event.h"
+#include "game/backend/resource/Resource.h"
 
 #define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
 
@@ -112,6 +115,7 @@ void Game::Start() {
 	NEW( m_tm, tile::TileManager, this );
 	NEW( m_um, unit::UnitManager, this );
 	NEW( m_bm, base::BaseManager, this );
+	NEW( m_rm, resource::ResourceManager, this );
 
 	RegisterWidgets();
 
@@ -155,6 +159,11 @@ void Game::Stop() {
 	if ( m_bm ) {
 		DELETE( m_bm );
 		m_bm = nullptr;
+	}
+
+	if ( m_rm ) {
+		DELETE( m_rm );
+		m_rm = nullptr;
 	}
 
 	if ( m_tm ) {
@@ -467,8 +476,13 @@ unit::UnitManager* Game::GetUM() const {
 }
 
 base::BaseManager* Game::GetBM() const {
-	ASSERT( m_um, "bm not set" );
+	ASSERT( m_bm, "bm not set" );
 	return m_bm;
+}
+
+resource::ResourceManager* Game::GetRM() const {
+	ASSERT( m_rm, "bm not set" );
+	return m_rm;
 }
 
 sprite::InstancedSpriteManager* Game::GetISM() const {
@@ -481,7 +495,7 @@ text::InstancedTextManager* Game::GetITM() const {
 	return m_itm;
 }
 
-types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res ) {
+types::texture::Texture* Game::GetSourceTexture( const ::resource::resource_t res ) {
 	const auto it = m_textures.source.find( res );
 	if ( it != m_textures.source.end() ) {
 		return it->second;
@@ -500,7 +514,7 @@ types::texture::Texture* Game::GetSourceTexture( const resource::resource_t res 
 sprite::InstancedSprite* Game::GetTerrainInstancedSprite( const backend::map::sprite_actor_t& actor ) {
 	return m_ism->GetInstancedSprite(
 		"Terrain_" + actor.name,
-		GetSourceTexture( resource::PCX_TER1 ),
+		GetSourceTexture( ::resource::PCX_TER1 ),
 		actor.tex_coords,
 		backend::map::s_consts.tc.ter1_pcx.dimensions,
 		{
@@ -1179,6 +1193,17 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			}
 			base->SetPops( pops );
 			m_bm->RefreshBase( base );
+			break;
+		}
+		case FrontendRequest::FR_RESOURCE_DEFINE: {
+			types::Buffer buf( *request->data.resource_define.serialized_resourcedef );
+			const auto* resourcedef = backend::resource::Resource::Deserialize( buf );
+			m_rm->DefineResource( resourcedef );
+			delete resourcedef;
+			break;
+		}
+		case FrontendRequest::FR_RESOURCE_UNDEFINE: {
+			m_rm->UndefineResource( *request->data.resource_undefine.id );
 			break;
 		}
 		case FrontendRequest::FR_LOADER_SHOW: {

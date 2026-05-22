@@ -83,6 +83,7 @@ namespace frontend {
 #define X_WIDGETS \
     X_WIDGET( Minimap ) \
     X_WIDGET( TilePreview ) \
+    X_WIDGET( TileResources ) \
     X_WIDGET( UnitPreview ) \
     X_WIDGET( BasePreview )
 
@@ -111,6 +112,10 @@ class UnitManager;
 namespace base {
 class BaseManager;
 class Base;
+}
+
+namespace resource {
+class ResourceManager;
 }
 
 namespace sprite {
@@ -170,10 +175,11 @@ CLASS( Game, common::Module )
 	tile::TileManager* GetTM() const;
 	unit::UnitManager* GetUM() const;
 	base::BaseManager* GetBM() const;
+	resource::ResourceManager* GetRM() const;
 	sprite::InstancedSpriteManager* GetISM() const;
 	text::InstancedTextManager* GetITM() const;
 
-	types::texture::Texture* GetSourceTexture( const resource::resource_t res );
+	types::texture::Texture* GetSourceTexture( const ::resource::resource_t res );
 	sprite::InstancedSprite* GetTerrainInstancedSprite( const backend::map::sprite_actor_t& actor );
 
 	void CenterAtCoordinatePercents( const ::types::Vec2< float > position_percents );
@@ -230,6 +236,7 @@ private:
 	tile::TileManager* m_tm = nullptr;
 	unit::UnitManager* m_um = nullptr;
 	base::BaseManager* m_bm = nullptr;
+	resource::ResourceManager* m_rm = nullptr;
 	sprite::InstancedSpriteManager* m_ism = nullptr;
 	text::InstancedTextManager* m_itm = nullptr;
 
@@ -360,7 +367,7 @@ private:
 private:
 
 	struct {
-		std::unordered_map< resource::resource_t, types::texture::Texture* > source;
+		std::unordered_map< ::resource::resource_t, types::texture::Texture* > source;
 		types::texture::Texture* terrain = nullptr;
 	} m_textures;
 

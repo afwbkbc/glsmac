@@ -915,7 +915,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			return VALUE( Range, , from, to );
 		}
 		case OT_TERNARY_IF: {
-			auto* const check = EvaluateOperand( ctx, ep, expression->a );
+			auto* const check = EvaluateOperand( ctx, ep, expression->a )->Deref();
 			auto* const body = (Expression*)expression->b;
 			if (
 				expression->b->type != program::Operand::OT_EXPRESSION ||

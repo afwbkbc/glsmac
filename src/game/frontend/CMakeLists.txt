@@ -5,6 +5,7 @@ SUBDIR( sprite )
 SUBDIR( text )
 SUBDIR( unit )
 SUBDIR( base )
+SUBDIR( resource )
 SUBDIR( widget )
 
 SET( SRC ${SRC}

@@ -38,6 +38,7 @@ CLASS( ResourceManager, gse::GCWrappable )
 	void UndefineResource( const std::string& id );
 
 	const resource_definitions_t& GetDefinedResources() const;
+	const std::vector< std::string >& GetDefinedResourcesOrder() const;
 
 	WRAPDEFS_PTR( ResourceManager )
 
@@ -47,6 +48,7 @@ CLASS( ResourceManager, gse::GCWrappable )
 private:
 	Game* m_game;
 
+	std::vector< std::string > m_resources_order = {};
 	resource_definitions_t m_resources = {};
 };
 

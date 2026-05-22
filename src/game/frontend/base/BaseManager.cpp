@@ -28,8 +28,8 @@ namespace base {
 BaseManager::BaseManager( Game* game )
 	: m_game( game )
 	, m_ism( game->GetISM() )
-	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALN, 48 ) ) )
-	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( resource::TTF_ARIALNB, 48 ) ) ) {
+	, m_name_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALN, 48 ) ) )
+	, m_badge_font( game->GetITM()->GetInstancedFont( g_engine->GetFontLoader()->LoadFont( ::resource::TTF_ARIALNB, 48 ) ) ) {
 	//
 }
 

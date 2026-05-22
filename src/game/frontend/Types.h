@@ -17,6 +17,7 @@ enum z_level_t {
 	ZL_TERRAIN_TEXT,
 	ZL_BASES,
 	ZL_UNITS,
+	ZL_RESOURCES,
 	ZL_ANIMATIONS,
 };
 static const float MAX_ZINDEX_ADJUSTMENT = 0.05f;
@@ -37,6 +38,10 @@ static const std::unordered_map< z_level_t, float > s_zlevel_map = {
 	{
 		ZL_UNITS,
 		0.6f
+	},
+	{
+		ZL_RESOURCES,
+		0.85f,
 	},
 	{
 		ZL_ANIMATIONS,

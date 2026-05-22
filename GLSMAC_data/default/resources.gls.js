@@ -1,22 +1,11 @@
-const define = (game, id, levels_y, minusplus_y) => {
+const define = (game, id, coords) => {
 
 	game.event('define_resource', {
 		name: id,
 		render: {
-			type: 'sprite_map',
+			type: 'sprites',
 			file: 'newicons.pcx',
-			yields: {
-				grid_x: 174, grid_y: levels_y, grid_margin: 1,
-				cell_width: 40, cell_height: 40, cells_count: 8,
-			},
-			plus: {
-				x: 24, y: minusplus_y,
-				width: 22, height: 22,
-			},
-			minus: {
-				x: 47, y: minusplus_y,
-				width: 22, height: 22,
-			},
+			coords: coords,
 		}
 	});
 
@@ -73,9 +62,24 @@ const result = {
 				// TODO: fungus tiles
 			}
 
-			// TODO: bonuses
+			// base
+			if (e.tile.get_base() != null) {
+				// TODO: reuse terraforming logic
+				if (result.NUTRIENTS < 2) {
+					result.NUTRIENTS = 2;
+				}
+				if (result.MINERALS < 1) {
+					result.MINERALS = 1;
+				}
+				const min_energy = e.tile.features.river ? 2 : 1;
+				if (result.ENERGY < min_energy) {
+					result.ENERGY = min_energy;
+				}
+			} else {
+				// TODO: terraforming
+			}
 
-			// TODO: terraforming
+			// TODO: bonuses
 
 			return result;
 		});
@@ -83,9 +87,36 @@ const result = {
 	},
 
 	define: (game) => {
-		define(game, 'NUTRIENTS', 304, 13);
-		define(game, 'MINERALS', 345, 35);
-		define(game, 'ENERGY', 386, 59);
+		define(game, 'NUTRIENTS', [
+			[184, 314, 201, 331],
+			[223, 312, 245, 334],
+			[262, 310, 288, 336],
+			[301, 308, 331, 338],
+			[339, 305, 376, 342],
+			[380, 305, 417, 342],
+			[421, 305, 458, 342],
+			[462, 305, 499, 342],
+		]);
+		define(game, 'MINERALS', [
+			[185, 356, 202, 373],
+			[223, 355, 245, 377],
+			[263, 353, 290, 378],
+			[302, 350, 332, 380],
+			[339, 346, 376, 383],
+			[380, 346, 417, 383],
+			[421, 346, 458, 383],
+			[462, 346, 499, 383],
+		]);
+		define(game, 'ENERGY', [
+			[186, 397, 202, 414],
+			[224, 395, 245, 417],
+			[262, 392, 289, 419],
+			[301, 390, 332, 421],
+			[339, 387, 376, 424],
+			[380, 387, 417, 424],
+			[421, 387, 458, 424],
+			[462, 387, 499, 424],
+		]);
 	},
 
 };
