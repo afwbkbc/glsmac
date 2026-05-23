@@ -201,7 +201,7 @@ void Class::RemoveObjectModifier( GSE_CALLABLE, dom::Object* object, const class
 	}
 }
 
-gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
+gse::Value* const Class::Wrap( GSE_CALLABLE ) {
 	gse::value::object_properties_t properties = {
 		{
 			"extend",
@@ -209,7 +209,7 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( name, 0, String );
 				SetParentClass( GSE_CALL, name );
-				return Wrap( GSE_CALL, true );
+				return Wrap( GSE_CALL );
 			} )
 		},
 		{
@@ -218,7 +218,7 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( properties, 0, Object );
 				SetProperties( GSE_CALL, properties );
-				return Wrap( GSE_CALL, true );
+				return Wrap( GSE_CALL );
 			} )
 		},
 		{
@@ -235,7 +235,7 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 					names.push_back( ((gse::value::String*)v)->value );
 				}
 				UnsetProperties( GSE_CALL, names );
-				return Wrap( GSE_CALL, true );
+				return Wrap( GSE_CALL );
 			} )
 		},
 	};
@@ -252,16 +252,12 @@ gse::Value* const Class::Wrap( GSE_CALLABLE, const bool dynamic ) {
 			properties.insert(
 				{
 					s_modifier_to_name.at( c.first ),
-					c.second->Wrap( GSE_CALL, dynamic )
+					c.second->Wrap( GSE_CALL )
 				}
 			);
 		}
 	}
-	return new gse::value::Object(
-		GSE_CALL, properties, "class", this, dynamic
-			? &Class::WrapSetStatic
-			: nullptr
-	);
+	return new gse::value::Object( GSE_CALL, properties, "class", this, &Class::WrapSetStatic );
 }
 
 void Class::WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE ) {

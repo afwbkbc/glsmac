@@ -23,7 +23,7 @@ typedef float movement_t;
 typedef float health_t;
 
 // must be hardcoded for now because unit badge sprites are
-typedef uint8_t morale_t;
+typedef int64_t morale_t; // used in value::Ptr
 static constexpr morale_t MORALE_MIN = 0;
 static constexpr morale_t MORALE_MAX = 6;
 

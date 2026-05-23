@@ -194,16 +194,7 @@ const bool Container::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
 			}
 		}
 	}
-	auto result = Area::ProcessEvent( GSE_CALL, event );
-	if (
-		m_has_body && // bodyless containers do not capture mouse events if no child caught it
-		( event.flags & input::EF_MOUSE ) &&
-		m_is_visible &&
-		m_geometry->Contains( { event.data.mouse.x, event.data.mouse.y } )
-	) {
-		result = true; // only one child can handle mouse event, regardless of processing result
-	}
-	return result;
+	return Area::ProcessEvent( GSE_CALL, event );
 }
 
 void Container::Show() {
@@ -360,7 +351,7 @@ void Container::Factory( GSE_CALLABLE, const std::string& name, const std::funct
 		if ( geometry ) {
 			m_factory_owner->UpdateChildZIndex( obj->m_dom_id, {}, geometry->GetZIndex() );
 		}
-		return obj->Wrap( GSE_CALL, true );
+		return obj->Wrap( GSE_CALL );
 	} ) );
 }
 

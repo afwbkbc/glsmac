@@ -514,11 +514,11 @@ const std::string& Config::GetGSETestsScript() const {
 
 #endif
 
-gse::Value* const Config::Wrap( GSE_CALLABLE, const bool dynamic ) {
+gse::Value* const Config::Wrap( GSE_CALLABLE ) {
 	if ( !m_wrapped_config ) {
 		m_wrapped_config = new wrapped::Config( m_manager );
 	}
-	return m_wrapped_config->Wrap( GSE_CALL, dynamic );
+	return m_wrapped_config->Wrap( GSE_CALL );
 }
 
 }

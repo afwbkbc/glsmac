@@ -51,7 +51,7 @@ return {
 		if (e.data.attacker.is_immovable) {
 			return 'Attacker is immovable';
 		}
-		if (e.data.attacker.movement == 0.0) {
+		if (e.data.attacker.movement <= 0.0) {
 			return 'Attacker is out of moves';
 		}
 		if (attacker_tile == defender_tile) {

@@ -3,6 +3,7 @@
 #include "util/FS.h"
 
 #include "gse/value/Float.h"
+#include "gse/value/Ptr.h"
 
 namespace game {
 namespace backend {
@@ -16,22 +17,22 @@ WRAPMAP( type, MapSettings::type_t,
 
 WRAPIMPL_DYNAMIC_GETTERS( MapSettings )
 			WRAPIMPL_GET_MAPPED( type )
-			WRAPIMPL_GET( filename, String )
-			WRAPIMPL_GET( size_x, Int )
-			WRAPIMPL_GET( size_y, Int )
-			WRAPIMPL_GET( ocean_coverage, Float )
-			WRAPIMPL_GET( erosive_forces, Float )
-			WRAPIMPL_GET( native_lifeforms, Float )
-			WRAPIMPL_GET( cloud_cover, Float )
+			WRAPIMPL_GET_PTR( "filename", filename )
+			WRAPIMPL_GET_PTR( "size_x", size_x )
+			WRAPIMPL_GET_PTR( "size_y", size_y )
+			WRAPIMPL_GET_PTR( "ocean_coverage", ocean_coverage )
+			WRAPIMPL_GET_PTR( "erosive_forces", erosive_forces )
+			WRAPIMPL_GET_PTR( "native_lifeforms", native_lifeforms )
+			WRAPIMPL_GET_PTR( "cloud_cover", cloud_cover )
 WRAPIMPL_DYNAMIC_SETTERS( MapSettings )
 	WRAPIMPL_SET_MAPPED( type )
-	WRAPIMPL_SET( filename, String )
-	WRAPIMPL_SET( size_x, Int )
-	WRAPIMPL_SET( size_y, Int )
-	WRAPIMPL_SET( ocean_coverage, Float )
-	WRAPIMPL_SET( erosive_forces, Float )
-	WRAPIMPL_SET( native_lifeforms, Float )
-	WRAPIMPL_SET( cloud_cover, Float )
+	WRAPIMPL_SET_PTR( "filename", String, filename )
+	WRAPIMPL_SET_PTR( "size_x", Int, size_x )
+	WRAPIMPL_SET_PTR( "size_y", Int, size_y )
+	WRAPIMPL_SET_PTR( "ocean_coverage", Float, ocean_coverage )
+	WRAPIMPL_SET_PTR( "erosive_forces", Float, erosive_forces )
+	WRAPIMPL_SET_PTR( "native_lifeforms", Float, native_lifeforms )
+	WRAPIMPL_SET_PTR( "cloud_cover", Float, cloud_cover )
 WRAPIMPL_DYNAMIC_ON_SET( MapSettings )
 WRAPIMPL_DYNAMIC_END()
 
@@ -70,9 +71,9 @@ WRAPIMPL_DYNAMIC_GETTERS( GlobalSettings )
 			WRAPIMPL_GET_WRAPPED( map )
 			WRAPIMPL_GET_WRAPPED( rules )
 			WRAPIMPL_GET_MAPPED_CUSTOM( difficulty_level, rules.m_difficulty_levels )
-			WRAPIMPL_GET( game_name, String )
+			WRAPIMPL_GET_PTR( "game_name", game_name )
 WRAPIMPL_DYNAMIC_SETTERS( GlobalSettings )
-	WRAPIMPL_SET( game_name, String )
+	WRAPIMPL_SET_PTR( "game_name", String, game_name )
 	WRAPIMPL_SET_MAPPED_CUSTOM( difficulty_level, obj->rules.m_difficulty_levels )
 WRAPIMPL_DYNAMIC_ON_SET( GlobalSettings )
 WRAPIMPL_DYNAMIC_END()
@@ -116,19 +117,19 @@ WRAPMAP( network_role, LocalSettings::network_role_t,
 WRAPIMPL_DYNAMIC_GETTERS( LocalSettings )
 			{
 				"account",
-				account.Wrap( GSE_CALL, true ),
+				account.Wrap( GSE_CALL ),
 			},
 			WRAPIMPL_GET_MAPPED( game_mode )
 			WRAPIMPL_GET_MAPPED( network_type )
 			WRAPIMPL_GET_MAPPED( network_role )
-			WRAPIMPL_GET( player_name, String )
-			WRAPIMPL_GET( remote_address, String )
+			WRAPIMPL_GET_PTR( "player_name", player_name )
+			WRAPIMPL_GET_PTR( "remote_address", remote_address )
 WRAPIMPL_DYNAMIC_SETTERS( LocalSettings )
 	WRAPIMPL_SET_MAPPED( game_mode )
 	WRAPIMPL_SET_MAPPED( network_type )
 	WRAPIMPL_SET_MAPPED( network_role )
-	WRAPIMPL_SET( player_name, String )
-	WRAPIMPL_SET( remote_address, String )
+	WRAPIMPL_SET_PTR( "player_name", String, player_name )
+	WRAPIMPL_SET_PTR( "remote_address", String, remote_address )
 WRAPIMPL_DYNAMIC_ON_SET( LocalSettings )
 WRAPIMPL_DYNAMIC_END()
 
@@ -156,11 +157,11 @@ WRAPIMPL_BEGIN( Settings )
 	WRAPIMPL_PROPS
 			{
 				"global",
-				global.Wrap( GSE_CALL, true ),
+				global.Wrap( GSE_CALL ),
 			},
 			{
 				"local",
-				local.Wrap( GSE_CALL, true ),
+				local.Wrap( GSE_CALL ),
 			},
 		};
 WRAPIMPL_END_PTR()

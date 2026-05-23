@@ -128,7 +128,7 @@ void UnitManager::SpawnUnit( GSE_CALLABLE, Unit* unit ) {
 		state->TriggerObject( this, "unit_spawn", ARGS_F( &unit, this ) {
 			{
 				"unit",
-				unit->Wrap( GSE_CALL, m_game->GetGCSpace() )
+				unit->Wrap( GSE_CALL )
 			},
 		}; } );
 	}
@@ -454,7 +454,7 @@ WRAPIMPL_BEGIN( UnitManager )
 				N_GETVALUE( unit_id, 0, Int );
 				const auto& it = m_units.find( unit_id );
 				if ( it != m_units.end() ) {
-					return it->second->Wrap( GSE_CALL, true );
+					return it->second->Wrap( GSE_CALL );
 				}
 				else {
 					GSE_ERROR( gse::EC.GAME_ERROR, "Unit id " + std::to_string( unit_id ) + " not found" );
@@ -496,7 +496,7 @@ WRAPIMPL_BEGIN( UnitManager )
 					false
 				);
 				SpawnUnit( GSE_CALL, unit );
-				return unit->Wrap( GSE_CALL, true );
+				return unit->Wrap( GSE_CALL );
 			})
 		},
 		{
@@ -731,11 +731,11 @@ void UnitManager::AttackUnitApply( GSE_CALLABLE, Unit* attacker, Unit* defender,
 	state->TriggerObject( this, "unit_attack_apply", ARGS_F( &attacker, &defender, &resolutions ) {
 		{
 			"attacker",
-			attacker->Wrap( GSE_CALL, true )
+			attacker->Wrap( GSE_CALL )
 		},
 		{
 			"defender",
-			defender->Wrap( GSE_CALL, true )
+			defender->Wrap( GSE_CALL )
 		},
 		{
 			"resolutions",

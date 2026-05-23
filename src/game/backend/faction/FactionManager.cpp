@@ -194,7 +194,7 @@ WRAPIMPL_BEGIN( FactionManager )
 				}
 
 				Add( faction );
-				return faction->Wrap( GSE_CALL, gc_space );
+				return faction->Wrap( GSE_CALL );
 			} )
 		},
 		{

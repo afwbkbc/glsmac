@@ -103,13 +103,16 @@ return {
 		const owner = base.get_owner();
 		const faction = owner.get_faction();
 
+		const intake = base.get_intake();
+		const consumption = base.get_consumption();
+
 		// dummy data for now
 
 		this.sections.nutrients.set({
 			rows: base.get_size() + 1,
 			columns: game.get('map_growth_base'),
 			filled: base.get('accumulated_nutrients'),
-			pending: game.get('f_base_get_nutrients_per_turn')(base),
+			pending: game.get('f_base_get_pending_growth')(base),
 		});
 
 		if (faction.is_progenitor) {
@@ -134,16 +137,16 @@ return {
 
 		const resource_data = {
 			nutrients: {
-				profit: 4,
-				loss: 2,
+				profit: intake.NUTRIENTS,
+				loss: consumption.NUTRIENTS,
 			},
 			minerals: {
-				profit: 3,
-				loss: 0,
+				profit: intake.MINERALS,
+				loss: consumption.MINERALS,
 			},
 			energy: {
-				profit: 5,
-				loss: 2,
+				profit: intake.ENERGY,
+				loss: consumption.ENERGY,
 			},
 		};
 		this.sections.resources.set(resource_data);

@@ -6,32 +6,20 @@
 #include "types/Buffer.h"
 
 namespace game {
+
 namespace backend {
 namespace resource {
+
+class ResourceManager;
 
 class Resource {
 public:
 
+	typedef std::vector< std::pair< types::Vec2< int64_t >, types::Vec2< int64_t > > > render_coords_t;
+
 	struct render_info_t {
 		std::string file;
-		struct {
-			uint16_t grid_x;
-			uint16_t grid_y;
-			uint8_t grid_margin;
-			uint16_t cell_width;
-			uint16_t cell_height;
-			uint8_t cells_count;
-		} yields;
-#define X( _n ) \
-        struct { \
-            uint16_t x; \
-            uint16_t y; \
-            uint16_t width; \
-            uint16_t height; \
-        } _n;
-		X( plus )
-		X( minus )
-#undef X
+		render_coords_t coords;
 	};
 
 	Resource( const std::string& id, const std::string& name, const render_info_t& render_info );

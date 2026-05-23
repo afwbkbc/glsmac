@@ -49,6 +49,8 @@ public:
 		FR_BASE_SPAWN,
 		FR_BASE_DESPAWN,
 		FR_BASE_UPDATE,
+		FR_RESOURCE_DEFINE,
+		FR_RESOURCE_UNDEFINE,
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
 		FR_LOADER_HIDE,
@@ -212,6 +214,12 @@ public:
 			const std::string* name;
 			base_pops_t* pops;
 		} base_update;
+		struct {
+			const std::string* serialized_resourcedef; // can be optimized
+		} resource_define;
+		struct {
+			const std::string* id;
+		} resource_undefine;
 		struct {
 			const std::string* text;
 		} loader;

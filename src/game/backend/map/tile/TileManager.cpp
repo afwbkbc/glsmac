@@ -142,6 +142,7 @@ void TileManager::ReleaseTileLocks( const size_t initiator_slot ) {
 
 WRAPIMPL_BEGIN( TileManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"get_map_width",
 			NATIVE_CALL( this ) {
@@ -180,7 +181,7 @@ WRAPIMPL_BEGIN( TileManager )
 				if ( x % 2 != y % 2 ) {
 					GSE_ERROR( gse::EC.INVALID_CALL, "X and Y oddity differs ( " + std::to_string( x ) + " % 2 != " + std::to_string( y ) + " % 2 )" );
 				}
-				return m->GetTile( x, y )->Wrap( GSE_CALL, gc_space );
+				return m->GetTile( x, y )->Wrap( GSE_CALL );
 			} )
 		},
 		{

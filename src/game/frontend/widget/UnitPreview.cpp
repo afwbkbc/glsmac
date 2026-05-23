@@ -17,7 +17,7 @@ namespace widget {
 UnitPreview::UnitPreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_UNIT_PREVIEW, "unit-preview", {
-		{ "unit", { gse::VT_OBJECT, ::game::backend::unit::Unit::WRAP_CLASS } },
+		{ "unit", { true, gse::VT_OBJECT, ::game::backend::unit::Unit::WRAP_CLASS } },
 	}
 ) {}
 

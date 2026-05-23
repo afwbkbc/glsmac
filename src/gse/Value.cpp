@@ -16,6 +16,7 @@
 #include "value/ValueRef.h"
 #include "value/Range.h"
 #include "value/LoopControl.h"
+#include "value/Ptr.h"
 
 #include "types/Buffer.h"
 
@@ -45,6 +46,7 @@ static const std::string s_t_objectref = "Objectref";
 static const std::string s_t_valueref = "Valueref";
 static const std::string s_t_range = "Range";
 static const std::string s_t_loopcontrol = "LoopControl";
+static const std::string s_t_ptr = "Ptr";
 static const std::string s_t_unknown = "Unknown";
 
 #define X_CUSTOM_CLASSES \
@@ -99,6 +101,8 @@ const std::string& Value::GetTypeStringStatic( const value_type_t type ) {
 			return s_t_range;
 		case VT_LOOPCONTROL:
 			return s_t_loopcontrol;
+		case VT_PTR:
+			return s_t_ptr;
 		default:
 			return s_t_unknown;
 	}
@@ -211,6 +215,9 @@ const std::string Value::ToStringImpl( std::unordered_set< const Value* >& stack
 					THROW( "unexpected loop control type: " + std::to_string( ( (value::LoopControl*)this )->value ) );
 			}
 		}
+		case VT_PTR: {
+			return "<PTR>";
+		}
 		default:
 			THROW( "unknown is not intended to be printed" );
 	}
@@ -306,6 +313,9 @@ const std::string Value::Dump() const {
 		}
 		case VT_LOOPCONTROL: {
 			return "loopcontrol{" + ToString() + "}";
+		}
+		case VT_PTR: {
+			return "ptr{}";
 		}
 		default:
 			return "unknown{" + std::to_string( type ) + "}";
@@ -493,6 +503,8 @@ Value* const Value::New( const Value* value ) {
 		}
 		case VT_LOOPCONTROL:
 			THROW( "loop controls are not supposed to be cloned" );
+		case VT_PTR:
+			THROW( "we don't clone ptr" );
 		default: {
 			THROW( "unsupported value type: " + ToString() );
 		}

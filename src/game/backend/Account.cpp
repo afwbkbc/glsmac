@@ -4,7 +4,7 @@
 
 #include "engine/Engine.h"
 #include "config/Config.h"
-
+#include "gse/value/Ptr.h"
 #include "util/FS.h"
 #include "util/UUID.h"
 
@@ -131,13 +131,13 @@ void Account::Load() {
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Account )
-			WRAPIMPL_GET( player_name, String )
-			WRAPIMPL_GET( game_name, String )
-			WRAPIMPL_GET( remote_address, String )
+			WRAPIMPL_GET_PTR( "player_name", player_name )
+			WRAPIMPL_GET_PTR( "game_name", game_name )
+			WRAPIMPL_GET_PTR( "remote_address", remote_address )
 WRAPIMPL_DYNAMIC_SETTERS( Account )
-	WRAPIMPL_SET( player_name, String )
-	WRAPIMPL_SET( game_name, String )
-	WRAPIMPL_SET( remote_address, String )
+	WRAPIMPL_SET_PTR( "player_name", String, player_name )
+	WRAPIMPL_SET_PTR( "game_name", String, game_name )
+	WRAPIMPL_SET_PTR( "remote_address", String, remote_address )
 WRAPIMPL_DYNAMIC_ON_SET( Account )
 	Save();
 WRAPIMPL_DYNAMIC_END()

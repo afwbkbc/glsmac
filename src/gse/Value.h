@@ -59,17 +59,17 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
     static const gse::value::Object::object_class_t WRAP_CLASS;
 #define WRAPDEFS_PTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE ) override; \
     static _type* Unwrap( gse::Value* const value );
 #define WRAPDEFS_DYNAMIC( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE ) override; \
     static _type* Unwrap( gse::Value* const value ); \
     static void WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ); \
     void OnWrapSet( GSE_CALLABLE, const std::string& property_name );
 #define WRAPDEFS_NOPTR( _type ) \
     WRAPDEFS_CLASS() \
-    virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override; \
+    virtual gse::Value* const Wrap( GSE_CALLABLE ) override; \
     static _type Unwrap( gse::Value* const value );
 #define WRAPIMPL_CLASS( _type ) \
     const gse::value::Object::object_class_t _type::WRAP_CLASS = #_type;
@@ -78,10 +78,10 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
 #define WRAPIMPL_DESERIALIZE( _type ) gse::Value* const _type::DeserializeRef( GSE_CALLABLE, const Game* const game, types::Buffer* const buf ) {
 #define WRAPIMPL_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    gse::Value* const _type::Wrap( GSE_CALLABLE, const bool dynamic ) {
+    gse::Value* const _type::Wrap( GSE_CALLABLE ) {
 #define WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     WRAPIMPL_CLASS( _type ) \
-    gse::Value* const _type::Wrap( GSE_CALLABLE, const bool dynamic ) {
+    gse::Value* const _type::Wrap( GSE_CALLABLE ) {
 #define WRAPIMPL_DYNAMIC_GETTERS( _type ) \
     WRAPIMPL_DYNAMIC_BEGIN( _type ) \
     const gse::value::object_properties_t properties = {
@@ -160,7 +160,7 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
 }
 #define WRAPIMPL_DYNAMIC_SETTERS( _type ) \
     }; \
-    return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS, this, dynamic ? &_type::WrapSet : nullptr ); \
+    return VALUEEXT( gse::value::Object, GSE_CALL, properties, WRAP_CLASS, this, &_type::WrapSet ); \
 } \
 void _type::WrapSet( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE ) { \
     auto* obj = (_type*)wrapobj; \
@@ -180,6 +180,11 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         _key, \
         VALUE( gse::value::_type,, __VA_ARGS__ ) \
     },
+#define WRAPIMPL_GET_PTR( _key, ... ) \
+    { \
+        _key, \
+        VALUE( gse::value::Ptr,, __VA_ARGS__ ) \
+    },
 #define WRAPIMPL_GET( _property, _type ) WRAPIMPL_GET_CUSTOM( #_property, _type, _property )
 #define WRAPIMPL_GET_MAPPED_CUSTOM( _property, _map ) \
     { \
@@ -190,7 +195,7 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
 #define WRAPIMPL_GET_WRAPPED( _property ) \
     { \
         #_property, \
-        _property.Wrap( GSE_CALL, dynamic ) \
+        _property.Wrap( GSE_CALL ) \
     },
 
 #define WRAPIMPL_LINK( _key, _property ) \
@@ -201,6 +206,17 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         }) \
     },
 
+// TODO: automatic _type
+#define WRAPIMPL_SET_PTR( _key, _type, _property ) \
+    if ( key == _key ) { \
+        if ( value->type != gse::value::_type::GetType() ) { \
+            GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid assignment value type, expected: " + gse::Value::GetTypeStringStatic( gse::value::_type::GetType() ) + ", got: " + value->GetTypeString() ); \
+        } \
+        obj->_property = ((gse::value::_type*)value)->value; \
+        obj->OnWrapSet( GSE_CALL, _key ); \
+        return; \
+    }
+
 #define WRAPIMPL_SET_CUSTOM( _key, _type, _property ) \
     if ( key == _key ) { \
         if ( value->type != gse::value::_type::GetType() ) { \
@@ -210,6 +226,8 @@ void _type::OnWrapSet( GSE_CALLABLE, const std::string& property_name ) {
         obj->OnWrapSet( GSE_CALL, _key ); \
         return; \
     }
+
+// TODO: switch to PTR
 #define WRAPIMPL_SET( _property, _type ) WRAPIMPL_SET_CUSTOM( #_property, _type, _property )
 
 #define WRAPIMPL_SET_MAPPED_CUSTOM( _property, _map ) \
@@ -263,9 +281,9 @@ public:
 	const std::string Dump() const;
 
 	Value* const Deref();
-	Value* const Clone();
+	virtual Value* const Clone();
 
-#define OP( _op ) const bool operator _op( const Value& other ) const;
+#define OP( _op ) virtual const bool operator _op( const Value& other ) const;
 	OP( == )
 	OP( != )
 	OP( < )

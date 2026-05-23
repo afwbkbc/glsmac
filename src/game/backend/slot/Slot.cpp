@@ -188,7 +188,7 @@ void Slot::Update() {
 			game->Trigger(
 				GSE_CALL, "player_update", ARGS_F( this ) {
 					{
-						"player", Wrap( GSE_CALL, true )
+						"player", Wrap( GSE_CALL )
 					}
 				}; }
 			);

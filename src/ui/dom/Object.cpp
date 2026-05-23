@@ -140,7 +140,7 @@ Object::~Object() {
 #endif
 };
 
-gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
+gse::Value* const Object::Wrap( GSE_CALLABLE ) {
 	if ( !m_wrapobj ) {
 		WRAPIMPL_PROPS
 		WRAPIMPL_TRIGGERS
@@ -169,11 +169,7 @@ gse::Value* const Object::Wrap( GSE_CALLABLE, const bool dynamic ) {
 				}
 			);
 		}
-		m_wrapobj = new gse::value::Object(
-			GSE_CALL, properties, m_tag, this, dynamic
-				? &Object::WrapSetStatic
-				: nullptr
-		);
+		m_wrapobj = new gse::value::Object( GSE_CALL, properties, m_tag, this, &Object::WrapSetStatic );
 	}
 	return m_wrapobj;
 }

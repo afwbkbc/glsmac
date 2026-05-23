@@ -131,7 +131,7 @@ WRAPIMPL_BEGIN( UI )
 	WRAPIMPL_TRIGGERS
 			{
 				"root",
-				m_root->Wrap( GSE_CALL, true )
+				m_root->Wrap( GSE_CALL )
 			},
 			{
 				"get_width",
@@ -187,7 +187,7 @@ WRAPIMPL_BEGIN( UI )
 						// passing parent class or properties in constructor works only if class didn't exist yet
 						GSE_ERROR( gse::EC.UI_ERROR, "Class '" + name + "' already exists. Use .set() instead of constructor to update properties of existing classes." );
 					}
-					return it->second->Wrap( GSE_CALL, true );
+					return it->second->Wrap( GSE_CALL );
 				} )
 			},
 			{
@@ -520,7 +520,7 @@ void UI::ValidateWidgetData( GSE_CALLABLE, const widget_type_t type, gse::value:
 			}
 		}
 		for ( const auto& d : data_it->second.data_config ) {
-			if ( data->value.find( d.first ) == data->value.end() ) {
+			if ( d.second.is_required && data->value.find( d.first ) == data->value.end() ) {
 				GSE_ERROR( gse::EC.UI_ERROR, "Widget data missing: " + d.first );
 			}
 		}

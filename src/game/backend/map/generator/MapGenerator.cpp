@@ -97,13 +97,13 @@ void MapGenerator::Generate( tile::Tiles* tiles, const settings::MapSettings* ma
 
 	m_game->SetLoaderText( "Normalizing fungus amount" );
 	// normalize fungus amount
-	const auto desired_fungus_amount = map_settings->native_lifeforms;
+	const float desired_fungus_amount = map_settings->native_lifeforms;
 	SetFungusAmount( tiles, desired_fungus_amount, MT_C );
 	MT_RETIF();
 
 	m_game->SetLoaderText( "Normalizing moisture amount" );
 	// normalize moisture amount
-	const auto desired_moisture_amount = map_settings->cloud_cover;
+	const float desired_moisture_amount = map_settings->cloud_cover;
 	SetMoistureAmount( tiles, desired_moisture_amount, MT_C );
 	MT_RETIF();
 

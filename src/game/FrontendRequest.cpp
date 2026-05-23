@@ -83,6 +83,14 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.base_update.pops, base_pops_t, *other.data.base_update.pops );
 			break;
 		}
+		case FR_RESOURCE_DEFINE: {
+			NEW( data.resource_define.serialized_resourcedef, std::string, *other.data.resource_define.serialized_resourcedef );
+			break;
+		}
+		case FR_RESOURCE_UNDEFINE: {
+			NEW( data.resource_undefine.id, std::string, *other.data.resource_undefine.id );
+			break;
+		}
 		case FR_LOADER_SHOW:
 		case FR_LOADER_TEXT: {
 			NEW( data.loader.text, std::string, *other.data.loader.text );
@@ -161,6 +169,14 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.base_update.name );
 			DELETE( data.base_update.faction_id );
 			DELETE( data.base_update.pops );
+			break;
+		}
+		case FR_RESOURCE_DEFINE: {
+			DELETE( data.resource_define.serialized_resourcedef );
+			break;
+		}
+		case FR_RESOURCE_UNDEFINE: {
+			DELETE( data.resource_undefine.id );
 			break;
 		}
 		case FR_LOADER_TEXT:

@@ -132,7 +132,7 @@ void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Cam
 									}
 
 									auto* lights = m_actor->GetScene()->GetLights();
-									if ( !lights->empty() ) {
+									if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
 										types::Vec3 light_pos[lights->size()];
 										types::Color::color_t light_color[lights->size()];
 										size_t i = 0;

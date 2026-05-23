@@ -83,7 +83,6 @@ public:
 	};
 
 	const render_data_t& GetRenderData() const;
-	const backend::map::tile::yields_t& GetYields() const;
 
 	void Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts );
 
@@ -106,8 +105,6 @@ private:
 	base::Base* m_base = nullptr;
 
 	render_data_t m_render_data = {};
-
-	backend::map::tile::yields_t m_yields = {};
 
 };
 

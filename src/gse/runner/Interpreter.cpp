@@ -41,6 +41,7 @@
 #include "gse/value/Range.h"
 #include "gse/value/LoopControl.h"
 #include "gse/value/Exception.h"
+#include "gse/value/Ptr.h"
 #include "gse/ExecutionPointer.h"
 
 #include "gc/Space.h"
@@ -429,7 +430,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 		}
 		case OT_ASSIGN: {
 			ASSERT( expression->a, "missing assignment target" );
-			auto result = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
+			auto* result = Deref( ctx, expression->b->m_si, ep, EvaluateOperand( ctx, ep, expression->b ) );
 			switch ( expression->a->type ) {
 				case Operand::OT_VARIABLE: {
 					const auto* var = (Variable*)expression->a;
@@ -792,6 +793,9 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						case gse::VT_LOOPCONTROL: {
 							THROW( "TODO: VT_LOOPCONTROL" );
 						}
+						case gse::VT_PTR: {
+							THROW( "TODO: VT_LOOPCONTROL" );
+						}
 						case gse::VT_OBJECTREF: {
 							return process_indexable( Deref( ctx, expression->a->m_si, ep, refv ) );
 						}
@@ -911,7 +915,7 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 			return VALUE( Range, , from, to );
 		}
 		case OT_TERNARY_IF: {
-			auto* const check = EvaluateOperand( ctx, ep, expression->a );
+			auto* const check = EvaluateOperand( ctx, ep, expression->a )->Deref();
 			auto* const body = (Expression*)expression->b;
 			if (
 				expression->b->type != program::Operand::OT_EXPRESSION ||
@@ -1051,6 +1055,7 @@ gse::Value* const Interpreter::EvaluateRange( context::Context* ctx, ExecutionPo
 			THROW( "unexpected index type: " + operand->ToString() );
 		}
 	}
+	value = Deref( ctx, operand->m_si, ep, value );
 	switch ( value->type ) {
 		case gse::VT_INT:
 		case gse::VT_STRING:
@@ -1113,6 +1118,10 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 				v = ( (ValueRef*)value )->target;
 				break;
 			}
+			case gse::VT_PTR: {
+				v = ( (AnyPtr*)value )->Clone(); // TODO: not needed in some cases
+				break;
+			}
 			default: {
 				v = value;
 			}
@@ -1122,7 +1131,8 @@ gse::Value* const Interpreter::Deref( context::Context* ctx, const si_t& si, Exe
 			case VT_ARRAYREF:
 			case VT_ARRAYRANGEREF:
 			case VT_OBJECTREF:
-			case VT_VALUEREF: {
+			case VT_VALUEREF:
+			case VT_PTR: {
 				return Deref( ctx, si, ep, v );
 			}
 			default: {

@@ -1,5 +1,7 @@
 #include "ResourceManager.h"
 
+#include <algorithm>
+
 #include "Resource.h"
 
 #include "gse/callable/Native.h"
@@ -7,6 +9,7 @@
 #include "game/backend/State.h"
 #include "game/backend/slot/Slot.h"
 #include "game/backend/Bindings.h"
+#include "gse/value/Array.h"
 
 namespace game {
 namespace backend {
@@ -27,6 +30,7 @@ void ResourceManager::Clear() {
 		delete it.second;
 	}
 	m_resources.clear();
+	m_resources_order.clear();
 }
 
 void ResourceManager::DefineResource( resource::Resource* resource ) {
@@ -40,43 +44,35 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 			resource
 		}
 	);
+	m_resources_order.push_back( resource->m_id );
+
+	auto fr = FrontendRequest( FrontendRequest::FR_RESOURCE_DEFINE );
+	NEW( fr.data.resource_define.serialized_resourcedef, std::string, Resource::Serialize( resource ).ToString() );
+	m_game->AddFrontendRequest( fr );
 }
 
 void ResourceManager::UndefineResource( const std::string& id ) {
 	Log( "Undefining resource ('" + id + "')" );
 
 	ASSERT( m_resources.find( id ) != m_resources.end(), "resource does not exist" );
+
 	m_resources.erase( id );
+	auto it = std::find( m_resources_order.begin(), m_resources_order.end(), id );
+	if ( it != m_resources_order.end() ) {
+		m_resources_order.erase( it );
+	}
+
+	auto fr = FrontendRequest( FrontendRequest::FR_RESOURCE_UNDEFINE );
+	NEW( fr.data.resource_undefine.id, std::string, id );
+	m_game->AddFrontendRequest( fr );
 }
 
-const map::tile::yields_t ResourceManager::GetYields( GSE_CALLABLE, map::tile::Tile* tile, slot::Slot* slot ) {
-	map::tile::yields_t yields = {};
-	for ( const auto& it : m_resources ) {
-		const auto result = m_game->GetState()->TriggerObject( this, "get_yield", ARGS_F( &tile, &slot, &it ) {
-			{
-				"tile",
-				tile->Wrap( GSE_CALL, gc_space )
-			},
-			{
-				"resource",
-				VALUE( gse::value::String,, it.first )
-			},
-			{
-				"player",
-				slot->Wrap( GSE_CALL, gc_space )
-			},
-		}; } );
-		if ( result->type != gse::VT_INT ) {
-			GSE_ERROR( gse::EC.INVALID_HANDLER, "unexpected return type: expected Object, got " + result->GetTypeString() );
-		}
-		yields.insert(
-			{
-				it.first,
-				( (gse::value::Int*)result )->value
-			}
-		);
-	}
-	return yields;
+const std::vector< std::string >& ResourceManager::GetDefinedResourcesOrder() const {
+	return m_resources_order;
+}
+
+const ResourceManager::resource_definitions_t& ResourceManager::GetDefinedResources() const {
+	return m_resources;
 }
 
 WRAPIMPL_BEGIN( ResourceManager )
@@ -99,43 +95,43 @@ WRAPIMPL_BEGIN( ResourceManager )
 					GSE_ERROR( gse::EC.GAME_ERROR, "Resource '" + id + "' already exists" );
 				}
 
-				if ( type == "sprite_map" ) {
+				if ( type == "sprites" ) {
 					N_GETPROP( file, render, "file", String );
 
-					N_GETPROP( yields, render, "yields", Object );
-					N_GETPROP( grid_x, yields, "grid_x", Int );
-					N_GETPROP( grid_y, yields, "grid_y", Int );
-					N_GETPROP( grid_margin, yields, "grid_margin", Int );
-					N_GETPROP( cell_width, yields, "cell_width", Int );
-					N_GETPROP( cell_height, yields, "cell_height", Int );
-					N_GETPROP( cells_count, yields, "cells_count", Int );
+					N_GETPROP( coords, render, "coords", Array );
+					Resource::render_coords_t render_coords = {};
 
-#define X( _n ) \
-					N_GETPROP( _n, render, "plus", Object ); \
-					N_GETPROP( _n ## _x, _n, "x", Int ); \
-					N_GETPROP( _n ## _y, _n, "y", Int ); \
-					N_GETPROP( _n ## _width, _n, "width", Int ); \
-					N_GETPROP( _n ## _height, _n, "height", Int );
-					X( plus )
-					X( minus )
+					for ( const auto& v : coords ) {
+						if ( v->type != gse::VT_ARRAY ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Resource coords must be array." );
+						}
+						const auto& c = ((gse::value::Array*)v)->value;
+						if ( c.size() != 4 ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Resource coords arrays must contain exactly 4 elements (x1, y1, x2, y2)." );
+						}
+						for ( const auto& cv : c ) {
+							if ( cv->type != gse::VT_INT ) {
+								GSE_ERROR( gse::EC.GAME_ERROR, "Resource coords array elements must be of type Int." );
+							}
+						}
+						render_coords.push_back({
+							{
+								( (gse::value::Int*)c.at( 0 ) )->value,
+								( (gse::value::Int*)c.at( 1 ) )->value,
+							},
+							{
+								( (gse::value::Int*)c.at( 2 ) )->value,
+								( (gse::value::Int*)c.at( 3 ) )->value,
+							}
+						});
+					}
 
 					auto* resource = new resource::Resource(
 						id,
 						name,
 						{
 							file,
-							{
-								(uint16_t)grid_x, (uint16_t)grid_y, (uint8_t)grid_margin,
-								(uint16_t)cell_width, (uint16_t)cell_height, (uint8_t)cells_count,
-							},
-							{
-								(uint16_t)plus_x, (uint16_t)plus_y,
-								(uint16_t)plus_width, (uint16_t)plus_height,
-							},
-							{
-								(uint16_t)minus_x, (uint16_t)minus_y,
-								(uint16_t)minus_width, (uint16_t)minus_height,
-							},
+							render_coords,
 						}
 					);
 					DefineResource( resource );

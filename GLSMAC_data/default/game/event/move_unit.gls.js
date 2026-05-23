@@ -59,7 +59,7 @@ return {
 		if (e.data.unit.is_immovable) {
 			return 'Unit is immovable';
 		}
-		if (e.data.unit.get_movement() == 0.0) {
+		if (e.data.unit.movement <= 0.0) {
 			return 'Unit is out of moves';
 		}
 		if (src_tile == dst_tile) {
@@ -90,12 +90,7 @@ return {
 
 	resolve: (e) => {
 
-		const movement = e.data.unit.get_movement();
-
-		if (movement == 0.0) {
-			// no moves left
-			return false;
-		}
+		const movement = e.data.unit.movement;
 
 		const src_tile = e.data.unit.get_tile();
 		const dst_tile = e.data.tile;
@@ -116,7 +111,7 @@ return {
 		const src_tile = unit.get_tile();
 		const dst_tile = e.data.tile;
 
-		const movement = unit.get_movement();
+		const movement = unit.movement;
 
 		const result = {
 			orig: {
@@ -131,9 +126,9 @@ return {
 		let next = () => {
 			// reduce remaining movement points (even if failed)
 			if (movement >= movement_cost) {
-				unit.set_movement(movement - movement_cost);
+				unit.movement = movement - movement_cost;
 			} else {
-				unit.set_movement(0.0);
+				unit.movement = 0.0;
 			}
 			unit.moved_this_turn = true;
 		};
@@ -152,7 +147,7 @@ return {
 		const unit = e.data.unit;
 		const orig = e.applied.orig;
 		unit.move_to_tile(orig.tile, () => {
-			unit.set_movement(orig.movement);
+			unit.movement = orig.movement;
 			unit.moved_this_turn = orig.moved_this_turn;
 		});
 	},

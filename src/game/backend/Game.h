@@ -352,8 +352,6 @@ private:
 
 	const types::Vec3 GetTileRenderCoords( const map::tile::Tile* tile );
 
-	void UpdateYields( GSE_CALLABLE, map::tile::Tile* tile ) const;
-
 	map::tile::TileManager* m_tm = nullptr;
 	resource::ResourceManager* m_rm = nullptr;
 	unit::UnitManager* m_um = nullptr;
@@ -428,6 +426,8 @@ private:
 	void InitFailed( const std::string& error_text );
 
 	void SetTurnStatus( const backend::turn::turn_status_t status );
+
+	void ProcessEvents();
 
 private:
 	friend class map::tile::TileManager;

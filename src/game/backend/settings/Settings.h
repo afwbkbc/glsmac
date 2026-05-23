@@ -36,8 +36,8 @@ CLASS2( MapSettings, types::Serializable, gse::Wrappable )
 		{ settings::MAP_CONFIG_LARGE,    { 140, 70 } },
 		{ settings::MAP_CONFIG_HUGE,     { 180, 90 } }
 	 */
-	size_t size_x = 112;
-	size_t size_y = 56;
+	int64_t size_x = 112;
+	int64_t size_y = 56;
 
 	/*
 	 	{ settings::MAP_CONFIG_OCEAN_LOW,    0.4f }, // '30-50% of surface'
@@ -81,7 +81,7 @@ CLASS2( GlobalSettings, types::Serializable, gse::Wrappable )
 	MapSettings map = {};
 
 	rules::Default rules = {}; // TODO: custom rules
-	int difficulty_level = rules.GetDefaultDifficultyLevelV();
+	int64_t difficulty_level = rules.GetDefaultDifficultyLevelV();
 
 	std::string game_name = "";
 

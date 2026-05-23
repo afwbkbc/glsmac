@@ -63,7 +63,8 @@ return {
 		}
 	},
 
-	set_image: (tile) => {
+	set_image: () => {
+		const tile = this.tile;
 		if (!#is_defined(this.preview)) {
 			this.preview = this.frame.widget({
 				type: 'tile-preview',
@@ -77,15 +78,24 @@ return {
 			});
 		} else {
 			this.preview.data = {
-				tile: tile
+				tile: tile,
 			};
 		}
 	},
 
-	set_lines: (tile) => {
+	line: (text) => {
+		this.lines.text({
+			color: 'rgb(116,156,56)',
+			font: 'arialnb.ttf:14',
+			text: text,
+			left: 3,
+		});
+	},
 
+	set_lines: () => {
+		const tile = this.tile;
 		if (#is_defined(this.lines)) {
-			this.lines.remove(); // TODO: fix this.lines.clear();
+			this.lines.remove(); // TODO: fix .clear()
 		}
 		this.lines = this.frame.listview({
 			left: 3,
@@ -95,56 +105,63 @@ return {
 			itemsize: 16,
 		});
 
-		const f_line = (text) => {
-			this.lines.text({
-				color: 'rgb(116,156,56)',
-				font: 'arialnb.ttf:14',
-				text: text,
-				left: 3,
-			});
-		};
+		if (this.show_resources) {
 
-		if (tile.is_water) {
-			if (tile.elevation < this.TRENCH_LEVEL) {
-				f_line('Ocean Trench');
-			} else if (tile.elevation < this.OCEAN_LEVEL) {
-				f_line('Ocean');
-			} else {
-				f_line('Ocean Shelf');
-			}
-			f_line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation));
+			const resources = tile.get_resources();
+			this.line('Nutrients: ' + #to_string(resources.NUTRIENTS));
+			this.line(''); // TODO: hints
+			this.line('Minerals: ' + #to_string(resources.MINERALS));
+			this.line(''); // TODO: hints
+			this.line('Energy: ' + #to_string(resources.ENERGY));
+			this.line(''); // TODO: hints
+
 		} else {
-			f_line('Elev:' + #to_string(tile.elevation - this.SEA_LEVEL));
-			let tilestr = '';
-			if (tile.rockiness < #sizeof(this.ROCKINESS_LEVELS)) {
-				tilestr += this.ROCKINESS_LEVELS[tile.rockiness];
+
+			if (tile.is_water) {
+				if (tile.elevation < this.TRENCH_LEVEL) {
+					this.line('Ocean Trench');
+				} else if (tile.elevation < this.OCEAN_LEVEL) {
+					this.line('Ocean');
+				} else {
+					this.line('Ocean Shelf');
+				}
+				this.line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation));
+			} else {
+				this.line('Elev:' + #to_string(tile.elevation - this.SEA_LEVEL));
+				let tilestr = '';
+				if (tile.rockiness < #sizeof(this.ROCKINESS_LEVELS)) {
+					tilestr += this.ROCKINESS_LEVELS[tile.rockiness];
+				}
+				tilestr += ' & ';
+				if (tile.moisture < #sizeof(this.MOISTURE_LEVELS)) {
+					tilestr += this.MOISTURE_LEVELS[tile.moisture];
+				}
+				this.line(tilestr);
 			}
-			tilestr += ' & ';
-			if (tile.moisture < #sizeof(this.MOISTURE_LEVELS)) {
-				tilestr += this.MOISTURE_LEVELS[tile.moisture];
+
+			for (f in tile.features) {
+				if (tile.features[f]) {
+					this.line(this.get_feature_name(tile, f));
+				}
 			}
-			f_line(tilestr);
+
+			for (f in tile.bonuses) {
+				if (tile.bonuses[f]) {
+					this.line(this.get_resource_name(f));
+				}
+			}
+
+			// TODO: terraforming
+
 		}
 
-		for (f in tile.features) {
-			if (tile.features[f]) {
-				f_line(this.get_feature_name(tile, f));
-			}
-		}
-
-		for (f in tile.resources) {
-			if (tile.resources[f]) {
-				f_line(this.get_resource_name(f));
-			}
-		}
-
-		// TODO: terraforming
-
-		f_line(''); // tmp workaround for 'cut-off' bottom in listview
+		this.line(''); // tmp workaround for 'cut-off' bottom in listview
 
 	},
 
 	init: (p) => {
+
+		this.show_resources = false;
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
@@ -159,8 +176,15 @@ return {
 		});
 
 		p.map.on('tile_preview', (e) => {
-			this.set_image(e.tile);
-			this.set_lines(e.tile);
+			this.tile = e.tile;
+			this.set_image();
+			this.set_lines();
+		});
+
+		frame_outer.on('mousedown', (e) => {
+			this.show_resources = !this.show_resources;
+			this.set_lines();
+			return true;
 		});
 
 	},

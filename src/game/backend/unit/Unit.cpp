@@ -5,7 +5,7 @@
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
 #include "gse/value/Bool.h"
-#include "gse/value/Undefined.h"
+#include "gse/value/Ptr.h"
 #include "gse/callable/Native.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -119,7 +119,7 @@ WRAPIMPL_DESERIALIZE( Unit )
 	const auto id = buf->ReadInt();
 	const auto& unit = game->GetUM()->GetUnit( id );
 	ASSERT( unit, "base id not found: " + std::to_string( id ) );
-	return unit->Wrap( GSE_CALL, true );
+	return unit->Wrap( GSE_CALL );
 }
 
 WRAPIMPL_DYNAMIC_GETTERS( Unit )
@@ -130,10 +130,10 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 		{ "x", VALUE( gse::value::Int,, m_tile->coord.x ) },
 		{ "y", VALUE( gse::value::Int,, m_tile->coord.y ) },
 	} )
-	WRAPIMPL_GET_CUSTOM( "movement", Float, m_movement ) // TODO: fix
-	WRAPIMPL_GET_CUSTOM( "morale", Int, m_morale )
-	WRAPIMPL_GET_CUSTOM( "health", Float, m_health )
-	WRAPIMPL_GET_CUSTOM( "moved_this_turn", Bool, m_moved_this_turn )
+	WRAPIMPL_GET_PTR( "movement", m_movement )
+	WRAPIMPL_GET_PTR( "morale", m_morale )
+	WRAPIMPL_GET_PTR( "health", m_health )
+	WRAPIMPL_GET_PTR( "moved_this_turn", m_moved_this_turn )
 	WRAPIMPL_GET_CUSTOM( "is_immovable", Bool, m_def->GetMovementType() == MT_IMMOVABLE )
 	WRAPIMPL_GET_CUSTOM( "is_land", Bool, m_def->GetMovementType() == MT_LAND )
 	WRAPIMPL_GET_CUSTOM( "is_water", Bool, m_def->GetMovementType() == MT_WATER )
@@ -164,26 +164,11 @@ WRAPIMPL_DYNAMIC_GETTERS( Unit )
 			return VALUE( gse::value::Undefined );
 		} )
 	},
-	{
-		"get_movement",
-		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 0 );
-			return VALUE( gse::value::Float,, m_movement );
-		} )
-	},
-	{
-		"set_movement",
-		NATIVE_CALL( this ) {
-			N_EXPECT_ARGS( 1 );
-			N_GETVALUE( movement, 0, Float );
-			m_movement = movement;
-			return VALUE( gse::value::Undefined );
-		} )
-	},
 WRAPIMPL_DYNAMIC_SETTERS( Unit )
-	WRAPIMPL_SET_CUSTOM( "movement", Float, m_movement ) // TODO: fix
-	WRAPIMPL_SET_CUSTOM( "health", Float, m_health )
-	WRAPIMPL_SET_CUSTOM( "moved_this_turn", Bool, m_moved_this_turn )
+	WRAPIMPL_SET_PTR( "movement", Float, m_movement )
+	WRAPIMPL_SET_PTR( "morale", Float, m_morale )
+	WRAPIMPL_SET_PTR( "health", Float, m_health )
+	WRAPIMPL_SET_PTR( "moved_this_turn", Bool, m_moved_this_turn )
 WRAPIMPL_DYNAMIC_ON_SET( Unit )
 	// this is potentially risky because if it gets zero health it will be despawned without script's awareness, how to handle it?
 	// maybe despawn unit from within script? but then it would be script's responsibility to ensure there are no zero-health units walking around

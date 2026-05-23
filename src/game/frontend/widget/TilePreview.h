@@ -11,7 +11,16 @@ class Texture;
 }
 
 namespace game {
+
+namespace backend::map::tile {
+class Tile;
+}
+
 namespace frontend {
+
+namespace tile {
+class Tile;
+}
 
 namespace widget {
 

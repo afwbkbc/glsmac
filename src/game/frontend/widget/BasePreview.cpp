@@ -17,7 +17,7 @@ namespace widget {
 BasePreview::BasePreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_BASE_PREVIEW, "base-preview", {
-		{ "base", { gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
+		{ "base", { true, gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
 	}
 ) {}
 

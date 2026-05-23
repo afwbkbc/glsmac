@@ -4,18 +4,25 @@ const get_nutrients_for_growth = (game, base) => {
 	return globals.map_growth_base * (base.get_size() + 1);
 };
 
-const get_nutrients_per_turn = (base) => {
-	return 2; // TODO: yields
+const get_pending_growth = (base) => {
+	const intake = base.get_intake();
+	const consumption = base.get_consumption();
+	return intake.NUTRIENTS - consumption.NUTRIENTS;
 };
 
 const process_growth = (game, base) => {
 	let grow = false;
 
+
 	let accumulated = base.get('accumulated_nutrients');
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
-	accumulated += get_nutrients_per_turn(base);
+	accumulated += get_pending_growth(base);
+	if (accumulated < 0) {
+		// TODO: hunger
+		accumulated = 0;
+	}
 	base.set('accumulated_nutrients', accumulated);
 	if (base.get_size() == 0) {
 		grow = true; // always grow new bases to 1
@@ -71,8 +78,9 @@ return (game) => {
 		const bm = game.get_bm();
 
 		// set bases-related globals
-		game.set('f_base_get_nutrients_per_turn', get_nutrients_per_turn);
-		game.set('f_base_reset_nutrients', (base) => { // TODO: prettier way to do this? needs to be callable from events
+		// TODO: prettier way to do this? needs to be callable from events
+		game.set('f_base_get_pending_growth', get_pending_growth);
+		game.set('f_base_reset_nutrients', (base) => {
 			const nfg = get_nutrients_for_growth(game, base);
 			let accumulated = base.get('accumulated_nutrients');
 			if (!#is_defined(accumulated)) {

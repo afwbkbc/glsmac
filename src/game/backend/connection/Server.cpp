@@ -54,7 +54,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			WTrigger(
 				"player_join", ARGS_F( player_copy ) {
 					{
-						"player", player_copy->Wrap( GSE_CALL, true )
+						"player", player_copy->Wrap( GSE_CALL )
 					}
 				}; },
 				[ player_copy ]() {
@@ -122,7 +122,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 				WTrigger(
 					"player_leave", ARGS_F( player_copy ) {
 						{
-							"player", player_copy->Wrap( GSE_CALL, true )
+							"player", player_copy->Wrap( GSE_CALL )
 						}
 					}; },
 					[ player_copy ]() {
@@ -241,7 +241,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 						WTrigger(
 							"player_join", ARGS_F( player_copy ) {
 								{
-									"player", player_copy->Wrap( GSE_CALL, true )
+									"player", player_copy->Wrap( GSE_CALL )
 								}
 							}; },
 							[ player_copy ]() {

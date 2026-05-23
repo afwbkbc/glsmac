@@ -62,7 +62,7 @@ public:
 	Object( DOM_ARGS_T );
 	virtual ~Object();
 
-	virtual gse::Value* const Wrap( GSE_CALLABLE, const bool dynamic = false ) override;
+	virtual gse::Value* const Wrap( GSE_CALLABLE ) override;
 	virtual void WrapSet( const std::string& key, gse::Value* const value, GSE_CALLABLE );
 	static void WrapSetStatic( gse::Wrappable* wrapobj, const std::string& key, gse::Value* const value, GSE_CALLABLE );
 

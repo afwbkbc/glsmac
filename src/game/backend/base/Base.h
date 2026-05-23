@@ -5,10 +5,16 @@
 
 #include "gse/Wrappable.h"
 #include "game/backend/MapObject.h"
+#include "game/backend/ResourceRelated.h"
 
 #include "types/Buffer.h"
 
 #include "Pop.h"
+
+namespace gse::value {
+class Object;
+class Array;
+}
 
 namespace game {
 namespace backend {
@@ -26,7 +32,7 @@ class Tile;
 
 namespace base {
 
-class Base : public gse::Wrappable, public MapObject {
+class Base : public gse::Wrappable, public MapObject, public ResourceRelated {
 public:
 
 	static const size_t GetNextId();
@@ -64,6 +70,11 @@ public:
 private:
 	Game* const m_game;
 
+	std::unordered_set< map::tile::Tile* > m_worked_tiles = {};
+
+	gse::value::Array* const GetWorkedTiles( GSE_CALLABLE );
+	gse::value::Object* const GetIntake( GSE_CALLABLE );
+	gse::value::Object* const GetConsumption( GSE_CALLABLE );
 };
 
 }

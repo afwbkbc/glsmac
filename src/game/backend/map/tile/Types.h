@@ -152,8 +152,6 @@ static constexpr terraforming_t TERRAFORMING_SENSOR = 1 << 10;
 static constexpr terraforming_t TERRAFORMING_BUNKER = 1 << 11;
 static constexpr terraforming_t TERRAFORMING_AIRBASE = 1 << 12;
 
-typedef std::unordered_map< std::string, size_t > yields_t;
-
 }
 }
 }

@@ -5,14 +5,19 @@
 #include "gse/value/Int.h"
 #include "gse/value/Bool.h"
 #include "gse/value/Null.h"
-#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 #include "gse/Exception.h"
 
+#include "Tiles.h"
 #include "game/backend/Game.h"
 #include "game/backend/map/Map.h"
 #include "game/backend/unit/Unit.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/map/tile/TileManager.h"
+#include "game/backend/resource/ResourceManager.h"
+#include "game/backend/slot/Slot.h"
+#include "game/backend/State.h"
+#include "game/backend/Player.h"
 
 #include "util/String.h"
 
@@ -109,12 +114,6 @@ const types::Buffer Tile::Serialize() const {
 	buf.WriteInt( features );
 	buf.WriteInt( terraforming );
 
-	buf.WriteInt( yields.size() );
-	for ( const auto& y : yields ) {
-		buf.WriteString( y.first );
-		buf.WriteInt( y.second );
-	}
-
 	return buf;
 }
 
@@ -135,16 +134,6 @@ void Tile::Deserialize( types::Buffer buf ) {
 
 	features = buf.ReadInt();
 	terraforming = buf.ReadInt();
-
-	ASSERT( yields.empty(), "yields not empty" );
-	const auto yields_size = buf.ReadInt();
-	yields.reserve( yields_size );
-	for ( size_t i = 0 ; i < yields_size ; i++ ) {
-		yields.insert({
-			buf.ReadString(),
-			buf.ReadInt()
-		});
-	}
 
 	Update();
 }
@@ -236,7 +225,7 @@ WRAPIMPL_BEGIN( Tile )
 			} )
 		},
 		{ "features", GetFeatures( GSE_CALL ) },
-		{ "resources", GetResources( GSE_CALL ) },
+		{ "bonuses", GetBonuses( GSE_CALL ) },
 		{
 			"get_units",
 			NATIVE_CALL( this ) {
@@ -260,6 +249,21 @@ WRAPIMPL_BEGIN( Tile )
 				}
 			} )
 		},
+		{
+			"get_resources",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS_MAX( 1 );
+				slot::Slot* slot;
+				if ( arguments.size() > 0 ) {
+					N_GETVALUE_UNWRAP( player, 0, Player );
+					slot = player->GetSlot();
+				}
+				else {
+					slot = tiles->GetMap()->GetGame()->GetPlayer()->GetSlot();
+				}
+				return GetResourcesAsValue( GSE_CALL, slot );
+			} )
+		},
 	};
 WRAPIMPL_END_PTR()
 
@@ -281,6 +285,15 @@ const bool Tile::IsLockedBy( const size_t initiator_slot ) const {
 	return m_is_locked && m_lock_initiator_slot == initiator_slot;
 }
 
+const Tile::resources_t Tile::GetResources( GSE_CALLABLE, slot::Slot* const slot ) {
+	auto* const result = GetResourcesAsValue( GSE_CALL, slot );
+	resources_t resources = {};
+	for ( const auto& it : ((gse::value::Object*)result)->value ) {
+		resources.insert_or_assign( it.first, ((gse::value::Int*)it.second)->value );
+	}
+	return resources;
+}
+
 gse::Value* const Tile::GetFeatures( GSE_CALLABLE ) const {
 	gse::value::object_properties_t result = {};
 #define X_FEATURE( _x, _i ) \
@@ -293,7 +306,7 @@ X_FEATURES
 	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
 }
 
-gse::Value* const Tile::GetResources( GSE_CALLABLE ) const {
+gse::Value* const Tile::GetBonuses( GSE_CALLABLE ) const {
 	gse::value::object_properties_t result = {};
 #define X_BONUS( _x, _i ) \
 	result.insert_or_assign(   \
@@ -305,6 +318,20 @@ gse::Value* const Tile::GetResources( GSE_CALLABLE ) const {
 	return VALUE( gse::value::Object,, GSE_CALL_NOGC, result );
 }
 
+gse::value::Object* const Tile::GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot ) {
+	ASSERT( tiles, "tiles not set" );
+	auto* const game = tiles->GetMap()->GetGame();
+	return GetResourcesFromCallback( GSE_CALL, game->GetTM(), game->GetRM(),"get_tile_resources", ARGS_F( this, &slot ) {
+		{
+			"tile",
+			Wrap( GSE_CALL )
+		},
+		{
+			"player",
+			slot->Wrap( GSE_CALL )
+		},
+	}; } );
+}
 
 }
 }

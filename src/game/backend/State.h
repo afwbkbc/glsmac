@@ -44,7 +44,7 @@ CLASS( State, gse::GCWrappable )
 
 	typedef std::function< void( GSE_CALLABLE ) > gse_func_t;
 
-	void WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup = nullptr );
+	void WithGSE( gc::Object* const owner, const gse_func_t& f, const f_cleanup_t& f_cleanup = nullptr, const bool need_now = false );
 
 	settings::Settings m_settings = {};
 	slot::Slots* m_slots;

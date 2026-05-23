@@ -215,7 +215,7 @@ const types::Buffer Map::Serialize() const {
 void Map::Deserialize( types::Buffer buf ) {
 
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, tile::Tiles );
+	NEW( m_tiles, tile::Tiles, this );
 	m_tiles->Deserialize( buf.ReadString() );
 
 	ASSERT( !m_map_state, "map state already set" );
@@ -612,6 +612,10 @@ void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t
 	);
 }
 
+Game* const Map::GetGame() const {
+	return m_game;
+}
+
 WRAPIMPL_BEGIN( Map )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
@@ -649,7 +653,7 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 	}
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, tile::Tiles, map_settings->size_x, map_settings->size_y );
+	NEW( m_tiles, tile::Tiles, this, map_settings->size_x, map_settings->size_y );
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {
 		Log( "Map generation canceled" );
@@ -673,7 +677,7 @@ const Map::error_code_t Map::LoadFromBuffer( types::Buffer& buffer ) {
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
-	NEW( m_tiles, tile::Tiles );
+	NEW( m_tiles, tile::Tiles, this );
 	try {
 		m_tiles->Deserialize( buffer );
 		return EC_NONE;

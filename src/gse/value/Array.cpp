@@ -74,7 +74,7 @@ Value* const Array::FromVector( GSE_CALLABLE, const std::vector< Wrappable* >* d
 	array_elements_t elements = {};
 	elements.reserve( data->size() );
 	for ( const auto& el : *data ) {
-		elements.push_back( el->Wrap( GSE_CALL, dynamic ) );
+		elements.push_back( el->Wrap( GSE_CALL ) );
 	}
 	return VALUE( Array, , elements );
 }

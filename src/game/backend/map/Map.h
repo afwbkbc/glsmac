@@ -127,6 +127,8 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 	const size_t AddTerrainSpriteActorInstance( const std::string& key, const types::Vec3& coords );
 	void RemoveTerrainSpriteActorInstance( const std::string& key, const size_t instance_id );
 
+	Game* const GetGame() const;
+
 	WRAPDEFS_PTR( Map )
 
 private:
