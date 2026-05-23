@@ -198,31 +198,31 @@ const bool Space::Collect() {
 	{
 		std::lock_guard guard3( m_accumulations_mutex ); // prevent collection during accumulation // TODO: improve
 
-		g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
-			[ this, &removed_objects ]() {
-				std::lock_guard guard2( m_objects_mutex );
-				for ( const auto& object : m_objects ) {
-					const auto& it = m_reachable_objects_tmp.find( object );
-					if ( it == m_reachable_objects_tmp.end() ) {
-						ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " was already removed" );
-#if defined( DEBUG ) || defined( FASTDEBUG )
-						GC_LOG( "Destroying unreachable object: " + util::String::ToHexString( (unsigned long long)object ) /* TODO + "[ " + object->ToString() + " ]"*/ );
-#endif
-#if defined( DEBUG ) || defined( FASTDEBUG )
-						debug::g_memory_watcher->MaybeDelete( object );
-#endif
-						removed_objects.insert( object );
-						delete object;
-					}
-				}
-				GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
-			}
-		);
-
-		m_reachable_objects_tmp.clear();
-
 		{
 			std::lock_guard guard2( m_objects_mutex );
+
+			g_engine->GetGraphics()->NoRender( // tmp: prevent race conditions with render thread
+				[ this, &removed_objects ]() {
+					for ( const auto& object : m_objects ) {
+						const auto& it = m_reachable_objects_tmp.find( object );
+						if ( it == m_reachable_objects_tmp.end() ) {
+							ASSERT( removed_objects.find( object ) == removed_objects.end(), "object " + std::to_string( (unsigned long long)object ) + " was already removed" );
+#if defined( DEBUG ) || defined( FASTDEBUG )
+							GC_LOG( "Destroying unreachable object: " + util::String::ToHexString( (unsigned long long)object ) /* TODO + "[ " + object->ToString() + " ]"*/ );
+#endif
+#if defined( DEBUG ) || defined( FASTDEBUG )
+							debug::g_memory_watcher->MaybeDelete( object );
+#endif
+							removed_objects.insert( object );
+							delete object;
+						}
+					}
+					GC_LOG( "Kept " + std::to_string( m_reachable_objects_tmp.size() ) + " reachable objects, removed " + std::to_string( removed_objects.size() ) + " unreachable" );
+				}
+			);
+
+			m_reachable_objects_tmp.clear();
+
 			for ( const auto& object : removed_objects ) {
 				ASSERT( m_objects.find( object ) != m_objects.end(), "object to be removed not found" );
 				m_objects.erase( object );
