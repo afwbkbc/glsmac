@@ -17,6 +17,7 @@
 #include "Pop.h"
 #include "PopDef.h"
 #include "game/backend/Random.h"
+#include "game/backend/resource/ResourceManager.h"
 
 namespace game {
 namespace backend {
@@ -180,11 +181,66 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return VALUE( gse::value::Int,, m_pops.size() );
 		} ),
 	},
+	{
+		"get_worked_tiles",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return GetWorkedTiles( GSE_CALL );
+		} ),
+	},
+	{
+		"get_intake",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return GetIntake( GSE_CALL );
+		} ),
+	},
+	{
+		"get_consumption",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return GetConsumption( GSE_CALL );
+		} ),
+	},
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Base )
+
+gse::value::Array* const Base::GetWorkedTiles( GSE_CALLABLE ) {
+	gse::value::array_elements_t result = {};
+	for ( const auto& tile : m_worked_tiles ) {
+		result.push_back( tile->Wrap( GSE_CALL ) );
+	}
+	return VALUE( gse::value::Array,, result );
+}
+
+gse::value::Object* const Base::GetIntake( GSE_CALLABLE ) {
+	return GetResourcesFromCallback( GSE_CALL, m_game->GetBM(), m_game->GetRM(), "get_base_intake", ARGS_F( this ) {
+		{
+			"base",
+			Wrap( GSE_CALL )
+		},
+		{
+			"player",
+			m_owner->Wrap( GSE_CALL )
+		},
+	}; } );
+}
+
+gse::value::Object* const Base::GetConsumption( GSE_CALLABLE ) {
+	return GetResourcesFromCallback( GSE_CALL, m_game->GetBM(), m_game->GetRM(), "get_base_consumption", ARGS_F( this ) {
+		{
+			"base",
+			Wrap( GSE_CALL )
+		},
+		{
+			"player",
+			m_owner->Wrap( GSE_CALL )
+		},
+	}; } );
+}
 
 }
 }

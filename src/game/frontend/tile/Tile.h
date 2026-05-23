@@ -106,8 +106,6 @@ private:
 
 	render_data_t m_render_data = {};
 
-	backend::map::tile::yields_t m_yields = {};
-
 };
 
 }

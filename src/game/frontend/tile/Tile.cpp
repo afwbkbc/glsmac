@@ -570,8 +570,6 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 		m_base->UpdateFromTile();
 	}
 
-	m_yields = tile.yields;
-
 }
 
 }

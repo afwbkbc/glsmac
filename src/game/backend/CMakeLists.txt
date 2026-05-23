@@ -20,5 +20,6 @@ SET( SRC ${SRC}
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
 	${PWD}/MapObject.cpp
+	${PWD}/ResourceRelated.cpp
 
 	PARENT_SCOPE )

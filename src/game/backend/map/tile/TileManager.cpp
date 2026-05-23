@@ -142,6 +142,7 @@ void TileManager::ReleaseTileLocks( const size_t initiator_slot ) {
 
 WRAPIMPL_BEGIN( TileManager )
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 		{
 			"get_map_width",
 			NATIVE_CALL( this ) {

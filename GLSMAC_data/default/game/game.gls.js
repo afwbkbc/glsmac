@@ -39,6 +39,7 @@ return (glsmac) => {
 			});
 
 			units.configure(game);
+			bases.configure(game);
 			resources.configure(game);
 
 			resources.define(game);

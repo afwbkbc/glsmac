@@ -15,9 +15,7 @@ const result = {
 
 	configure: (game) => {
 
-		const rm = game.get_rm();
-
-		rm.on('get_tile_resources', (e) => {
+		game.get_tm().on('get_tile_resources', (e) => {
 			let result = {
 				NUTRIENTS: 0,
 				MINERALS: 0,

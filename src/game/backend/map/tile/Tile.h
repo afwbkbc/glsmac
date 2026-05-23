@@ -7,6 +7,7 @@
 #include <string>
 
 #include "gse/Wrappable.h"
+#include "game/backend/ResourceRelated.h"
 
 #include "Types.h"
 
@@ -36,7 +37,7 @@ class Tiles;
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-class Tile : public gse::Wrappable {
+class Tile : public gse::Wrappable, public ResourceRelated {
 public:
 
 	typedef std::unordered_map< std::string, uint8_t > resources_t;
@@ -87,8 +88,6 @@ public:
 	feature_t features;
 	terraforming_t terraforming;
 
-	yields_t yields = {};
-
 	// units (id -> unit)
 	std::map< size_t, unit::Unit* > units = {};
 
@@ -119,6 +118,7 @@ public:
 	const bool IsLockedBy( const size_t initiator_slot ) const;
 
 	const resources_t GetResources( GSE_CALLABLE, slot::Slot* const slot );
+	gse::value::Object* const GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot );
 
 private:
 	bool m_is_locked = false;
@@ -127,7 +127,6 @@ private:
 	gse::Value* const GetFeatures( GSE_CALLABLE ) const;
 	gse::Value* const GetBonuses( GSE_CALLABLE ) const;
 
-	gse::Value* const GetResourcesImpl( GSE_CALLABLE, slot::Slot* const slot );
 };
 
 }
