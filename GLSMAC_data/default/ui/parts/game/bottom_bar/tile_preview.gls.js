@@ -85,8 +85,7 @@ return {
 
 	line: (text) => {
 		this.lines.text({
-			color: 'rgb(116,156,56)',
-			font: 'arialnb.ttf:14',
+			class: 'tile-preview-line',
 			text: text,
 			left: 3,
 		});
@@ -157,11 +156,28 @@ return {
 
 		this.line(''); // tmp workaround for 'cut-off' bottom in listview
 
+		const txt = '(' + #to_string(tile.x) + ' , ' + #to_string(tile.y) + ')';
+		if (!#is_defined(this.bottom_line)) {
+			this.bottom_line = this.frame.text({
+				class: 'tile-preview-line',
+				align: 'bottom right',
+				bottom: 3,
+				right: 3,
+				text: txt,
+			});
+		} else {
+			this.bottom_line.text = txt;
+		}
 	},
 
 	init: (p) => {
 
 		this.show_resources = false;
+
+		p.ui.class('tile-preview-line').set({
+			color: 'rgb(116,156,56)',
+			font: 'arialnb.ttf:14',
+		});
 
 		const frame_outer = p.el.panel({
 			class: 'bottombar-panel',
