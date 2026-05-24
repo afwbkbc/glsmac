@@ -34,6 +34,9 @@ const result = {
 				} else {
 					result.NUTRIENTS = 1;
 				}
+				if (e.tile.bonuses.nutrient) {
+					result.NUTRIENTS = result.NUTRIENTS + 2;
+				}
 			} else {
 				// TODO: fungus tiles
 			}
@@ -46,6 +49,9 @@ const result = {
 					}
 				} else {
 
+				}
+				if (e.tile.bonuses.minerals) {
+					result.MINERALS = result.MINERALS + 2;
 				}
 			} else {
 				// TODO: fungus tiles
@@ -60,6 +66,9 @@ const result = {
 					}
 				} else {
 					result.ENERGY = 1;
+				}
+				if (e.tile.bonuses.energy) {
+					result.ENERGY = result.ENERGY + 2;
 				}
 			} else {
 				// TODO: fungus tiles
@@ -82,7 +91,6 @@ const result = {
 				// TODO: terraforming
 			}
 
-			// TODO: bonuses
 
 			// TODO: tech-based limitations
 
