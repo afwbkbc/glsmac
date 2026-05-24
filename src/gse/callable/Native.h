@@ -126,6 +126,13 @@ namespace callable {
     N_GETPROP_VAL( _obj, _key, Object ); \
     N_CHECK_OBJECT_CLASS( getprop_val->Deref(), _type::WRAP_CLASS ); \
     const auto _var = _type::Unwrap( getprop_val );
+#define N_GETPROP_UNWRAP_OPT( _var, _obj, _key, _type ) \
+    _type* _var = nullptr; \
+    if ( _obj.find( _key ) != _obj.end() ) { \
+        N_GETPROP_VAL( _obj, _key, Object ); \
+        N_CHECK_OBJECT_CLASS( getprop_val->Deref(), _type::WRAP_CLASS ); \
+        _var = _type::Unwrap( getprop_val ); \
+    }
 #define N_GETPROP( _var, _obj, _key, _type ) \
     N_GETPROP_ARG( _obj, _key, _type ); \
     const auto& _var = ((gse::value::_type*)arg)->value;

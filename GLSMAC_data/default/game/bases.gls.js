@@ -10,6 +10,26 @@ const get_pending_growth = (base) => {
 	return intake.NUTRIENTS - consumption.NUTRIENTS;
 };
 
+const get_best_tile_to_work = (base) => {
+	let best = null;
+	const tiles = base.get_unworked_tiles();
+	for (tile of tiles) {
+		const resources = tile.get_resources(base.get_owner());
+		const score = resources.NUTRIENTS * 2 + resources.MINERALS + resources.ENERGY; // simple logic for now, TODO: improve based on what base needs
+		if (best == null || score > best.score) {
+			best = {
+				tile: tile,
+				score: score,
+			};
+		}
+	}
+	if (best == null) {
+		return null;
+	} else {
+		return best.tile;
+	}
+};
+
 const process_growth = (game, base) => {
 	let grow = false;
 
@@ -35,10 +55,22 @@ const process_growth = (game, base) => {
 	}
 
 	if (grow) {
-		game.event('add_base_pop', {
-			base: base,
-			type: 'Worker',
-		});
+		const best_tile = get_best_tile_to_work(base);
+		if (best_tile != null) {
+			// found tile to work, spawn Worker
+			// TODO: talents logic
+			game.event('add_base_pop', {
+				base: base,
+				type: 'Worker',
+				worked_tile: best_tile,
+			});
+		} else {
+			// all tiles already worked, spawn a Librarian
+			game.event('add_base_pop', {
+				base: base,
+				type: 'Librarian',
+			});
+		}
 	}
 };
 

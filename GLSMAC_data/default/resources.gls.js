@@ -25,7 +25,12 @@ const result = {
 			// nutrients
 			if (!e.tile.features.xenofungus) {
 				if (e.tile.is_land) {
-					result.NUTRIENTS = e.tile.moisture - 1;
+					if (e.tile.rockiness < 3) {
+						result.NUTRIENTS = e.tile.moisture - 1;
+					}
+					if (e.tile.features.jungle) {
+						result.NUTRIENTS = result.NUTRIENTS + 1;
+					}
 				} else {
 					result.NUTRIENTS = 1;
 				}
@@ -49,7 +54,7 @@ const result = {
 			// energy
 			if (!e.tile.features.xenofungus) {
 				if (e.tile.is_land) {
-					result.ENERGY = e.tile.elevation / 1000;
+					//result.ENERGY = e.tile.elevation / 1000; // only with solar collector
 					if (e.tile.features.river) {
 						result.ENERGY = result.ENERGY + 1; // TODO: fix += with properties
 					}
@@ -78,6 +83,8 @@ const result = {
 			}
 
 			// TODO: bonuses
+
+			// TODO: tech-based limitations
 
 			return result;
 		});

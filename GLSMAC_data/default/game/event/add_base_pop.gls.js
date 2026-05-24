@@ -11,20 +11,35 @@ return {
 		const base = e.data.base;
 
 		// reset nutrients
+		const old_nutrients = base.get('accumulated_nutrients');
 		e.game.get('f_base_reset_nutrients')(base);
 
 		// spawn population
-		const pop_id = base.create_pop({
+		const pop = base.create_pop({
 			type: e.data.type,
+			worked_tile: e.data.worked_tile,
 		});
 
+		let worked_tile = #undefined;
+		if (#is_defined(e.data.worked_tile)) {
+			worked_tile = e.data.worked_tile;
+			pop.set('worked_tile', worked_tile);
+			base.add_worked_tile(worked_tile);
+		}
+
 		return {
-			pop_id: pop_id,
+			pop_id: pop.id,
+			old_nutrients: old_nutrients,
+			worked_tile: worked_tile,
 		};
 	},
 
 	rollback: (e) => {
 		e.data.base.remove_pop(e.applied.pop_id);
+		if (#is_defined(e.applied.worked_tile)) {
+			e.data.base.base.remove_worked_tile(e.applied.worked_tile);
+		}
+		e.data.base.set('accumulated_nutrients', e.applied.old_nutrients);
 	},
 
 };

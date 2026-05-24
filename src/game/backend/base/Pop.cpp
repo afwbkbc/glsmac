@@ -6,17 +6,18 @@
 #include "game/backend/base/BaseManager.h"
 #include "gse/value/String.h"
 #include "gse/value/Int.h"
-#include "gse/value/Undefined.h"
 #include "gse/callable/Native.h"
 
 namespace game {
 namespace backend {
 namespace base {
 
-Pop::Pop( Base* const base, PopDef* def, const uint8_t variant )
+Pop::Pop( Base* const base, const size_t id, PopDef* def, const uint8_t variant, map::tile::Tile* const worked_tile )
 	: m_base( base )
+	, m_id( id )
 	, m_def( def )
-	, m_variant( variant ) {
+	, m_variant( variant )
+	, m_worked_tile( worked_tile ) {
 	//
 }
 
@@ -24,6 +25,7 @@ void Pop::Serialize( types::Buffer& buf ) const {
 	ASSERT( m_base, "pop base is null" );
 	ASSERT( m_def, "pop def is null" );
 
+	buf.WriteInt( m_id );
 	buf.WriteString( m_def->m_name );
 	buf.WriteInt( m_variant );
 }
@@ -35,6 +37,7 @@ void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 	auto* bm = game->GetBM();
 	ASSERT( bm, "bm is null" );
 
+	m_id = buf.ReadInt();
 	m_def = bm->GetPopDef( buf.ReadString() );
 	ASSERT( m_def, "pop def not found" );
 	m_variant = buf.ReadInt();
@@ -47,6 +50,11 @@ void Pop::SetBase( Base* const base ) {
 
 WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
+		WRAPIMPL_CUSTOM_SETTERS
+		{
+			"id",
+			VALUE( gse::value::Int,, m_id ),
+		},
 		{
 			"type",
 			VALUE( gse::value::String,, m_def->m_id )

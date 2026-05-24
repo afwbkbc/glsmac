@@ -220,11 +220,11 @@ void BaseManager::PushUpdates() {
 				NEW( fr.data.base_update.name, std::string, base->m_name );
 				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
 				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
-				for ( const auto& pop : base->m_pops ) {
+				for ( const auto& it : base->m_pops ) {
 					fr.data.base_update.pops->push_back(
 						{
-							pop.m_def->m_id,
-							pop.m_variant
+							it.second.m_def->m_id,
+							it.second.m_variant
 						}
 					);
 				}
