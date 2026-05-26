@@ -1,13 +1,17 @@
 return {
 
 	set_active_item: (item) => {
-		if (this.active_item != null) {
-			this.active_item.class = 'bottombar-objects-list-item';
-			this.active_item.border = #undefined; // TODO: fix class switching logic to also apply modifier styles correctly
+		if (this.active_item == item) {
+			return;
 		}
-		this.active_item = item;
 		if (this.active_item != null) {
-			this.active_item.class = 'bottombar-objects-list-item-active';
+			this.active_item.active = false;
+		}
+
+		this.active_item = item;
+
+		if (this.active_item != null) {
+			this.active_item.active = true;
 		}
 	},
 
@@ -36,6 +40,7 @@ return {
 
 		let item = this.list.panel({
 			class: 'bottombar-objects-list-item',
+			id: 'item_' + cls,
 			left: left,
 		});
 		item.widget({
@@ -93,6 +98,8 @@ return {
 
 	update_tile: (tile) => {
 
+		this.set_active_item(null);
+
 		if (#is_defined(this.list)) {
 			this.list.remove();
 			this.set_active_item(null);
@@ -145,10 +152,7 @@ return {
 			_hover: {
 				border: 'rgb(14,40,49),1',
 			},
-		});
-		p.ui.class('bottombar-objects-list-item-active').extend('bottombar-objects-list-item').set({
-			border: 'rgb(28,80,99),1',
-			_hover: {
+			_active: {
 				border: 'rgb(28,80,99),1',
 			},
 		});
@@ -212,25 +216,29 @@ return {
 		});
 
 		this.frame.listen(p.game, 'base_select', (e) => {
-			const key = #to_string(e.base.id);
-			this.set_active_item(this.bases[key].item);
-			const last_selected_object = this.selected_object;
-			this.selected_object = e.base;
-			this.p.modules.popup.set('base_screen', {
-				base: e.base,
-			});
-			this.p.modules.popup.show('base_screen', (result) => {
-				if (last_selected_object != null) {
-					switch (#classof(last_selected_object)) {
-						case 'Unit': {
-							this.p.game.select_unit(last_selected_object);
-							break;
+			this.set_active_item(null);
+			#async(0, () => { // workaround for objects list active border getting messed up, TODO: investigate and fix properly
+				const key = #to_string(e.base.id);
+				this.set_active_item(this.bases[key].item);
+				const last_selected_object = this.selected_object;
+				this.selected_object = e.base;
+				this.p.modules.popup.set('base_screen', {
+					base: e.base,
+				});
+				this.p.modules.popup.show('base_screen', (result) => {
+					this.selected_object = null;
+					if (last_selected_object != null) {
+						switch (#classof(last_selected_object)) {
+							case 'Unit': {
+								this.set_active_item(null);
+								this.p.game.select_unit(last_selected_object);
+								break;
+							}
 						}
+					} else {
+						this.p.game.select_tile(this.selected_tile);
 					}
-				} else {
-					this.set_active_item(null);
-					this.p.game.select_tile(this.selected_tile);
-				}
+				});
 			});
 		});
 
@@ -261,12 +269,14 @@ return {
 			) {
 				// open base screen if base is present
 				for (base of this.bases) {
+					this.set_active_item(null);
 					this.p.game.select_base(base.object);
 					return true;
 				}
 				if (this.selected_object == null) {
 					// select first unit if nothing is selected
 					for (unit of this.units) {
+						this.set_active_item(null);
 						this.p.game.select_unit(unit.object);
 						return true;
 					}
