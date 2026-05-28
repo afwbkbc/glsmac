@@ -26,6 +26,8 @@ return {
 		const c_top = #round(#to_float(this.tile_height) * 1.5);
 		let existing_tiles = {};
 
+		const tile_aspect_ratio = this.tile_width / this.tile_height;
+
 		const f_tile_key = (tile) => {
 			return #to_string(tile.x) + '_' + #to_string(tile.y);
 		};
@@ -36,10 +38,10 @@ return {
 				// don't draw duplicate tiles
 				return;
 			}
-			existing_tiles[key] = {
+			const t = {
 				tile: tile,
-				cx: cx,
-				cy: cy,
+				cx: #round(#to_float(parent.tile_width) * cx),
+				cy: #round(#to_float(parent.tile_height) * cy),
 			};
 
 			this.el.widget({
@@ -47,12 +49,13 @@ return {
 				data: {
 					tile: tile,
 				},
-				left: c_left + #round(#to_float(parent.tile_width) * cx),
-				top: c_top + #round(#to_float(parent.tile_height) * cy),
+				left: c_left + t.cx,
+				top: c_top + t.cy,
 				type: 'tile-preview',
 			});
 
-			return existing_tiles[key];
+			existing_tiles[key] = t;
+			return t;
 		};
 
 		const f_base = () => {
@@ -70,13 +73,13 @@ return {
 		};
 
 		const f_resources = (t) => {
-			this.el.widget({
+			t.el_resources = this.el.widget({
 				class: 'base-screen-middle-area-tile',
 				data: {
 					tile: t.tile,
 				},
-				left: c_left + #round(#to_float(parent.tile_width) * t.cx),
-				top: c_top + #round(#to_float(parent.tile_height) * t.cy),
+				left: c_left + t.cx,
+				top: c_top + t.cy,
 				type: 'tile-resources',
 			});
 		};
@@ -127,6 +130,31 @@ return {
 				f_resources(existing_tiles[key]);
 			}
 		}
+
+		this.el.on('mousedown', (e) => {
+			if (e.button == 'left') {
+				// check if any tile was clicked
+				const twh = this.tile_width / 2;
+				const mx = e.x - c_left - twh;
+				const my = e.y - c_top - this.tile_height / 2;
+				for (t of existing_tiles) {
+					const distance = #abs(t.cx - mx) + #abs(t.cy - my) * tile_aspect_ratio;
+					if (distance <= twh) {
+						if (t == t_center) {
+							#print('TODO: reassign all worked tiles');
+						} else if (#is_defined(t.el_resources)) {
+							#print('TODO: unassign worked tile', t);
+							#print('TODO: set pop to non-worker');
+						} else {
+							#print('TODO: unassign any work tile');
+							#print('TODO: assign worked tile', t);
+						}
+						break;
+					}
+				}
+			}
+			return true;
+		});
 	},
 
 };
