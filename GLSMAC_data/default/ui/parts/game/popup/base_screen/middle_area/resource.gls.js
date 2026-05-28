@@ -25,7 +25,7 @@ return {
 		const c_left = #round(#to_float(this.tile_width) * 1.5);
 		const c_top = #round(#to_float(this.tile_height) * 1.5);
 		let existing_tiles = {};
-		const f_tile = (tile, cx, cy, zindex) => {
+		const f_tile = (tile, cx, cy, zindex, show_base) => {
 			const key = #to_string(tile.x) + '_' + #to_string(tile.y);
 			if (#is_defined(existing_tiles[key])) {
 				// don't draw duplicate tiles
@@ -44,17 +44,33 @@ return {
 				type: 'tile-preview',
 				zindex: zindex,
 			});
+
+			if (#is_defined(show_base) && show_base) {
+				this.el.widget({
+					type: 'base-preview',
+					data: {
+						base: data.base,
+						no_badge: true,
+					},
+					width: parent.tile_width,
+					height: parent.tile_height + 20,
+					left: c_left,
+					top: c_top - 20,
+					zindex: zindex,
+				});
+			}
+
 			if (tile == data.base.get_tile() || data.base.is_tile_worked(tile)) {
 				this.el.widget(d + {
 					type: 'tile-resources',
-					zindex: zindex + 0.5, // TODO: remove the need for +
+					zindex: zindex,
 				})
 			}
 			return tile;
 		};
 
 		// TODO: is it possible to reuse get_base_workable_tiles ?
-		const t_center = f_tile(data.base.get_tile(), 0.0, 0.0, 0.35);
+		const t_center = f_tile(data.base.get_tile(), 0.0, 0.0, 0.35, true);
 		const t_n = f_tile(t_center.get_N(), 0.0, 0.0 - 1.0, 0.25); // TODO: remove the need for 0.0 - ...
 		const t_ne = f_tile(t_center.get_NE(), 0.5, 0.0 - 0.5, 0.3);
 		const t_e = f_tile(t_center.get_E(), 1.0, 0.0, 0.35);
@@ -75,19 +91,6 @@ return {
 		const t_w_sw = f_tile(t_w.get_SW(), 0.0 - 1.5, 0.5, 0.4);
 		const t_w_nw = f_tile(t_w.get_NW(), 0.0 - 1.5, 0.0 - 0.5, 0.3);
 		const t_nw_nw = f_tile(t_nw.get_NW(), 0.0 - 1.0, 0.0 - 1.0, 0.25);
-
-		// base preview
-
-		this.el.widget({
-			type: 'base-preview',
-			data: {
-				base: data.base,
-			},
-			width: parent.tile_width,
-			height: parent.tile_height + 20,
-			left: c_left,
-			top: c_top - 20,
-		});
 
 	},
 
