@@ -25,77 +25,108 @@ return {
 		const c_left = #round(#to_float(this.tile_width) * 1.5);
 		const c_top = #round(#to_float(this.tile_height) * 1.5);
 		let existing_tiles = {};
-		const f_tile = (tile, cx, cy, zindex) => {
-			const key = #to_string(tile.x) + '_' + #to_string(tile.y);
+
+		const f_tile_key = (tile) => {
+			return #to_string(tile.x) + '_' + #to_string(tile.y);
+		};
+
+		const f_tile = (tile, cx, cy) => {
+			const key = f_tile_key(tile);
 			if (#is_defined(existing_tiles[key])) {
 				// don't draw duplicate tiles
-				return tile;
+				return;
 			}
-			existing_tiles[key] = true;
-			const d = {
+			existing_tiles[key] = {
+				tile: tile,
+				cx: cx,
+				cy: cy,
+			};
+
+			this.el.widget({
 				class: 'base-screen-middle-area-tile',
 				data: {
 					tile: tile,
 				},
 				left: c_left + #round(#to_float(parent.tile_width) * cx),
 				top: c_top + #round(#to_float(parent.tile_height) * cy),
-			};
-
-			// tile terrain
-			this.el.widget(d + {
 				type: 'tile-preview',
-				zindex: zindex,
 			});
 
-			if (tile == data.base.get_tile()) {
-				// base
-				this.el.widget({
-					type: 'base-preview',
-					data: {
-						base: data.base,
-						no_badge: true,
-					},
-					width: parent.tile_width,
-					height: parent.tile_height + 20,
-					left: c_left,
-					top: c_top - 20,
-					zindex: zindex,
-				});
-			}
-
-			// tile resources
-			if (tile == data.base.get_tile() || data.base.is_tile_worked(tile)) {
-				this.el.widget(d + {
-					type: 'tile-resources',
-					zindex: zindex,
-				})
-			}
-			return tile;
+			return existing_tiles[key];
 		};
 
-		// TODO: is it possible to reuse get_base_workable_tiles ?
-		const t_center = f_tile(data.base.get_tile(), 0.0, 0.0, 0.35);
-		const t_n = f_tile(t_center.get_N(), 0.0, 0.0 - 1.0, 0.25); // TODO: remove the need for 0.0 - ...
-		const t_ne = f_tile(t_center.get_NE(), 0.5, 0.0 - 0.5, 0.3);
-		const t_e = f_tile(t_center.get_E(), 1.0, 0.0, 0.35);
-		const t_se = f_tile(t_center.get_SE(), 0.5, 0.5, 0.4);
-		const t_s = f_tile(t_center.get_S(), 0.0, 1.0, 0.45);
-		const t_sw = f_tile(t_center.get_SW(), 0.0 - 0.5, 0.5, 0.4);
-		const t_w = f_tile(t_center.get_W(), 0.0 - 1.0, 0.0, 0.35);
-		const t_nw = f_tile(t_center.get_NW(), 0.0 - 0.5, 0.0 - 0.5, 0.3);
-		const t_n_nw = f_tile(t_n.get_NW(), 0.0 - 0.5, 0.0 - 1.5, 0.2);
-		const t_n_ne = f_tile(t_n.get_NE(), 0.5, 0.0 - 1.5, 0.2);
-		const t_ne_ne = f_tile(t_ne.get_NE(), 1.0, 0.0 - 1.0, 0.25);
-		const t_e_ne = f_tile(t_e.get_NE(), 1.5, 0.0 - 0.5, 0.3);
-		const t_e_se = f_tile(t_e.get_SE(), 1.5, 0.5, 0.4);
-		const t_se_se = f_tile(t_se.get_SE(), 1.0, 1.0, 0.45);
-		const t_s_se = f_tile(t_s.get_SE(), 0.5, 1.5, 0.5);
-		const t_s_sw = f_tile(t_s.get_SW(), 0.0 - 0.5, 1.5, 0.5);
-		const t_sw_sw = f_tile(t_sw.get_SW(), 0.0 - 1.0, 1.0, 0.45);
-		const t_w_sw = f_tile(t_w.get_SW(), 0.0 - 1.5, 0.5, 0.4);
-		const t_w_nw = f_tile(t_w.get_NW(), 0.0 - 1.5, 0.0 - 0.5, 0.3);
-		const t_nw_nw = f_tile(t_nw.get_NW(), 0.0 - 1.0, 0.0 - 1.0, 0.25);
+		const f_base = () => {
+			this.el.widget({
+				type: 'base-preview',
+				data: {
+					base: data.base,
+					no_badge: true,
+				},
+				width: parent.tile_width,
+				height: parent.tile_height + 20,
+				left: c_left,
+				top: c_top - 20,
+			});
+		};
 
+		const f_resources = (t) => {
+			this.el.widget({
+				class: 'base-screen-middle-area-tile',
+				data: {
+					tile: t.tile,
+				},
+				left: c_left + #round(#to_float(parent.tile_width) * t.cx),
+				top: c_top + #round(#to_float(parent.tile_height) * t.cy),
+				type: 'tile-resources',
+			});
+		};
+
+		// terrain
+		const t_center = f_tile(data.base.get_tile(), 0.0, 0.0);
+		const t_n = f_tile(t_center.tile.get_N(), 0.0, 0.0 - 1.0); // TODO: remove the need for 0.0 - ...
+		const t_ne = f_tile(t_center.tile.get_NE(), 0.5, 0.0 - 0.5);
+		const t_e = f_tile(t_center.tile.get_E(), 1.0, 0.0);
+		const t_se = f_tile(t_center.tile.get_SE(), 0.5, 0.5);
+		const t_s = f_tile(t_center.tile.get_S(), 0.0, 1.0);
+		const t_sw = f_tile(t_center.tile.get_SW(), 0.0 - 0.5, 0.5);
+		const t_w = f_tile(t_center.tile.get_W(), 0.0 - 1.0, 0.0);
+		const t_nw = f_tile(t_center.tile.get_NW(), 0.0 - 0.5, 0.0 - 0.5);
+		if (#is_defined(t_n)) {
+			const t_n_nw = f_tile(t_n.tile.get_NW(), 0.0 - 0.5, 0.0 - 1.5);
+			const t_n_ne = f_tile(t_n.tile.get_NE(), 0.5, 0.0 - 1.5);
+		}
+		if (#is_defined(t_ne)) {
+			const t_ne_ne = f_tile(t_ne.tile.get_NE(), 1.0, 0.0 - 1.0);
+		}
+		const t_e_ne = f_tile(t_e.tile.get_NE(), 1.5, 0.0 - 0.5);
+		const t_e_se = f_tile(t_e.tile.get_SE(), 1.5, 0.5);
+		if (#is_defined(t_se)) {
+			const t_se_se = f_tile(t_se.tile.get_SE(), 1.0, 1.0);
+		}
+		if (#is_defined(t_s)) {
+			const t_s_se = f_tile(t_s.tile.get_SE(), 0.5, 1.5);
+			const t_s_sw = f_tile(t_s.tile.get_SW(), 0.0 - 0.5, 1.5);
+		}
+		if (#is_defined(t_sw)) {
+			const t_sw_sw = f_tile(t_sw.tile.get_SW(), 0.0 - 1.0, 1.0);
+		}
+		const t_w_sw = f_tile(t_w.tile.get_SW(), 0.0 - 1.5, 0.5);
+		const t_w_nw = f_tile(t_w.tile.get_NW(), 0.0 - 1.5, 0.0 - 0.5);
+		if (#is_defined(t_nw)) {
+			const t_nw_nw = f_tile(t_nw.tile.get_NW(), 0.0 - 1.0, 0.0 - 1.0);
+		}
+
+		// base
+		f_base();
+
+		// resources
+		f_resources(t_center);
+		for (tile of data.base.get_worked_tiles()) {
+			const key = f_tile_key(tile);
+			if (#is_defined(existing_tiles[key])) {
+				f_resources(existing_tiles[key]);
+			}
+		}
 	},
 
 };
