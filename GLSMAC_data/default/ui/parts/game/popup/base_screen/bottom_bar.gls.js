@@ -20,6 +20,10 @@ return {
 			left: 0,
 			right: 0,
 		});
+		this.frame.on('mousedown', (e) => {
+			// prevent clickthroughs
+			return true;
+		});
 		this.frame.hide();
 
 		// hide menus

@@ -1368,6 +1368,39 @@ void Game::Initialize(
 
 	m_global_handlers.before = m_ui->AddGlobalHandler(
 		ui::UI::GH_BEFORE, EH( this, game ) {
+
+			switch ( event.type ) {
+				case input::EV_MOUSE_DOWN: {
+					m_map_control.mouse_buttons_pressed++;
+					break;
+				}
+				case input::EV_MOUSE_UP: {
+					ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
+					m_map_control.mouse_buttons_pressed--;
+					switch ( event.data.mouse.button ) {
+						case input::MB_MIDDLE: {
+							if ( m_map_control.is_dragging ) {
+								m_map_control.is_dragging = false;
+								return true;
+							}
+						}
+						default: {
+						}
+					}
+					break;
+				}
+				default: {
+				}
+			}
+
+			// ignore out-of-viewport events
+			if ( event.flags & input::EF_MOUSE && (
+				event.data.mouse.x > m_viewport.width ||
+					event.data.mouse.y > m_viewport.height
+			) ) {
+				return false;
+			}
+
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
 					if ( event.data.key.key == 'z' ) {
@@ -1385,25 +1418,6 @@ void Game::Initialize(
 						if ( m_map_control.key_zooming ) {
 							m_map_control.key_zooming = 0;
 							m_scroller.Stop();
-						}
-					}
-					break;
-				}
-				case input::EV_MOUSE_DOWN: {
-					m_map_control.mouse_buttons_pressed++;
-					break;
-				}
-				case input::EV_MOUSE_UP: {
-					ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
-					m_map_control.mouse_buttons_pressed--;
-					switch ( event.data.mouse.button ) {
-						case input::MB_MIDDLE: {
-							if ( m_map_control.is_dragging ) {
-								m_map_control.is_dragging = false;
-								return true;
-							}
-						}
-						default: {
 						}
 					}
 					break;
@@ -1487,6 +1501,14 @@ void Game::Initialize(
 
 	m_global_handlers.after = m_ui->AddGlobalHandler(
 		ui::UI::GH_AFTER, EH( this, game ) {
+
+			// ignore out-of-viewport events
+			if ( event.flags & input::EF_MOUSE && (
+				event.data.mouse.x > m_viewport.width ||
+					event.data.mouse.y > m_viewport.height
+			) ) {
+				return false;
+			}
 
 			switch ( event.type ) {
 				case input::EV_KEY_DOWN: {
