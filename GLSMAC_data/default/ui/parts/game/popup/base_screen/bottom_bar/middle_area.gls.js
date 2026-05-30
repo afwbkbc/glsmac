@@ -138,11 +138,12 @@ return {
 		let shift = 40;
 		for (pop of data.pops) {
 			let variant = pop.variant;
-			if (!#is_defined(renders[pop.type][variant])) {
+			const pop_type = pop.get_type();
+			if (!#is_defined(renders[pop_type][variant])) {
 				variant = 0;
 			}
 			this.pops.surface({
-				class: 'base-screen-bottombar-pop-' + pop.type + '-' + #to_string(variant),
+				class: 'base-screen-bottombar-pop-' + pop_type + '-' + #to_string(variant),
 				left: left,
 			});
 			left += shift;

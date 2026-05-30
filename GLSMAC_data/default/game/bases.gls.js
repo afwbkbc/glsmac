@@ -115,6 +115,7 @@ const calculate_growth_base = (game) => {
 
 const pop_work_tile = (base, pop, tile) => {
 	pop_unwork(base, pop);
+	pop.set_type('WORKER');
 	pop.set('worked_tile', tile);
 	tile.set('working_pop', pop);
 	base.add_worked_tile(tile);
@@ -124,6 +125,7 @@ const pop_unwork = (base, pop, new_type) => {
 	const tile = pop.get('worked_tile');
 	if (#is_defined(tile)) {
 		tile.unset('working_pop');
+		pop.unset('worked_tile');
 		base.remove_worked_tile(tile);
 		if (#is_defined(new_type)) {
 			pop.set_type(new_type);

@@ -126,6 +126,7 @@ protected:
 
 	void CustomSet( const std::string& key, Value* const value );
 	void CustomUnset( const std::string& key );
+	const bool CustomHas( const std::string& key );
 	Value* const CustomGet( const std::string& key );
 
 private:

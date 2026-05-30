@@ -4,8 +4,8 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/PopDef.h"
 #include "game/backend/base/BaseManager.h"
-#include "gse/value/String.h"
 #include "gse/value/Int.h"
+#include "gse/value/Bool.h"
 #include "gse/callable/Native.h"
 
 namespace game {
@@ -49,14 +49,17 @@ void Pop::SetBase( Base* const base ) {
 
 WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
-		WRAPIMPL_CUSTOM_SETTERS
+	WRAPIMPL_CUSTOM_SETTERS
 		{
 			"id",
 			VALUE( gse::value::Int,, m_id ),
 		},
 		{
-			"type",
-			VALUE( gse::value::String,, m_def->m_id )
+			"get_type",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				return VALUE( gse::value::String, , m_def->m_id );
+			} )
 		},
 		{
 			"variant",

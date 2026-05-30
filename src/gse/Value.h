@@ -107,6 +107,14 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
         } ) \
     }, \
     { \
+        "has", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS( 1 ); \
+            N_GETVALUE( key, 0, String );\
+            return VALUE( gse::value::Bool,, CustomHas( key ) ); \
+        } ) \
+    }, \
+    { \
         "get", \
         NATIVE_CALL( this ) { \
             N_EXPECT_ARGS( 1 ); \

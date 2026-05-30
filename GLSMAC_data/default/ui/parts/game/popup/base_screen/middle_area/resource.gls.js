@@ -150,8 +150,24 @@ return {
 								tile: t.tile,
 							});
 						} else {
-							#print('TODO: unassign any work tile');
-							#print('TODO: assign worked tile', t);
+							let first_non_worker_pop = null;
+							let first_pop = null;
+							for (p of data.base.get_pops()) {
+								if (first_pop == null) {
+									first_pop = p;
+								}
+								if (p.get_type() != 'WORKER') {
+									first_non_worker_pop = p;
+									break;
+								}
+							}
+							this.p.game.event('work_base_tile', {
+								base: data.base,
+								tile: t.tile,
+								pop: first_non_worker_pop != null
+									? first_non_worker_pop
+									: first_pop,
+							});
 						}
 						break;
 					}
