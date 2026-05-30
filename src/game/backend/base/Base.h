@@ -71,6 +71,8 @@ public:
 
 	WRAPDEF_SERIALIZABLE;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
 private:
 	Game* const m_game;
 

@@ -298,6 +298,16 @@ WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Base )
 
+void Base::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
+	gse::Wrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "pops" );
+	for ( auto& it : m_pops ) {
+		it.second.GetReachableObjects( reachable_objects );
+	}
+	GC_DEBUG_END();
+}
+
 const PopDef* const Base::GetPopDef( GSE_CALLABLE, const std::string& id ) const {
 	auto* def = m_game->GetBM()->GetPopDef( id );
 	if ( !def ) {

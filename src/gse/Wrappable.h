@@ -105,7 +105,7 @@ public:
 	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< value_type_t > expected_return_type = {} );
 	virtual void ClearHandlers();
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
+	virtual void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
 
 protected:
 	// TODO: wrapobjs mutex

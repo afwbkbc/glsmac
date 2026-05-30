@@ -143,7 +143,32 @@ return {
 					const distance = #abs(t.cx - mx) + #abs(t.cy - my) * tile_aspect_ratio;
 					if (distance <= twh) {
 						if (t == t_center) {
-							#print('TODO: reassign all worked tiles');
+							let pops = data.base.get_pops();
+							const tiles = this.p.game.get('f_base_get_best_tiles_to_work')(data.base, true, #sizeof(pops));
+							let i = 0;
+							// TODO: optimize excessive unwork/work events
+							// unwork all tiles
+							for (pop of pops) {
+								const worked_tile = pop.get('worked_tile');
+								if (#is_defined(worked_tile)) {
+									this.p.game.event('unwork_base_tile', {
+										base: data.base,
+										tile: worked_tile,
+									});
+								}
+							}
+							// work best tiles
+							for (pop of pops) {
+								const tile = tiles[i++];
+								if (!#is_defined(tile)) {
+									break;
+								}
+								this.p.game.event('work_base_tile', {
+									base: data.base,
+									tile: tile,
+									pop: pop,
+								});
+							}
 						} else if (#is_defined(t.el_resources)) {
 							this.p.game.event('unwork_base_tile', {
 								base: data.base,
@@ -152,12 +177,12 @@ return {
 						} else {
 							let first_non_worker_pop = null;
 							let first_pop = null;
-							for (p of data.base.get_pops()) {
+							for (pop of data.base.get_pops()) {
 								if (first_pop == null) {
-									first_pop = p;
+									first_pop = pop;
 								}
-								if (p.get_type() != 'WORKER') {
-									first_non_worker_pop = p;
+								if (pop.get_type() != 'WORKER') {
+									first_non_worker_pop = pop;
 									break;
 								}
 							}
