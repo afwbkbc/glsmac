@@ -10,6 +10,19 @@ const get_pending_growth = (base) => {
 	return intake.NUTRIENTS - consumption.NUTRIENTS;
 };
 
+const reset_nutrients = (game, base) => {
+	const nfg = get_nutrients_for_growth(game, base);
+	let accumulated = base.get('accumulated_nutrients');
+	if (!#is_defined(accumulated)) {
+		accumulated = 0;
+	}
+	let updated = accumulated - nfg;
+	if (updated < 0) {
+		updated = 0;
+	}
+	base.set('accumulated_nutrients', updated);
+};
+
 const get_best_tile_to_work = (base) => {
 	let best = null;
 	const tiles = base.get_unworked_tiles();
@@ -32,7 +45,6 @@ const get_best_tile_to_work = (base) => {
 
 const process_growth = (game, base) => {
 	let grow = false;
-
 
 	let accumulated = base.get('accumulated_nutrients');
 	if (!#is_defined(accumulated)) {
@@ -57,18 +69,18 @@ const process_growth = (game, base) => {
 	if (grow) {
 		const best_tile = get_best_tile_to_work(base);
 		if (best_tile != null) {
-			// found tile to work, spawn Worker
+			// found tile to work, spawn worker
 			// TODO: talents logic
 			game.event('add_base_pop', {
 				base: base,
-				type: 'Worker',
+				type: 'WORKER',
 				worked_tile: best_tile,
 			});
 		} else {
-			// all tiles already worked, spawn a Librarian
+			// all tiles already worked, spawn doctor
 			game.event('add_base_pop', {
 				base: base,
-				type: 'Librarian',
+				type: 'DOCTOR',
 			});
 		}
 	}
@@ -101,6 +113,24 @@ const calculate_growth_base = (game) => {
 	game.set('map_growth_base', map_growth_base);
 };
 
+const pop_work_tile = (base, pop, tile) => {
+	pop_unwork(base, pop);
+	pop.set('worked_tile', tile);
+	tile.set('working_pop', pop);
+	base.add_worked_tile(tile);
+};
+
+const pop_unwork = (base, pop, new_type) => {
+	const tile = pop.get('worked_tile');
+	if (#is_defined(tile)) {
+		tile.unset('working_pop');
+		base.remove_worked_tile(tile);
+		if (#is_defined(new_type)) {
+			pop.set_type(new_type);
+		}
+	}
+};
+
 return (game) => {
 
 	game.on('start', (e) => {
@@ -112,18 +142,9 @@ return (game) => {
 		// set bases-related globals
 		// TODO: prettier way to do this? needs to be callable from events
 		game.set('f_base_get_pending_growth', get_pending_growth);
-		game.set('f_base_reset_nutrients', (base) => {
-			const nfg = get_nutrients_for_growth(game, base);
-			let accumulated = base.get('accumulated_nutrients');
-			if (!#is_defined(accumulated)) {
-				accumulated = 0;
-			}
-			let updated = accumulated - nfg;
-			if (updated < 0) {
-				updated = 0;
-			}
-			base.set('accumulated_nutrients', updated);
-		});
+		game.set('f_base_reset_nutrients', reset_nutrients);
+		game.set('f_base_pop_work_tile', pop_work_tile);
+		game.set('f_base_pop_unwork_tile', pop_unwork);
 
 		// new turn, process all bases
 		game.on('turn', (e) => {

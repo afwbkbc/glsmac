@@ -98,6 +98,15 @@ typedef std::function< void( GSE_CALLABLE, value::object_properties_t& args ) > 
         } ) \
     }, \
     { \
+        "unset", \
+        NATIVE_CALL( this ) { \
+            N_EXPECT_ARGS( 1 ); \
+            N_GETVALUE( key, 0, String ); \
+            CustomUnset( key ); \
+            return VALUE( gse::value::Undefined ); \
+        } ) \
+    }, \
+    { \
         "get", \
         NATIVE_CALL( this ) { \
             N_EXPECT_ARGS( 1 ); \

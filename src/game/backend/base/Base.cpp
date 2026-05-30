@@ -62,16 +62,37 @@ Base::Base(
 	}
 }
 
+const  Game* const Base::GetGame() const {
+	return m_game;
+}
+
 Pop* const Base::AddPop( const Pop& pop ) {
 	ASSERT( m_pops.find( pop.m_id ) == m_pops.end(), "pop already exists" );
 	m_pops.insert_or_assign( pop.m_id, pop );
 	m_game->GetBM()->RefreshBase( this );
+	TriggerUpdate();
 	return &m_pops.at( pop.m_id );
 }
 
 void Base::RemovePop( const size_t pop_id ) {
 	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id not found" );
 	m_pops.erase( pop_id );
+	m_game->GetBM()->RefreshBase( this );
+	TriggerUpdate();
+}
+
+void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id ) {
+	ASSERT( m_pops.find( pop_id ) != m_pops.end(), "pop id " + std::to_string( pop_id ) + " not found" );
+	auto& pop = m_pops.at( pop_id );
+	const auto& defs = m_game->GetBM()->GetBasePopDefs();
+	const auto& it = defs.find( def_id );
+	if ( it == defs.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown pop type: " + def_id );
+	}
+	if ( pop.m_def != it->second ) {
+		pop.m_def = it->second;
+		TriggerUpdate();
+	}
 }
 
 const types::Buffer Base::Serialize( const Base* base ) {
@@ -138,16 +159,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 
 			N_EXPECT_ARGS( 1 );
 			N_GETVALUE( data, 0, Object );
-			N_GETPROP( poptype, data, "type", String );
+			N_GETPROP( def_id, data, "type", String );
 			N_GETPROP_UNWRAP_OPT( worked_tile, data, "worked_tile", map::tile::Tile );
-			auto* def = m_game->GetBM()->GetPopDef( poptype );
-			if ( !def ) {
-				GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + poptype );
-			}
+			auto* def = GetPopDef( GSE_CALL, def_id );
 			const auto max_variants = (m_faction->m_flags & faction::Faction::FF_PROGENITOR)
 				? 1 // aliens have 1 gender
 				: 2; // humans have 2
-			ASSERT( max_variants > 0, "no variants found for pop type: " + poptype );
+			ASSERT( max_variants > 0, "no variants found for pop type: " + def_id );
 
 			auto* const pop = AddPop( Pop( this, m_next_pop_id++, def, m_game->GetRandom()->GetUInt(0, max_variants - 1), worked_tile ) );
 
@@ -186,6 +204,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			}
 			m_worked_tiles.insert( tile );
 
+			TriggerUpdate();
+
 			return VALUE( gse::value::Undefined );
 		} )
 	},
@@ -202,6 +222,8 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 				GSE_ERROR( gse::EC.GAME_ERROR, "This tile is not worked" );
 			}
 			m_worked_tiles.erase( tile );
+
+			TriggerUpdate();
 
 			return VALUE( gse::value::Undefined );
 		} )
@@ -276,6 +298,14 @@ WRAPIMPL_DYNAMIC_END()
 
 UNWRAPIMPL_PTR( Base )
 
+const PopDef* const Base::GetPopDef( GSE_CALLABLE, const std::string& id ) const {
+	auto* def = m_game->GetBM()->GetPopDef( id );
+	if ( !def ) {
+		GSE_ERROR( gse::EC.INVALID_DEFINITION, "Unknown pop type: " + id );
+	}
+	return def;
+}
+
 gse::value::Array* const Base::GetWorkableTiles( GSE_CALLABLE ) {
 	auto* const result = m_game->GetBM()->Trigger( GSE_CALL, "get_base_workable_tiles", ARGS_F( this ) {
 		{
@@ -340,6 +370,10 @@ gse::value::Object* const Base::GetConsumption( GSE_CALLABLE ) {
 			m_owner->Wrap( GSE_CALL )
 		},
 	}; } );
+}
+
+void Base::TriggerUpdate() {
+	m_game->GetBM()->AddUpdateTrigger( this );
 }
 
 }

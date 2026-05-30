@@ -17,6 +17,8 @@ return {
 
 		this.sections = {};
 		this.p = p;
+		this.is_open = false;
+		this.base_id = null;
 
 		p.ui.class('base-screen-frame').set({
 			border: 'rgb(35,59,34),2',
@@ -76,6 +78,14 @@ return {
 
 		return p.create('', 680, 442, (body, cb) => {
 
+			body.listen(p.game, 'update_base', (e) => {
+				if (this.is_open && e.base.id == this.base_id) {
+					this.set({
+						base: e.base,
+					});
+				}
+			});
+
 			const pp = {
 				body: body,
 				ui: p.ui,
@@ -102,6 +112,8 @@ return {
 		const base = data.base;
 		const owner = base.get_owner();
 		const faction = owner.get_faction();
+
+		this.base_id = base.id;
 
 		const intake = base.get_intake();
 		const consumption = base.get_consumption();
@@ -185,9 +197,11 @@ return {
 
 	on_hide: () => {
 		this.sections.bottom_bar.frame.hide();
+		this.is_open = false;
 	},
 
 	on_show: () => {
+		this.is_open = true;
 		this.sections.bottom_bar.frame.show();
 	},
 

@@ -344,7 +344,7 @@ public:
 
 	gc::Space* const GetGCSpace() const;
 
-	void CheckRW( GSE_CALLABLE );
+	void CheckRW( GSE_CALLABLE ) const;
 
 	void SetSlotNum( const size_t slotnum ); // not thread-safe, make sure to call from game thread only
 

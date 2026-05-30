@@ -12,12 +12,11 @@ namespace game {
 namespace backend {
 namespace base {
 
-Pop::Pop( Base* const base, const size_t id, PopDef* def, const uint8_t variant, map::tile::Tile* const worked_tile )
+Pop::Pop( Base* const base, const size_t id, const PopDef* def, const uint8_t variant, map::tile::Tile* const worked_tile )
 	: m_base( base )
 	, m_id( id )
 	, m_def( def )
-	, m_variant( variant )
-	, m_worked_tile( worked_tile ) {
+	, m_variant( variant ) {
 	//
 }
 
@@ -69,6 +68,20 @@ WRAPIMPL_BEGIN( Pop )
 				N_EXPECT_ARGS( 0 );
 				ASSERT( m_base, "pop has no base" );
 				return m_base->Wrap( GSE_CALL );
+			} )
+		},
+		{
+			"set_type",
+			NATIVE_CALL( this ) {
+
+				m_base->GetGame()->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				m_base->ChangePopType( GSE_CALL, m_id, id );
+
+				return VALUE( gse::value::Undefined );
 			} )
 		},
 	};

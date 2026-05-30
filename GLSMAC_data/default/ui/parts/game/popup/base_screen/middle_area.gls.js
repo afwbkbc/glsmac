@@ -35,6 +35,7 @@ return {
 
 		const pp = {
 			ui: p.ui,
+			game: p.game,
 			area: inner,
 		};
 

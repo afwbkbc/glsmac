@@ -218,6 +218,11 @@ void Wrappable::CustomSet( const std::string& key, gse::Value* const value ) {
 	}
 }
 
+void Wrappable::CustomUnset( const std::string& key ) {
+	std::lock_guard guard( m_globals_mutex );
+	m_globals.erase( key );
+}
+
 Value* const Wrappable::CustomGet( const std::string& key ) {
 	std::lock_guard guard( m_globals_mutex );
 	const auto& it = m_globals.find( key );

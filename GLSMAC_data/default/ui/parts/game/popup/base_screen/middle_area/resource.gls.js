@@ -5,6 +5,8 @@ return {
 
 	init: (p) => {
 
+		this.p = p;
+
 		this.el = p.area.panel({
 			class: 'base-screen-middle-area',
 		});
@@ -143,8 +145,10 @@ return {
 						if (t == t_center) {
 							#print('TODO: reassign all worked tiles');
 						} else if (#is_defined(t.el_resources)) {
-							#print('TODO: unassign worked tile', t);
-							#print('TODO: set pop to non-worker');
+							this.p.game.event('unwork_base_tile', {
+								base: data.base,
+								tile: t.tile,
+							});
 						} else {
 							#print('TODO: unassign any work tile');
 							#print('TODO: assign worked tile', t);

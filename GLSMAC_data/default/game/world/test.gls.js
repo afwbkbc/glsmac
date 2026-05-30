@@ -13,10 +13,10 @@ return (game) => {
 
 	// will be populated on start
 	const pop_types = [
-		'Worker',
-		'Talent',
-		'Doctor',
-		'Librarian',
+		'WORKER',
+		'TALENT',
+		'DOCTOR',
+		'LIBRARIAN',
 	];
 
 	let add_pops = (game, base, count) => {

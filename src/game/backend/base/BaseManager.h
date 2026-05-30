@@ -1,5 +1,12 @@
 #pragma once
 
+#include <unordered_set>
+#include <unordered_map>
+#include <mutex>
+#include <string>
+#include <map>
+#include <vector>
+
 #include "gse/GCWrappable.h"
 
 #include "gse/value/Object.h"
@@ -29,6 +36,9 @@ class PopDef;
 
 CLASS( BaseManager, gse::GCWrappable )
 public:
+
+	typedef std::unordered_map< std::string, base::PopDef* > popdefs_t;
+
 	BaseManager( Game* game );
 	~BaseManager();
 
@@ -42,23 +52,28 @@ public:
 	void DespawnBase( GSE_CALLABLE, const size_t base_id );
 
 	const std::map< size_t, Base* >& GetBases() const;
+	const popdefs_t& GetBasePopDefs() const;
 
 	void ProcessUnprocessed( GSE_CALLABLE );
 	void PushUpdates();
 
 	WRAPDEFS_PTR( BaseManager )
 
+	void TriggerUpdates( GSE_CALLABLE );
+
 	void Serialize( types::Buffer& buf ) const;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf );
 
 	void RefreshBase( const base::Base* base );
+
+	void AddUpdateTrigger( base::Base* base ); // TODO: combine with RefreshBase?
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
 private:
 	Game* m_game = nullptr;
 
-	std::unordered_map< std::string, base::PopDef* > m_base_popdefs = {};
+	popdefs_t m_base_popdefs = {};
 	std::map< size_t, base::Base* > m_bases = {};
 	std::vector< types::Buffer > m_unprocessed_bases = {};
 
@@ -79,7 +94,9 @@ private:
 	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
 
 private:
-	friend class Base;
+	std::mutex m_updated_bases_mutex;
+	std::unordered_set< Base* > m_updated_bases = {};
+
 };
 
 }

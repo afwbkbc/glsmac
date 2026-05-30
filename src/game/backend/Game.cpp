@@ -398,6 +398,15 @@ void Game::Iterate() {
 			}
 			ProcessEvents();
 		});
+
+		m_state->WithGSE(
+			this, [ this ]( GSE_CALLABLE ) {
+				if ( m_bm ) {
+					m_bm->TriggerUpdates( GSE_CALL );
+				}
+			}
+		);
+
 	}
 	if ( m_um ) {
 		m_um->PushUpdates();
@@ -1555,7 +1564,7 @@ void Game::ProcessEvents() {
 	}
 }
 
-void Game::CheckRW( GSE_CALLABLE ) {
+void Game::CheckRW( GSE_CALLABLE ) const {
 	if ( !m_rw_counter ) {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Game state is read-only. Try using events?");
 	}

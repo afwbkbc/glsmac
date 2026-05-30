@@ -52,8 +52,11 @@ public:
 	);
 	virtual ~Base() = default;
 
+	const Game* const GetGame() const;
+
 	Pop* const AddPop( const Pop& pop );
 	void RemovePop( const size_t pop_id );
+	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -75,12 +78,15 @@ private:
 
 	size_t m_next_pop_id = 1;
 
+	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
+
 	gse::value::Array* const GetWorkableTiles( GSE_CALLABLE );
 	gse::value::Array* const GetWorkedTiles( GSE_CALLABLE );
 	gse::value::Array* const GetUnworkedTiles( GSE_CALLABLE );
 	gse::value::Object* const GetIntake( GSE_CALLABLE );
 	gse::value::Object* const GetConsumption( GSE_CALLABLE );
 
+	void TriggerUpdate();
 };
 
 }
