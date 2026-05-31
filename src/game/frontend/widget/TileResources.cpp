@@ -61,6 +61,21 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		}
 	}
 
+	const auto x_scale = 0.4f;
+	const auto y_scale = 0.8f;
+
+	types::Vec2< size_t > max_wh = { 0, 0 };
+
+	for ( const auto& id : backend->GetRM()->GetDefinedResourcesOrder() ) {
+		const auto& r_max_wh = rm->GetResourceMaxWH( id );
+		if ( r_max_wh.x > max_wh.x ) {
+			max_wh.x = r_max_wh.x;
+		}
+		if ( r_max_wh.y > max_wh.y ) {
+			max_wh.y = r_max_wh.y;
+		}
+	}
+
 	if ( count > 0 ) {
 		std::vector< const types::mesh::Render* > meshes = {};
 		std::vector< types::texture::Texture* > textures = {};
@@ -68,16 +83,8 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		size_t index = 0;
 		size_t total_width = 0;
 		size_t max_height = 0;
-		types::Vec2< size_t > max_wh = { 0, 0 };
 		size_t total_possible_width = 0;
 		for ( const auto& id : backend->GetRM()->GetDefinedResourcesOrder() ) {
-			const auto& r_max_wh = rm->GetResourceMaxWH( id );
-			if ( r_max_wh.x > max_wh.x ) {
-				max_wh.x = r_max_wh.x;
-			}
-			if ( r_max_wh.y > max_wh.y ) {
-				max_wh.y = r_max_wh.y;
-			}
 			total_possible_width += max_wh.x;
 			const auto& resource_it = resources.find( id );
 			if ( resource_it == resources.end() ) {
@@ -105,8 +112,6 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		ASSERT( whs.size() == count, "whs size mismatch" );
 		ASSERT( max_wh.x > 0, "max_wh x is zero" );
 		ASSERT( max_wh.y > 0, "max_wh y is zero" );
-		const auto x_scale = 0.4f;
-		const auto y_scale = 0.8f;
 		auto offset = 0.5f - (float)total_width / total_possible_width / 2;
 		for ( size_t i = 0 ; i < count ; i++ ) {
 			const auto& wh = whs.at( i );
@@ -131,7 +136,28 @@ void TileResources::Update( ui::dom::Widget* const widget, const void* const dat
 		}
 	}
 	else {
-		// TODO
+		auto* instanced_sprite = rm->GetNoResourceSprite();
+		ASSERT( instanced_sprite, "no-resource sprite is null" );
+		auto* actor = instanced_sprite->actor;
+		auto sprite = actor->GetSpriteActor();
+		const auto& wh = instanced_sprite->wh;
+		const auto w = (float)wh.x / max_wh.x * x_scale;
+		const auto h = (float)wh.y / max_wh.y * y_scale;
+		AddMeshAndTexture(
+			widget,
+			0,
+			sprite->GenerateMesh(),
+			sprite->GetTexture(),
+			false,
+			{
+				w,
+				h,
+			},
+			{
+				0.5f - w / 2,
+				0.5f - h / 2,
+			}
+		);
 	}
 
 }

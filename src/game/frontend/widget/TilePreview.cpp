@@ -12,7 +12,6 @@
 #include "game/frontend/sprite/InstancedSpriteManager.h"
 #include "scene/actor/Instanced.h"
 #include "scene/actor/Sprite.h"
-#include "gse/value/Bool.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
 #include "game/backend/Player.h"

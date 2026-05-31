@@ -47,6 +47,8 @@ public:
 	void SetEventHandler( const input::event_type_t type, const f_on_event_t& f );
 	void SetGlobalEventHandler( const input::event_type_t type, const f_on_event_t& f );
 
+	const gse::value::object_properties_t& GetData() const;
+
 private:
 
 	widget_type_t m_type = WT_NONE;

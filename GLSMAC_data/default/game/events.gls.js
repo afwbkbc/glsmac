@@ -2,6 +2,7 @@ return (game) => {
 
 	for (e of [
 		'define_resource',
+		'define_no_resource',
 		'define_animation',
 		'define_moraleset',
 		'define_unit',
@@ -20,6 +21,8 @@ return (game) => {
 		'uncomplete_turn',
 		'advance_turn',
 		'chat_message',
+		'work_base_tile',
+		'unwork_base_tile',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

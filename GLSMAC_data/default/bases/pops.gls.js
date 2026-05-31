@@ -31,17 +31,17 @@ const define = (game, id, name, renders_human_x, renders_progenitor_x, propertie
 const result = {
 	define: (game) => {
 
-		define(game, 'Worker', 'Worker', [79, 118], [40], {tile_worker: true});
-		define(game, 'Talent', 'Talent', [1, 40], [1], {tile_worker: true});
-		define(game, 'Doctor', 'Doctor', [352], [196], {});
-		define(game, 'Technician', 'Technician', [313], [157], {});
-		define(game, 'Librarian', 'Librarian', [391], [235], {});
-		define(game, 'Engineer', 'Engineer', [430], [274], {});
-		define(game, 'Empath', 'Empath', [469], [313], {});
-		define(game, 'Thinker', 'Thinker', [508], [352], {});
-		define(game, 'Transcend', 'Transcend', [547], [391], {});
-		define(game, 'Drone', 'Drone', [157, 196], [79], {});
-		define(game, 'DronePlus', 'Drone', [235, 274], [118], {});
+		define(game, 'WORKER', 'Worker', [79, 118], [40], {tile_worker: true});
+		define(game, 'TALENT', 'Talent', [1, 40], [1], {tile_worker: true});
+		define(game, 'DOCTOR', 'Doctor', [352], [196], {});
+		define(game, 'TECHNICIAN', 'Technician', [313], [157], {});
+		define(game, 'LIBRARIAN', 'Librarian', [391], [235], {});
+		define(game, 'ENGINEER', 'Engineer', [430], [274], {});
+		define(game, 'EMPATH', 'Empath', [469], [313], {});
+		define(game, 'THINKER', 'Thinker', [508], [352], {});
+		define(game, 'TRANSCEND', 'Transcend', [547], [391], {});
+		define(game, 'DRONE', 'Drone', [157, 196], [79], {});
+		define(game, 'DRONEPLUS', 'Drone', [235, 274], [118], {});
 
 	},
 };

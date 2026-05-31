@@ -77,8 +77,8 @@ void Thread::Run() {
 	size_t step_len_rounded;
 
 #ifdef DEBUG
-	size_t modulensdiff[m_modules.size()];
-	memset( modulensdiff, 0, sizeof( modulensdiff ) );
+	/*std::vector< size_t > modulensdiff = {};
+	modulensdiff.resize( m_modules.size() );*/
 #endif
 
 	m_state = STATE_ACTIVE;
@@ -92,16 +92,16 @@ void Thread::Run() {
 		auto start = std::chrono::high_resolution_clock::now();
 
 #ifdef DEBUG
-		auto mstart = start;
+		//auto mstart = start;
 #endif
 
 		for ( modules_t::iterator it = m_modules.begin() ; it < m_modules.end() ; ++it ) {
 			//Log( "Iterating [" + (*it)->GetName() + "]" );
 			( *it )->Iterate();
 #ifdef DEBUG
-			auto mfinish = std::chrono::high_resolution_clock::now();
+			/*auto mfinish = std::chrono::high_resolution_clock::now();
 			modulensdiff[ it - m_modules.begin() ] = std::chrono::duration_cast< std::chrono::nanoseconds >( mfinish - mstart ).count();
-			mstart = mfinish;
+			mstart = mfinish;*/
 #endif
 		}
 

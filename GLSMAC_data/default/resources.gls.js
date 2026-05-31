@@ -25,9 +25,17 @@ const result = {
 			// nutrients
 			if (!e.tile.features.xenofungus) {
 				if (e.tile.is_land) {
-					result.NUTRIENTS = e.tile.moisture - 1;
+					if (e.tile.rockiness < 3) {
+						result.NUTRIENTS = e.tile.moisture - 1;
+					}
+					if (e.tile.features.jungle) {
+						result.NUTRIENTS = result.NUTRIENTS + 1;
+					}
 				} else {
 					result.NUTRIENTS = 1;
+				}
+				if (e.tile.bonuses.nutrient) {
+					result.NUTRIENTS = result.NUTRIENTS + 2;
 				}
 			} else {
 				// TODO: fungus tiles
@@ -42,6 +50,9 @@ const result = {
 				} else {
 
 				}
+				if (e.tile.bonuses.minerals) {
+					result.MINERALS = result.MINERALS + 2;
+				}
 			} else {
 				// TODO: fungus tiles
 			}
@@ -49,12 +60,15 @@ const result = {
 			// energy
 			if (!e.tile.features.xenofungus) {
 				if (e.tile.is_land) {
-					result.ENERGY = e.tile.elevation / 1000;
+					//result.ENERGY = e.tile.elevation / 1000; // only with solar collector
 					if (e.tile.features.river) {
 						result.ENERGY = result.ENERGY + 1; // TODO: fix += with properties
 					}
 				} else {
 					result.ENERGY = 1;
+				}
+				if (e.tile.bonuses.energy) {
+					result.ENERGY = result.ENERGY + 2;
 				}
 			} else {
 				// TODO: fungus tiles
@@ -77,7 +91,8 @@ const result = {
 				// TODO: terraforming
 			}
 
-			// TODO: bonuses
+
+			// TODO: tech-based limitations
 
 			return result;
 		});
@@ -115,6 +130,14 @@ const result = {
 			[421, 387, 458, 424],
 			[462, 387, 499, 424],
 		]);
+		game.event('define_no_resource', {
+			render: {
+				type: 'sprites',
+				file: 'newicons.pcx',
+				coords: [2, 175, 22, 194],
+			}
+		});
+
 	},
 
 };

@@ -29,6 +29,9 @@ protected:
 
 	virtual ~Drawable();
 
+	void SetActive( GSE_CALLABLE, const bool is_active );
+	bool m_is_active = false;
+
 	geometry::Geometry* const m_geometry = nullptr;
 	bool m_is_mouse_over = false;
 

@@ -131,6 +131,8 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 
 	WRAPDEFS_PTR( Map )
 
+	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
+
 private:
 	friend class module::Finalize;
 	friend class backend::Game;

@@ -51,6 +51,8 @@ public:
 		FR_BASE_UPDATE,
 		FR_RESOURCE_DEFINE,
 		FR_RESOURCE_UNDEFINE,
+		FR_NORESOURCE_DEFINE,
+		FR_NORESOURCE_UNDEFINE,
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
 		FR_LOADER_HIDE,
@@ -220,6 +222,9 @@ public:
 		struct {
 			const std::string* id;
 		} resource_undefine;
+		struct {
+			const std::string* serialized_noresource; // can be optimized
+		} noresource_define;
 		struct {
 			const std::string* text;
 		} loader;

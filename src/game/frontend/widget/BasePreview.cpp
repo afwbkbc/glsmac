@@ -9,6 +9,7 @@
 #include "game/frontend/Game.h"
 #include "game/backend/base/Base.h"
 #include "game/frontend/base/BaseManager.h"
+#include "gse/value/Bool.h"
 
 namespace game {
 namespace frontend {
@@ -17,7 +18,8 @@ namespace widget {
 BasePreview::BasePreview( Game* const game, ui::UI* const ui )
 	: Widget(
 	game, ui, ui::WT_BASE_PREVIEW, "base-preview", {
-		{ "base", { true, gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
+		{ "base",     { true,  gse::VT_OBJECT, ::game::backend::base::Base::WRAP_CLASS } },
+		{ "no_badge", { false, gse::VT_BOOL } },
 	}
 ) {}
 
@@ -51,8 +53,14 @@ void BasePreview::Update( ui::dom::Widget* const widget, const void* const data 
 
 	ASSERT( render.base.mesh->GetType() == types::mesh::Mesh::MT_RENDER, "base mesh not render" );
 
+	const auto& d = widget->GetData();
+
 	AddMeshAndTexture( widget, index++, render.base.mesh, render.base.texture, true );
-	AddMeshAndTexture( widget, index++, render.badge.mesh, render.badge.texture, true, { 0.16f, 0.27f }, { 0.04f, 0.04f } );
+	
+	auto it = d.find( "no_badge" );
+	if ( it == d.end() || !( (gse::value::Bool*)it->second )->value ) {
+		AddMeshAndTexture( widget, index++, render.badge.mesh, render.badge.texture, true, { 0.16f, 0.27f }, { 0.04f, 0.04f } );
+	}
 }
 
 }

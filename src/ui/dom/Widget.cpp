@@ -163,6 +163,10 @@ void Widget::SetGlobalEventHandler( const input::event_type_t type, const f_on_e
 	}
 }
 
+const gse::value::object_properties_t& Widget::GetData() const {
+	return m_data->value;
+}
+
 void Widget::Enable( const widget_type_t type ) {
 	ASSERT( type != WT_NONE, "widget type is none" );
 	if ( type != m_type ) {

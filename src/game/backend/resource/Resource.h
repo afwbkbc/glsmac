@@ -4,9 +4,9 @@
 #include <cstdint>
 
 #include "types/Buffer.h"
+#include "Types.h"
 
 namespace game {
-
 namespace backend {
 namespace resource {
 
@@ -14,13 +14,6 @@ class ResourceManager;
 
 class Resource {
 public:
-
-	typedef std::vector< std::pair< types::Vec2< int64_t >, types::Vec2< int64_t > > > render_coords_t;
-
-	struct render_info_t {
-		std::string file;
-		render_coords_t coords;
-	};
 
 	Resource( const std::string& id, const std::string& name, const render_info_t& render_info );
 

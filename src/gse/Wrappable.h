@@ -105,7 +105,7 @@ public:
 	virtual Value* const Trigger( GSE_CALLABLE, const std::string& event, gse::value::Object* args_obj, const std::optional< value_type_t > expected_return_type = {} );
 	virtual void ClearHandlers();
 
-	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
+	virtual void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
 
 protected:
 	// TODO: wrapobjs mutex
@@ -125,6 +125,8 @@ protected:
 	bool m_catchall = false;
 
 	void CustomSet( const std::string& key, Value* const value );
+	void CustomUnset( const std::string& key );
+	const bool CustomHas( const std::string& key );
 	Value* const CustomGet( const std::string& key );
 
 private:

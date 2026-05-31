@@ -624,6 +624,16 @@ WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Map )
 
+void Map::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {
+	gse::GCWrappable::GetReachableObjects( reachable_objects );
+
+	GC_DEBUG_BEGIN( "tiles" );
+	for ( auto& t : *m_tiles->GetTilesPtr() ) {
+		t.GetReachableObjects( reachable_objects );
+	}
+	GC_DEBUG_END();
+}
+
 const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_CANCELABLE ) {
 	auto* random = m_game->GetRandom();
 	generator::SimplePerlin generator( m_game, random );

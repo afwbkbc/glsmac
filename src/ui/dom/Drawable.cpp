@@ -6,6 +6,7 @@
 #include "util/String.h"
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
+#include "gse/value/Bool.h"
 
 namespace ui {
 namespace dom {
@@ -100,6 +101,17 @@ Drawable::Drawable( DOM_ARGS_T, geometry::Geometry* const geometry )
 			m_parent->UpdateMouseOver( GSE_CALL );
 		}
 	} );
+
+	Property(
+		GSE_CALL, "active", gse::VT_BOOL, VALUE( gse::value::Bool, , false ), PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			SetActive( GSE_CALL, ( (gse::value::Bool*)v )->value );
+		},
+		[ this ]( GSE_CALLABLE ) {
+			SetActive( GSE_CALL, false );
+		}
+	);
+
 }
 
 Drawable::~Drawable() {
@@ -107,6 +119,18 @@ Drawable::~Drawable() {
 		m_geometry->RemoveHandler( id );
 	}
 	delete m_geometry;
+}
+
+void Drawable::SetActive( GSE_CALLABLE, const bool is_active ) {
+	if ( is_active != m_is_active ) {
+		m_is_active = is_active;
+		if ( m_is_active ) {
+			AddModifier( GSE_CALL, CM_ACTIVE );
+		}
+		else {
+			RemoveModifier( GSE_CALL, CM_ACTIVE );
+		}
+	}
 }
 
 geometry::Geometry* const Drawable::GetGeometry() const {

@@ -8,7 +8,6 @@
 #include "gse/Exception.h"
 #include "gse/value/Int.h"
 #include "gse/value/Float.h"
-#include "gse/value/Undefined.h"
 #include "util/random/Random.h"
 
 namespace gse {
@@ -61,6 +60,65 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 	F( ceil, Float, Int )
 	F( sqrt, Float, Float )
 #undef F
+
+	ctx->CreateBuiltin( "pow", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 2 );
+		switch ( arguments.at( 0 )->type ) {
+			case VT_INT: {
+				switch ( arguments.at( 1 )->type ) {
+					case VT_INT: {
+						N_GETVALUE( a, 0, Int );
+						N_GETVALUE( b, 1, Int );
+						return VALUE( gse::value::Int,, pow( a, b ) );
+					}
+					case VT_FLOAT: {
+						N_GETVALUE( a, 0, Int );
+						N_GETVALUE( b, 1, Float );
+						return VALUE( gse::value::Float,, pow( a, b ) );
+					}
+					default:
+						GSE_ERROR( EC.INVALID_CALL, "Second argument must be Int or Float" );
+				}
+				break;
+			}
+			case VT_FLOAT: {
+				switch ( arguments.at( 1 )->type ) {
+					case VT_INT: {
+						N_GETVALUE( a, 0, Float );
+						N_GETVALUE( b, 1, Int );
+						return VALUE( gse::value::Float,, pow( a, b ) );
+					}
+					case VT_FLOAT: {
+						N_GETVALUE( a, 0, Float );
+						N_GETVALUE( b, 1, Float );
+						return VALUE( gse::value::Float,, pow( a, b ) );
+					}
+					default:
+						GSE_ERROR( EC.INVALID_CALL, "Second argument must be Int or Float" );
+				}
+				break;
+			}
+			default:
+				GSE_ERROR( EC.INVALID_CALL, "First argument must be Int or Float" );
+		}
+	} ), ep );
+
+	ctx->CreateBuiltin( "abs", NATIVE_CALL( this ) {
+		N_EXPECT_ARGS( 1 );
+		switch ( arguments.at( 0 )->type ) {
+			case VT_INT: {
+				N_GETVALUE( a, 0, Int );
+				return VALUE( gse::value::Int,, std::abs( a ) );
+			}
+			case VT_FLOAT: {
+				N_GETVALUE( a, 0, Float );
+				return VALUE( gse::value::Float,, std::fabs( a ) );
+			}
+			default: {
+				GSE_ERROR( EC.INVALID_CALL, "Argument must be Int or Float, got: " + arguments.at( 0 )->ToString() );
+			}
+		}
+	} ), ep );
 
 	ctx->CreateBuiltin( "random_int", NATIVE_CALL( this ) {
 		N_EXPECT_ARGS( 2 );

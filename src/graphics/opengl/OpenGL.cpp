@@ -81,7 +81,7 @@ void OpenGL::Start() {
 	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
 	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 32 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
 	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
@@ -216,17 +216,17 @@ void OpenGL::Stop() {
 void OpenGL::Iterate() {
 	std::lock_guard guard( m_render_mutex );
 
-	Lock();
-
 	Graphics::Iterate();
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	for ( auto it = m_routines.begin() ; it != m_routines.end() ; ++it ) {
+	Lock();
+
+	for ( auto it = m_routines.begin(); it != m_routines.end(); ++it ) {
 		( *it )->Iterate();
 	}
 
-	SDL_GL_SwapWindow( m_window );
+	Unlock();
 
 	GLenum errcode;
 	if ( ( errcode = glGetError() ) != GL_NO_ERROR ) {
@@ -235,7 +235,7 @@ void OpenGL::Iterate() {
 
 	ProcessPendingUnloads();
 
-	Unlock();
+	SDL_GL_SwapWindow( m_window );
 
 	DEBUG_STAT_INC( frames_rendered );
 }

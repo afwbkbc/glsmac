@@ -38,7 +38,7 @@ public:
 	static const size_t GetNextId();
 	static const void SetNextId( const size_t id );
 
-	typedef std::vector< Pop > pops_t;
+	typedef std::map< size_t, Pop > pops_t;
 
 	Base(
 		Game* game,
@@ -47,12 +47,16 @@ public:
 		faction::Faction* faction, // faction may differ from owner's faction in some cases, i.e. after being conquered
 		map::tile::Tile* tile,
 		const std::string& name,
-		const pops_t& pops
+		const pops_t& pops,
+		const size_t next_pop_id = 1
 	);
 	virtual ~Base() = default;
 
-	void AddPop( const Pop& pop );
+	const Game* const GetGame() const;
+
+	Pop* const AddPop( const Pop& pop );
 	void RemovePop( const size_t pop_id );
+	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
 
 	const size_t m_id;
 	slot::Slot* m_owner;
@@ -67,14 +71,24 @@ public:
 
 	WRAPDEF_SERIALIZABLE;
 
+	void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) override;
+
 private:
 	Game* const m_game;
 
 	std::unordered_set< map::tile::Tile* > m_worked_tiles = {};
 
+	size_t m_next_pop_id = 1;
+
+	const PopDef* const GetPopDef( GSE_CALLABLE, const std::string& id ) const;
+
+	gse::value::Array* const GetWorkableTiles( GSE_CALLABLE );
 	gse::value::Array* const GetWorkedTiles( GSE_CALLABLE );
+	gse::value::Array* const GetUnworkedTiles( GSE_CALLABLE );
 	gse::value::Object* const GetIntake( GSE_CALLABLE );
 	gse::value::Object* const GetConsumption( GSE_CALLABLE );
+
+	void TriggerUpdate();
 };
 
 }

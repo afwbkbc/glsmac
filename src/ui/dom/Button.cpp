@@ -76,15 +76,6 @@ Button::Button( DOM_ARGS )
 		}
 	);
 
-	Property(
-		GSE_CALL, "active", gse::VT_BOOL, VALUE( gse::value::Bool, , false ), PF_NONE,
-		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
-			SetActive( GSE_CALL, ( (gse::value::Bool*)v )->value );
-		},
-		[ this ]( GSE_CALLABLE ) {
-			SetActive( GSE_CALL, false );
-		}
-	);
 }
 
 const bool Button::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
@@ -186,18 +177,6 @@ void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 		}
 		default: {
 			Panel::WrapEvent( GSE_CALL, e, obj );
-		}
-	}
-}
-
-void Button::SetActive( GSE_CALLABLE, const bool is_active ) {
-	if ( is_active != m_is_active ) {
-		m_is_active = is_active;
-		if ( m_is_active ) {
-			AddModifier( GSE_CALL, CM_ACTIVE );
-		}
-		else {
-			RemoveModifier( GSE_CALL, CM_ACTIVE );
 		}
 	}
 }

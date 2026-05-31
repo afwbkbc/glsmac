@@ -155,6 +155,11 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 
 	Log( "Despawning base #" + std::to_string( base->m_id ) + " at " + base->GetTile()->ToString() );
 
+	{
+		std::lock_guard guard( m_updated_bases_mutex );
+		m_updated_bases.erase( base );
+	}
+
 	QueueBaseUpdate( base, BUO_DESPAWN );
 
 	auto* tile = base->GetTile();
@@ -180,6 +185,10 @@ void BaseManager::DespawnBase( GSE_CALLABLE, const size_t base_id ) {
 
 const std::map< size_t, Base* >& BaseManager::GetBases() const {
 	return m_bases;
+}
+
+const BaseManager::popdefs_t& BaseManager::GetBasePopDefs() const {
+	return m_base_popdefs;
 }
 
 void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
@@ -220,11 +229,11 @@ void BaseManager::PushUpdates() {
 				NEW( fr.data.base_update.name, std::string, base->m_name );
 				NEW( fr.data.base_update.faction_id, std::string, base->m_faction->m_id );
 				NEW( fr.data.base_update.pops, FrontendRequest::base_pops_t, {} );
-				for ( const auto& pop : base->m_pops ) {
+				for ( const auto& it : base->m_pops ) {
 					fr.data.base_update.pops->push_back(
 						{
-							pop.m_def->m_id,
-							pop.m_variant
+							it.second.m_def->m_id,
+							it.second.m_variant
 						}
 					);
 				}
@@ -413,6 +422,19 @@ WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( BaseManager )
 
+void BaseManager::TriggerUpdates( GSE_CALLABLE ) {
+	std::lock_guard guard( m_updated_bases_mutex );
+	for ( const auto& base : m_updated_bases ) {
+		m_game->Trigger( GSE_CALL, "update_base", ARGS_F( base ) {
+			{
+				"base",
+				base->Wrap( GSE_CALL )
+			},
+		}; } );
+	}
+	m_updated_bases.clear();
+}
+
 void BaseManager::Serialize( types::Buffer& buf ) const {
 
 	Log( "Serializing " + std::to_string( m_base_popdefs.size() ) + " base pop defs" );
@@ -467,6 +489,11 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 
 void BaseManager::RefreshBase( const base::Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
+}
+
+void BaseManager::AddUpdateTrigger( base::Base* base ) {
+	std::lock_guard guard( m_updated_bases_mutex );
+	m_updated_bases.insert( base );
 }
 
 void BaseManager::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

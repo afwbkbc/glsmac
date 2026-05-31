@@ -20,6 +20,22 @@ return {
 			left: 0,
 			right: 0,
 		});
+		this.frame.on('mousedown', (e) => {
+			// prevent clickthroughs
+
+			const left = e.ax;
+			const right = p.ui.get_width() - e.ax;
+			const bottom = p.ui.get_height() - e.ay;
+
+			if (left >= 252 && right >= 262 && bottom >= 10 && bottom <= 60) {
+				// allow clickthroughs to objects list
+				// TODO: better way to do this?
+				return false;
+			}
+
+			// block everything else
+			return true;
+		});
 		this.frame.hide();
 
 		// hide menus
