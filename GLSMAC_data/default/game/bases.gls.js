@@ -23,12 +23,14 @@ const reset_nutrients = (game, base) => {
 	base.set('accumulated_nutrients', updated);
 };
 
-const get_best_tiles_to_work = (base, consider_all_tiles, count) => {
+const get_tile_score = (base, tile) => {
+	const resources = tile.get_resources(base.get_owner());
+	return resources.NUTRIENTS * 3 + resources.MINERALS * 2 + resources.ENERGY; // simple logic for now, TODO: improve based on what base needs
+};
+
+const find_best_or_worst_tiles = (base, tiles, count, modifier) => { // modifier 1 to find best tiles, -1 to find worst tiles
 	let keys = {};
 	let result = [];
-	const tiles = consider_all_tiles
-		? base.get_workable_tiles()
-		: base.get_unworked_tiles();
 	for (let i = 0; i < count; i++) {
 		if (i >= #sizeof(tiles)) {
 			break;
@@ -39,8 +41,7 @@ const get_best_tiles_to_work = (base, consider_all_tiles, count) => {
 			if (#is_defined(keys[key])) {
 				continue;
 			}
-			const resources = tile.get_resources(base.get_owner());
-			const score = resources.NUTRIENTS * 3 + resources.MINERALS * 2 + resources.ENERGY; // simple logic for now, TODO: improve based on what base needs
+			const score = get_tile_score(base, tile) * modifier;
 			if (best == null || score > best.score) {
 				best = {
 					tile: tile,
@@ -83,7 +84,7 @@ const process_growth = (game, base) => {
 	}
 
 	if (grow) {
-		const best_tile = (get_best_tiles_to_work(base, false, 1))[0];
+		const best_tile = (find_best_or_worst_tiles(base, base.get_unworked_tiles(), 1, 1))[0];
 		if (best_tile != null) {
 			// found tile to work, spawn worker
 			// TODO: talents logic
@@ -163,7 +164,7 @@ return (game) => {
 		game.set('f_base_reset_nutrients', reset_nutrients);
 		game.set('f_base_pop_work_tile', pop_work_tile);
 		game.set('f_base_pop_unwork_tile', pop_unwork);
-		game.set('f_base_get_best_tiles_to_work', get_best_tiles_to_work);
+		game.set('f_base_find_best_or_worst_tiles', find_best_or_worst_tiles);
 
 		// new turn, process all bases
 		game.on('turn', (e) => {

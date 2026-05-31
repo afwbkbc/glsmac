@@ -139,12 +139,13 @@ return {
 				const twh = this.tile_width / 2;
 				const mx = e.x - c_left - twh;
 				const my = e.y - c_top - this.tile_height / 2;
+				const f_base_find_best_or_worst_tiles = this.p.game.get('f_base_find_best_or_worst_tiles');
 				for (t of existing_tiles) {
 					const distance = #abs(t.cx - mx) + #abs(t.cy - my) * tile_aspect_ratio;
 					if (distance <= twh) {
 						if (t == t_center) {
 							let pops = data.base.get_pops();
-							const tiles = this.p.game.get('f_base_get_best_tiles_to_work')(data.base, true, #sizeof(pops));
+							const tiles = f_base_find_best_or_worst_tiles(data.base, data.base.get_workable_tiles(), #sizeof(pops), 1);
 							let i = 0;
 							// TODO: optimize excessive unwork/work events
 							// unwork all tiles
@@ -175,24 +176,27 @@ return {
 								tile: t.tile,
 							});
 						} else {
-							let first_non_worker_pop = null;
-							let first_pop = null;
+							let target_pop = null;
 							for (pop of data.base.get_pops()) {
-								if (first_pop == null) {
-									first_pop = pop;
-								}
 								if (pop.get_type() != 'WORKER') {
-									first_non_worker_pop = pop;
+									target_pop = pop;
 									break;
 								}
 							}
-							this.p.game.event('work_base_tile', {
-								base: data.base,
-								tile: t.tile,
-								pop: first_non_worker_pop != null
-									? first_non_worker_pop
-									: first_pop,
-							});
+							if (target_pop == null) {
+								// find worst worked tile
+								const tile = (f_base_find_best_or_worst_tiles(data.base, data.base.get_worked_tiles(), 1, 0 - 1))[0]; // TODO: 0 - 1
+								if (#is_defined(tile)) {
+									target_pop = tile.get('working_pop');
+								}
+							}
+							if (target_pop != null) {
+								this.p.game.event('work_base_tile', {
+									base: data.base,
+									tile: t.tile,
+									pop: target_pop,
+								});
+							}
 						}
 						break;
 					}
