@@ -130,6 +130,14 @@ const result = {
 			[421, 387, 458, 424],
 			[462, 387, 499, 424],
 		]);
+		game.event('define_no_resource', {
+			render: {
+				type: 'sprites',
+				file: 'newicons.pcx',
+				coords: [2, 175, 22, 194],
+			}
+		});
+
 	},
 
 };

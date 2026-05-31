@@ -91,6 +91,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.resource_undefine.id, std::string, *other.data.resource_undefine.id );
 			break;
 		}
+		case FR_NORESOURCE_DEFINE: {
+			NEW( data.noresource_define.serialized_noresource, std::string, *other.data.noresource_define.serialized_noresource );
+			break;
+		}
 		case FR_LOADER_SHOW:
 		case FR_LOADER_TEXT: {
 			NEW( data.loader.text, std::string, *other.data.loader.text );
@@ -177,6 +181,10 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_RESOURCE_UNDEFINE: {
 			DELETE( data.resource_undefine.id );
+			break;
+		}
+		case FR_NORESOURCE_DEFINE: {
+			DELETE( data.noresource_define.serialized_noresource );
 			break;
 		}
 		case FR_LOADER_TEXT:

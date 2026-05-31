@@ -2,6 +2,7 @@ return (game) => {
 
 	for (e of [
 		'define_resource',
+		'define_no_resource',
 		'define_animation',
 		'define_moraleset',
 		'define_unit',

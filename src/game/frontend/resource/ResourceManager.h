@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "types/Vec2.h"
+#include "types/Buffer.h"
 
 namespace game::backend::resource {
 class Resource;
@@ -29,10 +30,14 @@ CLASS( ResourceManager, common::Class )
 	~ResourceManager();
 
 	void DefineResource( const backend::resource::Resource* const resource );
-	void UndefineResource( const std::string& id );
+	void UndefineResource( const std::string& id, const bool no_erase = false );
+	void DefineNoResource( types::Buffer& buf );
+	void UndefineNoResource();
 
-	const sprite::InstancedSprite* const GetResourceSprite( const std::string& id, const size_t value );
-	const types::Vec2< size_t >& GetResourceMaxWH( const std::string& id );
+	const sprite::InstancedSprite* const GetResourceSprite( const std::string& id, const size_t value ) const;
+	const types::Vec2< size_t >& GetResourceMaxWH( const std::string& id ) const;
+
+	const sprite::InstancedSprite* const GetNoResourceSprite() const;
 
 private:
 	Game* m_game;
@@ -44,6 +49,7 @@ private:
 	};
 
 	std::unordered_map< std::string, resource_info_t > m_resources = {};
+	resource_info_t m_no_resource = {};
 
 };
 

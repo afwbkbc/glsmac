@@ -1206,6 +1206,15 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 			m_rm->UndefineResource( *request->data.resource_undefine.id );
 			break;
 		}
+		case FrontendRequest::FR_NORESOURCE_DEFINE: {
+			types::Buffer buf( *request->data.noresource_define.serialized_noresource );
+			m_rm->DefineNoResource( buf );
+			break;
+		}
+		case FrontendRequest::FR_NORESOURCE_UNDEFINE: {
+			m_rm->UndefineNoResource();
+			break;
+		}
 		case FrontendRequest::FR_LOADER_SHOW: {
 			m_glsmac->ShowLoader( *request->data.loader.text );
 			break;
