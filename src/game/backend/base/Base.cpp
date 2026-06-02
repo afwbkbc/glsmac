@@ -173,19 +173,19 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		} )
 	},
 	{
-		"remove_pop",
+		"destroy_pop",
 		NATIVE_CALL( this ) {
 
 			m_game->CheckRW( GSE_CALL );
 
 			N_EXPECT_ARGS( 1 );
-			N_GETVALUE( pop_id, 0, Int );
+			N_GETVALUE_UNWRAP( pop, 0, Pop );
 
-			if ( pop_id >= m_pops.size() ) {
-				GSE_ERROR( gse::EC.GAME_ERROR, "Base does not have pop id " + std::to_string( pop_id ) );
+			if ( m_pops.find( pop->m_id ) == m_pops.end() ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Base does not have pop " + std::to_string( pop->m_id ) );
 			}
 
-			RemovePop( pop_id );
+			RemovePop( pop->m_id );
 
 			return VALUE( gse::value::Undefined );
 		} )

@@ -38,7 +38,7 @@ return {
 		if (#is_defined(e.applied.worked_tile)) {
 			e.game.get('f_base_pop_unwork', e.applied.base, e.applied.pop);
 		}
-		e.data.base.remove_pop(e.applied.pop.id);
+		e.data.base.destroy_pop(e.applied.pop);
 		if (#is_defined(e.applied.worked_tile)) {
 			e.data.base.base.remove_worked_tile(e.applied.worked_tile);
 		}

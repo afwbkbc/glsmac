@@ -34,6 +34,9 @@ return {
 		p.ui.class('base-screen-nutrients-cell-full').extend('base-screen-nutrients-cell').set({
 			background: 'interface.pcx:crop(418,22,437,41)',
 		});
+		p.ui.class('base-screen-nutrients-cell-deficit').extend('base-screen-nutrients-cell-full').set({
+			border: 'rgb(156,16,16),0',
+		});
 
 		this.growth_cells = body.area({
 			left: 6,

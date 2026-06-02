@@ -71,8 +71,32 @@ const process_growth = (game, base) => {
 	}
 	accumulated += get_pending_growth(base);
 	if (accumulated < 0) {
-		// TODO: hunger
-		accumulated = 0;
+		let pop = null;
+		// try to remove non-worker pop first
+		for (p of base.get_pops()) {
+			if (!p.has('worked_tile')) {
+				pop = p;
+				break;
+			}
+		}
+		if (pop == null) {
+			const worst_tile = (find_best_or_worst_tiles(base, base.get_worked_tiles(), 1, 0 - 1))[0];
+			if (#is_defined(worst_tile)) {
+				const p = worst_tile.get('working_pop');
+				if (#is_defined(p)) {
+					pop = p;
+				} else {
+					#print('bug: could not find pop of worked tile');
+				}
+			} else {
+				#print('bug: could not find worst tile for depopulation');
+			}
+		}
+		game.event('remove_base_pop', {
+			base: base,
+			pop: pop,
+		});
+		return;
 	}
 	base.set('accumulated_nutrients', accumulated);
 	if (base.get_size() == 0) {

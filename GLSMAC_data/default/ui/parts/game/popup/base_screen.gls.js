@@ -226,7 +226,11 @@ return {
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
 				if (i < filled) {
-					cls = 'full';
+					if (pending < 0 && i >= filled + pending) {
+						cls = 'deficit';
+					} else {
+						cls = 'full';
+					}
 				} else if (i < filled + pending) {
 					cls = 'pending';
 				} else {
