@@ -24,13 +24,7 @@ void ShaderProgram::Start() {
 
 	glValidateProgram( m_gl_shader_program );
 	glGetProgramiv( m_gl_shader_program, GL_VALIDATE_STATUS, &success );
-	if ( !success ) {
-		GLint info_log_length = 0;
-		glGetProgramiv( m_gl_shader_program, GL_INFO_LOG_LENGTH, &info_log_length );
-		std::vector< GLchar > info_log( info_log_length + 1 );
-		glGetProgramInfoLog( m_gl_shader_program, info_log_length, nullptr, info_log.data() );
-		THROW( "Invalid shader program: " + std::string( info_log.data() ) );
-	}
+	ASSERT( success, "Invalid shader program!" );
 
 	glUseProgram( m_gl_shader_program );
 	Initialize();

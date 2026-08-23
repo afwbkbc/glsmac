@@ -218,16 +218,18 @@ int Engine::Run() {
 
 void Engine::ShutDown() {
 
+#ifdef __APPLE__
 	if ( m_is_shutting_down.exchange( true ) ) {
 		return;
 	}
 
-#ifdef __APPLE__
 	// Engine::Run() is occupied by the inline main loop on macOS, so deliver
 	// the stop command here instead of waiting for Run() to poll the flag.
 	for ( auto& thread : m_threads ) {
 		thread->T_Stop();
 	}
+#else
+	m_is_shutting_down = true;
 #endif
 }
 

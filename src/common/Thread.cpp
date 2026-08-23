@@ -38,12 +38,14 @@ void Thread::T_Start() {
 	m_thread = new std::thread( &Thread::Run, this );
 }
 
+#ifdef __APPLE__
 void Thread::T_RunInCurrentThread() {
 	ASSERT( !m_thread, "thread object already initialized" );
 	ASSERT( m_state == STATE_INACTIVE, "thread is already running" );
 	m_state = STATE_STARTING;
 	Run();
 }
+#endif
 
 bool Thread::T_IsRunning() {
 	if ( m_state != STATE_INACTIVE ) {
@@ -161,9 +163,15 @@ void Thread::Run() {
 	Log( "Stopping thread" );
 
 	m_state = STATE_STOPPING;
+#ifdef __APPLE__
 	for ( auto it = m_modules.rbegin(); it != m_modules.rend(); ++it ) {
 		( *it )->Stop();
 	}
+#else
+	for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it ) {
+		( *it )->Stop();
+	}
+#endif
 
 	Log( "Thread stopped" );
 
