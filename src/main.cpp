@@ -112,6 +112,11 @@ for ( int i = 0; i < argc; i++ ) {
 int main( const int argc, char* const argv[] ) {
 #endif
 
+	// SDL_MAIN_HANDLED is defined by the SDL backends, so SDL's platform
+	// bootstrap does not run for us. Tell SDL that our own entry point is ready
+	// before any subsystem is initialized.
+	SDL_SetMainReady();
+
 	config::Config config( argv[ 0 ] );
 	config.Init( argc, argv );
 

@@ -31,6 +31,7 @@ CLASS( Thread, Class )
 	void AddModule( Module* module );
 
 	void T_Start();
+	void T_RunInCurrentThread();
 	bool T_IsRunning();
 	void T_Stop();
 
