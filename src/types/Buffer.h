@@ -1,5 +1,8 @@
 #pragma once
 
+#include <limits>
+#include <type_traits>
+
 #include "common/Common.h"
 
 #include "types/Vec2.h"
@@ -20,6 +23,9 @@ CLASS( Buffer, common::Class )
 	~Buffer();
 
 	Buffer( const Buffer& other );
+	Buffer( Buffer&& other ) noexcept;
+	Buffer& operator=( const Buffer& other );
+	Buffer& operator=( Buffer&& other ) noexcept;
 
 	data_t* data;
 	data_t* dw;
@@ -32,6 +38,25 @@ CLASS( Buffer, common::Class )
 	const bool ReadBool();
 	void WriteInt( const long long int val );
 	const long long int ReadInt();
+	template< typename T >
+	const T ReadInt( const std::string& name ) {
+		static_assert( std::is_integral< T >::value && !std::is_same< T, bool >::value, "integer type required" );
+		const auto value = ReadInt();
+		bool is_invalid = false;
+		if constexpr ( std::is_signed< T >::value ) {
+			is_invalid = value < static_cast< long long int >( ( std::numeric_limits< T >::min )() ) ||
+				value > static_cast< long long int >( ( std::numeric_limits< T >::max )() );
+		}
+		else {
+			is_invalid = value < 0 ||
+				static_cast< unsigned long long int >( value ) > static_cast< unsigned long long int >( ( std::numeric_limits< T >::max )() );
+		}
+		if ( is_invalid ) {
+			THROW( "invalid serialized " + name + ": " + std::to_string( value ) );
+		}
+		return static_cast< T >( value );
+	}
+	const size_t ReadCollectionSize( const std::string& name );
 	void WriteFloat( const float val );
 	const float ReadFloat();
 	void WriteString( const std::string& val );
@@ -48,6 +73,7 @@ CLASS( Buffer, common::Class )
 	const void* ReadData( const uint32_t len );
 
 	const std::string ToString() const;
+	const uint32_t GetRemaining() const;
 
 private:
 

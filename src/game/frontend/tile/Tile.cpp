@@ -2,6 +2,7 @@
 
 #include "game/frontend/unit/Unit.h"
 #include "game/frontend/base/Base.h"
+#include "game/FrontendRequest.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/map/tile/TileState.h"
 #include "types/mesh/Render.h"
@@ -16,6 +17,9 @@ std::vector< size_t > Tile::GetUnitsOrder( const std::unordered_map< size_t, uni
 	for ( auto& it : units ) {
 		const auto unit_id = it.first;
 		const auto* unit = it.second;
+		if ( unit->IsEmbarked() ) {
+			continue;
+		}
 		size_t weight = unit->GetSelectionWeight();
 		weights[ -weight ].push_back( unit_id ); // negative because we need reverse order
 	}
@@ -81,6 +85,14 @@ void Tile::RemoveUnit( unit::Unit* unit ) {
 	Render();
 }
 
+void Tile::InvalidateUnitOrder() {
+	m_is_units_reorder_needed = true;
+	m_is_objects_reorder_needed = true;
+	if ( m_base ) {
+		m_base->Update();
+	}
+}
+
 void Tile::SetActiveUnit( unit::Unit* unit ) {
 	if ( m_render.currently_rendered_unit && m_render.currently_rendered_unit != unit ) {
 		m_render.currently_rendered_unit->Hide();
@@ -115,19 +127,19 @@ void Tile::Render( size_t selected_unit_id ) {
 	}
 	m_render.currently_rendered_fake_badges.clear();
 
-	bool should_show_units = !m_units.empty();
+	const auto units_order = GetUnitsOrder( m_units );
+	bool should_show_units = !units_order.empty();
 	if ( m_base ) {
 		m_base->Show();
 		should_show_units = false;
-		for ( const auto& it : m_units ) {
-			if ( it.second->GetId() == selected_unit_id ) {
+		for ( const auto& unit_id : units_order ) {
+			if ( unit_id == selected_unit_id ) {
 				should_show_units = true;
 				break;
 			}
 		}
 	}
 	if ( should_show_units ) {
-		const auto units_order = GetUnitsOrder( m_units );
 		ASSERT( !units_order.empty(), "units order is empty" );
 
 		const auto most_important_unit_id = units_order.front();
@@ -223,20 +235,22 @@ const std::vector< TileObject* >& Tile::GetOrderedObjects() {
 }
 
 unit::Unit* Tile::GetMostImportantUnit() {
-	if ( m_units.empty() ) {
+	const auto& ordered_units = GetOrderedUnits();
+	if ( ordered_units.empty() ) {
 		return nullptr;
 	}
 	else {
-		return GetOrderedUnits().front();
+		return ordered_units.front();
 	}
 }
 
 TileObject* Tile::GetMostImportantObject() {
-	if ( !m_base && m_units.empty() ) {
+	const auto& ordered_objects = GetOrderedObjects();
+	if ( ordered_objects.empty() ) {
 		return nullptr;
 	}
 	else {
-		return GetOrderedObjects().front();
+		return ordered_objects.front();
 	}
 }
 
@@ -273,15 +287,15 @@ const Tile::render_data_t& Tile::GetRenderData() const {
 	return m_render_data;
 }
 
-void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::tile::TileState& ts ) {
+void Tile::Update( const tile_render_snapshot_t& snapshot ) {
 
-	m_is_water = tile.is_water_tile;
+	m_is_water = snapshot.is_water;
 
-	backend::map::tile::tile_layer_type_t lt = ( tile.is_water_tile
+	backend::map::tile::tile_layer_type_t lt = ( snapshot.is_water
 		? backend::map::tile::LAYER_WATER
 		: backend::map::tile::LAYER_LAND
 	);
-	const auto& layer = ts.layers[ lt ];
+	const auto& layer = snapshot.layers[ lt ];
 
 	backend::map::tile::tile_vertices_t selection_coords = {};
 	backend::map::tile::tile_vertices_t preview_coords = {
@@ -320,18 +334,18 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	x( bottom );
 #undef x
 
-	if ( !tile.is_water_tile && ts.is_coastline_corner ) {
-		if ( tile.W->is_water_tile ) {
-			selection_coords.left = ts.layers[ backend::map::tile::LAYER_WATER ].coords.left;
+	if ( !snapshot.is_water && snapshot.is_coastline_corner ) {
+		if ( snapshot.west_is_water ) {
+			selection_coords.left = snapshot.layers[ backend::map::tile::LAYER_WATER ].coords.left;
 		}
-		if ( tile.N->is_water_tile ) {
-			selection_coords.top = ts.layers[ backend::map::tile::LAYER_WATER ].coords.top;
+		if ( snapshot.north_is_water ) {
+			selection_coords.top = snapshot.layers[ backend::map::tile::LAYER_WATER ].coords.top;
 		}
-		if ( tile.E->is_water_tile ) {
-			selection_coords.right = ts.layers[ backend::map::tile::LAYER_WATER ].coords.right;
+		if ( snapshot.east_is_water ) {
+			selection_coords.right = snapshot.layers[ backend::map::tile::LAYER_WATER ].coords.right;
 		}
-		if ( tile.S->is_water_tile ) {
-			selection_coords.bottom = ts.layers[ backend::map::tile::LAYER_WATER ].coords.bottom;
+		if ( snapshot.south_is_water ) {
+			selection_coords.bottom = snapshot.layers[ backend::map::tile::LAYER_WATER ].coords.bottom;
 		}
 	}
 
@@ -349,14 +363,14 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	};
 
 	std::vector< backend::map::tile::tile_layer_type_t > layers = {};
-	if ( tile.is_water_tile ) {
+	if ( snapshot.is_water ) {
 		layers.push_back( backend::map::tile::LAYER_LAND );
 		layers.push_back( backend::map::tile::LAYER_WATER_SURFACE );
 		layers.push_back( backend::map::tile::LAYER_WATER_SURFACE_EXTRA ); // TODO: only near coastlines?
 		layers.push_back( backend::map::tile::LAYER_WATER );
 	}
 	else {
-		if ( ts.is_coastline_corner ) {
+		if ( snapshot.is_coastline_corner ) {
 			layers.push_back( backend::map::tile::LAYER_WATER_SURFACE );
 			layers.push_back( backend::map::tile::LAYER_WATER_SURFACE_EXTRA );
 			layers.push_back( backend::map::tile::LAYER_WATER );
@@ -377,7 +391,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 
 		NEWV( mesh, types::mesh::Render, 5, 4 );
 
-		const auto& l = ts.layers[ lt ];
+		const auto& l = snapshot.layers[ lt ];
 
 		auto tint = l.colors;
 
@@ -404,14 +418,14 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	}
 
 	std::vector< std::string > sprites = {};
-	for ( auto& s : ts.sprites ) {
-		sprites.push_back( s.actor );
+	for ( const auto& sprite : snapshot.sprites ) {
+		sprites.push_back( sprite );
 	}
 
 	std::vector< std::string > info_lines = {};
 
-	auto e = *tile.elevation.center;
-	if ( tile.is_water_tile ) {
+	auto e = snapshot.elevation;
+	if ( snapshot.is_water ) {
 		if ( e < backend::map::tile::ELEVATION_LEVEL_TRENCH ) {
 			info_lines.push_back( "Ocean Trench" );
 		}
@@ -426,7 +440,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	else {
 		info_lines.push_back( "Elev: " + std::to_string( e ) + "m" );
 		std::string tilestr = "";
-		switch ( tile.rockiness ) {
+		switch ( snapshot.rockiness ) {
 			case backend::map::tile::ROCKINESS_FLAT: {
 				tilestr += "Flat";
 				break;
@@ -441,7 +455,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 			}
 		}
 		tilestr += " & ";
-		switch ( tile.moisture ) {
+		switch ( snapshot.moisture ) {
 			case backend::map::tile::MOISTURE_ARID: {
 				tilestr += "Arid";
 				break;
@@ -459,18 +473,18 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 	}
 
 #define FEATURE( _feature, _line ) \
-            if ( tile.features & backend::map::tile::_feature ) { \
+			if ( snapshot.features & backend::map::tile::_feature ) { \
                 info_lines.push_back( _line ); \
             }
 
-	if ( tile.is_water_tile ) {
+	if ( snapshot.is_water ) {
 		FEATURE( FEATURE_XENOFUNGUS, "Sea Fungus" )
 	}
 	else {
 		FEATURE( FEATURE_XENOFUNGUS, "Xenofungus" )
 	}
 
-	switch ( tile.bonus ) {
+	switch ( snapshot.bonus ) {
 		case backend::map::tile::BONUS_NUTRIENT: {
 			info_lines.push_back( "Nutrient bonus" );
 			break;
@@ -488,7 +502,7 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 		}
 	}
 
-	if ( tile.is_water_tile ) {
+	if ( snapshot.is_water ) {
 		FEATURE( FEATURE_GEOTHERMAL, "Geothermal" )
 	}
 	else {
@@ -502,11 +516,11 @@ void Tile::Update( const backend::map::tile::Tile& tile, const backend::map::til
 #undef FEATURE
 
 #define TERRAFORMING( _terraforming, _line ) \
-            if ( tile.terraforming & backend::map::tile::_terraforming ) { \
+			if ( snapshot.terraforming & backend::map::tile::_terraforming ) { \
                 info_lines.push_back( _line ); \
             }
 
-	if ( tile.is_water_tile ) {
+	if ( snapshot.is_water ) {
 		TERRAFORMING( TERRAFORMING_FARM, "Kelp Farm" );
 		TERRAFORMING( TERRAFORMING_SOLAR, "Tidal Harness" );
 		TERRAFORMING( TERRAFORMING_MINE, "Mining Platform" );

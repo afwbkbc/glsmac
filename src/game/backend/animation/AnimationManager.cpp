@@ -1,5 +1,10 @@
 #include "AnimationManager.h"
 
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <unordered_set>
+
 #include "game/backend/Game.h"
 #include "Def.h"
 
@@ -56,7 +61,9 @@ void AnimationManager::Clear() {
 void AnimationManager::DefineAnimation( animation::Def* def ) {
 	Log( "Defining animation ('" + def->m_id + "')" );
 
-	ASSERT( m_animation_defs.find( def->m_id ) == m_animation_defs.end(), "animation definition already exists" );
+	if ( m_animation_defs.find( def->m_id ) != m_animation_defs.end() ) {
+		THROW( "animation definition already exists: " + def->m_id );
+	}
 
 	// backend doesn't need any animation details, just keep track of it's existence for validations
 	m_animation_defs.insert(
@@ -74,9 +81,14 @@ void AnimationManager::DefineAnimation( animation::Def* def ) {
 void AnimationManager::UndefineAnimation( const std::string& id ) {
 	Log( "Undefining animation ('" + id + "')" );
 
-	ASSERT( m_animation_defs.find( id ) != m_animation_defs.end(), "animation definition not found" );
+	const auto it = m_animation_defs.find( id );
+	if ( it == m_animation_defs.end() ) {
+		THROW( "animation definition not found: " + id );
+	}
 
-	m_animation_defs.erase( id );
+	auto* const def = it->second;
+	m_animation_defs.erase( it );
+	delete def;
 
 	auto fr = FrontendRequest( FrontendRequest::FR_ANIMATION_UNDEFINE );
 	NEW( fr.data.animation_undefine.animation_id, std::string, id );
@@ -155,24 +167,41 @@ WRAPIMPL_BEGIN( AnimationManager )
 					N_GETPROP_OPT( float, scale_y, animation_def, "scale_y", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
+					const auto max_u16 = static_cast< int64_t >( std::numeric_limits< uint16_t >::max() );
+					const auto max_u8 = static_cast< int64_t >( std::numeric_limits< uint8_t >::max() );
+					if (
+						row_x < 0 || row_x > max_u16 || row_y < 0 || row_y > max_u16 ||
+						frame_width < 1 || frame_width > max_u16 ||
+						frame_height < 1 || frame_height > max_u16 ||
+						frame_center_x < 0 || frame_center_x > max_u16 ||
+						frame_center_y < 0 || frame_center_y > max_u16 ||
+						frame_padding < 0 || frame_padding > max_u16 ||
+						frames_count < 1 || frames_count > max_u8 ||
+						frames_per_row < 1 || frames_per_row > frames_count ||
+						duration_ms < frames_count || duration_ms > max_u16 ||
+						!std::isfinite( scale_x ) || scale_x <= 0.0f ||
+						!std::isfinite( scale_y ) || scale_y <= 0.0f
+					) {
+						GSE_ERROR( gse::EC.INVALID_DEFINITION, "Animation fields are outside their supported ranges" );
+					}
 					if ( !g_engine->GetSoundLoader()->LoadCustomSound( sound ) ) {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
 					auto* def = new animation::FramesRow(
 						id,
 						file,
-						row_x,
-						row_y,
-						frame_width,
-						frame_height,
-						frame_center_x,
-						frame_center_y,
-						frame_padding,
-						frames_count,
-						frames_per_row,
+						static_cast< uint16_t >( row_x ),
+						static_cast< uint16_t >( row_y ),
+						static_cast< uint16_t >( frame_width ),
+						static_cast< uint16_t >( frame_height ),
+						static_cast< uint16_t >( frame_center_x ),
+						static_cast< uint16_t >( frame_center_y ),
+						static_cast< uint16_t >( frame_padding ),
+						static_cast< uint8_t >( frames_count ),
+						static_cast< uint8_t >( frames_per_row ),
 						scale_x,
 						scale_y,
-						duration_ms,
+						static_cast< uint16_t >( duration_ms ),
 						sound
 					);
 					DefineAnimation( def );
@@ -229,12 +258,16 @@ WRAPIMPL_BEGIN( AnimationManager )
 				N_EXPECT_ARGS( 1 );
 				N_GETVALUE( animations_id, 0, Int );
 
+				AnimationSequence* sequence = nullptr;
 				{
 					std::lock_guard guard( m_animation_sequences_mutex );
 					const auto& it = m_animation_sequences.find( animations_id );
 					if ( it != m_animation_sequences.end() ) {
-						it->second->Abort();
+						sequence = it->second;
 					}
+				}
+				if ( sequence ) {
+					sequence->Abort();
 				}
 
 				return VALUE( gse::value::Undefined );
@@ -327,21 +360,54 @@ void AnimationManager::Serialize( types::Buffer& buf ) const {
 		buf.WriteString( animation::Def::Serialize( it.second ).ToString() );
 	}
 	buf.WriteInt( m_next_running_animation_id );
+	buf.WriteInt( m_next_animation_sequence_id );
 	Log( "Saved next animation id: " + std::to_string( m_next_running_animation_id ) );
+	Log( "Saved next animation sequence id: " + std::to_string( m_next_animation_sequence_id ) );
 }
 
 void AnimationManager::Deserialize( types::Buffer& buf ) {
-	ASSERT( m_animation_defs.empty(), "animation defs not empty" );
-	size_t sz = buf.ReadInt();
-	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
-	m_animation_defs.reserve( sz );
-	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
-		auto b = types::Buffer( buf.ReadString() );
-		DefineAnimation( animation::Def::Deserialize( b ) );
+	if ( !m_animation_defs.empty() ) {
+		THROW( "cannot deserialize animations into a non-empty manager" );
 	}
-	m_next_running_animation_id = buf.ReadInt();
+	const size_t sz = buf.ReadCollectionSize( "animation definition" );
+	Log( "Unserializing " + std::to_string( sz ) + " animation defs" );
+	std::vector< std::unique_ptr< animation::Def > > definitions = {};
+	definitions.reserve( sz );
+	std::unordered_set< std::string > definition_ids = {};
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto id = buf.ReadString();
+		auto b = types::Buffer( buf.ReadString() );
+		auto definition = std::unique_ptr< animation::Def >( animation::Def::Deserialize( b ) );
+		if ( b.GetRemaining() != 0 ) {
+			THROW( "unexpected data after serialized animation definition" );
+		}
+		if ( id != definition->m_id ) {
+			THROW( "serialized animation definition id mismatch" );
+		}
+		if ( !definition_ids.insert( id ).second ) {
+			THROW( "duplicate serialized animation definition: " + id );
+		}
+		definitions.push_back( std::move( definition ) );
+	}
+	const auto next_running_animation_id = buf.ReadInt< size_t >( "next running animation id" );
+	if ( next_running_animation_id == ( std::numeric_limits< size_t >::max )() ) {
+		THROW( "serialized next running animation id cannot be incremented" );
+	}
+	const auto next_animation_sequence_id = buf.ReadInt< size_t >( "next animation sequence id" );
+	if ( next_animation_sequence_id == 0 ) {
+		THROW( "serialized next animation sequence id is zero" );
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized animation manager" );
+	}
+	m_animation_defs.reserve( definitions.size() );
+	for ( auto& definition : definitions ) {
+		DefineAnimation( definition.release() );
+	}
+	m_next_running_animation_id = next_running_animation_id;
+	m_next_animation_sequence_id = next_animation_sequence_id;
 	Log( "Restored next animation id: " + std::to_string( m_next_running_animation_id ) );
+	Log( "Restored next animation sequence id: " + std::to_string( m_next_animation_sequence_id ) );
 }
 
 const size_t AnimationManager::AddAnimationCallback( const cb_oncomplete& on_complete ) {

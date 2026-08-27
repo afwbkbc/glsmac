@@ -51,6 +51,7 @@ CLASS( Tiles, types::Serializable )
 
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
+	void Restore( types::Buffer buf );
 
 private:
 
@@ -64,6 +65,8 @@ private:
 	std::vector< Tile > m_data = {};
 
 	bool m_is_validated = false;
+
+	void ApplySerializedTiles( const std::vector< std::string >& serialized_tiles, const bool is_validated );
 
 };
 

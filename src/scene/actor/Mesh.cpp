@@ -5,6 +5,7 @@
 #include "types/mesh/Mesh.h"
 #include "types/mesh/Data.h"
 #include "types/texture/Texture.h"
+#include "types/Buffer.h"
 
 namespace scene {
 namespace actor {
@@ -32,6 +33,11 @@ void Mesh::SetMesh( const types::mesh::Mesh* mesh ) {
 const types::mesh::Mesh* Mesh::GetMesh() const {
 	ASSERT( m_mesh, "mesh not set" );
 	return m_mesh;
+}
+
+void Mesh::UpdateMesh( types::Buffer serialized_mesh ) {
+	ASSERT( m_mesh, "mesh not set" );
+	const_cast< types::mesh::Mesh* >( m_mesh )->Deserialize( std::move( serialized_mesh ) );
 }
 
 void Mesh::SetTintColor( const types::Color tint_color ) {
@@ -65,6 +71,11 @@ void Mesh::SetAlpha( const types::Color::channel_t alpha ) {
 
 const types::mesh::Data* Mesh::GetDataMesh() const {
 	return m_data_mesh;
+}
+
+void Mesh::UpdateDataMesh( types::Buffer serialized_mesh ) {
+	ASSERT( m_data_mesh, "data mesh not set" );
+	const_cast< types::mesh::Data* >( m_data_mesh )->Deserialize( std::move( serialized_mesh ) );
 }
 
 void Mesh::SetTexture( types::texture::Texture* texture ) {

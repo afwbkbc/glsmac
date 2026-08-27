@@ -16,7 +16,7 @@ namespace simpletcp {
 
 CLASS( SimpleTCP, Network )
 
-	SimpleTCP();
+	explicit SimpleTCP( const uint16_t port = 4888 );
 
 	void Start() override;
 	void Stop() override;
@@ -32,12 +32,15 @@ protected:
 	void ProcessEvents() override;
 
 private:
+	static constexpr size_t MAX_PENDING_WRITE_SIZE = BUFFER_SIZE * 16;
+
 	// true on success, false on error
 	bool ReadFromSocket( remote_socket_data_t& socket );
-	bool WriteToSocket( int fd, const std::string& data );
+	bool WriteToSocket( remote_socket_data_t& socket, const std::string& data );
+	bool FlushSocketWrites( remote_socket_data_t& socket );
 	bool MaybePing( remote_socket_data_t& socket );
 	bool MaybePingDo( remote_socket_data_t& socket );
-	void CloseSocket( int fd, network::cid_t cid = 0, bool skip_event = false );
+	void CloseSocket( fd_t fd, network::cid_t cid = 0, bool skip_event = false );
 	void CloseClientSocket( const remote_socket_data_t& socket );
 
 #ifdef DEBUG

@@ -16,6 +16,7 @@ return (i) => {
 			}],
 		];
 		for (faction of factions) {
+			if (#is_defined(faction.is_native) && faction.is_native) { continue; }
 			faction_choices :+[faction.id, faction.name, {
 				color: faction.text_color,
 			}];
@@ -148,8 +149,12 @@ return (i) => {
 			if (player.is_ready()) {
 				const id = #to_string(player.id);
 				ready_players[id] = true;
+				ready_players_count++;
 			}
 			add_row(player);
+		}
+		if (players_count > 0 && ready_players_count == players_count) {
+			lobby.start_countdown();
 		}
 
 		body.listen(i.connection, 'player_join', (e) => {

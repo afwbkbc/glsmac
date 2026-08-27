@@ -6,14 +6,48 @@
 
 #include "backend/unit/Types.h"
 #include "backend/turn/Types.h"
+#include "backend/map/Types.h"
+#include "backend/map/tile/Types.h"
+#include "types/Vec3.h"
 
 namespace game {
 
-namespace backend {
-namespace map::tile {
+namespace backend::map::tile {
 class Tile;
 class TileState;
 }
+
+struct tile_render_layer_t {
+	backend::map::tile::tile_vertices_t coords = {};
+	backend::map::tile::tile_tex_coords_t tex_coords = {};
+	backend::map::tile::tile_colors_t colors = {};
+};
+
+struct tile_render_snapshot_t {
+	tile_render_snapshot_t() = default;
+	tile_render_snapshot_t(
+		const backend::map::tile::Tile& tile,
+		const backend::map::tile::TileState& tile_state
+	);
+
+	backend::map::tile::coords_t coords = {};
+	bool is_water = false;
+	bool west_is_water = false;
+	bool north_is_water = false;
+	bool east_is_water = false;
+	bool south_is_water = false;
+	bool is_coastline_corner = false;
+	backend::map::tile::elevation_t elevation = 0;
+	backend::map::tile::moisture_t moisture = backend::map::tile::MOISTURE_NONE;
+	backend::map::tile::rockiness_t rockiness = backend::map::tile::ROCKINESS_NONE;
+	backend::map::tile::bonus_t bonus = backend::map::tile::BONUS_NONE;
+	backend::map::tile::feature_t features = backend::map::tile::FEATURE_NONE;
+	backend::map::tile::terraforming_t terraforming = backend::map::tile::TERRAFORMING_NONE;
+	tile_render_layer_t layers[ backend::map::tile::LAYER_MAX ] = {};
+	std::vector< std::string > sprites = {};
+};
+
+namespace backend {
 namespace faction {
 class Faction;
 }
@@ -56,6 +90,7 @@ public:
 		FR_LOADER_SHOW,
 		FR_LOADER_TEXT,
 		FR_LOADER_HIDE,
+		FR_UNIT_TELEPORT,
 	};
 	FrontendRequest( const request_type_t type );
 	FrontendRequest( const FrontendRequest& other );
@@ -71,7 +106,10 @@ public:
 	};
 	typedef std::vector< slot_define_t > slot_defines_t;
 
-	typedef std::vector< std::pair< backend::map::tile::Tile*, backend::map::tile::TileState* > > tile_updates_t;
+	typedef std::vector< tile_render_snapshot_t > tile_updates_t;
+	typedef std::unordered_map< std::string, backend::map::sprite_actor_t > tile_sprite_actors_t;
+	typedef std::unordered_map< size_t, std::string > tile_sprite_removals_t;
+	typedef std::unordered_map< size_t, std::pair< std::string, types::Vec3 > > tile_sprite_additions_t;
 
 	struct base_pop_t {
 		std::string type;
@@ -91,6 +129,16 @@ public:
 		} error;
 		struct {
 			const tile_updates_t* tile_updates;
+			const tile_sprite_actors_t* sprite_actors;
+			const tile_sprite_removals_t* sprite_removals;
+			const tile_sprite_additions_t* sprite_additions;
+			const std::string* serialized_terrain_texture_patch;
+			const std::string* serialized_terrain_mesh;
+			const std::string* serialized_terrain_data_mesh;
+			size_t terrain_texture_x;
+			size_t terrain_texture_y;
+			size_t terrain_texture_width;
+			size_t terrain_texture_height;
 		} update_tiles;
 		struct {
 			size_t tile_x;
@@ -160,6 +208,7 @@ public:
 			backend::unit::morale_t morale;
 			const std::string* morale_string;
 			backend::unit::health_t health;
+			bool embarked;
 		} unit_spawn;
 		struct {
 			size_t unit_id;
@@ -167,7 +216,10 @@ public:
 		struct {
 			size_t unit_id;
 			backend::unit::movement_t movement;
+			backend::unit::morale_t morale;
+			const std::string* morale_string;
 			backend::unit::health_t health;
+			bool embarked;
 			struct {
 				size_t x;
 				size_t y;
@@ -187,6 +239,13 @@ public:
 			} dst_tile_coords;
 		} unit_move;
 		struct {
+			size_t unit_id;
+			struct {
+				size_t x;
+				size_t y;
+			} dst_tile_coords;
+		} unit_teleport;
+		struct {
 			const std::string* serialized_popdef;
 		} base_pop_define;
 		struct {
@@ -195,6 +254,7 @@ public:
 		struct {
 			size_t base_id;
 			size_t slot_index;
+			const std::string* faction_id;
 			struct {
 				size_t x;
 				size_t y;

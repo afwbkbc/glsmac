@@ -52,7 +52,7 @@ private:
 
 	struct {
 		bool is_dragging = false;
-		int initial_offset = 0;
+		coord_t initial_offset = 0.0f;
 		size_t drag_handler_id = 0;
 	} m_slider_drag;
 

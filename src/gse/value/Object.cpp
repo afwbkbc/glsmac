@@ -113,6 +113,7 @@ Value* const Object::GetRef( const object_key_t& key ) {
 void Object::Unlink() {
 	wrapobj = nullptr;
 	wrapsetter = nullptr;
+	Invalidate();
 	type = VT_UNDEFINED; // make sure all corresponding variables are inaccessible in scripts
 }
 

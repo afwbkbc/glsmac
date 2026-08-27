@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
@@ -293,6 +294,7 @@ CLASS2( Game, MTModule, gse::GCWrappable )
 	Random* GetRandom() const;
 	map::Map* GetMap() const;
 	State* GetState() const;
+	State* TryGetState() const;
 	const Player* GetPlayer() const;
 	const size_t GetSlotNum() const;
 
@@ -330,6 +332,25 @@ public:
 	void CompleteTurn( GSE_CALLABLE, const size_t slot_num );
 	void UncompleteTurn( const size_t slot_num );
 	void AdvanceTurn( const size_t turn_id );
+
+	enum victory_type_t : uint8_t {
+		VT_NONE = 0,
+		VT_CONQUEST,
+		VT_TRANSCENDENCE,
+		VT_ECONOMIC,
+		VT_DIPLOMATIC,
+	};
+	struct victory_state_t {
+		victory_type_t type = VT_NONE;
+		size_t winner_slot = 0;
+		size_t turn_id = 0;
+	};
+	const bool IsGameOver() const;
+	const victory_state_t& GetVictoryState() const;
+	Player* GetConquestWinner() const;
+	void DeclareVictory( GSE_CALLABLE, const victory_type_t type, const size_t winner_slot );
+	static const std::string GetVictoryTypeString( const victory_type_t type );
+	static const bool ParseVictoryType( const std::string& value, victory_type_t& result );
 
 	void GlobalFinalizeTurn( GSE_CALLABLE );
 	void FirstTurn( GSE_CALLABLE );
@@ -392,8 +413,10 @@ private:
 	map::Map* m_old_map = nullptr; // to restore state, for example if loading of another map failed
 
 	turn::Turn m_current_turn = {};
+	victory_state_t m_victory_state = {};
 
 	bool m_is_turn_complete = false;
+	void RestoreTurn( const size_t turn_id );
 	void CheckTurnComplete();
 
 	std::unordered_map< std::string, event::EventHandler* > m_event_handlers = {};
@@ -405,6 +428,7 @@ private:
 	struct event_waiting_for_response_t {
 		event::Event* event;
 		gse::Value* rollback_data;
+		bool was_applied = false;
 	};
 	std::unordered_map< std::string, event_waiting_for_response_t > m_events_waiting_for_responses = {};
 	common::Mutex m_events_waiting_for_responses_mutex;
@@ -430,6 +454,7 @@ private:
 	void ProcessEvents();
 
 private:
+	friend class map::Map;
 	friend class map::tile::TileManager;
 	friend class resource::ResourceManager;
 	friend class unit::UnitManager;

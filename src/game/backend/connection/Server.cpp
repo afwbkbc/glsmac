@@ -28,7 +28,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			ASSERT( !m_player, "player already set" );
 			Log( "Listening" );
 			m_state->m_settings.global.Initialize();
-			m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
+			m_state->m_slots->Resize( State::TOTAL_SLOT_COUNT );
 			const auto& rules = m_state->m_settings.global.rules;
 			NEW(
 				m_player, Player,
@@ -43,6 +43,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 			auto& slot = m_state->m_slots->GetSlot( m_slot );
 			slot.SetPlayer( m_player, 0, event.data.remote_address ); // host always has cid 0
 			slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
+			m_state->EnsureNativePlayer();
 			if ( m_on_listen ) {
 				m_on_listen();
 			}
@@ -84,6 +85,8 @@ void Server::ProcessEvent( const network::Event& event ) {
 		}
 		case network::Event::ET_CLIENT_DISCONNECT: {
 			Log( "Client " + std::to_string( event.cid ) + " disconnected" );
+			m_download_data.erase( event.cid );
+			m_deferred_game_events.erase( event.cid );
 			auto it = m_state->GetCidSlots().find( event.cid );
 			if ( it != m_state->GetCidSlots().end() ) {
 				const auto slot_num = it->second;
@@ -107,12 +110,6 @@ void Server::ProcessEvent( const network::Event& event ) {
 					player->Disconnect();
 				}
 				SendSlotUpdate( slot_num, &slot, event.cid ); // notify others
-
-				// cleanup
-				const auto& download_data_it = m_download_data.find( event.cid );
-				if ( download_data_it != m_download_data.end() ) {
-					m_download_data.erase( download_data_it );
-				}
 
 				if ( m_game_state == GS_LOBBY ) {
 					ClearReadyFlags();
@@ -251,7 +248,10 @@ void Server::ProcessEvent( const network::Event& event ) {
 
 						break;
 					}
-					case types::Packet::PT_UPDATE_SLOT:
+					case types::Packet::PT_UPDATE_SLOT: {
+						Error( event.cid, "client slot updates are not supported" );
+						break;
+					}
 					case types::Packet::PT_UPDATE_FLAGS: {
 						const auto& slots = m_state->GetCidSlots();
 						const auto& it = slots.find( event.cid );
@@ -264,32 +264,45 @@ void Server::ProcessEvent( const network::Event& event ) {
 							Error( event.cid, "slot state mismatch" );
 							break;
 						}
-						const bool only_flags = packet.type == types::Packet::PT_UPDATE_FLAGS;
-						const auto old_flags = slot.GetState() == slot::Slot::SS_PLAYER
-							? slot.GetPlayerFlags()
-							: 0;
-						if ( only_flags ) {
-							Log( "Got flags update from " + std::to_string( event.cid ) );
-							slot.SetPlayerFlags( packet.udata.flags.flags );
-							SendFlagsUpdate( it->second, &slot, event.cid ); // notify others
+						if ( packet.udata.flags.flags & ~static_cast< size_t >( slot::PF_ALL ) ) {
+							Error( event.cid, "invalid player flags" );
+							break;
 						}
-						else {
-							Log( "Got slot update from " + std::to_string( event.cid ) );
-							const bool wasReady = slot.HasPlayerFlag( slot::PF_READY );
-							slot.Deserialize( packet.data.str );
-							if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
-								Error( event.cid, "slot update while ready" );
+						const auto old_flags = slot.GetPlayerFlags();
+						const auto new_flags = static_cast< slot::player_flag_t >( packet.udata.flags.flags );
+						if ( ( old_flags & slot::PF_READY ) != ( new_flags & slot::PF_READY ) ) {
+							Error( event.cid, "ready flag can only be changed by a game event" );
+							break;
+						}
+						const auto lifecycle_flags = static_cast< slot::player_flag_t >( slot::PF_MAP_DOWNLOADED | slot::PF_GAME_INITIALIZED );
+						if ( ( old_flags & lifecycle_flags ) != ( new_flags & lifecycle_flags ) ) {
+							if ( m_game_state != GS_RUNNING ) {
+								Error( event.cid, "lifecycle flags changed outside a running game" );
 								break;
 							}
-							SendSlotUpdate( it->second, &slot, event.cid ); // notify others
-						}
-						if ( !only_flags ) {
-							if ( m_on_slot_update ) {
-								m_on_slot_update( it->second, &slot );
+							if ( ( old_flags & lifecycle_flags ) & ~( new_flags & lifecycle_flags ) ) {
+								Error( event.cid, "lifecycle flags cannot be cleared" );
+								break;
+							}
+							if (
+								!( old_flags & slot::PF_MAP_DOWNLOADED ) &&
+								( new_flags & slot::PF_GAME_INITIALIZED )
+								) {
+								Error( event.cid, "game initialized before map download completed" );
+								break;
 							}
 						}
+						Log( "Got flags update from " + std::to_string( event.cid ) );
+						slot.SetPlayerFlags( new_flags );
+						SendFlagsUpdate( it->second, &slot, event.cid ); // notify others
 						if ( m_on_flags_update ) {
-							m_on_flags_update( it->second, &slot, old_flags, slot.GetPlayerFlags() );
+							m_on_flags_update( it->second, &slot, old_flags, new_flags );
+						}
+						if (
+							!( old_flags & slot::PF_GAME_INITIALIZED ) &&
+							( new_flags & slot::PF_GAME_INITIALIZED )
+						) {
+							FlushDeferredGameEvents( event.cid );
 						}
 						break;
 					}
@@ -307,11 +320,23 @@ void Server::ProcessEvent( const network::Event& event ) {
 					case types::Packet::PT_DOWNLOAD_REQUEST: {
 						Log( "Got download request from " + std::to_string( event.cid ) );
 						types::Packet p( types::Packet::PT_DOWNLOAD_RESPONSE );
+						const auto& cid_slot_it = m_state->GetCidSlots().find( event.cid );
+						if ( cid_slot_it == m_state->GetCidSlots().end() ) {
+							Error( event.cid, "download requested before authentication" );
+							break;
+						}
 						if ( m_on_download_request ) {
+							// Pending events have already changed the authoritative world. Flush
+							// them before taking the snapshot so they are not replayed after it.
+							FlushPendingGameEvents();
 							m_download_data[ event.cid ] = download_data_t{ // override previous request
 								0,
 								m_on_download_request()
 							};
+							// The snapshot and this roster are the consistency boundary. Events
+							// processed after it are replayed once the client finishes loading.
+							SendPlayersList( event.cid, cid_slot_it->second );
+							m_deferred_game_events[ event.cid ] = {};
 							p.data.num = m_download_data.at( event.cid ).serialized_snapshot.size();
 						}
 						else {
@@ -325,23 +350,28 @@ void Server::ProcessEvent( const network::Event& event ) {
 					case types::Packet::PT_DOWNLOAD_NEXT_CHUNK_REQUEST: {
 						Log( "Got next chunk request from " + std::to_string( event.cid ) + " ( offset=" + std::to_string( packet.udata.download.offset ) + " size=" + std::to_string( packet.udata.download.size ) + " )" );
 						const auto& it = m_download_data.find( event.cid );
-						const size_t end = packet.udata.download.offset + packet.udata.download.size;
 						if ( it == m_download_data.end() ) {
 							Error( event.cid, "download not initialized" );
 						}
-						else if ( end > it->second.serialized_snapshot.size() ) {
+						else if (
+							packet.udata.download.offset > it->second.serialized_snapshot.size() ||
+							packet.udata.download.size == 0 ||
+							packet.udata.download.size > it->second.serialized_snapshot.size() - packet.udata.download.offset
+							) {
 							Error( event.cid, "download offset overflow ( " + std::to_string( packet.udata.download.offset ) + " + " + std::to_string( packet.udata.download.size ) + " >= " + std::to_string( it->second.serialized_snapshot.size() ) + " )" );
 						}
 						else if ( packet.udata.download.offset != it->second.next_expected_offset ) {
 							Error( event.cid, "inconsistent download offset ( " + std::to_string( packet.udata.download.offset ) + " != " + std::to_string( it->second.next_expected_offset ) + " )" );
 						}
-						else if (
-							packet.udata.download.size != DOWNLOAD_CHUNK_SIZE &&
-								end != it->second.serialized_snapshot.size() // last chunk can be smaller
-							) {
-							Error( event.cid, "inconsistent download size ( " );
-						}
 						else {
+							const size_t end = packet.udata.download.offset + packet.udata.download.size;
+							if (
+								packet.udata.download.size != DOWNLOAD_CHUNK_SIZE &&
+								end != it->second.serialized_snapshot.size() // last chunk can be smaller
+								) {
+								Error( event.cid, "inconsistent download size" );
+								break;
+							}
 							types::Packet p( types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE );
 							p.udata.download.offset = packet.udata.download.offset;
 							p.udata.download.size = packet.udata.download.size;
@@ -386,7 +416,7 @@ void Server::ProcessEvent( const network::Event& event ) {
 					}
 				}
 			}
-			catch ( std::runtime_error& err ) {
+			catch ( const std::exception& err ) {
 				Error( event.cid, err.what() );
 			}
 			break;
@@ -409,25 +439,24 @@ static const std::unordered_set< std::string > s_clear_ready_on_events = {
 void Server::SendGameEvents( const game_events_t& game_events ) {
 	//Log( "Sending " + std::to_string( game_events.size() ) + " game events" );
 	bool need_ready_clear = false;
+	for ( const auto& event : game_events ) {
+		if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event.name ) != s_clear_ready_on_events.end() ) {
+			need_ready_clear = true;
+		}
+	}
 	Broadcast(
-		[ this, &game_events, &need_ready_clear ]( const network::cid_t cid ) -> void {
+		[ this, &game_events ]( const network::cid_t cid ) -> void {
 			for ( const auto& event : game_events ) {
-				if ( m_game_state == GS_LOBBY && s_clear_ready_on_events.find( event.name ) != s_clear_ready_on_events.end() ) {
-					need_ready_clear = true;
-				}
 				const auto& sender_slot = m_state->m_slots->GetSlot( event.caller );
 				const auto& target_slot = m_state->m_slots->GetSlot( m_state->GetCidSlots().at( cid ) );
-				if ( sender_slot.GetCid() != cid && (
-					m_game_state == GS_LOBBY ||
-						target_slot.HasPlayerFlag(
-							slot::PF_GAME_INITIALIZED
-						)
-				) ) {
-					types::Buffer buf;
-					buf.WriteString( event.serialized_data );
-					types::Packet p( types::Packet::PT_GAME_EVENT );
-					p.data.str = buf.ToString();
-					m_network->MT_SendPacket( &p, cid );
+				if ( sender_slot.GetCid() == cid ) {
+					continue;
+				}
+				if ( m_game_state == GS_LOBBY || target_slot.HasPlayerFlag( slot::PF_GAME_INITIALIZED ) ) {
+					SendSerializedGameEvent( cid, event );
+				}
+				else if ( m_deferred_game_events.find( cid ) != m_deferred_game_events.end() ) {
+					QueueDeferredGameEvent( cid, event );
 				}
 			}
 		}
@@ -435,6 +464,41 @@ void Server::SendGameEvents( const game_events_t& game_events ) {
 	if ( need_ready_clear ) {
 		ClearReadyFlags();
 	}
+}
+
+void Server::SendSerializedGameEvent( const network::cid_t cid, const game_event_t& event ) {
+	types::Buffer buf;
+	buf.WriteString( event.serialized_data );
+	types::Packet p( types::Packet::PT_GAME_EVENT );
+	p.data.str = buf.ToString();
+	m_network->MT_SendPacket( &p, cid );
+}
+
+void Server::QueueDeferredGameEvent( const network::cid_t cid, const game_event_t& event ) {
+	auto& pending = m_deferred_game_events.at( cid );
+	if (
+		pending.events.size() >= MAX_DEFERRED_GAME_EVENTS ||
+		pending.serialized_size > MAX_DEFERRED_GAME_EVENT_BYTES ||
+		event.serialized_data.size() > MAX_DEFERRED_GAME_EVENT_BYTES - pending.serialized_size
+	) {
+		m_deferred_game_events.erase( cid );
+		Error( cid, "too many game events accumulated during snapshot download" );
+		return;
+	}
+	pending.serialized_size += event.serialized_data.size();
+	pending.events.push_back( event );
+}
+
+void Server::FlushDeferredGameEvents( const network::cid_t cid ) {
+	const auto it = m_deferred_game_events.find( cid );
+	if ( it == m_deferred_game_events.end() ) {
+		return;
+	}
+	Log( "Sending " + std::to_string( it->second.events.size() ) + " deferred game events to " + std::to_string( cid ) );
+	for ( const auto& event : it->second.events ) {
+		SendSerializedGameEvent( cid, event );
+	}
+	m_deferred_game_events.erase( it );
 }
 
 void Server::Broadcast( std::function< void( const network::cid_t cid ) > callback ) {
@@ -520,6 +584,8 @@ void Server::ResetHandlers() {
 	Connection::ResetHandlers();
 	m_on_listen = nullptr;
 	m_on_download_request = nullptr;
+	m_download_data.clear();
+	m_deferred_game_events.clear();
 }
 
 void Server::UpdateGameSettings() {
@@ -627,7 +693,11 @@ void Server::ClearReadyFlags() {
 	auto& slots = m_state->m_slots->GetSlots();
 	for ( size_t num = 0 ; num < slots.size() ; num++ ) {
 		auto& slot = slots.at( num );
-		if ( slot.GetState() == slot::Slot::SS_PLAYER && slot.HasPlayerFlag( slot::PF_READY ) ) {
+		if (
+			slot.GetState() == slot::Slot::SS_PLAYER &&
+			!slot.GetPlayer()->IsNative() &&
+			slot.HasPlayerFlag( slot::PF_READY )
+		) {
 			Log( "Clearing 'ready' flag of " + slot.GetPlayer()->GetPlayerName() );
 			const auto old_flags = slot.GetPlayerFlags();
 			slot.UnsetPlayerFlag( slot::PF_READY );

@@ -3,8 +3,38 @@
 #include <cstring>
 
 #include "common/Common.h"
+#include "backend/map/tile/Tile.h"
+#include "backend/map/tile/TileState.h"
 
 namespace game {
+
+tile_render_snapshot_t::tile_render_snapshot_t(
+	const backend::map::tile::Tile& tile,
+	const backend::map::tile::TileState& tile_state
+) {
+	coords = tile.coord;
+	is_water = tile.is_water_tile;
+	west_is_water = tile.W->is_water_tile;
+	north_is_water = tile.N->is_water_tile;
+	east_is_water = tile.E->is_water_tile;
+	south_is_water = tile.S->is_water_tile;
+	is_coastline_corner = tile_state.is_coastline_corner;
+	elevation = *tile.elevation.center;
+	moisture = tile.moisture;
+	rockiness = tile.rockiness;
+	bonus = tile.bonus;
+	features = tile.features;
+	terraforming = tile.terraforming;
+	for ( size_t layer = 0 ; layer < backend::map::tile::LAYER_MAX ; layer++ ) {
+		layers[ layer ].coords = tile_state.layers[ layer ].coords;
+		layers[ layer ].tex_coords = tile_state.layers[ layer ].tex_coords;
+		layers[ layer ].colors.Set( tile_state.layers[ layer ].colors );
+	}
+	sprites.reserve( tile_state.sprites.size() );
+	for ( const auto& sprite : tile_state.sprites ) {
+		sprites.push_back( sprite.actor );
+	}
+}
 
 FrontendRequest::FrontendRequest( const request_type_t type )
 	: type( type ) {
@@ -30,6 +60,28 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_UPDATE_TILES: {
 			NEW( data.update_tiles.tile_updates, tile_updates_t, *other.data.update_tiles.tile_updates );
+			NEW( data.update_tiles.sprite_actors, tile_sprite_actors_t, *other.data.update_tiles.sprite_actors );
+			NEW( data.update_tiles.sprite_removals, tile_sprite_removals_t, *other.data.update_tiles.sprite_removals );
+			NEW( data.update_tiles.sprite_additions, tile_sprite_additions_t, *other.data.update_tiles.sprite_additions );
+			NEW(
+				data.update_tiles.serialized_terrain_texture_patch,
+				std::string,
+				*other.data.update_tiles.serialized_terrain_texture_patch
+			);
+			if ( other.data.update_tiles.serialized_terrain_mesh ) {
+				NEW(
+					data.update_tiles.serialized_terrain_mesh,
+					std::string,
+					*other.data.update_tiles.serialized_terrain_mesh
+				);
+			}
+			if ( other.data.update_tiles.serialized_terrain_data_mesh ) {
+				NEW(
+					data.update_tiles.serialized_terrain_data_mesh,
+					std::string,
+					*other.data.update_tiles.serialized_terrain_data_mesh
+				);
+			}
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -65,6 +117,10 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 			NEW( data.unit_spawn.morale_string, std::string, *other.data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_UNIT_UPDATE: {
+			NEW( data.unit_update.morale_string, std::string, *other.data.unit_update.morale_string );
+			break;
+		}
 		case FR_BASE_POP_DEFINE: {
 			NEW( data.base_pop_define.serialized_popdef, std::string, *other.data.base_pop_define.serialized_popdef );
 			break;
@@ -75,6 +131,7 @@ FrontendRequest::FrontendRequest( const FrontendRequest& other )
 		}
 		case FR_BASE_SPAWN: {
 			NEW( data.base_spawn.name, std::string, *other.data.base_spawn.name );
+			NEW( data.base_spawn.faction_id, std::string, *other.data.base_spawn.faction_id );
 			break;
 		}
 		case FR_BASE_UPDATE: {
@@ -122,6 +179,16 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_UPDATE_TILES: {
 			DELETE( data.update_tiles.tile_updates );
+			DELETE( data.update_tiles.sprite_actors );
+			DELETE( data.update_tiles.sprite_removals );
+			DELETE( data.update_tiles.sprite_additions );
+			DELETE( data.update_tiles.serialized_terrain_texture_patch );
+			if ( data.update_tiles.serialized_terrain_mesh ) {
+				DELETE( data.update_tiles.serialized_terrain_mesh );
+			}
+			if ( data.update_tiles.serialized_terrain_data_mesh ) {
+				DELETE( data.update_tiles.serialized_terrain_data_mesh );
+			}
 			break;
 		}
 		case FR_FACTION_DEFINE: {
@@ -157,6 +224,10 @@ FrontendRequest::~FrontendRequest() {
 			DELETE( data.unit_spawn.morale_string );
 			break;
 		}
+		case FR_UNIT_UPDATE: {
+			DELETE( data.unit_update.morale_string );
+			break;
+		}
 		case FR_BASE_POP_DEFINE: {
 			DELETE( data.base_pop_define.serialized_popdef );
 			break;
@@ -167,6 +238,7 @@ FrontendRequest::~FrontendRequest() {
 		}
 		case FR_BASE_SPAWN: {
 			DELETE( data.base_spawn.name );
+			DELETE( data.base_spawn.faction_id );
 			break;
 		}
 		case FR_BASE_UPDATE: {

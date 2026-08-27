@@ -39,6 +39,10 @@ void Common::AddToContext( gc::Space* const gc_space, context::Context* ctx, Exe
 			GSE_ERROR( EC.OPERATION_NOT_SUPPORTED, "Could not get size of Undefined" );
 		}
 		switch ( v->type ) {
+			case VT_STRING: {
+				size = ((value::String*)v)->value.size();
+				break;
+			}
 			case VT_ARRAY: {
 				size = ((value::Array*)v)->value.size();
 				break;

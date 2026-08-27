@@ -22,10 +22,13 @@ CLASS2( Faction, types::Serializable, gse::Wrappable )
 	static constexpr Faction::faction_flag_t FF_NONE = 0;
 	static constexpr Faction::faction_flag_t FF_NAVAL = 1 << 0;
 	static constexpr Faction::faction_flag_t FF_PROGENITOR = 1 << 1;
+	static constexpr Faction::faction_flag_t FF_NATIVE = 1 << 2;
+	static constexpr Faction::faction_flag_t FF_ALL = FF_NAVAL | FF_PROGENITOR | FF_NATIVE;
 
 	std::string m_id = "";
 	std::string m_name = "";
 	faction_flag_t m_flags = FF_NONE;
+	std::vector< std::string > m_starting_technologies = {};
 
 	struct {
 		types::Color text = {};

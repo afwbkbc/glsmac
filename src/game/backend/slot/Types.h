@@ -11,6 +11,7 @@ static const player_flag_t PF_NONE = 0;
 static const player_flag_t PF_READY = 1 << 0;
 static const player_flag_t PF_MAP_DOWNLOADED = 1 << 1;
 static const player_flag_t PF_GAME_INITIALIZED = 1 << 2;
+static const player_flag_t PF_ALL = PF_READY | PF_MAP_DOWNLOADED | PF_GAME_INITIALIZED;
 
 }
 }

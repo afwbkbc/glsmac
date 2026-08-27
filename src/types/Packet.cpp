@@ -1,5 +1,7 @@
 #include "Packet.h"
 
+#include <limits>
+
 namespace types {
 
 Packet::Packet( const packet_type_t type )
@@ -10,9 +12,18 @@ Packet::Packet( const packet_type_t type )
 const types::Buffer Packet::Serialize() const {
 	types::Buffer buf;
 
+	if ( type <= PT_NONE || type >= PT_MAX ) {
+		THROW( "invalid packet type " + std::to_string( type ) );
+	}
 	buf.WriteInt( type );
 
 	switch ( type ) {
+		case PT_REQUEST_AUTH:
+		case PT_PING:
+		case PT_PONG: {
+			// no data
+			break;
+		}
 		case PT_AUTH: {
 			buf.WriteString( data.vec[ 0 ] ); // gsid
 			buf.WriteString( data.vec[ 1 ] ); // player name
@@ -43,6 +54,7 @@ const types::Buffer Packet::Serialize() const {
 		case PT_FLAGS_UPDATE: {
 			buf.WriteInt( udata.flags.slot_num );
 			buf.WriteInt( udata.flags.flags );
+			break;
 		}
 		case PT_KICK: {
 			buf.WriteString( data.str ); // reason
@@ -86,7 +98,7 @@ const types::Buffer Packet::Serialize() const {
 			break;
 		}
 		default: {
-			//ASSERT(false, "unknown packet type " + std::to_string( type ));
+			THROW( "invalid packet type " + std::to_string( type ) );
 		}
 	}
 
@@ -97,9 +109,19 @@ void Packet::Deserialize( types::Buffer buf ) {
 
 	ASSERT( type == PT_NONE, "unserializing into existing packet" );
 
-	type = (packet_type_t)buf.ReadInt();
+	const auto serialized_type = buf.ReadInt();
+	if ( serialized_type <= PT_NONE || serialized_type >= PT_MAX ) {
+		THROW( "invalid packet type " + std::to_string( serialized_type ) );
+	}
+	type = static_cast< packet_type_t >( serialized_type );
 
 	switch ( type ) {
+		case PT_REQUEST_AUTH:
+		case PT_PING:
+		case PT_PONG: {
+			// no data
+			break;
+		}
 		case PT_AUTH: {
 			data.vec = {
 				buf.ReadString(), // gsid
@@ -108,7 +130,7 @@ void Packet::Deserialize( types::Buffer buf ) {
 			break;
 		}
 		case PT_PLAYERS: {
-			data.num = buf.ReadInt(); // assigned slot num
+			data.num = buf.ReadInt< size_t >( "assigned player slot" );
 			data.str = buf.ReadString(); // serialized slots
 			break;
 		}
@@ -121,17 +143,17 @@ void Packet::Deserialize( types::Buffer buf ) {
 			break;
 		}
 		case PT_SLOT_UPDATE: {
-			data.num = buf.ReadInt(); // player slot num
+			data.num = buf.ReadInt< size_t >( "player slot update index" );
 			data.str = buf.ReadString(); // serialized slot
 			break;
 		}
 		case PT_UPDATE_FLAGS: {
-			udata.flags.flags = buf.ReadInt();
+			udata.flags.flags = buf.ReadInt< size_t >( "player flags" );
 			break;
 		}
 		case PT_FLAGS_UPDATE: {
-			udata.flags.slot_num = buf.ReadInt();
-			udata.flags.flags = buf.ReadInt();
+			udata.flags.slot_num = buf.ReadInt< size_t >( "player flags slot" );
+			udata.flags.flags = buf.ReadInt< size_t >( "player flags" );
 			break;
 		}
 		case PT_KICK: {
@@ -143,7 +165,11 @@ void Packet::Deserialize( types::Buffer buf ) {
 			break;
 		}
 		case PT_GAME_STATE: {
-			udata.game_state.state = buf.ReadInt();
+			const auto state = buf.ReadInt();
+			if ( state < 0 || state > std::numeric_limits< uint8_t >::max() ) {
+				THROW( "invalid serialized game state " + std::to_string( state ) );
+			}
+			udata.game_state.state = static_cast< uint8_t >( state );
 			break;
 		}
 		case PT_DOWNLOAD_REQUEST: {
@@ -151,17 +177,17 @@ void Packet::Deserialize( types::Buffer buf ) {
 			break;
 		}
 		case PT_DOWNLOAD_RESPONSE: {
-			data.num = buf.ReadInt(); // total size of serialized data
+			data.num = buf.ReadInt< size_t >( "download size" );
 			break;
 		}
 		case PT_DOWNLOAD_NEXT_CHUNK_REQUEST: {
-			udata.download.offset = buf.ReadInt();
-			udata.download.size = buf.ReadInt();
+			udata.download.offset = buf.ReadInt< size_t >( "download chunk offset" );
+			udata.download.size = buf.ReadInt< size_t >( "download chunk size" );
 			break;
 		}
 		case PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
-			udata.download.offset = buf.ReadInt();
-			udata.download.size = buf.ReadInt();
+			udata.download.offset = buf.ReadInt< size_t >( "download chunk offset" );
+			udata.download.size = buf.ReadInt< size_t >( "download chunk size" );
 			data.str = buf.ReadString(); // serialized chunk
 			break;
 		}
@@ -176,8 +202,11 @@ void Packet::Deserialize( types::Buffer buf ) {
 			break;
 		}
 		default: {
-			//ASSERT(false, "unknown packet type " + std::to_string(type));
+			THROW( "invalid packet type " + std::to_string( type ) );
 		}
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected trailing packet data" );
 	}
 }
 

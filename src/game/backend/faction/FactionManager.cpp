@@ -1,5 +1,8 @@
 #include "FactionManager.h"
 
+#include <memory>
+#include <unordered_set>
+
 #include "Faction.h"
 
 #include "gse/callable/Native.h"
@@ -144,6 +147,28 @@ WRAPIMPL_BEGIN( FactionManager )
 				if ( is_progenitor ) {
 					faction->m_flags |= Faction::FF_PROGENITOR;
 				}
+				N_GETPROP_OPT_BOOL( is_native, faction_def, "is_native")
+				if ( is_native ) {
+					faction->m_flags |= Faction::FF_NATIVE;
+				}
+				N_GETPROP_OPT(
+					gse::value::array_elements_t,
+					starting_technology_values,
+					faction_def,
+					"starting_technologies",
+					Array,
+					gse::value::array_elements_t()
+				);
+				std::unordered_set< std::string > starting_technology_ids = {};
+				faction->m_starting_technologies.reserve( starting_technology_values.size() );
+				for ( size_t i = 0 ; i < starting_technology_values.size() ; i++ ) {
+					N_GETELEMENT( technology_id, starting_technology_values, i, String );
+					if ( technology_id.empty() || !starting_technology_ids.insert( technology_id ).second ) {
+						delete faction;
+						GSE_ERROR( gse::EC.INVALID_CALL, "Faction starting technologies must be unique, non-empty strings" );
+					}
+					faction->m_starting_technologies.push_back( technology_id );
+				}
 
 				N_GETPROP( bases_def, faction_def, "bases", Object );
 				N_GETPROP( bases_render_def, bases_def, "render", Object );
@@ -242,12 +267,22 @@ const types::Buffer FactionManager::Serialize() const {
 void FactionManager::Deserialize( types::Buffer buf ) {
 	Clear();
 
-	const size_t factions_count = buf.ReadInt();
+	const size_t factions_count = buf.ReadCollectionSize( "faction" );
 	for ( size_t i = 0 ; i < factions_count ; i++ ) {
 		const auto faction_id = buf.ReadString();
-		ASSERT( m_factions.find( faction_id ) == m_factions.end(), "duplicate faction id" );
-		m_factions.insert({ faction_id, { new Faction(), ++m_next_faction_idx }}).first->second.faction->Deserialize( buf.ReadString() );
+		if ( faction_id.empty() || m_factions.find( faction_id ) != m_factions.end() ) {
+			THROW( "invalid or duplicate serialized faction id: " + faction_id );
+		}
+		auto faction = std::make_unique< Faction >();
+		faction->Deserialize( buf.ReadString() );
+		if ( faction->m_id != faction_id ) {
+			THROW( "serialized faction id mismatch" );
+		}
+		m_factions.insert({ faction_id, { faction.release(), ++m_next_faction_idx }});
 		m_factions_order.insert( { m_next_faction_idx, faction_id } );
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized factions" );
 	}
 }
 

@@ -29,6 +29,7 @@ void Coastlines2::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 	if ( ts->has_water ) {
 		if ( ts->is_coastline_corner ) {
 			if (
+				m_map->IsTileRefreshTarget( tile->W ) &&
 				tile->W->is_water_tile &&
 					( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->NW->is_water_tile || tile->coord.y == 0 )
@@ -36,6 +37,7 @@ void Coastlines2::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 				ts->W->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
+				m_map->IsTileRefreshTarget( tile->N ) &&
 				( tile->N->is_water_tile || tile->coord.y <= 1 ) &&
 					( tile->NW->is_water_tile || tile->coord.y == 0 ) &&
 					( tile->NE->is_water_tile || tile->coord.y == 0 )
@@ -43,6 +45,7 @@ void Coastlines2::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 				ts->N->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
+				m_map->IsTileRefreshTarget( tile->E ) &&
 				tile->E->is_water_tile &&
 					( tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->NE->is_water_tile || tile->coord.y == 0 )
@@ -50,6 +53,7 @@ void Coastlines2::GenerateTile( const tile::Tile* tile, tile::TileState* ts, Map
 				ts->E->layers[ tile::LAYER_WATER_SURFACE_EXTRA ].colors.center.value.alpha *= s_consts.coastlines.coast_water_center_alpha_corner_mod;
 			}
 			if (
+				m_map->IsTileRefreshTarget( tile->S ) &&
 				( tile->S->is_water_tile || tile->coord.y <= ms->dimensions.y - 2 ) &&
 					( tile->SE->is_water_tile || tile->coord.y == ms->dimensions.y - 1 ) &&
 					( tile->SW->is_water_tile || tile->coord.y == ms->dimensions.y - 1 )

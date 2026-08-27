@@ -5,6 +5,7 @@
 #include "ui/geometry/Geometry.h"
 #include "input/Event.h"
 #include "gse/value/Bool.h"
+#include "gse/value/String.h"
 
 namespace ui {
 namespace dom {
@@ -52,6 +53,15 @@ Button::Button( DOM_ARGS )
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_is_cancel = false;
+		}
+	);
+	Property(
+		GSE_CALL, "value", gse::VT_STRING, nullptr, PF_NONE,
+		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
+			m_value = ( (gse::value::String*)v )->value;
+		},
+		[ this ]( GSE_CALLABLE ) {
+			m_value.clear();
 		}
 	);
 	Property(
@@ -166,6 +176,12 @@ void Button::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_
 				{
 					"button",
 					VALUE( gse::value::String, , buttonstr )
+				}
+			);
+			obj.insert(
+				{
+					"value",
+					VALUE( gse::value::String, , m_value )
 				}
 			);
 			break;

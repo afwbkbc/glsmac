@@ -4,6 +4,33 @@ return {
 		if (e.game.is_started()) {
 			return 'Game has already started';
 		}
+		if (#typeof(e.data.faction) != 'String') {
+			return 'Faction must be identified by name';
+		}
+		if (e.data.faction == 'RANDOM') {
+			return;
+		}
+		let faction_exists = false;
+		for (faction of e.game.get_fm().list()) {
+			if (faction.id == e.data.faction) {
+				if (#is_defined(faction.is_native) && faction.is_native) {
+					return 'Planet cannot be selected as a playable faction';
+				}
+				faction_exists = true;
+				break;
+			}
+		}
+		if (!faction_exists) {
+			return 'Unknown faction: ' + e.data.faction;
+		}
+		for (player of e.game.get_players()) {
+			if (player.id != e.caller) {
+				const faction = player.get_faction();
+				if (#is_defined(faction) && faction.id == e.data.faction) {
+					return 'Faction is already selected by another player';
+				}
+			}
+		}
 	},
 
 	apply: (e) => {

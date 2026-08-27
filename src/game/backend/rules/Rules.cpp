@@ -37,18 +37,10 @@ const types::Buffer Rules::Serialize() const {
 }
 
 void Rules::Deserialize( types::Buffer buf ) {
-
-	// no need for now, difficulty levels are hardcoded
-	/*
-	m_difficulty_levels.clear();
-	const size_t difficulty_levels_count = buf.ReadInt();
-	for ( size_t i = 0 ; i < difficulty_levels_count ; i++ ) {
-		const std::string difficulty_level_name = buf.ReadString();
-		m_difficulty_levels[ difficulty_level_name ].Deserialize( buf.ReadString() );
-	}*/
-
-	m_is_initialized = true;
-
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data in serialized rules" );
+	}
+	Initialize();
 }
 
 const gse::value::array_elements_t Rules::WrapDifficultyLevels( gc::Space* const gc_space ) {

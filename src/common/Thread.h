@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <exception>
 #include <thread>
 
 #include "Common.h"
@@ -33,6 +34,7 @@ CLASS( Thread, Class )
 	void T_Start();
 	bool T_IsRunning();
 	void T_Stop();
+	const std::exception_ptr& T_GetException() const;
 
 	const std::string& GetThreadName() const;
 
@@ -44,6 +46,7 @@ protected:
 
 	std::atomic< thread_state_t > m_state = STATE_INACTIVE;
 	std::atomic< thread_command_t > m_command = COMMAND_NONE;
+	std::exception_ptr m_exception = nullptr;
 	modules_t m_modules = {};
 	float m_ips = 10;
 

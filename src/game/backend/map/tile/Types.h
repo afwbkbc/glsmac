@@ -135,22 +135,35 @@ static constexpr feature_t FEATURE_NONE = 0;
 #define X_FEATURE( _x, _i ) static constexpr feature_t FEATURE_ ## _x = 1 << _i;
 X_FEATURES
 #undef X_FEATURE
+#define X_FEATURE( _x, _i ) FEATURE_ ## _x |
+static constexpr feature_t FEATURE_ALL = X_FEATURES FEATURE_NONE;
+#undef X_FEATURE
 
 // bitflags
+#define X_TERRAFORMINGS \
+	X_TERRAFORMING( ROAD, 0 ) \
+	X_TERRAFORMING( MAG_TUBE, 1 ) \
+	X_TERRAFORMING( FOREST, 2 ) \
+	X_TERRAFORMING( FARM, 3 ) \
+	X_TERRAFORMING( SOIL_ENRICHER, 4 ) \
+	X_TERRAFORMING( SOLAR, 5 ) \
+	X_TERRAFORMING( MINE, 6 ) \
+	X_TERRAFORMING( CONDENSER, 7 ) \
+	X_TERRAFORMING( MIRROR, 8 ) \
+	X_TERRAFORMING( BOREHOLE, 9 ) \
+	X_TERRAFORMING( SENSOR, 10 ) \
+	X_TERRAFORMING( BUNKER, 11 ) \
+	X_TERRAFORMING( AIRBASE, 12 ) \
+	X_TERRAFORMING( REMOVE_FUNGUS, 13 ) \
+	X_TERRAFORMING( PLANT_FUNGUS, 14 )
+
 static constexpr terraforming_t TERRAFORMING_NONE = 0;
-static constexpr terraforming_t TERRAFORMING_ROAD = 1 << 0;
-static constexpr terraforming_t TERRAFORMING_MAG_TUBE = 1 << 1;
-static constexpr terraforming_t TERRAFORMING_FOREST = 1 << 2;
-static constexpr terraforming_t TERRAFORMING_FARM = 1 << 3;
-static constexpr terraforming_t TERRAFORMING_SOIL_ENRICHER = 1 << 4;
-static constexpr terraforming_t TERRAFORMING_SOLAR = 1 << 5;
-static constexpr terraforming_t TERRAFORMING_MINE = 1 << 6;
-static constexpr terraforming_t TERRAFORMING_CONDENSER = 1 << 7;
-static constexpr terraforming_t TERRAFORMING_MIRROR = 1 << 8;
-static constexpr terraforming_t TERRAFORMING_BOREHOLE = 1 << 9;
-static constexpr terraforming_t TERRAFORMING_SENSOR = 1 << 10;
-static constexpr terraforming_t TERRAFORMING_BUNKER = 1 << 11;
-static constexpr terraforming_t TERRAFORMING_AIRBASE = 1 << 12;
+#define X_TERRAFORMING( _x, _i ) static constexpr terraforming_t TERRAFORMING_ ## _x = 1 << _i;
+X_TERRAFORMINGS
+#undef X_TERRAFORMING
+#define X_TERRAFORMING( _x, _i ) TERRAFORMING_ ## _x |
+static constexpr terraforming_t TERRAFORMING_ALL = X_TERRAFORMINGS TERRAFORMING_NONE;
+#undef X_TERRAFORMING
 
 }
 }

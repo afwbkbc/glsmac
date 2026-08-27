@@ -23,11 +23,13 @@ CLASS( Slots, types::Serializable )
 
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
+	void DeserializeUpdate( types::Buffer buf );
 
 private:
 	State* m_state;
 
 	std::vector< Slot > m_slots = {};
+	static constexpr size_t MAX_SERIALIZED_SLOTS = 64;
 
 };
 

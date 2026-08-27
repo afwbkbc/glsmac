@@ -38,6 +38,7 @@ void Connection::ResetHandlers() {
 	m_on_global_settings_update = nullptr;
 	m_on_game_event_validate = nullptr;
 	m_on_game_event_apply = nullptr;
+	m_on_game_event_rollback = nullptr;
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
 		m_mt_ids.events = 0;
@@ -54,6 +55,9 @@ Connection::Connection( gc::Space* const gc_space, const network::connection_mod
 Connection::~Connection() {
 	if ( m_mt_ids.disconnect ) {
 		for ( uint8_t tries = 25 ; tries > 0 ; tries-- ) {
+			if ( !m_network->IsRunning() ) {
+				break;
+			}
 			IterateAndMaybeDelete( false );
 			if ( m_mt_ids.disconnect ) {
 				std::this_thread::sleep_for( std::chrono::milliseconds( 40 ) );
@@ -63,15 +67,25 @@ Connection::~Connection() {
 			}
 		}
 		if ( m_mt_ids.disconnect ) {
-			Log( "WARNING: connection destroyed while still disconnecting!" );
+			if ( m_network->IsRunning() ) {
+				Log( "WARNING: connection destroyed while still disconnecting!" );
+			}
+			else {
+				FinalizeStoppedNetwork();
+			}
 		}
+	}
+	if ( m_mt_ids.connect ) {
+		m_network->MT_Cancel( m_mt_ids.connect );
+		m_mt_ids.connect = 0;
 	}
 	if ( m_mt_ids.events ) {
 		m_network->MT_Cancel( m_mt_ids.events );
+		m_mt_ids.events = 0;
 	}
-	/* if ( m_state ) {
+	if ( m_state ) {
 		m_state->DetachConnection();
-	}*/
+	}
 	ClearPending();
 }
 
@@ -80,6 +94,7 @@ void Connection::Connect() {
 	ASSERT( !m_mt_ids.connect, "connection already in progress" );
 
 	m_is_canceled = false;
+	m_disconnect_reason.clear();
 
 	m_game_state = GS_NONE;
 
@@ -225,8 +240,10 @@ const bool Connection::IterateAndMaybeDelete( const bool send_allowed ) {
 			}
 			m_is_connected = false;
 			m_is_canceled = false;
-			if ( !m_disconnect_reason.empty() && m_on_error ) {
-				m_on_error( m_disconnect_reason );
+			if ( !m_disconnect_reason.empty() ) {
+				if ( m_on_error ) {
+					m_on_error( m_disconnect_reason );
+				}
 				m_disconnect_reason.clear();
 			}
 			return true;
@@ -391,6 +408,10 @@ void Connection::Disconnect( const std::string& reason ) {
 	if ( m_mt_ids.disconnect ) {
 		return; // already disconnecting
 	}
+	if ( !m_network->IsRunning() ) {
+		FinalizeStoppedNetwork();
+		return;
+	}
 	Log(
 		"Disconnecting" + ( !reason.empty()
 			? " (reason: " + reason + ")"
@@ -403,14 +424,43 @@ void Connection::Disconnect( const std::string& reason ) {
 void Connection::ProcessPending( const bool send_allowed ) {
 	if ( !m_pending_game_events.empty() ) {
 		if ( send_allowed ) {
-			SendGameEvents( m_pending_game_events );
+			FlushPendingGameEvents();
+			return;
 		}
 		m_pending_game_events.clear();
 	}
 }
 
+void Connection::FlushPendingGameEvents() {
+	if ( m_pending_game_events.empty() ) {
+		return;
+	}
+	SendGameEvents( m_pending_game_events );
+	m_pending_game_events.clear();
+}
+
 void Connection::ClearPending() {
 	m_pending_game_events.clear();
+}
+
+void Connection::FinalizeStoppedNetwork() {
+	if ( m_mt_ids.connect ) {
+		m_network->MT_Cancel( m_mt_ids.connect );
+		m_mt_ids.connect = 0;
+	}
+	if ( m_mt_ids.events ) {
+		m_network->MT_Cancel( m_mt_ids.events );
+		m_mt_ids.events = 0;
+	}
+	if ( m_mt_ids.disconnect ) {
+		m_network->MT_Cancel( m_mt_ids.disconnect );
+		m_mt_ids.disconnect = 0;
+	}
+	m_game_state = GS_NONE;
+	m_is_connected = false;
+	m_is_canceled = false;
+	m_disconnect_reason.clear();
+	ClearPending();
 }
 
 }

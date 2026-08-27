@@ -24,6 +24,7 @@ public:
 	const std::string ToString( const std::string& prefix = "" ) const;
 
 	static const types::Buffer Serialize( const Resource* resource );
+	static void ValidateRenderInfo( const render_info_t& render_info, const bool require_single_coordinate = false );
 	static Resource* Deserialize( types::Buffer& buf );
 
 };

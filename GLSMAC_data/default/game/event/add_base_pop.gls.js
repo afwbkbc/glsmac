@@ -17,7 +17,6 @@ return {
 		// spawn population
 		const pop = base.create_pop({
 			type: e.data.type,
-			worked_tile: e.data.worked_tile,
 		});
 
 		let worked_tile = #undefined;
@@ -36,13 +35,10 @@ return {
 
 	rollback: (e) => {
 		if (#is_defined(e.applied.worked_tile)) {
-			e.game.get('f_base_pop_unwork', e.applied.base, e.applied.pop);
+			e.game.get('f_base_pop_unwork_tile')(e.applied.base, e.applied.pop);
 		}
-		e.data.base.destroy_pop(e.applied.pop);
-		if (#is_defined(e.applied.worked_tile)) {
-			e.data.base.base.remove_worked_tile(e.applied.worked_tile);
-		}
-		e.data.base.set('accumulated_nutrients', e.applied.old_nutrients);
+		e.applied.base.destroy_pop(e.applied.pop);
+		e.applied.base.set('accumulated_nutrients', e.applied.old_nutrients);
 	},
 
 };

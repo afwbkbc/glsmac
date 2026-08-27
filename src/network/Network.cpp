@@ -4,6 +4,27 @@
 
 namespace network {
 
+Network::Network( const uint16_t port )
+	: m_port( port ) {
+	ASSERT( m_port > 0, "network port is zero" );
+}
+
+void Network::Start() {
+	m_is_running = true;
+}
+
+void Network::Stop() {
+	MTModule::Stop();
+	m_events_in.clear();
+	m_events_out.clear();
+	m_current_connection_mode = CM_NONE;
+	m_is_running = false;
+}
+
+bool Network::IsRunning() const {
+	return m_is_running;
+}
+
 common::mt_id_t Network::MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address ) {
 	ASSERT( !( connect_mode == CM_CLIENT && remote_address.empty() ), "client connection without remote address" );
 	MT_Request request;
@@ -164,11 +185,13 @@ void Network::InvalidateEventsForDisconnectedClient( const network::cid_t cid ) 
 	events_t events_new = {};
 	bool disconnect_event_kept = false;
 	for ( auto& event : m_events_out ) {
-		if ( !disconnect_event_kept && event.type == Event::ET_CLIENT_DISCONNECT ) {
-			disconnect_event_kept = true;
-		}
-		else if ( event.cid == cid ) {
-			continue;
+		if ( event.cid == cid ) {
+			if ( !disconnect_event_kept && event.type == Event::ET_CLIENT_DISCONNECT ) {
+				disconnect_event_kept = true;
+			}
+			else {
+				continue;
+			}
 		}
 		events_new.push_back( event );
 	}

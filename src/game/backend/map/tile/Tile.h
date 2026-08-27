@@ -26,6 +26,7 @@ class Unit;
 
 namespace base {
 class Base;
+class Pop;
 }
 
 namespace map {
@@ -97,6 +98,7 @@ public:
 	//   it recalculates dynamic properties and solves inconsistencies
 	//   safe to call anytime
 	void Update();
+	void RefreshWrappers();
 
 	// reset to empty state
 	void Clear();
@@ -107,6 +109,13 @@ public:
 	void Deserialize( types::Buffer data );
 
 	const std::string ToString() const;
+	static feature_t GetFeatureFromString( const std::string& name );
+	static bonus_t GetBonusFromString( const std::string& name );
+	static terraforming_t GetTerraformingFromString( const std::string& name );
+	static const std::string& GetTerraformingString( const terraforming_t value );
+	void SetFeatures( GSE_CALLABLE, const feature_t value );
+	void SetBonus( GSE_CALLABLE, const bonus_t value );
+	void SetTerraforming( GSE_CALLABLE, const terraforming_t value );
 
 	WRAPDEFS_PTR( Tile );
 
@@ -120,12 +129,18 @@ public:
 	const resources_t GetResources( GSE_CALLABLE, slot::Slot* const slot );
 	gse::value::Object* const GetResourcesAsValue( GSE_CALLABLE, slot::Slot* const slot );
 
+	bool HasWorkingPopLink() const;
+	base::Pop* GetWorkingPop() const;
+	void SetWorkingPop( GSE_CALLABLE, base::Pop* const pop );
+	void UnsetWorkingPop( GSE_CALLABLE, const base::Pop* const pop );
+
 private:
 	bool m_is_locked = false;
 	size_t m_lock_initiator_slot = 0;
 
 	gse::Value* const GetFeatures( GSE_CALLABLE ) const;
 	gse::Value* const GetBonuses( GSE_CALLABLE ) const;
+	gse::Value* const GetTerraformings( GSE_CALLABLE ) const;
 
 };
 

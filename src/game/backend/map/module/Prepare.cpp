@@ -28,11 +28,12 @@ void Prepare::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapStat
 		m_map->ClearTexture();
 	}
 
-	ts->elevations.left = *tile->elevation.left;
-	ts->elevations.top = *tile->elevation.top;
-	ts->elevations.right = *tile->elevation.right;
-	ts->elevations.bottom = *tile->elevation.bottom;
-	ts->elevations.center = *tile->elevation.center;
+	const auto sea_level = m_map->GetSeaLevel();
+	ts->elevations.left = *tile->elevation.left - sea_level;
+	ts->elevations.top = *tile->elevation.top - sea_level;
+	ts->elevations.right = *tile->elevation.right - sea_level;
+	ts->elevations.bottom = *tile->elevation.bottom - sea_level;
+	ts->elevations.center = *tile->elevation.center - sea_level;
 
 	// modify elevations based on water / not water, to avoid displaying half-submerged tiles
 	// original tile isn't modified, this is just for rendering

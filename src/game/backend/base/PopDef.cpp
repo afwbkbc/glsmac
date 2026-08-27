@@ -1,5 +1,7 @@
 #include "PopDef.h"
 
+#include <limits>
+
 namespace game {
 namespace backend {
 namespace base {
@@ -57,20 +59,35 @@ const types::Buffer PopDef::Serialize( const PopDef* def ) {
 PopDef* PopDef::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
+	if ( id.empty() ) {
+		THROW( "serialized base population definition id is empty" );
+	}
 #define X( _r ) \
     pop_render_infos_t _r = {}; \
-    _r.resize( buf.ReadInt() ); \
+    { \
+        const auto count = buf.ReadCollectionSize( #_r " render" ); \
+        if ( count == 0 || count > static_cast< size_t >( std::numeric_limits< uint8_t >::max() ) + 1 ) { \
+            THROW( "invalid serialized " #_r " render count" ); \
+        } \
+        _r.resize( count ); \
+    } \
     for ( auto& r : _r ) { \
         r.file = buf.ReadString(); \
-        r.x = buf.ReadInt(); \
-        r.y = buf.ReadInt(); \
-        r.width = buf.ReadInt(); \
-        r.height = buf.ReadInt(); \
+        r.x = buf.ReadInt< uint16_t >( #_r " render x" ); \
+        r.y = buf.ReadInt< uint16_t >( #_r " render y" ); \
+        r.width = buf.ReadInt< uint16_t >( #_r " render width" ); \
+        r.height = buf.ReadInt< uint16_t >( #_r " render height" ); \
+        if ( r.file.empty() || r.width == 0 || r.height == 0 ) { \
+            THROW( "invalid serialized " #_r " render" ); \
+        } \
     }
 	X( renders_human )
 	X( renders_progenitor )
 #undef X
-	const auto flags = buf.ReadInt();
+	const auto flags = buf.ReadInt< pop_flags_t >( "base population definition flags" );
+	if ( flags & ~PF_TILE_WORKER ) {
+		THROW( "invalid serialized base population definition flags" );
+	}
 	return new PopDef( id, name, renders_human, renders_progenitor, flags );
 }
 

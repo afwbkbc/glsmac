@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include "common/MTModule.h"
 
 #include "Types.h"
@@ -13,6 +15,7 @@ class Packet;
 namespace network {
 
 CLASS( Network, MTModule )
+	explicit Network( const uint16_t port = 4888 );
 
 	common::mt_id_t MT_Connect( const connection_mode_t connect_mode, const std::string& remote_address = "" );
 	common::mt_id_t MT_Disconnect();
@@ -25,12 +28,15 @@ CLASS( Network, MTModule )
 
 	MT_Response MT_GetResult( common::mt_id_t mt_id );
 
+	void Start() override;
+	void Stop() override;
 	void Iterate() override;
+	bool IsRunning() const;
 
 protected:
 
-	static const int GLSMAC_PORT = 4888;
 	static const int GLSMAC_MAX_INCOMING_CONNECTIONS = 64;
+	const uint16_t m_port;
 
 	// should be sufficient to fit any packet
 	static const int BUFFER_SIZE = 65536;
@@ -63,6 +69,10 @@ protected:
 			char* ptr = nullptr;
 			size_t len = 0;
 		} buffer = {};
+		struct {
+			std::string data = "";
+			size_t offset = 0;
+		} outgoing = {};
 		time_t last_data_at = 0;
 		bool ping_needed = false;
 		bool ping_sent = false;
@@ -75,9 +85,7 @@ protected:
 		std::unordered_map< cid_t, fd_t > cid_to_fd = {};
 		cid_t next_cid = 1; // 0 is reserved for server
 		struct {
-			void* client_addr = nullptr;
 			fd_t newfd = 0;
-			std::vector< int > to_remove = {};
 		} tmp = {};
 	} m_server = {};
 
@@ -132,6 +140,7 @@ protected:
 	const fd_t GetFdFromCid( const cid_t cid ) const;
 
 private:
+	std::atomic< bool > m_is_running = false;
 	connection_mode_t m_current_connection_mode = CM_NONE;
 
 	events_t m_events_out = {}; // from network to other modules

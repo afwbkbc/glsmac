@@ -72,11 +72,12 @@ return (game) => {
 		game.event('spawn_base', {
 			owner: player,
 			tile: tile,
+			headquarters: true,
 		});
 		tiles_with_bases :+tile;
 
-		// spawn "scout patrol"
-		let type = 'MindWorms';
+		// spawn scout patrol (naval starts keep a sea-native stand-in for now)
+		let type = 'ScoutPatrol';
 		if (faction.is_naval) {
 			type = 'SeaLurk';
 		}
@@ -86,6 +87,7 @@ return (game) => {
 			type: type,
 			health: 1.0,
 			morale: 1,
+			home_base_at_tile: true,
 		});
 
 	}

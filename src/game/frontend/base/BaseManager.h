@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <vector>
-#include <set>
 
 #include "common/Common.h"
 
@@ -66,8 +65,15 @@ CLASS( BaseManager, common::Class )
 	void SpawnBase(
 		const size_t base_id,
 		const size_t slot_index,
+		faction::Faction* faction,
 		const ::types::Vec2< size_t >& tile_coords,
 		const ::types::Vec3& render_coords,
+		const std::string& name
+	);
+	void UpdateBase(
+		Base* base,
+		const size_t slot_index,
+		faction::Faction* faction,
 		const std::string& name
 	);
 	void DespawnBase( const size_t base_id );
@@ -82,6 +88,7 @@ CLASS( BaseManager, common::Class )
 
 private:
 	friend class Base;
+	text::InstancedText* CreateNameText( const std::string& name, const faction::Faction* faction ) const;
 
 private:
 	friend class SlotBadges;
@@ -101,8 +108,6 @@ private:
 	std::unordered_map< std::string, PopDef* > m_popdefs = {};
 
 	std::unordered_map< size_t, base::Base* > m_bases = {};
-	typedef std::set< size_t > ordered_base_ids_t;
-	std::unordered_map< faction::Faction*, ordered_base_ids_t > m_faction_base_ids = {};
 
 };
 

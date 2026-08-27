@@ -30,6 +30,7 @@ private:
 
 	bool m_is_ok = false;
 	bool m_is_cancel = false;
+	std::string m_value = "";
 
 	std::string m_group = "";
 	bool m_is_group_enabled = false;

@@ -51,7 +51,7 @@ private:
 
 private:
 	friend class Select;
-	typedef std::function< void( const std::string& value, const std::string& label, const bool send_event ) > f_on_update_t;
+	typedef std::function< void( GSE_CALLABLE, const std::string& value, const std::string& label, const bool send_event ) > f_on_update_t;
 	f_on_update_t m_on_update = nullptr;
 };
 

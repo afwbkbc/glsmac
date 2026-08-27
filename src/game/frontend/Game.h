@@ -310,7 +310,7 @@ private:
 			};
 		} edge_scrolling;
 		types::Vec2< float > last_mouse_position;
-		unsigned char mouse_buttons_pressed;
+		size_t mouse_buttons_pressed;
 		float key_zooming = 0;
 	} m_map_control = {};
 
@@ -396,6 +396,7 @@ private:
 	// tile request stuff
 	rr::id_t m_tile_at_request_id = 0;
 	backend::tile_query_purpose_t m_tile_at_query_purpose = backend::TQP_NONE;
+	size_t m_attack_target_unit_id = 0;
 
 	void CancelTileAtRequest();
 	void GetTileAtScreenCoords( const backend::tile_query_purpose_t tile_query_purpose, const size_t screen_x, const size_t screen_inverse_y ); // async, y needs to be upside down

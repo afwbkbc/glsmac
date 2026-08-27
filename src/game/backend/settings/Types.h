@@ -8,6 +8,9 @@ namespace settings {
 
 typedef uint8_t map_config_value_t;
 
+static constexpr uint64_t MAP_MIN_DIMENSION = 4;
+static constexpr uint64_t MAP_MAX_AREA = 180 * 90;
+
 static constexpr map_config_value_t MAP_CONFIG_CUSTOM = 0;
 static constexpr map_config_value_t MAP_CONFIG_TINY = 1;
 static constexpr map_config_value_t MAP_CONFIG_SMALL = 2;

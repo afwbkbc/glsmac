@@ -35,14 +35,14 @@ bool Routine::RemoveScene( scene::Scene* scene ) {
 	if ( SceneBelongs( scene ) ) {
 		auto it = std::find( m_scenes.begin(), m_scenes.end(), scene );
 		if ( it < m_scenes.end() ) {
+			const auto scene_index = it - m_scenes.begin();
+			auto gl_scene_it = m_gl_scenes.begin() + scene_index;
 
-			m_scenes.erase( it, it + 1 );
-			auto gl_scene_index = m_gl_scenes.begin() + ( it - m_scenes.begin() );
+			OnSceneRemove( *gl_scene_it );
 
-			OnSceneRemove( *gl_scene_index );
-
-			DELETE( *gl_scene_index );
-			m_gl_scenes.erase( gl_scene_index, gl_scene_index + 1 );
+			DELETE( *gl_scene_it );
+			m_gl_scenes.erase( gl_scene_it );
+			m_scenes.erase( it );
 
 			//Log( "Scene [" + scene->GetName() + "] removed" );
 

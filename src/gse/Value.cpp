@@ -27,6 +27,7 @@
 #include "game/backend/Player.h"
 #include "game/backend/map/tile/Tile.h"
 #include "game/backend/base/Base.h"
+#include "game/backend/base/Pop.h"
 #include "game/backend/unit/Unit.h"
 
 namespace gse {
@@ -53,6 +54,7 @@ static const std::string s_t_unknown = "Unknown";
     X_CUSTOM_CLASS( Player, game::backend::Player ), \
     X_CUSTOM_CLASS( Tile, game::backend::map::tile::Tile ), \
     X_CUSTOM_CLASS( Base, game::backend::base::Base ), \
+    X_CUSTOM_CLASS( Pop, game::backend::base::Pop ), \
     X_CUSTOM_CLASS( Unit, game::backend::unit::Unit )
 
 typedef std::function< void( types::Buffer* const buf, const Wrappable* const wrapobj ) > custom_serialize_func_t;
@@ -110,6 +112,14 @@ const std::string& Value::GetTypeStringStatic( const value_type_t type ) {
 
 const std::string& Value::GetTypeString() const {
 	return GetTypeStringStatic( type );
+}
+
+const bool Value::IsInvalidated() const {
+	return m_is_invalidated;
+}
+
+void Value::Invalidate() {
+	m_is_invalidated = true;
 }
 
 const std::string Value::ToString() const {
@@ -494,8 +504,10 @@ Value* const Value::New( const Value* value ) {
 		case VT_ARRAYRANGEREF:
 		case VT_OBJECTREF:
 		case VT_VALUEREF: {
-			// no need to keep ref to old value if it's a copy
-			return Deref();
+			auto* const dereferenced = Deref();
+			return dereferenced->type == VT_PTR
+				? dereferenced->Clone()
+				: dereferenced;
 		}
 		case VT_RANGE: {
 			const auto* range = (value::Range*)value;
@@ -551,8 +563,9 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 				const auto* obj = (value::Object*)value;
 				buf->WriteString( obj->object_class );
 				if ( obj->object_class.empty() ) {
-					ASSERT( !obj->wrapobj, "serialization of objects with wrapobj is not supported" );
-					ASSERT( !obj->wrapsetter, "serialization of objects with wrapsetter is not supported" );
+					if ( obj->wrapobj || obj->wrapsetter ) {
+						THROW( "serialization of anonymous wrapped objects is not supported" );
+					}
 					const auto& properties = obj->value;
 					buf->WriteInt( properties.size() );
 					for ( const auto& p : properties ) {
@@ -562,8 +575,12 @@ void Value::Serialize( types::Buffer* buf, const Value* const value ) {
 				}
 				else {
 					const auto& it = s_custom_object_serializers.find( obj->object_class );
-					ASSERT( it != s_custom_object_serializers.end(), "custom object serializer not found: " + obj->object_class );
-					ASSERT( obj->wrapobj, "custom object wrapobj is null" );
+					if ( it == s_custom_object_serializers.end() ) {
+						THROW( "custom object serializer not found: " + obj->object_class );
+					}
+					if ( !obj->wrapobj ) {
+						THROW( "custom object wrapobj is null: " + obj->object_class );
+					}
 					it->second( buf, obj->wrapobj );
 				}
 				break;
@@ -617,9 +634,13 @@ Value* Value::Deserialize( GSE_CALLABLE, types::Buffer* buf, game::backend::Game
 				return VALUEEXT( value::Object, GSE_CALL, properties );
 			}
 			else {
-				ASSERT( game, "game not available for custom object deserialization" );
+				if ( !game ) {
+					THROW( "game not available for custom object deserialization" );
+				}
 				const auto& it = s_custom_object_deserializers.find( object_class );
-				ASSERT( it != s_custom_object_deserializers.end(), "custom object deserializer not found: " + object_class );
+				if ( it == s_custom_object_deserializers.end() ) {
+					THROW( "custom object deserializer not found: " + object_class );
+				}
 				return it->second( GSE_CALL, game, buf );
 			}
 		}

@@ -22,7 +22,7 @@ const float Sound::GetVolume() const {
 	return m_actor->GetVolume();
 }
 
-void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
+void Sound::GetNextBuffer( uint8_t* buffer, size_t len ) {
 	m_actor->GetNextBuffer( buffer, len );
 }
 

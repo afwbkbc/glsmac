@@ -1,6 +1,8 @@
 #include "ResourceManager.h"
 
 #include <algorithm>
+#include <memory>
+#include <unordered_set>
 
 #include "Resource.h"
 
@@ -40,7 +42,9 @@ void ResourceManager::Clear() {
 void ResourceManager::DefineResource( resource::Resource* resource ) {
 	Log( "Defining resource ('" + resource->m_id + "')" );
 
-	ASSERT( m_resources.find( resource->m_id ) == m_resources.end(), "resource already exists" );
+	if ( m_resources.find( resource->m_id ) != m_resources.end() ) {
+		THROW( "resource already exists: " + resource->m_id );
+	}
 
 	m_resources.insert(
 		{
@@ -58,9 +62,14 @@ void ResourceManager::DefineResource( resource::Resource* resource ) {
 void ResourceManager::UndefineResource( const std::string& id ) {
 	Log( "Undefining resource ('" + id + "')" );
 
-	ASSERT( m_resources.find( id ) != m_resources.end(), "resource does not exist" );
+	const auto resource_it = m_resources.find( id );
+	if ( resource_it == m_resources.end() ) {
+		THROW( "resource does not exist: " + id );
+	}
 
-	m_resources.erase( id );
+	auto* const resource = resource_it->second;
+	m_resources.erase( resource_it );
+	delete resource;
 	auto it = std::find( m_resources_order.begin(), m_resources_order.end(), id );
 	if ( it != m_resources_order.end() ) {
 		m_resources_order.erase( it );
@@ -74,7 +83,10 @@ void ResourceManager::UndefineResource( const std::string& id ) {
 void ResourceManager::DefineNoResource( const render_info_t& info ) {
 	Log( "Defining no-resource" );
 
-	ASSERT( !m_noresource_defined, "no-resource already defined" );
+	if ( m_noresource_defined ) {
+		THROW( "no-resource already defined" );
+	}
+	Resource::ValidateRenderInfo( info, true );
 	m_noresource_defined = true;
 	m_noresource_info = info;
 
@@ -95,7 +107,9 @@ void ResourceManager::DefineNoResource( const render_info_t& info ) {
 void ResourceManager::UndefineNoResource() {
 	Log( "Undefining no-resource" );
 
-	ASSERT( m_noresource_defined, "no-resource not defined" );
+	if ( !m_noresource_defined ) {
+		THROW( "no-resource not defined" );
+	}
 
 	m_noresource_defined = false;
 	m_noresource_info = {};
@@ -258,20 +272,28 @@ void ResourceManager::Serialize( types::Buffer& buf ) const {
 }
 
 void ResourceManager::Deserialize( types::Buffer& buf ) {
-	Clear();
-	ASSERT( m_resources.empty(), "resources not empty" );
-	size_t sz = buf.ReadInt();
+	const size_t sz = buf.ReadCollectionSize( "resource" );
 	Log( "Deserializing " + std::to_string( sz ) + " resources" );
-	m_resources.reserve( sz );
+	std::vector< std::unique_ptr< resource::Resource > > resources = {};
+	resources.reserve( sz );
+	std::unordered_set< std::string > resource_ids = {};
 	for ( size_t i = 0 ; i < sz ; i++ ) {
-		const auto name = buf.ReadString();
+		const auto id = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefineResource( resource::Resource::Deserialize( b ) );
+		auto resource = std::unique_ptr< resource::Resource >( resource::Resource::Deserialize( b ) );
+		if ( id != resource->m_id ) {
+			THROW( "serialized resource id mismatch" );
+		}
+		if ( !resource_ids.insert( id ).second ) {
+			THROW( "duplicate serialized resource: " + id );
+		}
+		resources.push_back( std::move( resource ) );
 	}
-	m_noresource_defined = buf.ReadBool();
-	if ( m_noresource_defined ) {
+	const bool has_noresource = buf.ReadBool();
+	render_info_t noresource_info = {};
+	if ( has_noresource ) {
 		Log( "Deserializing no-resource" );
-		render_info_t info = {
+		noresource_info = {
 			buf.ReadString(),
 			{
 				{
@@ -286,8 +308,26 @@ void ResourceManager::Deserialize( types::Buffer& buf ) {
 				}
 			},
 		};
-		DefineNoResource( info );
+		Resource::ValidateRenderInfo( noresource_info, true );
 	};
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized resource manager" );
+	}
+
+	const auto old_resource_ids = m_resources_order;
+	for ( const auto& id : old_resource_ids ) {
+		UndefineResource( id );
+	}
+	if ( m_noresource_defined ) {
+		UndefineNoResource();
+	}
+	m_resources.reserve( resources.size() );
+	for ( auto& resource : resources ) {
+		DefineResource( resource.release() );
+	}
+	if ( has_noresource ) {
+		DefineNoResource( noresource_info );
+	}
 }
 
 void ResourceManager::AddRenderCoords( GSE_CALLABLE, render_coords_t& render_coords, gse::Value* const value ) {

@@ -29,6 +29,7 @@ class Game;
 }
 
 namespace game::backend {
+class Player;
 namespace faction {
 class Faction;
 }
@@ -52,6 +53,7 @@ CLASS2( GLSMAC, gse::GCWrappable, gse::Bindings )
 	void HideLoader();
 
 	void ShowError( const std::string& text, const std::function< void() >& on_close );
+	void Reset();
 
 	typedef std::function< void( GSE_CALLABLE, gse::value::object_properties_t& args ) > f_args_t;
 	gse::Value* const TriggerObject( gse::GCWrappable* object, const std::string& event, const f_args_t& f_args = nullptr );
@@ -102,6 +104,7 @@ private:
 	void RandomizeSettings( GSE_CALLABLE );
 
 	void AddSinglePlayerSlot( game::backend::faction::Faction* const faction );
+	game::backend::Player* AddAIPlayerSlot();
 	void StartGame( GSE_CALLABLE );
 
 	game::frontend::Game* m_game = nullptr;

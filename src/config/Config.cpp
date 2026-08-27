@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <sstream>
+#include <limits>
 
 #include "Config.h"
 
@@ -11,6 +12,10 @@
 #include "util/random/Random.h"
 #include "util/LogHelper.h"
 #include "config/WrappedConfig.h"
+
+#ifdef _WIN32
+#include "config/WindowsInstallPaths.h"
+#endif
 
 namespace config {
 
@@ -29,15 +34,29 @@ void Config::Error( const std::string& error ) {
 const types::Vec2< size_t > Config::ParseSize( const std::string& value ) {
 	const size_t pos = value.find( 'x' );
 	const std::string s_invalid_format = "Invalid size specified! Format is WIDTHxHEIGHT, for example: 80x40";
-	if ( pos == std::string::npos ) {
+	if ( pos == std::string::npos || pos == 0 || pos == value.size() - 1 || value.find( 'x', pos + 1 ) != std::string::npos ) {
 		Error( s_invalid_format );
 	}
 	types::Vec2< size_t > result = {};
 	try {
-		result.x = std::stoul( value.substr( 0, pos ) );
-		result.y = std::stoul( value.substr( pos + 1 ) );
+		size_t parsed = 0;
+		const auto width = std::stoull( value.substr( 0, pos ), &parsed );
+		if ( parsed != pos ) {
+			Error( s_invalid_format );
+		}
+		const auto height = value.substr( pos + 1 );
+		const auto height_value = std::stoull( height, &parsed );
+		if (
+			parsed != height.size() || width == 0 || height_value == 0 ||
+			width > std::numeric_limits< size_t >::max() ||
+			height_value > std::numeric_limits< size_t >::max()
+		) {
+			Error( s_invalid_format );
+		}
+		result.x = static_cast< size_t >( width );
+		result.y = static_cast< size_t >( height_value );
 	}
-	catch ( std::invalid_argument& e ) {
+	catch ( const std::exception& ) {
 		Error( s_invalid_format );
 	}
 	return result;
@@ -125,6 +144,11 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"verbose", "Output runtime logs to the console", AH( this ) {
+			m_launch_flags |= LF_VERBOSE;
+		}
+	);
+	m_manager->AddRule(
 		"windowed", "Start in windowed mode", AH( this ) {
 			m_launch_flags |= LF_WINDOWED;
 		}
@@ -135,6 +159,15 @@ Config::Config( const std::string& path )
 				Error( "Window-related options can only be used after --windowed argument!" );
 			}
 			m_window_size = ParseSize( value );
+			if ( !m_window_size.x || !m_window_size.y ) {
+				Error( "Window width and height must be at least 1" );
+			}
+			if (
+				m_window_size.x > std::numeric_limits< unsigned short >::max() ||
+				m_window_size.y > std::numeric_limits< unsigned short >::max()
+			) {
+				Error( "Window width and height cannot exceed 65535" );
+			}
 			m_launch_flags |= LF_WINDOW_SIZE;
 		}
 	);
@@ -146,14 +179,14 @@ Config::Config( const std::string& path )
 	);
 	const std::string s_quickstart_argument_missing = "Quickstart-related options can only be used after --quickstart argument!";
 	m_manager->AddRule(
-		"quickstart-seed", "SEED", "Generate map with specific seed (A:B:C:D)", AH( this, s_quickstart_argument_missing ) {
-			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
-				Error( s_quickstart_argument_missing );
+		"quickstart-seed", "SEED", "Generate map with specific seed (A:B:C:D)", AH( this ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) && !HasLaunchFlag( LF_HOST ) ) {
+				Error( "Map seed can only be used after --quickstart or --host argument!" );
 			}
 			try {
 				m_quickstart_seed = util::random::Random::GetStateFromString( value );
 			}
-			catch ( std::runtime_error& e ) {
+			catch ( const std::runtime_error& ) {
 				Error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
 			}
 			m_launch_flags |= LF_QUICKSTART_SEED;
@@ -177,6 +210,16 @@ Config::Config( const std::string& path )
 				Error( s_quickstart_argument_missing );
 			}
 			m_quickstart_mapsize = ParseSize( value );
+			if (
+				m_quickstart_mapsize.x < game::backend::settings::MAP_MIN_DIMENSION ||
+				m_quickstart_mapsize.y < game::backend::settings::MAP_MIN_DIMENSION ||
+				( m_quickstart_mapsize.x & 1 ) || ( m_quickstart_mapsize.y & 1 ) ||
+				m_quickstart_mapsize.x > game::backend::settings::MAP_MAX_AREA ||
+				m_quickstart_mapsize.y > game::backend::settings::MAP_MAX_AREA ||
+				m_quickstart_mapsize.x * m_quickstart_mapsize.y > game::backend::settings::MAP_MAX_AREA
+			) {
+				Error( "Quickstart map dimensions must be even numbers of at least 4 with area no larger than Huge Planet (180x90)" );
+			}
 			m_launch_flags |= LF_QUICKSTART_MAP_SIZE;
 		}
 	);
@@ -277,13 +320,35 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"quickstart-ai", "COUNT", "Add computer-controlled players", AH( this, s_quickstart_argument_missing ) {
+			if ( !HasLaunchFlag( LF_QUICKSTART ) ) {
+				Error( s_quickstart_argument_missing );
+			}
+			long int count = 0;
+			if ( !util::String::ParseInt( value, count ) || count < 1 || count > 6 ) {
+				Error( "Invalid --quickstart-ai value specified! Expected number ( 1 to 6 ), got: " + value );
+			}
+			m_quickstart_ai_players = static_cast< uint8_t >( count );
+			m_launch_flags |= LF_QUICKSTART_AI;
+		}
+	);
+	m_manager->AddRule(
+		"port", "PORT", "TCP/IP port for hosting or joining games (default: 4888)", AH( this ) {
+			long int port = 0;
+			if ( !util::String::ParseInt( value, port ) || port < 1 || port > 65535 ) {
+				Error( "--port value must be a number from 1 to 65535" );
+			}
+			m_network_port = static_cast< uint16_t >( port );
+		}
+	);
+	m_manager->AddRule(
 		"maxips", "IPS", "Maximum allowed IPS (iterations per second, determine FPS, default: 500)", AH( this ) {
 			m_launch_flags |= LF_MAXIPS;
 			long int maxips = 0;
 			if ( !util::String::ParseInt( value, maxips ) || maxips < 1 || maxips > 1000 ) {
 				Error( "--maxips value must be a number from 1 to 1000" );
 			}
-			m_maxips = maxips;
+			m_maxips = static_cast< uint16_t >( maxips );
 		}
 	);
 	m_manager->AddRule(
@@ -334,6 +399,14 @@ Config::Config( const std::string& path )
 			m_debug_flags |= DF_GSE_ONLY | DF_GSE_PROMPT_JS;
 		}
 	);
+#endif
+
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
+	m_manager->AddRule(
+		"headless", "Run without graphics, input, or audio for automated testing", AH( this ) {
+			m_debug_flags |= DF_HEADLESS;
+		}
+	);
 	m_manager->AddRule(
 		"gse-tests", "Run GSE tests and exit", AH( this ) {
 			m_debug_flags |= DF_GSE_ONLY | DF_GSE_TESTS;
@@ -344,10 +417,25 @@ Config::Config( const std::string& path )
 			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
 				Error( "Gse-tests-related options can only be used after --gse-tests!" );
 			}
+			if ( HasDebugFlag( DF_GSE_TESTS_NATIVE_ONLY ) ) {
+				Error( "Gse-tests script and native-only options are mutually exclusive!" );
+			}
 			m_debug_flags |= DF_GSE_TESTS_SCRIPT;
 			m_gse_tests_script = value;
 		}
 	);
+	m_manager->AddRule(
+		"gse-tests-native-only", "Run only native GSE tests", AH( this ) {
+			if ( !HasDebugFlag( DF_GSE_TESTS ) ) {
+				Error( "Gse-tests-related options can only be used after --gse-tests!" );
+			}
+			if ( HasDebugFlag( DF_GSE_TESTS_SCRIPT ) ) {
+				Error( "Gse-tests script and native-only options are mutually exclusive!" );
+			}
+			m_debug_flags |= DF_GSE_TESTS_NATIVE_ONLY;
+		}
+	);
+#endif
 
 #ifdef DEBUG
 	m_manager->AddRule(
@@ -372,8 +460,6 @@ Config::Config( const std::string& path )
 			m_debug_flags |= DF_QUICKSTART_MAP_DUMP;
 		}
 	);
-#endif
-
 #endif
 
 }
@@ -407,7 +493,7 @@ const std::string& Config::GetPrefix() const {
 	return m_prefix;
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
 const std::string Config::GetDebugPath() const {
 	return m_prefix + "debug/";
@@ -427,6 +513,10 @@ const std::vector< std::string > Config::GetPossibleSMACPaths() const {
 	if ( m_smac_path != "." ) {
 		result.push_back( "." );
 	}
+#ifdef _WIN32
+	const auto install_paths = GetWindowsSMACInstallPaths();
+	result.insert( result.end(), install_paths.begin(), install_paths.end() );
+#endif
 	return result;
 }
 
@@ -478,6 +568,10 @@ const std::string& Config::GetQuickstartFaction() const {
 	return m_quickstart_faction;
 }
 
+const uint8_t Config::GetQuickstartAIPlayers() const {
+	return m_quickstart_ai_players;
+}
+
 const std::vector< std::string >& Config::GetModPaths() const {
 	return m_mod_paths;
 }
@@ -498,7 +592,11 @@ const uint16_t Config::GetMaxIPS() const {
 	return m_maxips;
 }
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+const uint16_t Config::GetNetworkPort() const {
+	return m_network_port;
+}
+
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
 const bool Config::HasDebugFlag( const debug_flag_t flag ) const {
 	return m_debug_flags & flag;

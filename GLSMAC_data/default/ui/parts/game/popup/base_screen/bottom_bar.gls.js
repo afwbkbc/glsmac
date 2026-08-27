@@ -76,24 +76,79 @@ return {
 	},
 
 	set: (data) => {
+		const base = data.base;
+		const production = base.get_production();
+		const queue = base.get_production_queue();
+		const pending = this.p.game.get('f_base_get_pending_production')(base);
+		let definitions = [];
+		for (def of this.p.game.get_um().get_unit_defs()) {
+			definitions :+def;
+		}
+		for (def of this.p.game.get_bm().get_facility_defs()) {
+			definitions :+def;
+		}
+		let set_candidates = [];
+		let queue_candidates = [];
+		for (def of definitions) {
+			if (base.can_set_production(def.production_kind, def.id)) {
+				set_candidates :+def;
+			}
+			if (base.can_queue_production(def.production_kind, def.id)) {
+				queue_candidates :+def;
+			}
+		}
 
-		this.parts.production.set({
-			rows: 3,
-			columns: 10,
-			filled: 8,
-			pending: 4,
+		if (#is_defined(production)) {
+			const production_cost = this.p.game.get('f_base_get_production_cost')(
+				base,
+				production
+			);
+			const is_mineral_conversion =
+				#is_defined(production.mineral_to_energy_divisor) &&
+				production.mineral_to_energy_divisor > 0;
+			const stockpile_energy = is_mineral_conversion
+				? this.p.game.get('f_economy_get_base_stockpile_energy')(
+					this.p.game,
+					base
+				)
+				: 0;
+			this.parts.production.set({
+				name: production.name,
+				rows: #max(#ceil(#to_float(production_cost) / 10.0), 1),
+				columns: 10,
+				filled: is_mineral_conversion
+					? 0
+					: #min(base.get_accumulated_minerals(), production_cost),
+				pending: is_mineral_conversion ? 0 : pending,
+				conversion_label: is_mineral_conversion
+					? #to_string(stockpile_energy) + ' EC / TURN'
+					: #undefined,
+			});
+		} else {
+			this.parts.production.set({
+				name: 'NOTHING',
+				rows: 1,
+				columns: 10,
+				filled: 0,
+				pending: 0,
+			});
+		}
+
+		this.parts.queue.set({
+			base: base,
+			production: production,
+			queue: queue,
+			set_candidates: set_candidates,
+			queue_candidates: queue_candidates,
 		});
-
-		this.parts.queue.set([
-			'Mind Worms',
-			'Recreation Commons',
-		]);
 
 		this.parts.middle_area.set({
-			name: data.base.name,
-			owner: data.base.get_owner(),
-			pops: data.base.get_pops(),
+			name: base.name,
+			owner: base.get_owner(),
+			pops: base.get_pops(),
 		});
+
+		this.parts.support.set(data.support);
 
 	},
 

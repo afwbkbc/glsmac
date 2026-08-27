@@ -19,6 +19,20 @@ static const std::unordered_map< std::string, std::vector< unsigned char > >& s_
 
 namespace util {
 
+static const std::filesystem::path ResolvePath( const std::string& path ) {
+	std::error_code error;
+	auto result = std::filesystem::weakly_canonical( path, error );
+	if ( error ) {
+		error.clear();
+		result = std::filesystem::absolute( path, error );
+		if ( error ) {
+			result = std::filesystem::path( path );
+		}
+		result = result.lexically_normal();
+	}
+	return result;
+}
+
 const char FS::PATH_SEPARATOR =
 #ifdef _WIN32
 	'\\'
@@ -90,7 +104,7 @@ const std::string FS::GetExistingCaseSensitivePath( const std::string& base_path
 }
 
 const std::string FS::NormalizePath( const std::string& path, const char path_separator ) {
-	std::string result = std::filesystem::weakly_canonical( path ).string();
+	std::string result = ResolvePath( path ).string();
 	if ( path_separator != PATH_SEPARATOR ) {
 		std::replace( result.begin(), result.end(), path_separator, PATH_SEPARATOR );
 	}
@@ -391,7 +405,7 @@ const void FS::WriteFile( const std::string& path, const std::string& data, cons
 }
 
 const std::string FS::GetEmbedPath( const std::string& path ) {
-	std::string result = std::filesystem::weakly_canonical( path ).string();
+	std::string result = ResolvePath( path ).string();
 	if ( PATH_SEPARATOR != '/' ) { // embedded paths always use /
 		std::replace( result.begin(), result.end(), PATH_SEPARATOR, '/' );
 	}

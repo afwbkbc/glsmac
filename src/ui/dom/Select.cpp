@@ -53,17 +53,16 @@ Select::Select( DOM_ARGS )
 	ForwardProperty( GSE_CALL, "border", m_active_element );
 
 	m_choicelist = new ChoiceList( GSE_CALL, ui, m_ui->GetRoot(), {} );
-	m_choicelist->m_on_update = [ this, gc_space, ctx, si, ep ]( const std::string& value, const std::string& label, const bool send_event ) {
-		auto ep2 = ep;
-		m_active_element->RemoveModifier( m_gc_space, ctx, si, ep2, CM_HIGHLIGHT );
+	m_choicelist->m_on_update = [ this ]( GSE_CALLABLE, const std::string& value, const std::string& label, const bool send_event ) {
+		m_active_element->RemoveModifier( GSE_CALL, CM_HIGHLIGHT );
 		m_choicelist->Hide();
-		m_choicelist->Deglobalize( m_gc_space, ctx, si, ep2 );
-		m_active_element->WrapSet( "text", VALUE( gse::value::String, , label ), gc_space, ctx, si, ep2 );
+		m_choicelist->Deglobalize( GSE_CALL );
+		m_active_element->WrapSet( "text", VALUE( gse::value::String, , label ), GSE_CALL );
 		if ( send_event ) {
 			input::Event e;
 			e.SetType( input::EV_SELECT );
 			e.data.value.change_select.text = &value;
-			ProcessEvent( gc_space, ctx, si, ep2, e );
+			ProcessEvent( GSE_CALL, e );
 		}
 	};
 	Embed( m_choicelist );

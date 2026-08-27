@@ -3,6 +3,7 @@
 
 #include "Tiles.h"
 
+#include "game/backend/settings/Types.h"
 #include "util/Clamper.h"
 #include "util/random/Random.h"
 
@@ -10,6 +11,38 @@ namespace game {
 namespace backend {
 namespace map {
 namespace tile {
+
+struct serialized_tiles_state_t {
+	uint32_t width;
+	uint32_t height;
+	std::vector< std::string > tiles;
+	bool is_validated;
+};
+
+static const serialized_tiles_state_t ReadSerializedTiles( types::Buffer buf ) {
+	serialized_tiles_state_t state = {};
+	state.width = buf.ReadInt< uint32_t >( "map width" );
+	state.height = buf.ReadInt< uint32_t >( "map height" );
+	const auto area = static_cast< uint64_t >( state.width ) * state.height;
+	if (
+		state.width < settings::MAP_MIN_DIMENSION ||
+		state.height < settings::MAP_MIN_DIMENSION ||
+		( state.width & 1 ) ||
+		( state.height & 1 ) ||
+		area > settings::MAP_MAX_AREA
+	) {
+		THROW( "invalid serialized map dimensions" );
+	}
+	state.tiles.reserve( static_cast< size_t >( area / 2 ) );
+	for ( size_t i = 0 ; i < area / 2 ; i++ ) {
+		state.tiles.push_back( buf.ReadString() );
+	}
+	state.is_validated = buf.ReadBool();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized tiles" );
+	}
+	return state;
+}
 
 Tiles::Tiles( Map* const map, const uint32_t width, const uint32_t height )
 	: m_map( map ) {
@@ -22,10 +55,12 @@ Tiles::~Tiles() {
 }
 
 void Tiles::Resize( const uint32_t width, const uint32_t height ) {
-	ASSERT( width > 0, "can't resize to zero width" );
-	ASSERT( height > 0, "can't resize to zero height" );
-	ASSERT( !( width & 1 ), "can't resize to non-even width" );
-	ASSERT( !( height & 1 ), "can't resize to non-even height" );
+	if ( !width || !height || ( width & 1 ) || ( height & 1 ) ) {
+		THROW( "map dimensions must be positive even numbers" );
+	}
+	if ( static_cast< uint64_t >( width ) * height > settings::MAP_MAX_AREA ) {
+		THROW( "map dimensions exceed maximum area" );
+	}
 
 	if ( width != m_width || height != m_height ) {
 		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
@@ -33,11 +68,15 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 		m_width = width;
 		m_height = height;
 
-		m_data.resize( width * height );
+		const uint64_t tile_count = (uint64_t)width * height / 2;
+		if ( tile_count > m_data.max_size() ) {
+			THROW( "map dimensions exceed tile storage capacity" );
+		}
+		m_data.resize( (size_t)tile_count );
 		for ( auto& tile : m_data ) {
 			tile.tiles = this;
 		}
-		m_top_vertex_row.resize( m_width * 2 );
+		m_top_vertex_row.resize( (size_t)m_width * 2 );
 		m_top_right_vertex_row.resize( width );
 
 		Tile* tile;
@@ -192,14 +231,14 @@ Tile& Tiles::At( const size_t x, const size_t y ) {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
-	return m_data.at( y * m_width + x / 2 );
+	return m_data.at( y * ( m_width / 2 ) + x / 2 );
 }
 
 const Tile& Tiles::AtConst( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
-	return m_data.at( y * m_width + x / 2 );
+	return m_data.at( y * ( m_width / 2 ) + x / 2 );
 }
 
 std::vector< Tile >* Tiles::GetTilesPtr() {
@@ -280,7 +319,7 @@ void Tiles::FixTopBottomRows( util::random::Random* random ) {
 
 const std::vector< Tile* > Tiles::GetVector( MT_CANCELABLE ) {
 	std::vector< Tile* > tiles = {};
-	const size_t tiles_count = GetDataCount() / 2; // / 2 because SMAC coordinate system
+	const size_t tiles_count = GetDataCount();
 	tiles.reserve( tiles_count );
 	for ( size_t y = 0 ; y < m_height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_width ; x += 2 ) {
@@ -315,25 +354,45 @@ const types::Buffer Tiles::Serialize() const {
 }
 
 void Tiles::Deserialize( types::Buffer buf ) {
-
-	size_t width = buf.ReadInt();
-	size_t height = buf.ReadInt();
+	const auto state = ReadSerializedTiles( buf );
 
 	m_width = m_height = 0;
-	Resize( width, height );
+	Resize( state.width, state.height );
+	ApplySerializedTiles( state.tiles, state.is_validated );
+}
 
+void Tiles::Restore( types::Buffer buf ) {
+	const auto state = ReadSerializedTiles( buf );
+	if ( state.width != m_width || state.height != m_height ) {
+		THROW( "serialized terrain snapshot dimensions do not match the active map" );
+	}
+	ApplySerializedTiles( state.tiles, state.is_validated );
+}
+
+void Tiles::ApplySerializedTiles( const std::vector< std::string >& serialized_tiles, const bool is_validated ) {
+	size_t tile_index = 0;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
-			At( x, y ).Deserialize( types::Buffer( buf.ReadString() ) );
+			auto& tile = At( x, y );
+			tile.Deserialize( types::Buffer( serialized_tiles.at( tile_index++ ) ) );
+			if ( tile.coord.x != x || tile.coord.y != y ) {
+				THROW( "serialized tile coordinates do not match the map grid" );
+			}
 		}
 	}
 
+	tile_index = 0;
 	for ( auto y = 0 ; y < m_height ; y++ ) {
 		for ( auto x = y & 1 ; x < m_width ; x += 2 ) {
-			At( x, y ).Update();
+			auto& tile = At( x, y );
+			tile.Update();
+			if ( tile.Serialize().ToString() != serialized_tiles.at( tile_index++ ) ) {
+				THROW( "serialized tiles contain inconsistent shared elevation data" );
+			}
 		}
 	}
 
+	m_is_validated = is_validated;
 }
 
 }

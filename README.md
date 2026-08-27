@@ -93,6 +93,8 @@ Any increases of dependency versions after 2025/10/20 will happen only after I m
 
 - v0.4: game processing, such as: game turns, units (only scout patrols, formers and colony pods), buildings (only recycling tanks), technologies (only centauri ecology), building of bases (only land bases), terraforming (only farms, mines and solar arrays), unit combat, victory by conquest
 
+  The v0.4 Centauri Ecology milestone uses a fixed 20-lab cost. The original game's research-cost scaling and complete technology tree remain v0.5 work.
+
 - v0.5: all remaining SMAC units, buildings, terraformings, technologies, etc
 
 - v0.6: all remaining victory types
@@ -263,7 +265,7 @@ Wasn't tested. Feel free to test, but I have feeling it will require many change
 
 Just run GLSMAC	binary without arguments.
 
-If this is your first launch it will ask you for SMAC location and save it in profile. Just can also specify smac location on command line: ./GLSMAC --smacpath <smac_directory>
+On Windows, registered GOG and Steam installations are detected automatically. If no installation is found, the first launch asks for the SMAC location and saves it in the profile. You can also specify the location on the command line: ./GLSMAC --smacpath <smac_directory>
 
 You can also put `GLSMAC` file into your SMAC directory and it will detect SMAC installation.
 

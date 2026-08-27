@@ -1,6 +1,7 @@
 #include "GLSMAC.h"
 
 #include "util/FS.h"
+#include "util/String.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
@@ -123,6 +124,9 @@ GLSMAC::~GLSMAC() {
 }
 
 void GLSMAC::Iterate() {
+	if ( g_engine->IsShuttingDown() ) {
+		return;
+	}
 	{
 		bool ticked = false;
 		while ( m_loader_dots_timer.HasTicked() ) {
@@ -150,9 +154,18 @@ void GLSMAC::Iterate() {
 		}
 	}
 	m_gse->Iterate();
+	if ( g_engine->IsShuttingDown() ) {
+		return;
+	}
 	m_ui->Iterate();
+	if ( g_engine->IsShuttingDown() ) {
+		return;
+	}
 	if ( m_game ) {
 		m_game->Iterate();
+	}
+	if ( g_engine->IsShuttingDown() ) {
+		return;
 	}
 	if ( m_reset_needed ) {
 		m_reset_needed = false;
@@ -261,6 +274,39 @@ WRAPIMPL_BEGIN( GLSMAC )
 			} ),
 		},
 		{
+			"add_single_player",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				if ( m_is_game_running ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+				}
+				if ( !m_state->m_slots->GetSlots().empty() ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Single player is already prepared" );
+				}
+				AddSinglePlayerSlot( nullptr );
+				return m_state->m_slots->GetSlot( 0 ).GetPlayer()->Wrap( GSE_CALL );
+			} )
+		},
+		{
+			"add_ai_player",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 0 );
+				if ( !m_state ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game not initialized" );
+				}
+				if ( m_is_game_running ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game is already running" );
+				}
+				if ( m_state->m_slots->GetSlots().empty() ) {
+					AddSinglePlayerSlot( nullptr );
+				}
+				return AddAIPlayerSlot()->Wrap( GSE_CALL );
+			} )
+		},
+		{
 			"start_game",
 			NATIVE_CALL( this ) {
 				N_EXPECT_ARGS( 0 );
@@ -328,8 +374,29 @@ void GLSMAC::HideLoader() {
 
 void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
 	Log( text );
+	m_gc_space->Accumulate( this, [ this, text, on_close ](){
+		TriggerObject( m_ui, "error", ARGS_F( this, &text, &on_close ) {
+			{
+				"error",
+				VALUE( gse::value::String,, text )
+			},
+			{
+				"on_close",
+				VALUE( gse::callable::Native,, ctx, [ on_close ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value* {
+					if ( on_close ) {
+						on_close();
+					}
+					return VALUE( gse::value::Undefined );
+				} )
+			}
+		}; } );
+	});
+}
+
+void GLSMAC::Reset() {
 	m_gc_space->Accumulate( this, [ this ](){
-		TriggerObject( m_ui, "error_popup" );
+		gse::ExecutionPointer ep;
+		Reset( m_gc_space, m_ctx, {}, ep );
 	});
 }
 
@@ -339,7 +406,9 @@ gse::Value* const GLSMAC::TriggerObject( gse::GCWrappable* object, const std::st
 }
 
 void GLSMAC::WithGSE( const std::function<void( GSE_CALLABLE )>& f ) {
-	m_state->WithGSE( this, f );
+	if ( !g_engine->IsShuttingDown() && m_state ) {
+		m_state->WithGSE( this, f );
+	}
 }
 
 void GLSMAC::GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects ) {
@@ -454,7 +523,7 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	m_gc_space->Accumulate( this, [ this, &text ]() {
+	m_gc_space->Accumulate( this, [ this, text ]() {
 		try {
 			TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
 				{
@@ -485,16 +554,29 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 			const auto* fm = m_state->GetFM();
 			ASSERT( fm, "fm is null" );
-			faction = fm->Get( c->GetQuickstartFaction() );
+			faction = fm->Get( util::String::GetUpperCase( c->GetQuickstartFaction() ) );
+			if ( faction && ( faction->m_flags & game::backend::faction::Faction::FF_NATIVE ) ) {
+				faction = nullptr;
+			}
 			if ( !faction ) {
 				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
 				for ( const auto& f : fm->GetAll() ) {
-					errmsg += " " + f->m_id;
+					if ( !( f->m_flags & game::backend::faction::Faction::FF_NATIVE ) ) {
+						errmsg += " " + f->m_id;
+					}
 				}
-				THROW( errmsg );
+				ShowError( errmsg, []() {
+					g_engine->ShutDown();
+				} );
+				return;
 			}
 		}
 		AddSinglePlayerSlot( faction );
+		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_AI ) ) {
+			for ( uint8_t i = 0 ; i < c->GetQuickstartAIPlayers() ; i++ ) {
+				AddAIPlayerSlot();
+			}
+		}
 		auto ep2 = ep;
 		StartGame( m_gc_space, ctx, si, ep2 );
 	}
@@ -546,14 +628,18 @@ void GLSMAC::RandomizeSettings( GSE_CALLABLE ) {
 }
 
 void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction ) {
-	m_state->m_slots->Resize( 7 ); // TODO: make dynamic?
+	m_state->m_slots->Resize( game::backend::State::TOTAL_SLOT_COUNT );
+	m_state->EnsureNativePlayer();
 	const auto& rules = m_state->m_settings.global.rules;
+	const auto& difficulty_level = rules.m_difficulty_levels.GetString(
+		static_cast< int >( m_state->m_settings.global.difficulty_level )
+	);
 	m_state->m_settings.local.player_name = "Player";
 	NEWV( player, ::game::backend::Player,
 		m_state->m_settings.local.player_name,
 		::game::backend::Player::PR_SINGLE,
 		faction,
-		rules.GetDefaultDifficultyLevel() // TODO: make configurable
+		difficulty_level
 	);
 	m_state->AddPlayer( player );
 	size_t slot_num = 0; // player always has slot 0
@@ -562,6 +648,61 @@ void GLSMAC::AddSinglePlayerSlot( game::backend::faction::Faction* const faction
 	slot.SetPlayer( player, 0, "" );
 	slot.SetPlayerFlag( ::game::backend::slot::PF_READY );
 	slot.SetLinkedGSID( m_state->m_settings.local.account.GetGSID() );
+}
+
+game::backend::Player* GLSMAC::AddAIPlayerSlot() {
+	ASSERT( m_state, "game state is not initialized" );
+	if ( m_state->m_slots->GetSlots().empty() ) {
+		m_state->m_slots->Resize( game::backend::State::TOTAL_SLOT_COUNT );
+	}
+	m_state->EnsureNativePlayer();
+
+	size_t slot_num = m_state->m_slots->GetCount();
+	for ( size_t i = 0 ; i < m_state->m_slots->GetCount() ; i++ ) {
+		if ( m_state->m_slots->GetSlot( i ).GetState() == game::backend::slot::Slot::SS_OPEN ) {
+			slot_num = i;
+			break;
+		}
+	}
+	ASSERT( slot_num < m_state->m_slots->GetCount(), "no open slot is available for an AI player" );
+
+	game::backend::faction::Faction* faction = nullptr;
+	for ( auto* const candidate : m_state->GetFM()->GetAll() ) {
+		if ( candidate->m_flags & (
+			game::backend::faction::Faction::FF_NAVAL |
+			game::backend::faction::Faction::FF_NATIVE
+		) ) {
+			continue;
+		}
+		bool is_selected = false;
+		for ( const auto& slot : m_state->m_slots->GetSlots() ) {
+			if (
+				slot.GetState() == game::backend::slot::Slot::SS_PLAYER
+				&& slot.GetPlayer()->GetFaction() == candidate
+			) {
+				is_selected = true;
+				break;
+			}
+		}
+		if ( !is_selected ) {
+			faction = candidate;
+			break;
+		}
+	}
+	ASSERT( faction, "no land faction is available for an AI player" );
+
+	const auto& rules = m_state->m_settings.global.rules;
+	auto* const player = new game::backend::Player(
+		"AI " + std::to_string( slot_num ),
+		game::backend::Player::PR_AI,
+		faction,
+		rules.GetDefaultDifficultyLevel()
+	);
+	m_state->AddPlayer( player );
+	auto& slot = m_state->m_slots->GetSlot( slot_num );
+	slot.SetPlayer( player, 0, "AI" );
+	slot.SetPlayerFlag( game::backend::slot::PF_READY );
+	return player;
 }
 
 void GLSMAC::StartGame( GSE_CALLABLE ) {
@@ -588,8 +729,18 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 					TriggerObject( this, "start_game" );
 				}
 			);
-		}, [] () {
-			// THROW( "TODO: cancel" );
+		}, [ this ] () {
+			const auto* config = g_engine->GetConfig();
+			if (
+				config->HasLaunchFlag( config::Config::LF_QUICKSTART ) ||
+				config->HasLaunchFlag( config::Config::LF_HOST ) ||
+				config->HasLaunchFlag( config::Config::LF_JOIN )
+			) {
+				g_engine->ShutDown();
+			}
+			else {
+				Reset();
+			}
 		}
 	);
 

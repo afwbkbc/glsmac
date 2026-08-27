@@ -1,5 +1,7 @@
 #include "Resource.h"
 
+#include <limits>
+
 namespace game {
 namespace backend {
 namespace resource {
@@ -76,7 +78,7 @@ Resource* Resource::Deserialize( types::Buffer& buf ) {
 	render_info.file = buf.ReadString();
 	{
 		auto& r = render_info.coords;
-		const auto count = buf.ReadInt();
+		const auto count = buf.ReadCollectionSize( "resource render coordinate" );
 		r.reserve( count );
 		for ( size_t i = 0 ; i < count ; i++ ) {
 			r.push_back(
@@ -87,7 +89,34 @@ Resource* Resource::Deserialize( types::Buffer& buf ) {
 			);
 		}
 	};
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized resource" );
+	}
+	if ( id.empty() ) {
+		THROW( "serialized resource id is empty" );
+	}
+	ValidateRenderInfo( render_info );
 	return new Resource( id, name, render_info );
+}
+
+void Resource::ValidateRenderInfo( const render_info_t& render_info, const bool require_single_coordinate ) {
+	if (
+		render_info.file.empty() ||
+		render_info.coords.empty() ||
+		( require_single_coordinate && render_info.coords.size() != 1 )
+	) {
+		THROW( "invalid serialized resource render definition" );
+	}
+	const auto max_coordinate = static_cast< int64_t >( ( std::numeric_limits< uint32_t >::max )() ) - 1;
+	for ( const auto& coordinate : render_info.coords ) {
+		if (
+			coordinate.first.x < 0 || coordinate.first.y < 0 ||
+			coordinate.second.x < coordinate.first.x || coordinate.second.y < coordinate.first.y ||
+			coordinate.second.x > max_coordinate || coordinate.second.y > max_coordinate
+		) {
+			THROW( "invalid serialized resource render coordinates" );
+		}
+	}
 }
 
 }

@@ -1,5 +1,7 @@
 #include "GSETests.h"
 
+#include <cstdlib>
+
 #include "gse/GSE.h"
 #include "gse/Async.h"
 #include "gse/tests/Tests.h"
@@ -55,7 +57,7 @@ void GSETests::Iterate() {
 	}
 	else if ( current_test_index == m_tests.size() ) {
 		current_test_index++;
-		g_engine->ShutDown();
+		g_engine->ShutDown( m_stats.failed == 0 ? EXIT_SUCCESS : EXIT_FAILURE );
 	}
 }
 

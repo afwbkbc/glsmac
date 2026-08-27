@@ -105,7 +105,12 @@ const Color Color::operator*( const Color& other ) const {
 }
 
 const Color::rgba_t Color::GetRGBA() const {
-	return RGBA( value.red * 255, value.green * 255, value.blue * 255, value.alpha * 255 );
+	return RGBA(
+		(uint8_t)( value.red * 255 ),
+		(uint8_t)( value.green * 255 ),
+		(uint8_t)( value.blue * 255 ),
+		(uint8_t)( value.alpha * 255 )
+	);
 };
 
 Color Color::FromRGBA( const rgba_t rgba ) {
@@ -131,15 +136,20 @@ Color Color::FromRGB( const uint8_t red, const uint8_t green, const uint8_t blue
 }
 
 Color::rgba_t Color::RGBA( const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha ) {
-	return red | ( green << 8 ) | ( blue << 16 ) | ( alpha << 24 );
+	return
+		static_cast< rgba_t >( red ) |
+			( static_cast< rgba_t >( green ) << 8 ) |
+			( static_cast< rgba_t >( blue ) << 16 ) |
+			( static_cast< rgba_t >( alpha ) << 24 );
 }
 
 Color::rgba_t Color::ToRGBA( const color_t& color ) {
-	return
-		( (uint8_t)( color.red * 256 ) ) |
-			( (uint8_t)( color.green * 256 ) >> 8 ) |
-			( (uint8_t)( color.blue * 256 ) >> 16 ) |
-			( (uint8_t)( color.alpha * 256 ) >> 24 );
+	return RGBA(
+		(uint8_t)( color.red * 255 ),
+		(uint8_t)( color.green * 255 ),
+		(uint8_t)( color.blue * 255 ),
+		(uint8_t)( color.alpha * 255 )
+	);
 }
 
 Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t blue ) {
@@ -147,11 +157,12 @@ Color::rgba_t Color::RGB( const uint8_t red, const uint8_t green, const uint8_t 
 }
 
 void Color::Convert( const color_t& in, rgba_t& out ) {
-	out =
-		( (uint8_t)( std::min( in.red, 1.0f ) * 255 ) ) |
-			( (uint8_t)( std::min( in.green, 1.0f ) * 255 ) << 8 ) |
-			( (uint8_t)( std::min( in.blue, 1.0f ) * 255 ) << 16 ) |
-			( (uint8_t)( std::min( in.alpha, 1.0f ) * 255 ) << 24 );
+	out = RGBA(
+		(uint8_t)( std::min( in.red, 1.0f ) * 255 ),
+		(uint8_t)( std::min( in.green, 1.0f ) * 255 ),
+		(uint8_t)( std::min( in.blue, 1.0f ) * 255 ),
+		(uint8_t)( std::min( in.alpha, 1.0f ) * 255 )
+	);
 }
 
 void Color::Convert( const rgba_t& in, color_t& out ) {

@@ -57,6 +57,7 @@ public:
 		const size_t id,
 		const std::string& name,
 		Slot* slot,
+		faction::Faction* faction,
 		tile::Tile* tile,
 		const bool is_owned,
 		const types::Vec3& render_coords,
@@ -67,8 +68,8 @@ public:
 	const size_t GetId() const;
 
 	const std::string& GetName() const;
-	void SetName( const std::string& name );
 
+	Slot* const GetOwner() const;
 	faction::Faction* const GetFaction() const;
 	const bool IsOwned() const;
 	tile::Tile* GetTile() const;
@@ -97,13 +98,15 @@ protected:
 	void SetRenderCoords( const types::Vec3& coords ) override;
 
 private:
+	friend class BaseManager;
 
 	BaseManager* m_bm = nullptr;
-	SlotBadges* const m_slot_badges;
+	SlotBadges* m_slot_badges = nullptr;
 
 	size_t m_id = 0;
 	std::string m_name = "";
 
+	Slot* m_owner = nullptr;
 	faction::Faction* m_faction = nullptr;
 
 	struct {
@@ -122,7 +125,7 @@ private:
 
 	bool m_is_guarded = false;
 
-	const bool m_is_owned = false;
+	bool m_is_owned = false;
 
 	render_data_t m_render_data = {};
 
@@ -130,6 +133,7 @@ private:
 
 	void ShowBadge();
 	void HideBadge();
+	void SetState( const std::string& name, Slot* owner, faction::Faction* faction, const bool is_owned );
 
 	void UpdateMeshTex( meshtex_t& meshtex, const sprite::InstancedSprite* sprite );
 };

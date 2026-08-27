@@ -1,5 +1,11 @@
 #include "Map.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <unordered_set>
+#include <utility>
+
 #include "game/backend/Game.h"
 #include "game/backend/settings/Settings.h"
 #include "game/backend/map/generator/SimplePerlin.h"
@@ -166,6 +172,15 @@ Map::Map( Game* game )
 }
 
 Map::~Map() {
+	if ( m_meshes.terrain ) {
+		DELETE( m_meshes.terrain );
+	}
+	if ( m_meshes.terrain_data ) {
+		DELETE( m_meshes.terrain_data );
+	}
+	if ( m_textures.terrain ) {
+		DELETE( m_textures.terrain );
+	}
 	if ( m_tiles ) {
 		DELETE( m_tiles );
 	}
@@ -208,41 +223,126 @@ const types::Buffer Map::Serialize() const {
 		buf.WriteInt( it.first );
 	}
 	buf.WriteInt( m_next_sprite_instance_id );
+	buf.WriteInt( m_sea_level );
+	buf.WriteInt( m_climate_state.level );
+	buf.WriteInt( m_climate_state.future_change );
+	buf.WriteInt( m_climate_state.progress );
 
 	return buf;
 }
 
 void Map::Deserialize( types::Buffer buf ) {
 
-	ASSERT( !m_tiles, "tiles already set" );
+	if ( m_tiles || m_map_state ) {
+		THROW( "cannot deserialize over an initialized map" );
+	}
 	NEW( m_tiles, tile::Tiles, this );
 	m_tiles->Deserialize( buf.ReadString() );
 
-	ASSERT( !m_map_state, "map state already set" );
 	NEW( m_map_state, MapState );
 	m_map_state->Deserialize( buf.ReadString() );
+	if (
+		m_map_state->dimensions.x != m_tiles->GetWidth() ||
+		m_map_state->dimensions.y != m_tiles->GetHeight()
+	) {
+		THROW( "serialized map-state dimensions do not match tiles" );
+	}
 
 	InitTextureAndMesh();
 	m_meshes.terrain->Deserialize( buf.ReadString() );
 	m_meshes.terrain_data->Deserialize( buf.ReadString() );
 	m_textures.terrain->Deserialize( buf.ReadString() );
 
-	size_t sz = buf.ReadInt();
+	size_t sz = buf.ReadCollectionSize( "map sprite actor" );
 	m_sprite_actors.clear();
-	for ( auto i = 0 ; i < sz ; i++ ) {
-		m_sprite_actors[ buf.ReadString() ] = DeserializeSpriteActor( buf.ReadString() );
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto actor = DeserializeSpriteActor( buf.ReadString() );
+		const auto key = buf.ReadString();
+		if ( key.empty() || !m_sprite_actors.emplace( key, actor ).second ) {
+			THROW( "invalid or duplicate serialized map sprite actor key" );
+		}
 	}
 
-	sz = buf.ReadInt();
+	sz = buf.ReadCollectionSize( "map sprite instance" );
 	m_sprite_instances.clear();
-	for ( auto i = 0 ; i < sz ; i++ ) {
-		m_sprite_instances[ buf.ReadInt() ] = {
-			buf.ReadString(),
-			buf.ReadVec3()
-		};
+	size_t max_sprite_instance_id = 0;
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto actor_key = buf.ReadString();
+		const auto coords = buf.ReadVec3();
+		const auto instance_id = buf.ReadInt< size_t >( "map sprite instance id" );
+		if ( m_sprite_actors.find( actor_key ) == m_sprite_actors.end() ) {
+			THROW( "serialized map sprite instance references an unknown actor" );
+		}
+		if ( instance_id == 0 ) {
+			THROW( "serialized map sprite instance has an invalid id" );
+		}
+		if ( !std::isfinite( coords.x ) || !std::isfinite( coords.y ) || !std::isfinite( coords.z ) ) {
+			THROW( "invalid serialized map sprite instance coordinates" );
+		}
+		if ( !m_sprite_instances.emplace( instance_id, std::make_pair( actor_key, coords ) ).second ) {
+			THROW( "duplicate serialized map sprite instance id" );
+		}
+		max_sprite_instance_id = std::max( max_sprite_instance_id, instance_id );
 	}
 
-	m_next_sprite_instance_id = buf.ReadInt();
+	const auto next_sprite_instance_id = buf.ReadInt< size_t >( "next map sprite instance id" );
+	if ( next_sprite_instance_id == 0 || ( !m_sprite_instances.empty() && next_sprite_instance_id <= max_sprite_instance_id ) ) {
+		THROW( "invalid next map sprite instance id" );
+	}
+	const auto serialized_sea_level = buf.GetRemaining() > 0
+		? buf.ReadInt()
+		: static_cast< int64_t >( tile::ELEVATION_LEVEL_COAST );
+	if ( serialized_sea_level < tile::ELEVATION_MIN || serialized_sea_level > tile::ELEVATION_MAX ) {
+		THROW( "invalid serialized map sea level" );
+	}
+	climate_state_t serialized_climate_state = {};
+	if ( buf.GetRemaining() > 0 ) {
+		serialized_climate_state.level = buf.ReadInt();
+		serialized_climate_state.future_change = buf.ReadInt();
+		serialized_climate_state.progress = buf.ReadInt();
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized map" );
+	}
+	m_sea_level = static_cast< tile::elevation_t >( serialized_sea_level );
+	SetClimateState( serialized_climate_state );
+	for ( auto* const map_tile : GetAllTiles() ) {
+		map_tile->Update();
+	}
+
+	const auto terrain_vertex_count = m_meshes.terrain->GetVertexCount();
+	const auto terrain_surface_count = m_meshes.terrain->GetSurfaceCount();
+	const auto data_vertex_count = m_meshes.terrain_data->GetVertexCount();
+	std::unordered_set< size_t > referenced_sprite_instances;
+	for ( size_t y = 0 ; y < m_map_state->dimensions.y ; y++ ) {
+		for ( size_t x = y & 1 ; x < m_map_state->dimensions.x ; x += 2 ) {
+			const auto* const tile_state = m_map_state->At( x, y );
+			tile_state->ValidateMeshReferences(
+				terrain_vertex_count,
+				terrain_surface_count,
+				data_vertex_count
+			);
+			for ( const auto& sprite : tile_state->sprites ) {
+				const auto actor_it = m_sprite_actors.find( sprite.actor );
+				const auto instance_it = m_sprite_instances.find( sprite.instance );
+				if (
+					actor_it == m_sprite_actors.end() ||
+					instance_it == m_sprite_instances.end() ||
+					instance_it->second.first != sprite.actor ||
+					actor_it->second.name != sprite.name ||
+					actor_it->second.tex_coords.x != sprite.tex_coords.x ||
+					actor_it->second.tex_coords.y != sprite.tex_coords.y ||
+					!referenced_sprite_instances.insert( sprite.instance ).second
+				) {
+					THROW( "serialized tile sprite does not match the restored map sprite tables" );
+				}
+			}
+		}
+	}
+	if ( referenced_sprite_instances.size() != m_sprite_instances.size() ) {
+		THROW( "serialized map contains unreferenced sprite instances" );
+	}
+	m_next_sprite_instance_id = next_sprite_instance_id;
 
 	m_sprite_actors_to_add.clear();
 	m_sprite_instances_to_remove.clear();
@@ -252,8 +352,10 @@ void Map::Deserialize( types::Buffer buf ) {
 const std::string& Map::GetErrorString( const error_code_t& code ) {
 
 	static const std::unordered_map< error_code_t, const std::string > m_error_code_strings = {
-		{ EC_UNKNOWN,              "Unknown error" },
-		{ EC_MAPFILE_FORMAT_ERROR, "Invalid map file format" }
+		{ EC_UNKNOWN,                "Unknown error" },
+		{ EC_MAPFILE_FORMAT_ERROR,   "Invalid map file format" },
+		{ EC_INVALID_MAP_DIMENSIONS, "Map dimensions must be even values of at least 4 with area no larger than Huge Planet (180x90)" },
+		{ EC_INVALID_MAP_PARAMETERS, "Map generation values must be finite numbers from 0 to 1" }
 	};
 
 	auto it = m_error_code_strings.find( code );
@@ -287,11 +389,12 @@ void Map::ClearTexture() {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "ClearTexture called outside of tile generation" );
 	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
+		const auto atlas_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, (tile::tile_layer_type_t)lt );
 		m_textures.terrain->Erase(
-			m_current_ts->tex_coord.x1,
-			lt * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
-			m_current_ts->tex_coord.x2 - 1,
-			lt * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y2 - 1
+			atlas_pos.x,
+			atlas_pos.y,
+			atlas_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+			atlas_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1
 		);
 	}
 }
@@ -300,6 +403,7 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	ASSERT( m_textures.terrain, "terrain texture not set" );
+	const auto atlas_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_textures.terrain->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -307,8 +411,8 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 		tc.y,
 		tc.x + s_consts.tc.texture_pcx.dimensions.x - 1,
 		tc.y + s_consts.tc.texture_pcx.dimensions.y - 1,
-		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		atlas_pos.x,
+		atlas_pos.y,
 		rotate,
 		alpha,
 		GetRandom(),
@@ -319,15 +423,21 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 void Map::CopyTextureFromLayer( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer_from
+	);
+	const auto dest_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_textures.terrain->AddFrom(
 		m_textures.terrain,
 		mode,
-		tx_from,
-		tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-		tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-		tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
-		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		source_pos.x,
+		source_pos.y,
+		source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+		source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
+		dest_pos.x,
+		dest_pos.y,
 		rotate,
 		alpha,
 		GetRandom(),
@@ -352,15 +462,21 @@ void Map::CopyTexture( const tile::tile_layer_type_t tile_layer_from, const tile
 void Map::CopyTextureDeferred( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureDeferred called outside of tile generation" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer_from
+	);
+	const auto dest_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_map_state->copy_from_after.push_back(
 		{
 			mode,
-			tx_from,
-			tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-			tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-			tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
-			(size_t)m_current_ts->tex_coord.x1,
-			tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + (size_t)m_current_ts->tex_coord.y1,
+			source_pos.x,
+			source_pos.y,
+			source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+			source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
+			dest_pos.x,
+			dest_pos.y,
 			rotate,
 			alpha,
 			perlin
@@ -391,13 +507,18 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer
+	);
 	dest_texture->AddFrom(
 		m_textures.terrain,
 		mode,
-		tx_from,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-		tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
+		source_pos.x,
+		source_pos.y,
+		source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+		source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
 		0,
 		0,
 		rotate,
@@ -412,15 +533,20 @@ void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState*
 	ASSERT( m_textures.terrain, "terrain texture not set" );
 	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
 	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
+	const auto atlas_pos = GetTextureAtlasPosition(
+		(size_t)ts->tex_coord.x1 / s_consts.tc.texture_pcx.dimensions.x,
+		(size_t)ts->tex_coord.y1 / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer
+	);
 	m_textures.terrain->AddFrom(
 		src_texture,
 		mode,
 		0,
 		0,
 		s_consts.tc.texture_pcx.dimensions.x - 1,
-		s_consts.tc.texture_pcx.dimensions.x - 1,
-		ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ts->tex_coord.y1,
+		s_consts.tc.texture_pcx.dimensions.y - 1,
+		atlas_pos.x,
+		atlas_pos.y,
 		rotate,
 		alpha,
 		GetRandom()
@@ -531,6 +657,553 @@ const size_t Map::GetHeight() const {
 	return m_tiles->GetHeight();
 }
 
+const tile::elevation_t Map::GetSeaLevel() const {
+	return m_sea_level;
+}
+
+const Map::climate_state_t& Map::GetClimateState() const {
+	return m_climate_state;
+}
+
+void Map::SetClimateState( const climate_state_t& state ) {
+	if ( state.level < 0 || state.level > 1000000 ) {
+		THROW( "climate level is outside the supported range" );
+	}
+	if (
+		state.future_change < tile::ELEVATION_MIN ||
+		state.future_change > tile::ELEVATION_MAX ||
+		state.future_change % 100 != 0
+	) {
+		THROW( "future climate change is outside the supported range" );
+	}
+	if ( state.progress < 0 || state.progress > 1000000 ) {
+		THROW( "climate progress is outside the supported range" );
+	}
+	m_climate_state = state;
+}
+
+void Map::RefreshTile( tile::Tile* tile ) {
+	ASSERT( tile, "cannot refresh a null tile" );
+	ASSERT( m_map_state && m_textures.terrain, "cannot refresh an uninitialized map" );
+	ASSERT( GetTile( tile->coord.x, tile->coord.y ) == tile, "tile does not belong to map" );
+
+	const auto random_state = GetRandom()->GetState();
+	try {
+		m_current_tile = tile;
+		m_current_ts = GetTileState( tile );
+		if ( !tile->is_water_tile ) {
+			module::LandSurface( this ).GenerateTile( m_current_tile, m_current_ts, m_map_state );
+		}
+		module::Sprites( this ).GenerateTile( m_current_tile, m_current_ts, m_map_state );
+	}
+	catch ( ... ) {
+		m_current_tile = nullptr;
+		m_current_ts = nullptr;
+		GetRandom()->SetState( random_state );
+		throw;
+	}
+	m_current_tile = nullptr;
+	m_current_ts = nullptr;
+	GetRandom()->SetState( random_state );
+
+	const auto texture_position = GetTextureAtlasPosition(
+		tile->coord.x,
+		tile->coord.y,
+		tile->is_water_tile ? tile::LAYER_WATER : tile::LAYER_LAND
+	);
+	const auto& texture_dimensions = s_consts.tc.texture_pcx.dimensions;
+	types::texture::Texture texture_patch(
+		"TerrainTilePatch",
+		texture_dimensions.x,
+		texture_dimensions.y
+	);
+	texture_patch.AddFrom(
+		m_textures.terrain,
+		types::texture::AM_DEFAULT,
+		texture_position.x,
+		texture_position.y,
+		texture_position.x + texture_dimensions.x - 1,
+		texture_position.y + texture_dimensions.y - 1
+	);
+
+	auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
+	NEW( fr.data.update_tiles.tile_updates, FrontendRequest::tile_updates_t, {
+		tile_render_snapshot_t( *tile, *GetTileState( tile ) ),
+	} );
+	NEW( fr.data.update_tiles.sprite_actors, FrontendRequest::tile_sprite_actors_t, m_sprite_actors_to_add );
+	NEW( fr.data.update_tiles.sprite_removals, FrontendRequest::tile_sprite_removals_t, m_sprite_instances_to_remove );
+	NEW( fr.data.update_tiles.sprite_additions, FrontendRequest::tile_sprite_additions_t, m_sprite_instances_to_add );
+	NEW(
+		fr.data.update_tiles.serialized_terrain_texture_patch,
+		std::string,
+		texture_patch.Serialize().ToString()
+	);
+	fr.data.update_tiles.terrain_texture_x = texture_position.x;
+	fr.data.update_tiles.terrain_texture_y = texture_position.y;
+	fr.data.update_tiles.terrain_texture_width = texture_dimensions.x;
+	fr.data.update_tiles.terrain_texture_height = texture_dimensions.y;
+	m_game->AddFrontendRequest( fr );
+
+	m_sprite_actors_to_add.clear();
+	m_sprite_instances_to_remove.clear();
+	m_sprite_instances_to_add.clear();
+}
+
+const Map::tiles_t Map::GetAllTiles() const {
+	tiles_t tiles;
+	tiles.reserve( GetWidth() * GetHeight() / 2 );
+	for ( size_t y = 0 ; y < GetHeight() ; y++ ) {
+		for ( size_t x = y & 1 ; x < GetWidth() ; x += 2 ) {
+			tiles.push_back( GetTile( x, y ) );
+		}
+	}
+	return tiles;
+}
+
+bool Map::IsTileRefreshTarget( const tile::Tile* tile ) const {
+	return m_active_refresh_tiles.empty() || m_active_refresh_tiles.find( tile ) != m_active_refresh_tiles.end();
+}
+
+std::string Map::ApplyCrater( tile::Tile* center, const size_t radius ) {
+	ASSERT( center, "cannot create a crater around a null tile" );
+	ASSERT( radius >= 1 && radius <= 4, "crater radius must be between one and four tiles" );
+	ASSERT( GetTile( center->coord.x, center->coord.y ) == center, "crater center does not belong to map" );
+
+	const auto snapshot = m_tiles->Serialize().ToString();
+	if ( snapshot.empty() || snapshot.size() > MAX_TERRAIN_SNAPSHOT_SIZE ) {
+		THROW( "serialized terrain snapshot size is invalid" );
+	}
+
+	std::unordered_map< tile::Tile*, size_t > distance = { { center, 0 } };
+	tiles_t pending = { center };
+	for ( size_t i = 0 ; i < pending.size() ; i++ ) {
+		auto* const current = pending.at( i );
+		const auto current_distance = distance.at( current );
+		if ( current_distance >= radius ) {
+			continue;
+		}
+		for ( auto* const neighbour : current->neighbours ) {
+			if ( distance.find( neighbour ) == distance.end() ) {
+				distance.insert( { neighbour, current_distance + 1 } );
+				pending.push_back( neighbour );
+			}
+		}
+	}
+
+	tile_set_t blast_tiles;
+	for ( const auto& it : distance ) {
+		blast_tiles.insert( it.first );
+	}
+
+	const auto all_tiles = GetAllTiles();
+	std::unordered_map< tile::elevation_t*, tiles_t > vertex_owners;
+	for ( auto* const map_tile : all_tiles ) {
+		for ( auto* const vertex : map_tile->elevation.corners ) {
+			auto& owners = vertex_owners[ vertex ];
+			if ( std::find( owners.begin(), owners.end(), map_tile ) == owners.end() ) {
+				owners.push_back( map_tile );
+			}
+		}
+	}
+
+	static constexpr tile::elevation_t CRATER_ELEVATION_STEP = 1000;
+	for ( auto& it : vertex_owners ) {
+		size_t maximum_distance = 0;
+		bool fully_inside_blast = true;
+		for ( auto* const owner : it.second ) {
+			const auto distance_it = distance.find( owner );
+			if ( distance_it == distance.end() ) {
+				fully_inside_blast = false;
+				break;
+			}
+			maximum_distance = std::max( maximum_distance, distance_it->second );
+		}
+		if ( fully_inside_blast ) {
+			const auto depth_steps = std::min( radius, radius - maximum_distance + 1 );
+			auto* const vertex = it.first;
+			*vertex = std::max(
+				tile::ELEVATION_MIN,
+				*vertex - static_cast< tile::elevation_t >( depth_steps ) * CRATER_ELEVATION_STEP
+			);
+		}
+	}
+
+	static constexpr tile::feature_t DESTROYED_SURFACE_FEATURES =
+		tile::FEATURE_RIVER |
+		tile::FEATURE_MONOLITH |
+		tile::FEATURE_XENOFUNGUS |
+		tile::FEATURE_UNITY_POD |
+		tile::FEATURE_UNITY_ENERGY |
+		tile::FEATURE_UNITY_CHOPPER |
+		tile::FEATURE_UNITY_RADAR;
+	for ( auto* const blast_tile : blast_tiles ) {
+		blast_tile->features &= static_cast< tile::feature_t >( ~DESTROYED_SURFACE_FEATURES );
+		blast_tile->terraforming = tile::TERRAFORMING_NONE;
+	}
+	for ( auto* const map_tile : all_tiles ) {
+		map_tile->Update();
+		map_tile->RefreshWrappers();
+	}
+
+	try {
+		RefreshTerrain( blast_tiles );
+	}
+	catch ( ... ) {
+		m_tiles->Restore( types::Buffer( snapshot ) );
+		for ( auto* const map_tile : all_tiles ) {
+			map_tile->RefreshWrappers();
+		}
+		throw;
+	}
+	return snapshot;
+}
+
+std::string Map::ApplyEarthquake( tile::Tile* center, const size_t elevation_steps ) {
+	ASSERT( center, "cannot create an earthquake around a null tile" );
+	ASSERT( elevation_steps >= 1 && elevation_steps <= 3, "earthquake must raise terrain by one to three levels" );
+	ASSERT( GetTile( center->coord.x, center->coord.y ) == center, "earthquake center does not belong to map" );
+	ASSERT( !center->is_water_tile, "earthquake center must be on land" );
+
+	const auto snapshot = m_tiles->Serialize().ToString();
+	if ( snapshot.empty() || snapshot.size() > MAX_TERRAIN_SNAPSHOT_SIZE ) {
+		THROW( "serialized terrain snapshot size is invalid" );
+	}
+
+	const auto amount = static_cast< tile::elevation_t >( elevation_steps ) * 1000;
+	for ( auto* const vertex : center->elevation.corners ) {
+		*vertex = std::min( tile::ELEVATION_MAX, *vertex + amount );
+	}
+
+	const auto all_tiles = GetAllTiles();
+	for ( auto* const map_tile : all_tiles ) {
+		map_tile->Update();
+		map_tile->RefreshWrappers();
+	}
+
+	try {
+		RefreshTerrain( { center } );
+	}
+	catch ( ... ) {
+		m_tiles->Restore( types::Buffer( snapshot ) );
+		for ( auto* const map_tile : all_tiles ) {
+			map_tile->RefreshWrappers();
+		}
+		throw;
+	}
+	return snapshot;
+}
+
+void Map::RestoreTerrain( const std::string& snapshot ) {
+	if ( snapshot.empty() || snapshot.size() > MAX_TERRAIN_SNAPSHOT_SIZE ) {
+		THROW( "serialized terrain snapshot size is invalid" );
+	}
+
+	// Validate the complete snapshot before changing any live tile.
+	tile::Tiles validated_tiles( this );
+	validated_tiles.Deserialize( types::Buffer( snapshot ) );
+	if ( validated_tiles.GetWidth() != GetWidth() || validated_tiles.GetHeight() != GetHeight() ) {
+		THROW( "serialized terrain snapshot dimensions do not match the active map" );
+	}
+
+	const auto all_tiles = GetAllTiles();
+	std::vector< std::string > previous_tiles;
+	previous_tiles.reserve( all_tiles.size() );
+	for ( auto* const map_tile : all_tiles ) {
+		previous_tiles.push_back( map_tile->Serialize().ToString() );
+	}
+
+	m_tiles->Restore( types::Buffer( snapshot ) );
+	tile_set_t changed_tiles;
+	for ( size_t i = 0 ; i < all_tiles.size() ; i++ ) {
+		auto* const map_tile = all_tiles.at( i );
+		map_tile->RefreshWrappers();
+		if ( map_tile->Serialize().ToString() != previous_tiles.at( i ) ) {
+			changed_tiles.insert( map_tile );
+		}
+	}
+	RefreshTerrain( changed_tiles );
+}
+
+std::string Map::ApplySeaLevelChange( const tile::elevation_t amount ) {
+	if ( amount == 0 ) {
+		THROW( "sea-level change must be non-zero" );
+	}
+	const auto next_sea_level = m_sea_level + amount;
+	if ( next_sea_level < tile::ELEVATION_MIN || next_sea_level > tile::ELEVATION_MAX ) {
+		THROW( "sea level would exceed the supported elevation range" );
+	}
+
+	const auto tiles_snapshot = m_tiles->Serialize().ToString();
+	if ( tiles_snapshot.empty() || tiles_snapshot.size() > MAX_TERRAIN_SNAPSHOT_SIZE ) {
+		THROW( "serialized terrain snapshot size is invalid" );
+	}
+	types::Buffer snapshot;
+	snapshot.WriteInt( m_sea_level );
+	snapshot.WriteString( tiles_snapshot );
+
+	const auto previous_sea_level = m_sea_level;
+	const auto all_tiles = GetAllTiles();
+	m_sea_level = next_sea_level;
+	static constexpr tile::terraforming_t DOMAIN_CHANGE_TERRAFORMING =
+		tile::TERRAFORMING_ROAD |
+		tile::TERRAFORMING_MAG_TUBE |
+		tile::TERRAFORMING_FOREST |
+		tile::TERRAFORMING_FARM |
+		tile::TERRAFORMING_SOIL_ENRICHER |
+		tile::TERRAFORMING_SOLAR |
+		tile::TERRAFORMING_MINE |
+		tile::TERRAFORMING_CONDENSER |
+		tile::TERRAFORMING_MIRROR |
+		tile::TERRAFORMING_BOREHOLE |
+		tile::TERRAFORMING_SENSOR |
+		tile::TERRAFORMING_BUNKER |
+		tile::TERRAFORMING_AIRBASE;
+	for ( auto* const map_tile : all_tiles ) {
+		const bool was_water = map_tile->is_water_tile;
+		map_tile->Update();
+		if ( map_tile->is_water_tile != was_water ) {
+			map_tile->terraforming &= static_cast< tile::terraforming_t >( ~DOMAIN_CHANGE_TERRAFORMING );
+		}
+		map_tile->RefreshWrappers();
+	}
+
+	try {
+		RefreshTerrain( tile_set_t( all_tiles.begin(), all_tiles.end() ) );
+	}
+	catch ( ... ) {
+		m_sea_level = previous_sea_level;
+		m_tiles->Restore( types::Buffer( tiles_snapshot ) );
+		for ( auto* const map_tile : all_tiles ) {
+			map_tile->RefreshWrappers();
+		}
+		throw;
+	}
+	return snapshot.ToString();
+}
+
+void Map::RestoreSeaLevel( const std::string& snapshot ) {
+	if ( snapshot.empty() || snapshot.size() > MAX_SEA_LEVEL_SNAPSHOT_SIZE ) {
+		THROW( "serialized sea-level snapshot size is invalid" );
+	}
+	types::Buffer snapshot_buffer( snapshot );
+	const auto restored_sea_level = snapshot_buffer.ReadInt();
+	const auto restored_tiles = snapshot_buffer.ReadString();
+	if (
+		restored_sea_level < tile::ELEVATION_MIN ||
+		restored_sea_level > tile::ELEVATION_MAX ||
+		restored_tiles.empty() ||
+		restored_tiles.size() > MAX_TERRAIN_SNAPSHOT_SIZE ||
+		snapshot_buffer.GetRemaining() != 0
+	) {
+		THROW( "serialized sea-level snapshot is invalid" );
+	}
+
+	tile::Tiles validated_tiles( this );
+	validated_tiles.Deserialize( types::Buffer( restored_tiles ) );
+	if ( validated_tiles.GetWidth() != GetWidth() || validated_tiles.GetHeight() != GetHeight() ) {
+		THROW( "serialized sea-level snapshot dimensions do not match the active map" );
+	}
+
+	const auto previous_sea_level = m_sea_level;
+	const auto previous_tiles = m_tiles->Serialize().ToString();
+	const auto all_tiles = GetAllTiles();
+	m_sea_level = static_cast< tile::elevation_t >( restored_sea_level );
+	m_tiles->Restore( types::Buffer( restored_tiles ) );
+	for ( auto* const map_tile : all_tiles ) {
+		map_tile->Update();
+		map_tile->RefreshWrappers();
+	}
+
+	try {
+		RefreshTerrain( tile_set_t( all_tiles.begin(), all_tiles.end() ) );
+	}
+	catch ( ... ) {
+		m_sea_level = previous_sea_level;
+		m_tiles->Restore( types::Buffer( previous_tiles ) );
+		for ( auto* const map_tile : all_tiles ) {
+			map_tile->RefreshWrappers();
+		}
+		throw;
+	}
+}
+
+void Map::RefreshTerrain( const tile_set_t& changed_tiles ) {
+	if ( changed_tiles.empty() ) {
+		return;
+	}
+	ASSERT( m_map_state && m_textures.terrain, "cannot refresh an uninitialized map" );
+
+	tile_set_t refresh_set = changed_tiles;
+	for ( size_t ring = 0 ; ring < 2 ; ring++ ) {
+		tiles_t edge( refresh_set.begin(), refresh_set.end() );
+		for ( auto* const map_tile : edge ) {
+			for ( auto* const neighbour : map_tile->neighbours ) {
+				refresh_set.insert( neighbour );
+			}
+		}
+	}
+
+	const auto all_tiles = GetAllTiles();
+	tiles_t refresh_tiles;
+	refresh_tiles.reserve( refresh_set.size() );
+	for ( auto* const map_tile : all_tiles ) {
+		if ( refresh_set.find( map_tile ) != refresh_set.end() ) {
+			refresh_tiles.push_back( map_tile );
+			m_active_refresh_tiles.insert( map_tile );
+		}
+	}
+
+	const auto random_state = GetRandom()->GetState();
+	common::mt_flag_t canceled = false;
+	try {
+		LoadTiles( refresh_tiles, MT_C );
+		FixNormals( refresh_tiles, MT_C );
+	}
+	catch ( ... ) {
+		m_current_tile = nullptr;
+		m_current_ts = nullptr;
+		m_active_refresh_tiles.clear();
+		m_map_state->copy_from_after.clear();
+		m_sprite_actors_to_add.clear();
+		m_sprite_instances_to_remove.clear();
+		m_sprite_instances_to_add.clear();
+		GetRandom()->SetState( random_state );
+		throw;
+	}
+	m_current_tile = nullptr;
+	m_current_ts = nullptr;
+	m_active_refresh_tiles.clear();
+	GetRandom()->SetState( random_state );
+
+	QueueTerrainUpdates( refresh_tiles );
+}
+
+void Map::QueueTerrainUpdates( const tiles_t& tiles ) {
+	struct texture_cell_t {
+		size_t x;
+		size_t y;
+	};
+	std::vector< texture_cell_t > cells;
+	cells.reserve( tiles.size() * tile::LAYER_MAX );
+	for ( auto* const map_tile : tiles ) {
+		for ( size_t layer = 0 ; layer < tile::LAYER_MAX ; layer++ ) {
+			const auto position = GetTextureAtlasPosition(
+				map_tile->coord.x,
+				map_tile->coord.y,
+				static_cast< tile::tile_layer_type_t >( layer )
+			);
+			cells.push_back( { position.x, position.y } );
+		}
+	}
+	std::sort(
+		cells.begin(),
+		cells.end(),
+		[]( const texture_cell_t& first, const texture_cell_t& second ) {
+			return first.y == second.y ? first.x < second.x : first.y < second.y;
+		}
+	);
+	cells.erase(
+		std::unique(
+			cells.begin(),
+			cells.end(),
+			[]( const texture_cell_t& first, const texture_cell_t& second ) {
+				return first.x == second.x && first.y == second.y;
+			}
+		),
+		cells.end()
+	);
+
+	FrontendRequest::tile_updates_t tile_updates;
+	tile_updates.reserve( tiles.size() );
+	for ( auto* const map_tile : tiles ) {
+		tile_updates.emplace_back( *map_tile, *GetTileState( map_tile ) );
+	}
+	const FrontendRequest::tile_updates_t empty_tile_updates;
+	const FrontendRequest::tile_sprite_actors_t empty_sprite_actors;
+	const FrontendRequest::tile_sprite_removals_t empty_sprite_removals;
+	const FrontendRequest::tile_sprite_additions_t empty_sprite_additions;
+	const auto serialized_terrain_mesh = m_meshes.terrain->Serialize().ToString();
+	const auto serialized_terrain_data_mesh = m_meshes.terrain_data->Serialize().ToString();
+
+	const auto& cell_dimensions = s_consts.tc.texture_pcx.dimensions;
+	bool include_state_updates = true;
+	for ( size_t first = 0 ; first < cells.size() ; ) {
+		size_t last = first;
+		while (
+			last + 1 < cells.size() &&
+			cells.at( last + 1 ).y == cells.at( first ).y &&
+			cells.at( last + 1 ).x == cells.at( last ).x + cell_dimensions.x
+		) {
+			last++;
+		}
+		const auto patch_width = cells.at( last ).x - cells.at( first ).x + cell_dimensions.x;
+		types::texture::Texture texture_patch(
+			"TerrainBatchPatch",
+			patch_width,
+			cell_dimensions.y
+		);
+		texture_patch.AddFrom(
+			m_textures.terrain,
+			types::texture::AM_DEFAULT,
+			cells.at( first ).x,
+			cells.at( first ).y,
+			cells.at( last ).x + cell_dimensions.x - 1,
+			cells.at( first ).y + cell_dimensions.y - 1
+		);
+
+		auto fr = FrontendRequest( FrontendRequest::FR_UPDATE_TILES );
+		NEW(
+			fr.data.update_tiles.tile_updates,
+			FrontendRequest::tile_updates_t,
+			include_state_updates ? tile_updates : empty_tile_updates
+		);
+		NEW(
+			fr.data.update_tiles.sprite_actors,
+			FrontendRequest::tile_sprite_actors_t,
+			include_state_updates ? m_sprite_actors_to_add : empty_sprite_actors
+		);
+		NEW(
+			fr.data.update_tiles.sprite_removals,
+			FrontendRequest::tile_sprite_removals_t,
+			include_state_updates ? m_sprite_instances_to_remove : empty_sprite_removals
+		);
+		NEW(
+			fr.data.update_tiles.sprite_additions,
+			FrontendRequest::tile_sprite_additions_t,
+			include_state_updates ? m_sprite_instances_to_add : empty_sprite_additions
+		);
+		NEW(
+			fr.data.update_tiles.serialized_terrain_texture_patch,
+			std::string,
+			texture_patch.Serialize().ToString()
+		);
+		if ( include_state_updates ) {
+			NEW(
+				fr.data.update_tiles.serialized_terrain_mesh,
+				std::string,
+				serialized_terrain_mesh
+			);
+			NEW(
+				fr.data.update_tiles.serialized_terrain_data_mesh,
+				std::string,
+				serialized_terrain_data_mesh
+			);
+		}
+		fr.data.update_tiles.terrain_texture_x = cells.at( first ).x;
+		fr.data.update_tiles.terrain_texture_y = cells.at( first ).y;
+		fr.data.update_tiles.terrain_texture_width = patch_width;
+		fr.data.update_tiles.terrain_texture_height = cell_dimensions.y;
+		m_game->AddFrontendRequest( fr );
+
+		include_state_updates = false;
+		first = last + 1;
+	}
+
+	m_sprite_actors_to_add.clear();
+	m_sprite_instances_to_remove.clear();
+	m_sprite_instances_to_add.clear();
+}
+
 tile::Tiles* Map::GetTilesPtr() const {
 	ASSERT( m_tiles, "tiles not set" );
 	return m_tiles;
@@ -550,6 +1223,12 @@ const sprite_actor_t Map::DeserializeSpriteActor( types::Buffer buf ) const {
 	const auto name = buf.ReadString();
 	const auto tex_coords = buf.ReadVec2u();
 	const auto z_index = buf.ReadFloat();
+	if ( name.empty() || !std::isfinite( z_index ) ) {
+		THROW( "invalid serialized map sprite actor" );
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized map sprite actor" );
+	}
 	return sprite_actor_t{
 		name,
 		tex_coords,
@@ -604,6 +1283,10 @@ const size_t Map::AddTerrainSpriteActorInstance( const std::string& key, const t
 void Map::RemoveTerrainSpriteActorInstance( const std::string& key, const size_t instance_id ) {
 	ASSERT( m_sprite_actors.find( key ) != m_sprite_actors.end(), "actor not found" );
 	ASSERT( m_sprite_instances_to_remove.find( instance_id ) == m_sprite_instances_to_remove.end(), "instance already pending removal" );
+	const auto& instance_it = m_sprite_instances.find( instance_id );
+	ASSERT( instance_it != m_sprite_instances.end(), "instance not found" );
+	ASSERT( instance_it->second.first == key, "instance actor mismatch" );
+	m_sprite_instances.erase( instance_it );
 	m_sprite_instances_to_remove.insert(
 		{
 			instance_id,
@@ -661,9 +1344,33 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 			? c->GetQuickstartMapCloudCover()
 			: random->GetFloat( 0.2, 0.8f );
 	}
+	if (
+		map_settings->size_x < settings::MAP_MIN_DIMENSION ||
+		map_settings->size_y < settings::MAP_MIN_DIMENSION ||
+		( map_settings->size_x & 1 ) || ( map_settings->size_y & 1 ) ||
+		map_settings->size_x > std::numeric_limits< uint32_t >::max() ||
+		map_settings->size_y > std::numeric_limits< uint32_t >::max() ||
+		map_settings->size_x > settings::MAP_MAX_AREA ||
+		map_settings->size_y > settings::MAP_MAX_AREA ||
+		static_cast< uint64_t >( map_settings->size_x ) * static_cast< uint64_t >( map_settings->size_y ) > settings::MAP_MAX_AREA
+	) {
+		return EC_INVALID_MAP_DIMENSIONS;
+	}
+	if (
+		!std::isfinite( map_settings->ocean_coverage ) || map_settings->ocean_coverage < 0.0f || map_settings->ocean_coverage > 1.0f ||
+		!std::isfinite( map_settings->erosive_forces ) || map_settings->erosive_forces < 0.0f || map_settings->erosive_forces > 1.0f ||
+		!std::isfinite( map_settings->native_lifeforms ) || map_settings->native_lifeforms < 0.0f || map_settings->native_lifeforms > 1.0f ||
+		!std::isfinite( map_settings->cloud_cover ) || map_settings->cloud_cover < 0.0f || map_settings->cloud_cover > 1.0f
+	) {
+		return EC_INVALID_MAP_PARAMETERS;
+	}
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
-	NEW( m_tiles, tile::Tiles, this, map_settings->size_x, map_settings->size_y );
+	NEW(
+		m_tiles, tile::Tiles, this,
+		static_cast< uint32_t >( map_settings->size_x ),
+		static_cast< uint32_t >( map_settings->size_y )
+	);
 	generator.Generate( m_tiles, map_settings, MT_C );
 	if ( canceled ) {
 		Log( "Map generation canceled" );
@@ -717,7 +1424,7 @@ const Map::error_code_t Map::SaveToFile( const std::string& path ) const {
 		util::FS::WriteFile( path, m_tiles->Serialize().ToString() );
 		return EC_NONE;
 	}
-	catch ( std::runtime_error& e ) {
+	catch ( const std::runtime_error& ) {
 		return EC_MAPFILE_FORMAT_ERROR;
 	}
 }
@@ -742,11 +1449,6 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 		-( s_consts.tile.scale.x * ( m_map_state->dimensions.x + 1 ) / 4 - s_consts.tile.radius.x ),
 		-( s_consts.tile.scale.y * ( m_map_state->dimensions.y + 1 ) / 4 - s_consts.tile.radius.y )
 	};
-	m_map_state->variables.texture_scaling = {
-		1.0f / s_consts.tc.texture_pcx.dimensions.x / ( m_map_state->dimensions.x + 1 ), // + 1 for overdraw column
-		1.0f / s_consts.tc.texture_pcx.dimensions.y / m_map_state->dimensions.y / tile::LAYER_MAX
-	};
-
 	m_map_state->LinkTileStates( MT_C );
 	MT_RETIFV( EC_ABORTED );
 
@@ -771,6 +1473,9 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 	MT_RETIFV( EC_ABORTED );
 
 	m_map_state->first_run = false;
+	m_sprite_actors_to_add.clear();
+	m_sprite_instances_to_remove.clear();
+	m_sprite_instances_to_add.clear();
 
 	m_current_tile = nullptr;
 	m_current_ts = nullptr;
@@ -779,16 +1484,27 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 }
 
 void Map::InitTextureAndMesh() {
+	const auto atlas_dimensions = GetTextureAtlasDimensions();
+	Log( "Terrain texture atlas: " + atlas_dimensions.ToString() );
+	m_map_state->variables.texture_scaling = {
+		1.0f / atlas_dimensions.x,
+		1.0f / atlas_dimensions.y
+	};
 
 	if ( m_textures.terrain ) {
 		DELETE( m_textures.terrain );
 	}
 	NEW( m_textures.terrain, types::texture::Texture, "TerrainTexture",
-		( m_map_state->dimensions.x + 1 ) * s_consts.tc.texture_pcx.dimensions.x, // + 1 for overdraw_column
-		( m_map_state->dimensions.y * tile::LAYER_MAX ) * s_consts.tc.texture_pcx.dimensions.y
+		atlas_dimensions.x,
+		atlas_dimensions.y
 	);
 
-	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
+	if ( m_meshes.terrain ) {
+		DELETE( m_meshes.terrain );
+	}
+	if ( m_meshes.terrain_data ) {
+		DELETE( m_meshes.terrain_data );
+	}
 	NEW( m_meshes.terrain, types::mesh::Render,
 		( m_map_state->dimensions.x * tile::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 5 / 2, // + 1 for overdraw column
 		( m_map_state->dimensions.x * tile::LAYER_MAX + 1 ) * m_map_state->dimensions.y * 4 / 2 // + 1 for overdraw column
@@ -801,6 +1517,39 @@ void Map::InitTextureAndMesh() {
 	// TODO: refactor?
 	m_map_state->terrain_texture = m_textures.terrain;
 	m_map_state->ter1_pcx = m_textures.source.ter1_pcx;
+}
+
+const types::Vec2< size_t > Map::GetTextureAtlasDimensions() const {
+	ASSERT( m_map_state, "map state not set" );
+	ASSERT( m_map_state->dimensions.x > 0 && m_map_state->dimensions.x % 2 == 0, "map width must be a positive even number" );
+	const size_t cell_count =
+		( m_map_state->dimensions.x / 2 ) *
+		m_map_state->dimensions.y *
+		tile::LAYER_MAX;
+	const size_t columns = (size_t)std::ceil( std::sqrt( (double)cell_count ) );
+	const size_t rows = ( cell_count + columns - 1 ) / columns;
+	return {
+		columns * s_consts.tc.texture_pcx.dimensions.x,
+		rows * s_consts.tc.texture_pcx.dimensions.y
+	};
+}
+
+const types::Vec2< size_t > Map::GetTextureAtlasPosition( const size_t tile_x, const size_t tile_y, const tile::tile_layer_type_t layer ) const {
+	ASSERT( m_map_state, "map state not set" );
+	ASSERT( m_map_state->dimensions.x > 0 && m_map_state->dimensions.x % 2 == 0, "map width must be a positive even number" );
+	ASSERT( tile_x < m_map_state->dimensions.x, "texture atlas tile x overflow" );
+	ASSERT( tile_y < m_map_state->dimensions.y, "texture atlas tile y overflow" );
+	ASSERT( ( tile_x % 2 ) == ( tile_y % 2 ), "texture atlas tile axis oddity differs" );
+	ASSERT( layer < tile::LAYER_MAX, "texture atlas layer overflow" );
+	const size_t tile_count = ( m_map_state->dimensions.x / 2 ) * m_map_state->dimensions.y;
+	const size_t cell_count = tile_count * tile::LAYER_MAX;
+	const size_t atlas_columns = (size_t)std::ceil( std::sqrt( (double)cell_count ) );
+	const size_t tile_index = tile_y * ( m_map_state->dimensions.x / 2 ) + tile_x / 2;
+	const size_t cell_index = (size_t)layer * tile_count + tile_index;
+	return {
+		( cell_index % atlas_columns ) * s_consts.tc.texture_pcx.dimensions.x,
+		( cell_index / atlas_columns ) * s_consts.tc.texture_pcx.dimensions.y
+	};
 }
 
 void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE ) {
@@ -848,7 +1597,8 @@ void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT
 				MT_RETIF();
 			}
 
-			if ( !--state_iterate_eta ) {
+			// A live refresh runs inside an event transaction and must not re-enter state processing.
+			if ( m_active_refresh_tiles.empty() && !--state_iterate_eta ) {
 				// keep processing state (i.e. network events) while loading
 				m_game->GetState()->Iterate();
 				state_iterate_eta = ITERATE_STATE_EVERY_N_TILES;

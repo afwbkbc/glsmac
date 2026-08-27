@@ -34,6 +34,7 @@ public:
 	~UnitDef();
 
 	const bool IsArtillery() const;
+	const bool IsPlanetBuster() const;
 
 	sprite::Sprite* GetSprite( const backend::unit::morale_t morale );
 
@@ -51,6 +52,10 @@ private:
 	std::string m_id;
 	std::string m_name;
 	backend::unit::def_type_t m_type;
+	int64_t m_offense;
+	int64_t m_defense;
+	bool m_is_artillery = false;
+	bool m_is_planet_buster = false;
 
 	typedef std::unordered_map< backend::unit::morale_t, sprite::Sprite > morale_based_sprites_t;
 

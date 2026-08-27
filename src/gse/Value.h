@@ -293,6 +293,7 @@ public:
 
 	static const std::string& GetTypeStringStatic( const value_type_t type );
 	const std::string& GetTypeString() const;
+	const bool IsInvalidated() const;
 	virtual const std::string ToString() const;
 	const std::string ToStringImpl( std::unordered_set< const Value* >& stack ) const;
 	const std::string Dump() const;
@@ -318,8 +319,10 @@ public:
 
 protected:
 	Value( gc::Space* const gc_space, const value_type_t type );
+	void Invalidate();
 
 	gc::Space* const m_gc_space = nullptr;
+	bool m_is_invalidated = false;
 
 };
 

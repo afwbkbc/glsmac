@@ -60,13 +60,16 @@ void SpriteRender::Serialize( types::Buffer& buf, const SpriteRender* render ) {
 
 SpriteRender* SpriteRender::Deserialize( types::Buffer& buf ) {
 	const auto file = buf.ReadString();
-	const auto x = buf.ReadInt();
-	const auto y = buf.ReadInt();
-	const auto w = buf.ReadInt();
-	const auto h = buf.ReadInt();
-	const auto cx = buf.ReadInt();
-	const auto cy = buf.ReadInt();
-	const auto morale_based_xshift = buf.ReadInt();
+	const auto x = buf.ReadInt< uint32_t >( "unit sprite x" );
+	const auto y = buf.ReadInt< uint32_t >( "unit sprite y" );
+	const auto w = buf.ReadInt< uint32_t >( "unit sprite width" );
+	const auto h = buf.ReadInt< uint32_t >( "unit sprite height" );
+	const auto cx = buf.ReadInt< uint32_t >( "unit sprite center x" );
+	const auto cy = buf.ReadInt< uint32_t >( "unit sprite center y" );
+	const auto morale_based_xshift = buf.ReadInt< uint32_t >( "unit sprite morale shift" );
+	if ( file.empty() || w == 0 || h == 0 ) {
+		THROW( "invalid serialized unit sprite render" );
+	}
 	return new SpriteRender( file, x, y, w, h, cx, cy, morale_based_xshift );
 }
 

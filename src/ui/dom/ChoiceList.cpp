@@ -189,7 +189,7 @@ void ChoiceList::SetItems( GSE_CALLABLE, const gse::value::array_elements_t& ite
 				Select( GSE_CALL, choice, true );
 			}
 			else if ( m_on_update ) {
-				m_on_update( m_selected_choice->value, m_selected_choice->label, was_actually_changed );
+				m_on_update( GSE_CALL, m_selected_choice->value, m_selected_choice->label, was_actually_changed );
 			}
 			return VALUE( gse::value::Bool,, true );
 		} ) );
@@ -222,7 +222,7 @@ void ChoiceList::Select( GSE_CALLABLE, const choice_t& choice, const bool send_e
 	UpdateProperty( "value", VALUE( gse::value::String, , m_selected_choice->value ) );
 	if ( m_on_update ) {
 		// managed by parent object otherwise
-		m_on_update( m_selected_choice->value, m_selected_choice->label, send_event );
+		m_on_update( GSE_CALL, m_selected_choice->value, m_selected_choice->label, send_event );
 	}
 	else {
 		if ( send_event ) {

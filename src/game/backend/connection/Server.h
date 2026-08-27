@@ -59,6 +59,18 @@ private:
 	};
 	std::unordered_map< network::cid_t, download_data_t > m_download_data = {}; // cid -> serialized snapshot of world
 
+	static constexpr size_t MAX_DEFERRED_GAME_EVENTS = 4096;
+	static constexpr size_t MAX_DEFERRED_GAME_EVENT_BYTES = 16 * 1024 * 1024;
+	struct deferred_game_events_t {
+		game_events_t events = {};
+		size_t serialized_size = 0;
+	};
+	std::unordered_map< network::cid_t, deferred_game_events_t > m_deferred_game_events = {};
+
+	void SendSerializedGameEvent( const network::cid_t cid, const game_event_t& event );
+	void QueueDeferredGameEvent( const network::cid_t cid, const game_event_t& event );
+	void FlushDeferredGameEvents( const network::cid_t cid );
+
 	void ClearReadyFlags();
 };
 

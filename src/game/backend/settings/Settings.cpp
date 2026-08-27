@@ -1,5 +1,7 @@
 #include "Settings.h"
 
+#include <cmath>
+
 #include "util/FS.h"
 
 #include "gse/value/Float.h"
@@ -52,14 +54,58 @@ const types::Buffer MapSettings::Serialize() const {
 }
 
 void MapSettings::Deserialize( types::Buffer buf ) {
-	type = (type_t)buf.ReadInt();
-	filename = buf.ReadString();
-	size_x = buf.ReadInt();
-	size_y = buf.ReadInt();
-	ocean_coverage = buf.ReadFloat();
-	erosive_forces = buf.ReadFloat();
-	native_lifeforms = buf.ReadFloat();
-	cloud_cover = buf.ReadFloat();
+	const auto serialized_type = buf.ReadInt();
+	const auto serialized_filename = buf.ReadString();
+	const auto serialized_size_x = buf.ReadInt();
+	const auto serialized_size_y = buf.ReadInt();
+	const auto serialized_ocean_coverage = buf.ReadFloat();
+	const auto serialized_erosive_forces = buf.ReadFloat();
+	const auto serialized_native_lifeforms = buf.ReadFloat();
+	const auto serialized_cloud_cover = buf.ReadFloat();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized map settings" );
+	}
+	if ( serialized_type < MT_RANDOM || serialized_type > MT_MAPFILE ) {
+		THROW( "invalid serialized map type: " + std::to_string( serialized_type ) );
+	}
+	if (
+		serialized_filename != util::FS::GetBaseName( serialized_filename ) ||
+		serialized_filename.find( '/' ) != std::string::npos ||
+		serialized_filename.find( '\\' ) != std::string::npos
+	) {
+		THROW( "serialized map filename contains directory components" );
+	}
+	if ( serialized_type == MT_MAPFILE && serialized_filename.empty() ) {
+		THROW( "serialized map file is empty" );
+	}
+	if (
+		serialized_size_x < static_cast< int64_t >( MAP_MIN_DIMENSION ) ||
+		serialized_size_y < static_cast< int64_t >( MAP_MIN_DIMENSION ) ||
+		( serialized_size_x & 1 ) || ( serialized_size_y & 1 ) ||
+		serialized_size_x > static_cast< int64_t >( MAP_MAX_AREA ) ||
+		serialized_size_y > static_cast< int64_t >( MAP_MAX_AREA ) ||
+		static_cast< uint64_t >( serialized_size_x ) * static_cast< uint64_t >( serialized_size_y ) > MAP_MAX_AREA
+	) {
+		THROW( "invalid serialized map dimensions" );
+	}
+	const auto validate_fraction = []( const float value, const std::string& name ) {
+		if ( !std::isfinite( value ) || value < 0.0f || value > 1.0f ) {
+			THROW( "invalid serialized map " + name );
+		}
+	};
+	validate_fraction( serialized_ocean_coverage, "ocean coverage" );
+	validate_fraction( serialized_erosive_forces, "erosive forces" );
+	validate_fraction( serialized_native_lifeforms, "native lifeforms" );
+	validate_fraction( serialized_cloud_cover, "cloud cover" );
+
+	type = static_cast< type_t >( serialized_type );
+	filename = serialized_filename;
+	size_x = serialized_size_x;
+	size_y = serialized_size_y;
+	ocean_coverage = serialized_ocean_coverage;
+	erosive_forces = serialized_erosive_forces;
+	native_lifeforms = serialized_native_lifeforms;
+	cloud_cover = serialized_cloud_cover;
 }
 
 void GlobalSettings::Initialize() {
@@ -90,10 +136,26 @@ const types::Buffer GlobalSettings::Serialize() const {
 }
 
 void GlobalSettings::Deserialize( types::Buffer buf ) {
-	map.Deserialize( buf.ReadString() );
-	rules.Deserialize( buf.ReadString() );
-	difficulty_level = buf.ReadInt();
-	game_name = buf.ReadString();
+	const auto serialized_map = buf.ReadString();
+	const auto serialized_rules = buf.ReadString();
+	const auto serialized_difficulty_level = buf.ReadInt< int >( "difficulty level" );
+	const auto serialized_game_name = buf.ReadString();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized global settings" );
+	}
+
+	MapSettings parsed_map;
+	parsed_map.Deserialize( types::Buffer( serialized_map ) );
+	game::backend::rules::Default parsed_rules;
+	parsed_rules.Deserialize( types::Buffer( serialized_rules ) );
+	if ( parsed_rules.m_difficulty_levels.GetVK().find( serialized_difficulty_level ) == parsed_rules.m_difficulty_levels.GetVK().end() ) {
+		THROW( "invalid serialized difficulty level: " + std::to_string( serialized_difficulty_level ) );
+	}
+
+	map = parsed_map;
+	rules.Deserialize( types::Buffer( serialized_rules ) );
+	difficulty_level = serialized_difficulty_level;
+	game_name = serialized_game_name;
 }
 
 WRAPMAP( game_mode, LocalSettings::game_mode_t,
@@ -146,11 +208,29 @@ const types::Buffer LocalSettings::Serialize() const {
 }
 
 void LocalSettings::Deserialize( types::Buffer buf ) {
-	game_mode = (game_mode_t)buf.ReadInt();
-	network_type = (network_type_t)buf.ReadInt();
-	network_role = (network_role_t)buf.ReadInt();
-	player_name = buf.ReadString();
-	remote_address = buf.ReadString();
+	const auto serialized_game_mode = buf.ReadInt();
+	const auto serialized_network_type = buf.ReadInt();
+	const auto serialized_network_role = buf.ReadInt();
+	const auto serialized_player_name = buf.ReadString();
+	const auto serialized_remote_address = buf.ReadString();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized local settings" );
+	}
+	if ( serialized_game_mode < GM_SINGLEPLAYER || serialized_game_mode > GM_SCENARIO ) {
+		THROW( "invalid serialized game mode: " + std::to_string( serialized_game_mode ) );
+	}
+	if ( serialized_network_type < NT_NONE || serialized_network_type > NT_HOTSEAT ) {
+		THROW( "invalid serialized network type: " + std::to_string( serialized_network_type ) );
+	}
+	if ( serialized_network_role < NR_NONE || serialized_network_role > NR_CLIENT ) {
+		THROW( "invalid serialized network role: " + std::to_string( serialized_network_role ) );
+	}
+
+	game_mode = static_cast< game_mode_t >( serialized_game_mode );
+	network_type = static_cast< network_type_t >( serialized_network_type );
+	network_role = static_cast< network_role_t >( serialized_network_role );
+	player_name = serialized_player_name;
+	remote_address = serialized_remote_address;
 }
 
 WRAPIMPL_BEGIN( Settings )
@@ -176,8 +256,18 @@ const types::Buffer Settings::Serialize() const {
 }
 
 void Settings::Deserialize( types::Buffer buf ) {
-	global.Deserialize( types::Buffer( buf.ReadString() ) );
-	local.Deserialize( types::Buffer( buf.ReadString() ) );
+	const auto serialized_global = buf.ReadString();
+	const auto serialized_local = buf.ReadString();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized settings" );
+	}
+	GlobalSettings parsed_global;
+	parsed_global.Deserialize( types::Buffer( serialized_global ) );
+	LocalSettings parsed_local;
+	parsed_local.Deserialize( types::Buffer( serialized_local ) );
+
+	global.Deserialize( types::Buffer( serialized_global ) );
+	local.Deserialize( types::Buffer( serialized_local ) );
 }
 
 }

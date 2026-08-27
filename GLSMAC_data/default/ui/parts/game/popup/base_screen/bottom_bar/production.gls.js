@@ -19,7 +19,7 @@ return {
 			class: 'default-panel-inner',
 		});
 
-		body.text({
+		this.production_name = body.text({
 			class: 'base-screen-frame-title',
 			text: 'NOTHING',
 			align: 'top center',
@@ -53,6 +53,7 @@ return {
 	},
 
 	set: (data) => {
+		this.production_name.text = data.name;
 
 		this.p.utils.set_cells(
 			108,
@@ -68,6 +69,9 @@ return {
 				return #to_string(progress_in) + ' TURNS';
 			},
 		);
+		if (#is_defined(data.conversion_label)) {
+			this.production_label.text = data.conversion_label;
+		}
 
 	},
 

@@ -7,6 +7,8 @@
 #include "gse/value/Int.h"
 #include "gse/value/String.h"
 #include "gse/value/Object.h"
+#include "gse/value/Float.h"
+#include "gse/value/Ptr.h"
 #include "gse/value/Callable.h"
 #include "gse/ExecutionPointer.h"
 #include "gc/Space.h"
@@ -15,6 +17,31 @@ namespace gse {
 namespace tests {
 
 void AddGSETests( task::gsetests::GSETests* task ) {
+
+	task->AddTest(
+		"test if cloned references snapshot pointer values",
+		GT() {
+			auto* gc_space = gse->GetGCSpace();
+			bool snapshot_is_independent = false;
+			gc_space->Accumulate(
+				nullptr,
+				[ &gc_space, &ctx, &snapshot_is_independent ]() {
+					float target = 0.75f;
+					const si_t si = {};
+					ExecutionPointer ep;
+					auto* source = VALUE( value::Object, , GSE_CALL_NOGC, value::object_properties_t{
+						{ "value", VALUE( value::Ptr, , target ) },
+					} );
+					auto* snapshot = source->GetRef( "value" )->Clone();
+					target = 0.25f;
+					snapshot_is_independent = snapshot->type == VT_FLOAT &&
+						( (value::Float*)snapshot )->value == 0.75f;
+				}
+			);
+			GT_ASSERT( snapshot_is_independent, "cloned reference retained its pointer-backed target" );
+			GT_OK();
+		}
+	);
 
 	class Sum : public value::Callable {
 	public:

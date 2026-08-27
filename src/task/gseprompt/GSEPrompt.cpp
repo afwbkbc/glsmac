@@ -1,3 +1,5 @@
+#if defined( DEBUG ) || defined( FASTDEBUG )
+
 #ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
@@ -213,3 +215,5 @@ void GSEPrompt::ProcessInput() {
 
 }
 }
+
+#endif

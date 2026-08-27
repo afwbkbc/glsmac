@@ -99,7 +99,12 @@ InstancedSprite* InstancedSpriteManager::GetInstancedSprite(
 
 InstancedSprite* InstancedSpriteManager::GetInstancedSpriteByKey( const std::string& key ) {
 	const auto& it = m_instanced_sprites.find( key );
-	ASSERT( it != m_instanced_sprites.end(), "sprite actor '" + key + "' not found" );
+	if ( it == m_instanced_sprites.end() ) {
+		THROW( "sprite actor '" + key + "' not found" );
+	}
+	if ( !it->second.actor ) {
+		THROW( "sprite actor '" + key + "' is not initialized" );
+	}
 	return &it->second;
 }
 

@@ -92,6 +92,7 @@ PopDef* BaseManager::GetPopDef( const std::string& id ) const {
 void BaseManager::SpawnBase(
 	const size_t base_id,
 	const size_t slot_index,
+	faction::Faction* faction,
 	const types::Vec2< size_t >& tile_coords,
 	const types::Vec3& render_coords,
 	const std::string& name
@@ -101,22 +102,18 @@ void BaseManager::SpawnBase(
 
 	auto* tile = m_game->GetTM()->GetTile( tile_coords );
 	auto* slot = m_game->GetSlot( slot_index );
-	auto* faction = slot->GetFaction();
+	auto* owner_faction = slot->GetFaction();
 
 	auto* base = new base::Base(
 		this,
 		base_id,
 		name,
 		slot,
+		faction,
 		tile,
 		slot_index == m_game->GetMySlotIndex(),
 		render_coords,
-		m_game->GetITM()->CreateInstancedText(
-			name,
-			m_name_font,
-			faction->m_colors.text,
-			faction->m_colors.text_shadow
-		)
+		CreateNameText( name, owner_faction )
 	);
 
 	m_bases.insert(
@@ -125,19 +122,20 @@ void BaseManager::SpawnBase(
 			base
 		}
 	);
-	auto it = m_faction_base_ids.find( faction );
-	if ( it == m_faction_base_ids.end() ) {
-		it = m_faction_base_ids.insert(
-			{
-				faction,
-				{}
-			}
-		).first;
-	}
-	ASSERT( it->second.find( base_id ) == it->second.end(), "faction base id already exists" );
-	it->second.insert( base_id );
 
 	RefreshBase( base );
+}
+
+void BaseManager::UpdateBase(
+	Base* base,
+	const size_t slot_index,
+	faction::Faction* faction,
+	const std::string& name
+) {
+	ASSERT( base, "base is null" );
+	auto* const owner = m_game->GetSlot( slot_index );
+	const bool is_owned = slot_index == m_game->GetMySlotIndex();
+	base->SetState( name, owner, faction, is_owned );
 }
 
 void BaseManager::DespawnBase( const size_t base_id ) {
@@ -147,6 +145,7 @@ void BaseManager::DespawnBase( const size_t base_id ) {
 	auto* base = it->second;
 
 	m_bases.erase( it );
+	m_game->UpdateRelatedWidgets( ui::WT_BASE_PREVIEW, base_id, nullptr );
 
 	delete base;
 
@@ -157,25 +156,6 @@ void BaseManager::RefreshBase( Base* base ) {
 	m_game->RenderTile( base->GetTile(), m_game->GetUM()->GetSelectedUnit() );
 	m_game->UpdateRelatedWidgets( ui::WT_BASE_PREVIEW, base->GetId(), base );
 }
-
-/* TODO void BaseManager::DespawnBase( const size_t base_id ) {
-	const auto& it = m_units.find( unit_id );
-	ASSERT( it != m_units.end(), "unit id not found" );
-
-	auto* unit = it->second;
-
-	m_units.erase( it );
-
-	if ( unit->IsOwned() ) {
-		RemoveSelectable( unit );
-	}
-
-	delete unit;
-
-	m_game->RefreshSelectedTile( m_selected_unit );
-
-}*/
-
 SlotBadges* BaseManager::GetSlotBadges( const size_t slot_index ) const {
 	ASSERT( m_slot_badges.find( slot_index ) != m_slot_badges.end(), "slot base badges for index " + std::to_string( slot_index ) + " not defined" );
 	return m_slot_badges.at( slot_index );
@@ -214,35 +194,71 @@ void BaseManager::SelectBase( Base* base ) {
 }
 
 Base* BaseManager::GetBaseBefore( Base* base ) const {
-	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
-	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
-	const auto& ids = ids_it->second;
-	auto it = ids.find( base->GetId() );
-	ASSERT( it != ids.end(), "base not in faction ids" );
-	if ( it == ids.begin() ) {
-		it = ids.end();
+	ASSERT( base, "base is null" );
+	const auto* const faction = base->GetOwner()->GetFaction();
+	Base* previous = nullptr;
+	Base* last = nullptr;
+	bool found = false;
+	for ( const auto& it : m_bases ) {
+		auto* const candidate = it.second;
+		if ( candidate->GetOwner()->GetFaction() != faction ) {
+			continue;
+		}
+		found = found || candidate == base;
+		if ( !last || candidate->GetId() > last->GetId() ) {
+			last = candidate;
+		}
+		if (
+			candidate->GetId() < base->GetId()
+			&& ( !previous || candidate->GetId() > previous->GetId() )
+		) {
+			previous = candidate;
+		}
 	}
-	it--;
-	ASSERT( m_bases.find( *it ) != m_bases.end(), "base id not found" );
-	return m_bases.at( *it );
+	ASSERT( found, "base not found for owner" );
+	ASSERT( last, "owner has no bases" );
+	return previous ? previous : last;
 }
 
 Base* BaseManager::GetBaseAfter( Base* base ) const {
-	const auto& ids_it = m_faction_base_ids.find( base->GetFaction() );
-	ASSERT( ids_it != m_faction_base_ids.end(), "faction ids not found" );
-	const auto& ids = ids_it->second;
-	auto it = ids.find( base->GetId() );
-	ASSERT( it != ids.end(), "base not in faction ids" );
-	it++;
-	if ( it == ids.end() ) {
-		it = ids.begin();
+	ASSERT( base, "base is null" );
+	const auto* const faction = base->GetOwner()->GetFaction();
+	Base* next = nullptr;
+	Base* first = nullptr;
+	bool found = false;
+	for ( const auto& it : m_bases ) {
+		auto* const candidate = it.second;
+		if ( candidate->GetOwner()->GetFaction() != faction ) {
+			continue;
+		}
+		found = found || candidate == base;
+		if ( !first || candidate->GetId() < first->GetId() ) {
+			first = candidate;
+		}
+		if (
+			candidate->GetId() > base->GetId()
+			&& ( !next || candidate->GetId() < next->GetId() )
+		) {
+			next = candidate;
+		}
 	}
-	ASSERT( m_bases.find( *it ) != m_bases.end(), "base id not found" );
-	return m_bases.at( *it );
+	ASSERT( found, "base not found for owner" );
+	ASSERT( first, "owner has no bases" );
+	return next ? next : first;
 }
 
 text::InstancedFont* BaseManager::GetBadgeFont() const {
 	return m_badge_font;
+}
+
+text::InstancedText* BaseManager::CreateNameText( const std::string& name, const faction::Faction* faction ) const {
+	ASSERT( faction, "base owner faction is null" );
+	return m_game->GetITM()->CreateInstancedText(
+		name,
+		m_name_font,
+		faction->m_colors.text,
+		faction->m_colors.text_shadow
+	);
 }
 
 }

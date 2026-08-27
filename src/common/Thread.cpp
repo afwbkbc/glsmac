@@ -5,6 +5,7 @@
 
 #include "Thread.h"
 #include "common/Module.h"
+#include "engine/Engine.h"
 
 namespace common {
 
@@ -34,6 +35,7 @@ void Thread::AddModule( Module* module ) {
 
 void Thread::T_Start() {
 	ASSERT( !m_thread, "thread object already initialized" );
+	m_exception = nullptr;
 	m_state = STATE_STARTING;
 	m_thread = new std::thread( &Thread::Run, this );
 }
@@ -58,19 +60,26 @@ void Thread::T_Stop() {
 	m_command = Thread::COMMAND_STOP;
 }
 
+const std::exception_ptr& Thread::T_GetException() const {
+	return m_exception;
+}
+
 void Thread::Run() {
+	size_t started_modules = 0;
 
-	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
+	try {
+		ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
 
-	Log( "Starting thread" );
+		Log( "Starting thread" );
 
 #ifdef DEBUG
 	m_icounter = 0;
 #endif
 
-	for ( modules_t::iterator it = m_modules.begin() ; it < m_modules.end() ; ++it ) {
-		( *it )->Start();
-	}
+		for ( const auto& module : m_modules ) {
+			module->Start();
+			started_modules++;
+		}
 
 	float step_diff = 0.0f;
 	float step_len;
@@ -81,13 +90,11 @@ void Thread::Run() {
 	modulensdiff.resize( m_modules.size() );*/
 #endif
 
-	m_state = STATE_ACTIVE;
+		m_state = STATE_ACTIVE;
 
-	Log( "Thread started, entering main loop" );
+		Log( "Thread started, entering main loop" );
 
-//	try {
-
-	while ( m_state == STATE_ACTIVE ) {
+		while ( m_state == STATE_ACTIVE ) {
 
 		auto start = std::chrono::high_resolution_clock::now();
 
@@ -149,30 +156,49 @@ void Thread::Run() {
 			default:
 				THROW( "unknown thread command " + std::to_string( m_command ) );
 		}
+		}
+
+		Log( "Stopping thread" );
+
+		m_state = STATE_STOPPING;
+		while ( started_modules > 0 ) {
+			m_modules[ --started_modules ]->Stop();
+		}
+
+		Log( "Thread stopped" );
+
+		m_state = STATE_INACTIVE;
 	}
-
-	Log( "Stopping thread" );
-
-	m_state = STATE_STOPPING;
-	for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it ) {
-		( *it )->Stop();
-	}
-
-	Log( "Thread stopped" );
-
-	m_state = STATE_INACTIVE;
-
-/*	} catch ( runtime_error &e ) {
-
+	catch ( ... ) {
+		m_exception = std::current_exception();
 		try {
-			m_state = STATE_STOPPING;
-			for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it )
-				(*it)->Stop();
-			m_state = STATE_INACTIVE;
-		} catch ( runtime_error &e ) {};
+			std::rethrow_exception( m_exception );
+		}
+		catch ( const std::exception& e ) {
+			Log( "Unhandled exception on thread " + m_thread_name + ": " + e.what() );
+		}
+		catch ( ... ) {
+			Log( "Unhandled non-standard exception on thread " + m_thread_name );
+		}
 
-		throw e;
-	}*/
+		m_state = STATE_STOPPING;
+		while ( started_modules > 0 ) {
+			try {
+				m_modules[ --started_modules ]->Stop();
+			}
+			catch ( const std::exception& e ) {
+				Log( "Exception while stopping thread " + m_thread_name + ": " + e.what() );
+			}
+			catch ( ... ) {
+				Log( "Non-standard exception while stopping thread " + m_thread_name );
+			}
+		}
+		m_state = STATE_INACTIVE;
+
+		if ( g_engine ) {
+			g_engine->ShutDown( EXIT_FAILURE );
+		}
+	}
 }
 
 const std::string& Thread::GetThreadName() const {

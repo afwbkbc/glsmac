@@ -10,6 +10,7 @@
 #include "rr/GetData.h"
 
 namespace types {
+class Buffer;
 namespace texture {
 class Texture;
 }
@@ -35,6 +36,8 @@ CLASS2( Mesh, Actor, common::RRAware )
 
 	const types::mesh::Mesh* GetMesh() const;
 	const types::mesh::Data* GetDataMesh() const;
+	void UpdateMesh( types::Buffer serialized_mesh );
+	void UpdateDataMesh( types::Buffer serialized_mesh );
 
 	void SetTexture( types::texture::Texture* texture );
 	types::texture::Texture* GetTexture() const;

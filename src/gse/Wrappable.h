@@ -5,6 +5,7 @@
 #include <map>
 #include <optional>
 #include <functional>
+#include <cstdint>
 
 #include "common/Mutex.h"
 
@@ -96,7 +97,7 @@ public:
 	void Depend( Wrappable* other );
 	void Undepend( Wrappable* other );
 
-	typedef uint16_t callback_id_t;
+	typedef int64_t callback_id_t;
 	typedef std::function< void() > f_cleanup_t;
 	virtual const callback_id_t On( GSE_CALLABLE, const std::string& event, value::Callable* const callback );
 	virtual void Off( GSE_CALLABLE, const std::string& event, const callback_id_t callback_id );
@@ -108,7 +109,7 @@ public:
 	virtual void GetReachableObjects( std::unordered_set< gc::Object* >& reachable_objects );
 
 protected:
-	// TODO: wrapobjs mutex
+	common::Mutex m_wrapobjs_mutex;
 	std::unordered_set< value::Object* > m_wrapobjs = {};
 
 protected:
@@ -117,7 +118,7 @@ protected:
 		context::Context* ctx;
 		si_t si;
 	};
-	typedef std::unordered_map< std::string, std::map< uint16_t, callback_t > > callbacks_t;
+	typedef std::unordered_map< std::string, std::map< callback_id_t, callback_t > > callbacks_t;
 	callbacks_t m_callbacks = {};
 	callback_id_t m_next_callback_id = 0;
 	common::Mutex m_callbacks_mutex;

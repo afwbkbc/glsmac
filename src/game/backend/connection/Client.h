@@ -29,14 +29,18 @@ protected:
 	void SendGameEvents( const game_events_t& game_events ) override;
 
 private:
+	static constexpr size_t MAX_DOWNLOAD_SIZE = 256 * 1024 * 1024;
+
 	bool m_are_global_settings_received = false;
+	bool m_has_pending_game_state_notification = false;
 
 	void Error( const std::string& reason );
+	void NotifyGameState();
 
 	struct {
 		bool is_downloading = false;
-		int total_size = 0;
-		int downloaded_size = 0;
+		size_t total_size = 0;
+		size_t downloaded_size = 0;
 		std::string buffer = "";
 	} m_download_state = {};
 	void DownloadNextChunk();

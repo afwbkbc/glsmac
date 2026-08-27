@@ -58,13 +58,16 @@ public:
 		const backend::unit::movement_t movement,
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const backend::unit::health_t health
+		const backend::unit::health_t health,
+		const bool embarked
 	);
 	~Unit();
 
 	const size_t GetId() const;
 	const bool IsOwned() const;
 	const bool IsActive() const;
+	const bool IsEmbarked() const;
+	const bool IsPlanetBuster() const;
 	tile::Tile* GetTile() const;
 
 	const size_t GetSelectionWeight() const;
@@ -98,10 +101,12 @@ public:
 	void Refresh();
 
 	void SetMovement( const backend::unit::movement_t movement );
+	void SetMorale( const backend::unit::morale_t morale, const std::string& morale_string );
 	void SetHealth( const backend::unit::health_t health );
+	void SetEmbarked( const bool embarked );
 	const bool CanMove() const;
 
-	void SetTile( tile::Tile* dst_tile );
+	void SetTile( tile::Tile* dst_tile, const bool update_render = true );
 	void MoveToTile( tile::Tile* dst_tile );
 
 	const bool IsMoving() const;
@@ -155,6 +160,7 @@ private:
 	backend::unit::morale_t m_morale = 0;
 	std::string m_morale_string = "";
 	backend::unit::health_t m_health = 0;
+	bool m_is_embarked = false;
 
 	bool m_need_refresh = true;
 	uint8_t m_fake_badge_offset = 0;

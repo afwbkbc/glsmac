@@ -45,39 +45,47 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_PLAYERS: {
 							Log( "Got players list from server" );
-							if ( packet.data.num ) {
-								// initial players list
+							const bool is_initial_list = m_state->m_slots->GetCount() == 0;
+							if ( is_initial_list ) {
 								m_slot = packet.data.num;
 								g_engine->GetGame()->SetSlotNum( m_slot );
+								m_state->m_slots->Deserialize( packet.data.str );
 							}
 							else {
-								// players list update (i.e. after resolving random players )
-								m_state->m_slots->Clear();
+								m_state->m_slots->DeserializeUpdate( packet.data.str );
 							}
-							m_state->m_slots->Deserialize( packet.data.str );
+							if (
+								m_slot >= m_state->m_slots->GetCount() ||
+								m_state->m_slots->GetSlot( m_slot ).GetState() != slot::Slot::SS_PLAYER
+							) {
+								THROW( "assigned player slot is invalid" );
+							}
 							const auto c = m_state->m_slots->GetCount();
-							for ( auto i = 0 ; i < c ; i++ ) {
-								const auto& slot = m_state->m_slots->GetSlot( i );
-								if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
-									const auto& player = slot.GetPlayer();
-									m_state->AddPlayer( player );
-									if ( i == m_slot ) {
-										m_player = player;
-									}
-
-									auto* player_copy = new Player( player );
-									WTrigger(
-										"player_join", ARGS_F( player_copy ) {
-											{
-												"player", player_copy->Wrap( GSE_CALL )
-											}
-										}; },
-										[ player_copy ]() {
-											delete player_copy;
+							if ( is_initial_list ) {
+								for ( auto i = 0 ; i < c ; i++ ) {
+									const auto& slot = m_state->m_slots->GetSlot( i );
+									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
+										const auto& player = slot.GetPlayer();
+										m_state->AddPlayer( player );
+										if ( player->IsNative() ) {
+											continue;
 										}
-									);
+
+										auto* player_copy = new Player( player );
+										WTrigger(
+											"player_join", ARGS_F( player_copy ) {
+												{
+													"player", player_copy->Wrap( GSE_CALL )
+												}
+											}; },
+											[ player_copy ]() {
+												delete player_copy;
+											}
+										);
+									}
 								}
 							}
+							m_player = m_state->m_slots->GetSlot( m_slot ).GetPlayer();
 							if ( m_on_players_list_update ) {
 								m_on_players_list_update( m_slot );
 							}
@@ -118,6 +126,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 							}
 							m_are_global_settings_received = true;
 							OnOpen();
+							if ( m_has_pending_game_state_notification ) {
+								m_has_pending_game_state_notification = false;
+								NotifyGameState();
+							}
 							break;
 						}
 						case types::Packet::PT_SLOT_UPDATE:
@@ -136,28 +148,58 @@ void Client::ProcessEvent( const network::Event& event ) {
 								: 0;
 							if ( only_flags ) {
 								Log( "Got flags update from server (slot: " + std::to_string( slot_num ) + ")" );
-								slot.SetPlayerFlags( packet.udata.flags.flags );
+								if (
+									slot.GetState() != slot::Slot::SS_PLAYER ||
+									( packet.udata.flags.flags & ~static_cast< size_t >( slot::PF_ALL ) )
+								) {
+									THROW( "invalid player flags update" );
+								}
+								slot.SetPlayerFlags( static_cast< slot::player_flag_t >( packet.udata.flags.flags ) );
 							}
 							else {
 								Log( "Got slot update from server (slot: " + std::to_string( slot_num ) + ")" );
-								const bool wasReady = slot.GetState() == slot::Slot::SS_PLAYER
-									? slot.HasPlayerFlag( slot::PF_READY ) // check readyness of player
-									: m_state->m_slots->GetSlot( 0 ).HasPlayerFlag( slot::PF_READY ) // check readyness of host
-								;
+								types::Buffer state_buffer( packet.data.str );
+								const auto serialized_state = state_buffer.ReadInt();
+								if ( serialized_state < slot::Slot::SS_CLOSED || serialized_state > slot::Slot::SS_PLAYER ) {
+									THROW( "invalid slot state update" );
+								}
+
+								const auto old_state = slot.GetState();
+								Player* departed_player = nullptr;
+								if ( old_state == slot::Slot::SS_PLAYER && serialized_state != slot::Slot::SS_PLAYER ) {
+									departed_player = slot.GetPlayerAndClose();
+									m_state->RemovePlayer( departed_player );
+								}
 								slot.Deserialize( packet.data.str );
-								if ( m_game_state == GS_LOBBY ) {
-									if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
-										if ( wasReady && slot.HasPlayerFlag( slot::PF_READY ) ) {
-											Error( "player updated slot while ready" );
-											break;
+
+								if ( old_state != slot::Slot::SS_PLAYER && slot.GetState() == slot::Slot::SS_PLAYER ) {
+									auto* const joined_player = slot.GetPlayer();
+									m_state->AddPlayer( joined_player );
+									auto* player_copy = new Player( joined_player );
+									WTrigger(
+										"player_join", ARGS_F( player_copy ) {
+											{
+												"player", player_copy->Wrap( GSE_CALL )
+											}
+										}; },
+										[ player_copy ]() {
+											delete player_copy;
 										}
-									}
-									else {
-										if ( wasReady ) {
-											Error( "host updated slot while ready" );
-											break;
+									);
+								}
+								if ( departed_player ) {
+									auto* player_copy = new Player( departed_player );
+									WTrigger(
+										"player_leave", ARGS_F( player_copy ) {
+											{
+												"player", player_copy->Wrap( GSE_CALL )
+											}
+										}; },
+										[ player_copy ]() {
+											delete player_copy;
 										}
-									}
+									);
+									delete departed_player;
 								}
 							}
 							if ( !only_flags ) {
@@ -166,7 +208,10 @@ void Client::ProcessEvent( const network::Event& event ) {
 								}
 							}
 							if ( m_on_flags_update ) {
-								m_on_flags_update( slot_num, &slot, old_flags, slot.GetPlayerFlags() );
+								const auto new_flags = slot.GetState() == slot::Slot::SS_PLAYER
+									? slot.GetPlayerFlags()
+									: 0;
+								m_on_flags_update( slot_num, &slot, old_flags, new_flags );
 							}
 							break;
 						}
@@ -183,29 +228,31 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_GAME_STATE: {
 							Log( "Got game state: " + std::to_string( packet.udata.game_state.state ) );
+							if ( packet.udata.game_state.state > GS_RUNNING ) {
+								THROW( "invalid game state" );
+							}
 							if ( packet.udata.game_state.state != m_game_state ) {
 								m_game_state = (game_state_t)packet.udata.game_state.state;
-								if ( m_on_game_state_change ) {
-									m_on_game_state_change( m_game_state );
+								if ( m_are_global_settings_received ) {
+									NotifyGameState();
 								}
-								WTrigger(
-									"game_state", ARGS_F( this ) {
-										{
-											"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
-										}
-									}; }
-								);
+								else {
+									m_has_pending_game_state_notification = true;
+								}
 							}
 							break;
 						}
 						case types::Packet::PT_DOWNLOAD_RESPONSE: {
 							Log( "Got download response" );
 							if ( !m_download_state.is_downloading ) {
-								Error( "download response received while not downloading" );
+								THROW( "download response received while not downloading" );
 							}
 							if ( packet.data.num == 0 ) {
 								Log( "No download response received from server" );
 								Disconnect( "No download response received from server" );
+							}
+							else if ( packet.data.num > MAX_DOWNLOAD_SIZE ) {
+								THROW( "download exceeds maximum supported size" );
 							}
 							else {
 								m_download_state.total_size = packet.data.num;
@@ -217,39 +264,47 @@ void Client::ProcessEvent( const network::Event& event ) {
 						}
 						case types::Packet::PT_DOWNLOAD_NEXT_CHUNK_RESPONSE: {
 							Log( "Downloaded next chunk ( offset=" + std::to_string( packet.udata.download.offset ) + " size=" + std::to_string( packet.udata.download.size ) + " )" );
-							const size_t end = packet.udata.download.offset + packet.udata.download.size;
 							if ( !m_download_state.is_downloading ) {
 								Error( "chunk received while not downloading" );
 							}
-							else if ( end > m_download_state.total_size ) {
+							else if (
+								packet.udata.download.offset > m_download_state.total_size ||
+								packet.udata.download.size == 0 ||
+								packet.udata.download.size > m_download_state.total_size - packet.udata.download.offset
+							) {
 								Error( "chunk overflow ( " + std::to_string( packet.udata.download.offset ) + " + " + std::to_string( packet.udata.download.size ) + " >= " + std::to_string( m_download_state.total_size ) + " )" );
 							}
 							else if ( packet.udata.download.offset != m_download_state.downloaded_size ) {
 								Error( "inconsistent chunk offset ( " + std::to_string( packet.udata.download.offset ) + " != " + std::to_string( m_download_state.downloaded_size ) + " )" );
 							}
-							else if (
-								packet.udata.download.size != DOWNLOAD_CHUNK_SIZE &&
+							else {
+								const size_t end = packet.udata.download.offset + packet.udata.download.size;
+								if (
+									packet.udata.download.size != DOWNLOAD_CHUNK_SIZE &&
 									end != m_download_state.total_size // last chunk can be smaller
 								) {
-								Error( "inconsistent map chunk size ( " );
-							}
-							else {
-								ASSERT( packet.data.str.size() == packet.udata.download.size, "download buffer size mismatch" );
-								m_download_state.buffer.append( packet.data.str );
-								if ( end < m_download_state.total_size ) {
-									if ( m_on_download_progress ) {
-										m_on_download_progress( (float)m_download_state.downloaded_size / m_download_state.total_size );
-									}
-									m_download_state.downloaded_size = end;
-									DownloadNextChunk();
+									Error( "inconsistent map chunk size" );
+								}
+								else if ( packet.data.str.size() != packet.udata.download.size ) {
+									Error( "download buffer size mismatch" );
 								}
 								else {
-									Log( "Download completed successfully" );
-									if ( m_on_download_complete ) {
-										m_on_download_complete( m_download_state.buffer );
+									m_download_state.buffer.append( packet.data.str );
+									m_download_state.downloaded_size = end;
+									if ( end < m_download_state.total_size ) {
+										if ( m_on_download_progress ) {
+											m_on_download_progress( static_cast< float >( end ) / m_download_state.total_size );
+										}
+										DownloadNextChunk();
 									}
-									m_download_state.buffer.clear();
-									m_download_state.is_downloading = false;
+									else {
+										Log( "Download completed successfully" );
+										if ( m_on_download_complete ) {
+											m_on_download_complete( m_download_state.buffer );
+										}
+										m_download_state.buffer.clear();
+										m_download_state.is_downloading = false;
+									}
 								}
 							}
 							break;
@@ -287,7 +342,7 @@ void Client::ProcessEvent( const network::Event& event ) {
 					}
 				}
 			}
-			catch ( std::runtime_error& err ) {
+			catch ( const std::exception& err ) {
 				Error( err.what() );
 			}
 			break;
@@ -350,6 +405,9 @@ void Client::RequestDownload() {
 	ASSERT( !m_download_state.is_downloading, "download already started" );
 	ASSERT( m_on_download_complete, "download requested but m_on_download_complete is not set" );
 	m_download_state.is_downloading = true;
+	m_download_state.total_size = 0;
+	m_download_state.downloaded_size = 0;
+	m_download_state.buffer.clear();
 	types::Packet p( types::Packet::PT_DOWNLOAD_REQUEST );
 	m_network->MT_SendPacket( &p );
 }
@@ -365,6 +423,19 @@ void Client::ResetHandlers() {
 void Client::Error( const std::string& reason ) {
 	Log( "Network protocol error: " + reason );
 	Disconnect( "Network protocol error" );
+}
+
+void Client::NotifyGameState() {
+	if ( m_on_game_state_change ) {
+		m_on_game_state_change( m_game_state );
+	}
+	WTrigger(
+		"game_state", ARGS_F( this ) {
+			{
+				"state", VALUE( gse::value::String, , GetGameStateStr( m_game_state ) )
+			}
+		}; }
+	);
 }
 
 void Client::DownloadNextChunk() {

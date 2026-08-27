@@ -53,7 +53,7 @@ void UnitManager::Iterate() {
 			if ( unit == m_selected_unit ) {
 				m_game->SetSelectedTile( tile );
 			}
-			unit->SetTile( tile );
+			unit->UpdateFromTile();
 			m_game->RefreshSelectedTileIf( tile, m_selected_unit );
 			m_game->SendAnimationFinished( it->second.animation_id );
 			it = m_moving_units.erase( it );
@@ -104,7 +104,8 @@ void UnitManager::SpawnUnit(
 	const backend::unit::movement_t movement,
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
-	const backend::unit::health_t health
+	const backend::unit::health_t health,
+	const bool embarked
 ) {
 
 	ASSERT( m_unitdefs.find( unitdef_id ) != m_unitdefs.end(), "unitdef not found" );
@@ -137,7 +138,8 @@ void UnitManager::SpawnUnit(
 				movement,
 				morale,
 				morale_string,
-				health
+				health,
+				embarked
 			)
 		}
 	).first->second;
@@ -159,6 +161,7 @@ void UnitManager::DespawnUnit( const size_t unit_id ) {
 	auto* unit = it->second;
 
 	m_units.erase( it );
+	m_game->UpdateRelatedWidgets( ui::WT_UNIT_PREVIEW, unit_id, nullptr );
 
 	if ( unit->IsOwned() ) {
 		RemoveSelectable( unit );
@@ -195,7 +198,7 @@ void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t anima
 		if ( unit == m_selected_unit ) {
 			m_game->SetSelectedTile( tile );
 		}
-		unit->SetTile( tile );
+		unit->UpdateFromTile();
 		m_game->RefreshSelectedTileIf( tile, m_selected_unit );
 		m_game->SendAnimationFinished( it->second.animation_id );
 		m_moving_units.erase( it );
@@ -209,10 +212,10 @@ void UnitManager::MoveUnit( Unit* unit, tile::Tile* dst_tile, const size_t anima
 			}
 		}
 	);
-	src_tile->RemoveUnit( unit );
-	m_game->RefreshSelectedTileIf( src_tile, m_selected_unit );
 	m_game->SetSelectedTile( dst_tile );
 	unit->MoveToTile( dst_tile );
+	unit->SetTile( dst_tile, false );
+	m_game->RefreshSelectedTileIf( src_tile, m_selected_unit );
 }
 
 Unit* UnitManager::GetSelectedUnit() const {

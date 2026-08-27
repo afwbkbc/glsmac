@@ -1,6 +1,8 @@
 return {
 
 	init: (p) => {
+		this.p = p;
+		this.base = null;
 
 		this.frame = p.body.panel({
 			class: 'base-screen-frame',
@@ -16,12 +18,12 @@ return {
 			width: 210, // TODO: why doesn't this work?
 		});
 
-		const btn_rename = this.frame.button({
+		this.btn_hurry = this.frame.button({
 			class: 'base-screen-popup-bottom-button',
 			align: 'left',
 			left: 3,
 			width: 210,
-			text: 'RENAME',
+			text: 'HURRY',
 		});
 		const btn_ok = this.frame.button({
 			class: 'base-screen-popup-bottom-button',
@@ -37,7 +39,19 @@ return {
 			p.hide();
 			return false;
 		});
+		this.btn_hurry.on('click', (e) => {
+			if (this.base != null && this.p.game.get('f_economy_get_hurry_cost')(this.base) > 0) {
+				this.p.game.event('hurry_base_production', {base: this.base});
+			}
+			return false;
+		});
 
+	},
+
+	set: (data) => {
+		this.base = data.base;
+		const cost = this.p.game.get('f_economy_get_hurry_cost')(this.base);
+		this.btn_hurry.text = cost > 0 ? 'HURRY (' + #to_string(cost) + ')' : 'HURRY';
 	},
 
 };

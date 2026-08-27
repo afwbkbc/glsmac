@@ -1,8 +1,10 @@
 #include <thread>
+#include <string>
+#include <utility>
+#include <vector>
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 
-#include <string>
 #include <stdlib.h>
 
 #endif
@@ -10,6 +12,7 @@
 #include "config/Config.h"
 
 #ifdef _WIN32
+#include <shellapi.h>
 #include "error_handler/Win32.h"
 #else
 
@@ -17,9 +20,8 @@
 
 #endif
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
-#include "logger/Stdout.h"
 #include "graphics/Null.h"
 #include "loader/font/Null.h"
 #include "loader/texture/Null.h"
@@ -27,11 +29,9 @@
 #include "input/Null.h"
 #include "audio/Null.h"
 
-#else
-
-#include "logger/Logger.h"
-
 #endif
+
+#include "logger/Stdout.h"
 
 #include "resource/ResourceManager.h"
 
@@ -49,8 +49,10 @@
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
 #include "task/gseprompt/GSEPrompt.h"
-#include "task/gsetests/GSETests.h"
+#endif
 
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
+#include "task/gsetests/GSETests.h"
 #endif
 
 #include "task/main/Main.h"
@@ -101,12 +103,31 @@ debug::MemoryWatcher memory_watcher;
 
 #ifdef _WIN32
 int argc = 0;
-const LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
-char* argv[ argc ];
+LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
+if ( !argw ) {
+	return EXIT_FAILURE;
+}
+std::vector< std::string > argv_strings;
+argv_strings.reserve( argc );
 for ( int i = 0; i < argc; i++ ) {
-	const int sz = wcslen( argw[ i ] );
-	argv[ i ] = (char*)malloc( sz + 1 );
-	wcstombs( argv[ i ], argw[ i ], sz + 1 );
+	const int size = WideCharToMultiByte( CP_UTF8, 0, argw[ i ], -1, nullptr, 0, nullptr, nullptr );
+	if ( size <= 0 ) {
+		LocalFree( argw );
+		return EXIT_FAILURE;
+	}
+	std::string value( size, '\0' );
+	if ( !WideCharToMultiByte( CP_UTF8, 0, argw[ i ], -1, value.data(), size, nullptr, nullptr ) ) {
+		LocalFree( argw );
+		return EXIT_FAILURE;
+	}
+	value.pop_back();
+	argv_strings.push_back( std::move( value ) );
+}
+LocalFree( argw );
+std::vector< char* > argv_storage( argc );
+char** argv = argv_storage.data();
+for ( int i = 0; i < argc; i++ ) {
+	argv[ i ] = argv_strings[ i ].data();
 }
 #else
 int main( const int argc, char* const argv[] ) {
@@ -179,12 +200,13 @@ int main( const int argc, char* const argv[] ) {
 	// logger needs to be outside of scope to be destroyed last
 
 	std::vector< logger::Logger* > loggers = {};
-
+	bool enable_stdout_logger = config.HasLaunchFlag( config::Config::LF_VERBOSE );
 #if defined( DEBUG ) || defined( FASTDEBUG )
-	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
+	enable_stdout_logger = enable_stdout_logger || !config.HasDebugFlag( config::Config::DF_QUIET );
+#endif
+	if ( enable_stdout_logger ) {
 		loggers.push_back( new logger::Stdout() );
 	}
-#endif
 
 #ifdef _WIN32
 	error_handler::Win32 error_handler;
@@ -199,10 +221,10 @@ int main( const int argc, char* const argv[] ) {
 	title += "-portable";
 #endif
 
-	network::simpletcp::SimpleTCP network;
+	network::simpletcp::SimpleTCP network( config.GetNetworkPort() );
 	scheduler::Simple scheduler;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 	if ( config.HasDebugFlag( config::Config::DF_GSE_ONLY ) ) {
 
 		loader::font::Null font_loader;
@@ -216,10 +238,12 @@ int main( const int argc, char* const argv[] ) {
 			NEWV( task, task::gsetests::GSETests );
 			scheduler.AddTask( task );
 		}
+#if defined( DEBUG ) || defined( FASTDEBUG )
 		else if ( config.HasDebugFlag( config::Config::DF_GSE_PROMPT_JS ) ) {
 			NEWV( task, task::gseprompt::GSEPrompt, "js" );
 			scheduler.AddTask( task );
 		}
+#endif
 
 		engine::Engine engine(
 			&config,
@@ -252,7 +276,6 @@ int main( const int argc, char* const argv[] ) {
 		loader::sound::SDL2 sound_loader;
 		loader::txt::TXTLoaders txt_loaders;
 
-		input::sdl2::SDL2 input;
 		bool vsync = VSYNC;
 		if ( config.HasLaunchFlag( config::Config::LF_BENCHMARK ) ) {
 			vsync = false;
@@ -272,34 +295,57 @@ int main( const int argc, char* const argv[] ) {
 			start_fullscreen = false;
 		}
 
-		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
-		audio::sdl2::SDL2 audio;
+		const auto run_game = [
+			&config, &error_handler, &loggers, &resource_manager, &font_loader,
+			&texture_loader, &sound_loader, &txt_loaders, &scheduler, &network, &game
+		]( input::Input* input, graphics::Graphics* graphics, audio::Audio* audio ) {
+			engine::Engine engine(
+				&config,
+				&error_handler,
+				loggers,
+				&resource_manager,
+				&font_loader,
+				&texture_loader,
+				&sound_loader,
+				&txt_loaders,
+				&scheduler,
+				input,
+				graphics,
+				audio,
+				&network,
+				&game
+			);
 
-		// game entry point
-		common::Task* task = nullptr;
+			common::Task* task = nullptr;
+			NEW( task, task::main::Main );
+			scheduler.AddTask( task );
+			return engine.Run();
+		};
 
-		engine::Engine engine(
-			&config,
-			&error_handler,
-			loggers,
-			&resource_manager,
-			&font_loader,
-			&texture_loader,
-			&sound_loader,
-			&txt_loaders,
-			&scheduler,
-			&input,
-			&graphics,
-			&audio,
-			&network,
-			&game
-		);
-
-		NEW( task, task::main::Main );
-
-		scheduler.AddTask( task );
-
-		result = engine.Run();
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
+		if ( config.HasDebugFlag( config::Config::DF_HEADLESS ) ) {
+			input::Null input;
+			graphics::Null graphics(
+				static_cast< unsigned short >( window_size.x ),
+				static_cast< unsigned short >( window_size.y )
+			);
+			audio::Null audio;
+			result = run_game( &input, &graphics, &audio );
+		}
+		else
+#endif
+		{
+			input::sdl2::SDL2 input;
+			graphics::opengl::OpenGL graphics(
+				title,
+				static_cast< unsigned short >( window_size.x ),
+				static_cast< unsigned short >( window_size.y ),
+				vsync,
+				start_fullscreen
+			);
+			audio::sdl2::SDL2 audio;
+			result = run_game( &input, &graphics, &audio );
+		}
 	}
 
 	for ( const auto& logger : loggers ) {

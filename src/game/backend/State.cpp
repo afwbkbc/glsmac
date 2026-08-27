@@ -1,6 +1,7 @@
 #include "State.h"
 
 #include "game/backend/faction/FactionManager.h"
+#include "game/backend/faction/Faction.h"
 #include "Game.h"
 #include "game/backend/connection/Connection.h"
 #include "Bindings.h"
@@ -70,12 +71,15 @@ void State::Iterate() {
 				m_connection->SetState( nullptr );
 				m_connection = nullptr;
 			}
-			for ( auto& player : m_players ) {
-				DELETE( player );
+			// World objects and queued frontend work retain slot and player references until the coordinated reset.
+			if ( !m_game || !m_game->IsStarted() ) {
+				for ( auto& player : m_players ) {
+					DELETE( player );
+				}
+				m_players.clear();
+				m_slots->Clear();
+				m_cid_slots.clear();
 			}
-			m_players.clear();
-			m_slots->Clear();
-			m_cid_slots.clear();
 		}
 	}
 }
@@ -105,6 +109,26 @@ void State::RemovePlayer( Player* player ) {
 	}
 #endif
 	m_players.erase( player );
+}
+
+Player* State::EnsureNativePlayer() {
+	m_slots->Resize( TOTAL_SLOT_COUNT );
+	auto& slot = m_slots->GetSlot( NATIVE_SLOT_INDEX );
+	if ( slot.GetState() == slot::Slot::SS_PLAYER ) {
+		auto* const player = slot.GetPlayer();
+		ASSERT( player && player->IsNative(), "reserved native slot contains a playable faction" );
+		return player;
+	}
+	if ( slot.GetState() == slot::Slot::SS_CLOSED ) {
+		slot.Open();
+	}
+	auto* const faction = m_fm->Get( "PLANET" );
+	ASSERT( faction && ( faction->m_flags & faction::Faction::FF_NATIVE ), "Planet faction is not configured" );
+	const auto& rules = m_settings.global.rules;
+	NEWV( player, Player, "Planet", Player::PR_NATIVE, faction, rules.GetDefaultDifficultyLevel() );
+	AddPlayer( player );
+	slot.SetPlayer( player, 0, "Planet" );
+	return player;
 }
 
 void State::AddCIDSlot( const network::cid_t cid, const size_t slot ) {
@@ -210,8 +234,13 @@ const types::Buffer State::Serialize() const {
 }
 
 void State::Deserialize( types::Buffer buf ) {
-	m_settings.global.Deserialize( buf.ReadString() );
-	m_fm->Deserialize( buf.ReadString() );
+	const auto serialized_global_settings = buf.ReadString();
+	const auto serialized_factions = buf.ReadString();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized backend state" );
+	}
+	m_settings.global.Deserialize( types::Buffer( serialized_global_settings ) );
+	m_fm->Deserialize( types::Buffer( serialized_factions ) );
 }
 
 void State::GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) {

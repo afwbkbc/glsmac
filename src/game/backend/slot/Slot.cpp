@@ -1,5 +1,7 @@
 #include "Slot.h"
 
+#include <memory>
+
 #include "engine/Engine.h"
 #include "game/backend/Game.h"
 #include "game/backend/State.h"
@@ -157,18 +159,47 @@ const types::Buffer Slot::Serialize() const {
 }
 
 void Slot::Deserialize( types::Buffer buf ) {
-	m_slot_state = (slot_state_t)buf.ReadInt();
-	if ( m_slot_state == SS_PLAYER ) {
+	const auto serialized_state = buf.ReadInt();
+	if ( serialized_state < SS_CLOSED || serialized_state > SS_PLAYER ) {
+		THROW( "invalid serialized slot state: " + std::to_string( serialized_state ) );
+	}
+	const auto slot_state = static_cast< slot_state_t >( serialized_state );
+	std::string serialized_player;
+	player_flag_t player_flags = PF_NONE;
+	if ( slot_state == SS_PLAYER ) {
+		serialized_player = buf.ReadString();
+		player_flags = buf.ReadInt< player_flag_t >( "slot player flags" );
+		if ( player_flags & ~PF_ALL ) {
+			THROW( "invalid serialized slot player flags" );
+		}
+	}
+	const auto linked_gsid = buf.ReadString();
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized slot" );
+	}
+
+	if ( slot_state == SS_PLAYER ) {
 		if ( !m_player_data.player ) {
-			m_player_data.player = new Player( buf.ReadString() );
+			auto player = std::make_unique< Player >( types::Buffer( serialized_player ) );
+			m_player_data.player = player.release();
 			m_player_data.player->SetSlot( this );
 		}
 		else {
-			m_player_data.player->Deserialize( buf.ReadString() );
+			m_player_data.player->Deserialize( types::Buffer( serialized_player ) );
 		}
-		m_player_data.flags = buf.ReadInt();
+		m_player_data.flags = player_flags;
 	}
-	m_linked_gsid = buf.ReadString();
+	else {
+		if ( m_player_data.player ) {
+			THROW( "serialized non-player slot still owns a player" );
+		}
+		m_player_data.cid = 0;
+		m_player_data.remote_address.clear();
+		m_player_data.flags = PF_NONE;
+	}
+	m_slot_state = slot_state;
+	m_close_after_clear = false;
+	m_linked_gsid = linked_gsid;
 }
 
 WRAPIMPL_BEGIN( Slot )

@@ -39,6 +39,9 @@ const types::Buffer MoraleSet::Serialize( const MoraleSet* moraleset ) {
 MoraleSet* MoraleSet::Deserialize( types::Buffer& buf ) {
 	ASSERT( MORALE_MIN == 0, "non-zero MORALE_MIN may cause unexpected bugs here" );
 	const auto id = buf.ReadString();
+	if ( id.empty() ) {
+		THROW( "serialized morale set id is empty" );
+	}
 	morale_values_t values = {};
 	for ( size_t i = MORALE_MIN ; i <= MORALE_MAX ; i++ ) {
 		values.push_back( Morale{ buf.ReadString() } );

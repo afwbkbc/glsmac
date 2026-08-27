@@ -59,9 +59,14 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 			}
 			case VT_STRING: {
 				try {
-					value = std::stol( ((value::String*)v)->value );
+					const auto& source = ((value::String*)v)->value;
+					size_t parsed_length = 0;
+					value = std::stoll( source, &parsed_length );
+					if ( parsed_length != source.size() ) {
+						throw std::invalid_argument( "unexpected characters after number" );
+					}
 				}
-				catch ( std::logic_error const& ex ) {
+				catch ( std::logic_error const& ) {
 					CONVERSION_ERROR( "Int" )
 				}
 				break;
@@ -90,9 +95,14 @@ void Conversions::AddToContext( gc::Space* const gc_space, context::Context* ctx
 			}
 			case VT_STRING: {
 				try {
-					value = std::stof( ((value::String*)v)->value );
+					const auto& source = ((value::String*)v)->value;
+					size_t parsed_length = 0;
+					value = std::stof( source, &parsed_length );
+					if ( parsed_length != source.size() ) {
+						throw std::invalid_argument( "unexpected characters after number" );
+					}
 				}
-				catch ( std::logic_error const& ex ) {
+				catch ( std::logic_error const& ) {
 					CONVERSION_ERROR( "Float" )
 				}
 				break;

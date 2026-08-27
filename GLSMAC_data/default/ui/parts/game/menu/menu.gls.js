@@ -54,6 +54,7 @@ return {
 			glsmac: p.glsmac,
 			ui: p.ui,
 			menu: parent,
+			modules: p.modules,
 			maybe_quit: p.maybe_quit,
 			create: (entries) => {
 

@@ -32,6 +32,7 @@ GSE::GSE()
 GSE::~GSE() {
 	{
 		Finish();
+		m_gc_space->StopCollecting();
 		for ( auto& it : m_include_cache ) {
 			it.second.Cleanup( this );
 		}
@@ -206,7 +207,7 @@ Value* const GSE::RunScript( GSE_CALLABLE, const std::string& path ) {
 	};
 	try {
 		cache.context = CreateGlobalContext( full_path );
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 		// copy mocks
 		if ( ctx && ctx->HasVariable( "test" ) ) {
 			cache.context->CreateVariable( "test", ctx->GetVariable( "test", si, ep ), si, ep );

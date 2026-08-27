@@ -9,6 +9,7 @@ FETCHCONTENT_DECLARE(
 	glew
 	GIT_REPOSITORY https://github.com/Perlmint/glew-cmake.git
 	GIT_TAG glew-cmake-2.3.1
+	GIT_SHALLOW TRUE
 )
 
 FETCHCONTENT_GETPROPERTIES( glew )

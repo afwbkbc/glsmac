@@ -53,9 +53,11 @@ CLASS( Config, common::Module )
 		LF_JOIN = 1 << 19,
 		LF_MAXIPS = 1 << 20,
 		LF_SINGLE_THREAD = 1 << 21,
+		LF_VERBOSE = 1 << 22,
+		LF_QUICKSTART_AI = 1 << 23,
 	};
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 	enum debug_flag_t : uint16_t {
 		DF_NONE = 0,
 		DF_GDB = 1 << 0,
@@ -67,6 +69,8 @@ CLASS( Config, common::Module )
 		DF_NOPINGS = 1 << 6,
 		DF_VERBOSE_GC = 1 << 7,
 		DF_NO_GC = 1 << 8,
+		DF_GSE_TESTS_NATIVE_ONLY = 1 << 12,
+		DF_HEADLESS = 1 << 13,
 #ifdef DEBUG
 		DF_MAPDUMP = 1 << 9,
 		DF_MEMORYDEBUG = 1 << 10,
@@ -84,7 +88,7 @@ CLASS( Config, common::Module )
 
 	void SetSMACPath( const std::string& path ) const;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 	const std::string GetDebugPath() const; // to store debug stuff like dumps
 #endif
 
@@ -99,13 +103,15 @@ CLASS( Config, common::Module )
 	const float GetQuickstartMapNativeLifeforms() const;
 	const float GetQuickstartMapCloudCover() const;
 	const std::string& GetQuickstartFaction() const;
+	const uint8_t GetQuickstartAIPlayers() const;
 	const std::vector< std::string >& GetModPaths() const;
 	const std::string& GetJoinAddress() const;
 	const std::string& GetMainScript() const;
 	const std::string& GetWorldScript() const;
 	const uint16_t GetMaxIPS() const;
+	const uint16_t GetNetworkPort() const;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
 	const bool HasDebugFlag( const debug_flag_t flag ) const;
 	const std::string& GetQuickstartMapDump() const;
@@ -146,13 +152,15 @@ private:
 	float m_quickstart_map_native_lifeforms = 0.5f;
 	float m_quickstart_map_cloud_cover = 0.5f;
 	std::string m_quickstart_faction = "";
+	uint8_t m_quickstart_ai_players = 0;
 	std::vector< std::string > m_mod_paths = {};
 	std::string m_join_address = "";
 	std::string m_mainscript = "main";
 	std::string m_worldscript = "default";
 	uint16_t m_maxips = 500;
+	uint16_t m_network_port = 4888;
 
-#if defined( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
 	uint16_t m_debug_flags = DF_NONE;
 	std::string m_quickstart_mapdump = "";

@@ -1,5 +1,9 @@
 #include "MapState.h"
 
+#include <cmath>
+
+#include "game/backend/settings/Types.h"
+
 namespace game {
 namespace backend {
 namespace map {
@@ -12,14 +16,14 @@ tile::TileState* MapState::At( const size_t x, const size_t y ) {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return &m_tiles.at( y * dimensions.x + x / 2 );
+	return &m_tiles.at( y * ( dimensions.x / 2 ) + x / 2 );
 }
 
 const tile::TileState* MapState::AtConst( const size_t x, const size_t y ) const {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return &m_tiles.at( y * dimensions.x + x / 2 );
+	return &m_tiles.at( y * ( dimensions.x / 2 ) + x / 2 );
 }
 
 const std::vector< tile::TileState >* MapState::GetTileStatesPtr() const {
@@ -28,8 +32,20 @@ const std::vector< tile::TileState >* MapState::GetTileStatesPtr() const {
 
 void MapState::LinkTileStates( MT_CANCELABLE ) {
 
-	ASSERT( m_tiles.empty(), "m_tiles already set" );
-	m_tiles.resize( dimensions.y * dimensions.x );
+	if ( !m_tiles.empty() ) {
+		THROW( "tile states already linked" );
+	}
+	const uint64_t area = static_cast< uint64_t >( dimensions.x ) * dimensions.y;
+	if (
+		dimensions.x < settings::MAP_MIN_DIMENSION ||
+		dimensions.y < settings::MAP_MIN_DIMENSION ||
+		( dimensions.x & 1 ) ||
+		( dimensions.y & 1 ) ||
+		area > settings::MAP_MAX_AREA
+	) {
+		THROW( "invalid map-state dimensions" );
+	}
+	m_tiles.resize( static_cast< size_t >( area / 2 ) );
 
 	Log( "Linking tile states" );
 
@@ -104,11 +120,23 @@ const types::Buffer MapState::Serialize() const {
 
 void MapState::Deserialize( types::Buffer buf ) {
 
-	first_run = buf.ReadBool();
-	coord = buf.ReadVec2f();
-	dimensions = buf.ReadVec2u();
+	const auto serialized_first_run = buf.ReadBool();
+	const auto serialized_coord = buf.ReadVec2f();
+	const auto serialized_dimensions = buf.ReadVec2u();
+	const auto serialized_texture_scaling = buf.ReadVec2f();
+	if (
+		!std::isfinite( serialized_coord.x ) ||
+		!std::isfinite( serialized_coord.y ) ||
+		!std::isfinite( serialized_texture_scaling.x ) ||
+		!std::isfinite( serialized_texture_scaling.y )
+	) {
+		THROW( "invalid serialized map-state coordinates" );
+	}
 
-	variables.texture_scaling = buf.ReadVec2f();
+	first_run = serialized_first_run;
+	coord = serialized_coord;
+	dimensions = serialized_dimensions;
+	variables.texture_scaling = serialized_texture_scaling;
 
 	MT_CANCELABLE = false;
 	LinkTileStates( MT_C );
@@ -117,6 +145,9 @@ void MapState::Deserialize( types::Buffer buf ) {
 		for ( auto x = y & 1 ; x < dimensions.x ; x += 2 ) {
 			At( x, y )->Deserialize( buf.ReadString() );
 		}
+	}
+	if ( buf.GetRemaining() != 0 ) {
+		THROW( "unexpected data after serialized map state" );
 	}
 
 	copy_from_after.clear();

@@ -63,6 +63,26 @@ return {
 		}
 	},
 
+	get_terraforming_name: (terraforming) => {
+		switch (terraforming) {
+			case 'forest': {
+				return 'Forest';
+			}
+			case 'farm': {
+				return 'Farm';
+			}
+			case 'mine': {
+				return 'Mine';
+			}
+			case 'solar': {
+				return 'Solar Collector';
+			}
+			case 'road': {
+				return 'Road';
+			}
+		}
+	},
+
 	set_image: () => {
 		const tile = this.tile;
 		if (!#is_defined(this.preview)) {
@@ -116,17 +136,19 @@ return {
 
 		} else {
 
+			const sea_level = #is_defined(tile.sea_level) ? tile.sea_level : this.SEA_LEVEL;
+			const relative_elevation = tile.elevation - sea_level;
 			if (tile.is_water) {
-				if (tile.elevation < this.TRENCH_LEVEL) {
+				if (relative_elevation < this.TRENCH_LEVEL) {
 					this.line('Ocean Trench');
-				} else if (tile.elevation < this.OCEAN_LEVEL) {
+				} else if (relative_elevation < this.OCEAN_LEVEL) {
 					this.line('Ocean');
 				} else {
 					this.line('Ocean Shelf');
 				}
-				this.line('Depth: ' + #to_string(this.SEA_LEVEL - tile.elevation));
+				this.line('Depth: ' + #to_string(0 - relative_elevation));
 			} else {
-				this.line('Elev:' + #to_string(tile.elevation - this.SEA_LEVEL));
+				this.line('Elev:' + #to_string(relative_elevation));
 				let tilestr = '';
 				if (tile.rockiness < #sizeof(this.ROCKINESS_LEVELS)) {
 					tilestr += this.ROCKINESS_LEVELS[tile.rockiness];
@@ -150,8 +172,19 @@ return {
 				}
 			}
 
-			// TODO: terraforming
+			for (terraforming of ['forest', 'farm', 'mine', 'solar', 'road']) {
+				if (tile.terraforming[terraforming]) {
+					this.line(this.get_terraforming_name(terraforming));
+				}
+			}
 
+		}
+		if (#is_defined(this.p.game)) {
+			const get_owner = this.p.game.get('f_territory_get_owner');
+			if (#is_defined(get_owner)) {
+				const owner = get_owner(tile);
+				this.line('Territory: ' + (owner == null ? 'Unclaimed' : owner.name));
+			}
 		}
 
 		this.line(''); // tmp workaround for 'cut-off' bottom in listview
@@ -172,6 +205,7 @@ return {
 
 	init: (p) => {
 
+		this.p = p;
 		this.show_resources = false;
 
 		p.ui.class('tile-preview-line').set({

@@ -118,6 +118,11 @@ public:
 	sprites_t sprites;
 
 	const types::Vec3& GetCenterCoords( tile_layer_type_t layer ) const;
+	void ValidateMeshReferences(
+		const size_t terrain_vertex_count,
+		const size_t terrain_surface_count,
+		const size_t data_vertex_count
+	) const;
 
 	const types::Buffer Serialize() const;
 	void Deserialize( types::Buffer buf );

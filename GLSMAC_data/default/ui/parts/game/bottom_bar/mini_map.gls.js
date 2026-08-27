@@ -1,7 +1,8 @@
+const turn_rules = #include('../../../../game/turn_rules');
+
 return {
 
 	init: (p) => {
-
 		p.ui.class('bottombar-minimap-info-text').set({
 			font: 'arialn.ttf:14',
 			color: 'rgb(60, 148, 124)',
@@ -249,6 +250,9 @@ return {
 		});
 
 		btn_turn_complete.on('click', (e) => {
+			if (turn_rules.has_pending_owned_animation(p.game, p.game.get_player().id)) {
+				return true;
+			}
 			switch (turn_status) {
 				case 'active': {
 					p.modules.popup.show('turn_confirmation', (result) => {

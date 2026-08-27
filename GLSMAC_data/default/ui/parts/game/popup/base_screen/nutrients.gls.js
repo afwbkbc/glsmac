@@ -79,6 +79,7 @@ return {
 				}
 				return progress_text;
 			},
+			data.capacity,
 		);
 	},
 

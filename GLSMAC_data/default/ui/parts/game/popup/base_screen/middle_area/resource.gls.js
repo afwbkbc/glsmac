@@ -140,12 +140,18 @@ return {
 				const mx = e.x - c_left - twh;
 				const my = e.y - c_top - this.tile_height / 2;
 				const f_base_find_best_or_worst_tiles = this.p.game.get('f_base_find_best_or_worst_tiles');
+				const f_base_get_assignable_worker_tiles = this.p.game.get('f_base_get_assignable_worker_tiles');
 				for (t of existing_tiles) {
 					const distance = #abs(t.cx - mx) + #abs(t.cy - my) * tile_aspect_ratio;
 					if (distance <= twh) {
 						if (t == t_center) {
 							let pops = data.base.get_pops();
-							const tiles = f_base_find_best_or_worst_tiles(data.base, data.base.get_workable_tiles(), #sizeof(pops), 1);
+							const tiles = f_base_find_best_or_worst_tiles(
+								data.base,
+								f_base_get_assignable_worker_tiles(data.base),
+								#sizeof(pops),
+								1
+							);
 							let i = 0;
 							// TODO: optimize excessive unwork/work events
 							// unwork all tiles

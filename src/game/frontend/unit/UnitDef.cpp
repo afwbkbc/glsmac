@@ -16,11 +16,15 @@ UnitDef::UnitDef( sprite::InstancedSpriteManager* ism, const backend::unit::Def*
 	: m_ism( ism )
 	, m_id( unitdef->m_id )
 	, m_name( unitdef->m_name )
-	, m_type( unitdef->m_type ) {
+	, m_type( unitdef->m_type )
+	, m_offense( unitdef->m_offense )
+	, m_defense( unitdef->m_defense ) {
 
 	switch ( unitdef->m_type ) {
 		case backend::unit::DT_STATIC: {
 			const auto* def = (backend::unit::StaticDef*)unitdef;
+			m_is_artillery = def->IsArtillery();
+			m_is_planet_buster = def->m_is_missile && def->m_weapon_id == "PlanetBuster";
 
 			switch ( def->m_render->m_type ) {
 
@@ -54,7 +58,11 @@ UnitDef::~UnitDef() {
 }
 
 const bool UnitDef::IsArtillery() const {
-	return m_id != "SporeLauncher";
+	return m_is_artillery;
+}
+
+const bool UnitDef::IsPlanetBuster() const {
+	return m_is_planet_buster;
 }
 
 sprite::Sprite* UnitDef::GetSprite( const backend::unit::morale_t morale ) {
@@ -135,14 +143,11 @@ const std::string UnitDef::GetNameString() const {
 }
 
 const std::string UnitDef::GetStatsString() const {
-	std::string str = "";
-	if ( m_id == "SporeLauncher" ) {
-		str += "(?)";
+	std::string offense = std::to_string( m_offense );
+	if ( m_is_artillery ) {
+		offense = "(" + offense + ")";
 	}
-	else {
-		str += "?";
-	}
-	return str + " - ? - " + util::String::ApproximateFloat( static_.movement_per_turn );
+	return offense + " - " + std::to_string( m_defense ) + " - " + util::String::ApproximateFloat( static_.movement_per_turn );
 
 }
 

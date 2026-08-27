@@ -93,7 +93,8 @@ public:
 
 	~Engine();
 	int Run();
-	void ShutDown();
+	void ShutDown( int result = 0 );
+	const bool IsShuttingDown() const { return m_is_shutting_down.load(); }
 
 	config::Config* GetConfig() const { return m_config; }
 	resource::ResourceManager* GetResourceManager() const { return m_resource_manager; }
@@ -118,6 +119,7 @@ public:
 private:
 
 	std::atomic< bool > m_is_shutting_down = false;
+	std::atomic< int > m_exit_code = 0;
 
 	std::vector< common::Thread* > m_threads = {};
 

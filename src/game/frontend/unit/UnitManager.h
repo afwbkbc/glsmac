@@ -58,7 +58,8 @@ CLASS( UnitManager, common::Class )
 		const backend::unit::movement_t movement,
 		const backend::unit::morale_t morale,
 		const std::string& morale_string,
-		const backend::unit::health_t health
+		const backend::unit::health_t health,
+		const bool embarked
 	);
 	void DespawnUnit( const size_t unit_id );
 	void RefreshUnit( Unit* unit );

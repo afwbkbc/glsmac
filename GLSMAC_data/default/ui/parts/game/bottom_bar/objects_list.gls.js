@@ -125,7 +125,7 @@ return {
 			this.list_width = this.list_width + this.object_width;
 		}
 
-		for (unit of tile.get_units()) {
+		for (unit of tile.get_units(true)) {
 			this.add_object(unit, this.list_width);
 			this.list_width = this.list_width + this.object_width;
 		}
@@ -211,7 +211,11 @@ return {
 		this.frame.listen(p.game, 'unit_select', (e) => {
 			this.p.modules.popup.hide('base_screen');
 			const key = #to_string(e.unit.id);
-			this.set_active_item(this.units[key].item);
+			const entry = this.units[key];
+			if (!#is_defined(entry) || entry.object != e.unit) {
+				return;
+			}
+			this.set_active_item(entry.item);
 			this.selected_object = e.unit;
 		});
 
@@ -219,7 +223,11 @@ return {
 			this.set_active_item(null);
 			#async(0, () => { // workaround for objects list active border getting messed up, TODO: investigate and fix properly
 				const key = #to_string(e.base.id);
-				this.set_active_item(this.bases[key].item);
+				const entry = this.bases[key];
+				if (!#is_defined(entry) || entry.object != e.base) {
+					return;
+				}
+				this.set_active_item(entry.item);
 				const last_selected_object = this.selected_object;
 				this.selected_object = e.base;
 				this.p.modules.popup.set('base_screen', {

@@ -30,4 +30,6 @@ _deps
 /GLSMAC.cbp
 /GLSMAC_data/mods
 *.core
+__pycache__/
+*.py[cod]
 /resource/icon/glsmac.aps

@@ -77,7 +77,7 @@ CLASS( GSE, gc::Object )
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
-#if defined ( DEBUG ) || defined( FASTDEBUG )
+#if defined( DEBUG ) || defined( FASTDEBUG ) || defined( GLSMAC_TESTING )
 
 	void LogCaptureStart() const { m_builtins.LogCaptureStart(); }
 	const std::string& LogCaptureStopGet() const { return m_builtins.LogCaptureStopGet(); }

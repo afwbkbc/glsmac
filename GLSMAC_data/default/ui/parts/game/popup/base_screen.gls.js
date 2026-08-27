@@ -117,12 +117,25 @@ return {
 
 		const intake = base.get_intake();
 		const consumption = base.get_consumption();
+		let supported_units = [];
+		for (unit of game.get_um().get_units()) {
+			if (unit.owner == owner.id && unit.home_base_id == base.id) {
+				supported_units :+unit;
+			}
+		}
+		const free_support_capacity = #max(base.get_size(), 1);
+		const support = {
+			units: supported_units,
+			free_units: #min(#sizeof(supported_units), free_support_capacity),
+			mineral_upkeep: consumption.MINERALS,
+		};
 
 		// dummy data for now
 
 		this.sections.nutrients.set({
 			rows: base.get_size() + 1,
 			columns: game.get('map_growth_base'),
+			capacity: game.get('f_base_get_nutrients_for_growth')(game, base),
 			filled: base.get('accumulated_nutrients'),
 			pending: game.get('f_base_get_pending_growth')(base),
 		});
@@ -132,20 +145,22 @@ return {
 				// TODO
 			});
 		} else {
-			this.sections.economy.set_commerce({
-				// TODO
-			});
+			this.sections.economy.set_commerce(
+				game.get('f_economy_get_base_commerce')(game, base)
+			);
 		}
 
 		this.sections.game_state.set({
 			year: game.get_year(),
-			energy: 0, // TODO
-			ecodamage: 0, // TODO
+			energy: owner.energy_credits,
+			ecodamage: game.get('f_ecology_get_base_damage')(base).percent,
 		});
 
-		this.sections.facilities.set([
-			'Recycling Tanks',
-		]);
+		let facility_names = [];
+		for (facility of base.get_facilities()) {
+			facility_names :+(facility.is_project ? 'PROJECT: ' : '') + facility.name;
+		}
+		this.sections.facilities.set(facility_names);
 
 		const resource_data = {
 			nutrients: {
@@ -163,35 +178,19 @@ return {
 		};
 		this.sections.resources.set(resource_data);
 
-		const allocation_labs = 0.4;
-		const allocation_psych = 0.2;
-
-		const total_energy = resource_data.energy.profit - resource_data.energy.loss;
-		const energy_data = {
-			labs: {
-				allocation: allocation_labs,
-				value: #round(#to_float(total_energy) * allocation_labs),
-				bonus: 2,
-			},
-			psych: {
-				allocation: allocation_psych,
-				value: #round(#to_float(total_energy) * allocation_psych),
-				bonus: 0,
-			},
-		};
-		energy_data.economy = {
-			allocation: 1.0 - energy_data.labs.allocation - energy_data.psych.allocation,
-			value: total_energy - energy_data.labs.value - energy_data.psych.value,
-			bonus: 0,
-		};
-		this.sections.energy.set(energy_data);
+		this.sections.energy.set(game.get('f_economy_get_base_allocation')(game, base));
 
 		this.sections.middle_area.set({
+			base: base,
+			support: support,
+		});
+		this.sections.buttons.set({
 			base: base,
 		});
 
 		this.sections.bottom_bar.set({
 			base: base,
+			support: support,
 		});
 	},
 
@@ -205,7 +204,7 @@ return {
 		this.sections.bottom_bar.frame.show();
 	},
 
-	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, f_label) => {
+	set_cells: (total_width, total_height, columns, rows, filled, pending, cells_el, cell_baseclass, label_el, f_label, capacity_in) => {
 		cells_el.clear();
 
 		const width = #floor(#to_float(total_width) / #to_float(columns));
@@ -222,6 +221,7 @@ return {
 
 		let i = 0;
 		let cls = '';
+		const capacity = #is_defined(capacity_in) ? capacity_in : rows * columns;
 
 		for (let y = 0; y < rows; y++) {
 			for (let x = 0; x < columns; x++) {
@@ -237,11 +237,13 @@ return {
 					cls = 'empty';
 				}
 				i++;
-				cells_el.panel({
-					class: cell_baseclass + '-' + cls,
-					left: left + 1,
-					top: top + 1,
-				});
+				if (i <= capacity) {
+					cells_el.panel({
+						class: cell_baseclass + '-' + cls,
+						left: left + 1,
+						top: top + 1,
+					});
+				}
 				left += width;
 			}
 			top += height;
@@ -250,7 +252,7 @@ return {
 
 		let progress_in = 0;
 		if (pending > 0) {
-			progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
+			progress_in = #ceil(#to_float(capacity - filled) / #to_float(pending));
 		}
 		label_el.text = f_label(progress_in);
 	},

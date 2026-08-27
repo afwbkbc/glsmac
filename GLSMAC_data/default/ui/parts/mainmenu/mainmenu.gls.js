@@ -150,6 +150,7 @@ return (m) => {
 			'customize_cloud_cover',
 			'select_difficulty_level',
 			'select_rules',
+			'select_faction',
 			'multiplayer_type',
 			'multiplayer_role',
 			'multiplayer_host',

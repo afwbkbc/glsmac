@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <thread>
 
 #ifdef _WIN32
@@ -25,10 +26,8 @@
 namespace network {
 namespace simpletcp {
 
-static socklen_t sockaddr_in_size = sizeof( struct sockaddr_in );
-
-SimpleTCP::SimpleTCP()
-	: Network() {
+SimpleTCP::SimpleTCP( const uint16_t port )
+	: Network( port ) {
 
 }
 
@@ -37,6 +36,7 @@ void SimpleTCP::Start() {
 	m_need_pings = !g_engine->GetConfig()->HasDebugFlag( config::Config::DF_NOPINGS );
 #endif
 	m_impl.Start();
+	Network::Start();
 }
 
 void SimpleTCP::Stop() {
@@ -53,13 +53,14 @@ void SimpleTCP::Stop() {
 		}
 	}
 	m_impl.Stop();
+	Network::Stop();
 }
 
 MT_Response SimpleTCP::ListenStart() {
 
 	ASSERT( m_server.listening_sockets.empty(), "some connection socket(s) already active" );
 
-	Log( (std::string)"Starting server on port " + std::to_string( GLSMAC_PORT ) );
+	Log( (std::string)"Starting server on port " + std::to_string( m_port ) );
 
 	addrinfo hints, * res, * p;
 	memset( &hints, 0, sizeof( hints ) );
@@ -68,7 +69,7 @@ MT_Response SimpleTCP::ListenStart() {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	m_tmp.tmpint = getaddrinfo( nullptr, std::to_string( GLSMAC_PORT ).c_str(), &hints, &res );
+	m_tmp.tmpint = getaddrinfo( nullptr, std::to_string( m_port ).c_str(), &hints, &res );
 	if ( m_tmp.tmpint != 0 ) {
 		return Error( (std::string)"Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
 	}
@@ -99,7 +100,7 @@ MT_Response SimpleTCP::ListenStart() {
 
 		Log( "Opening listening socket on " + socket_data.local_address );
 		socket_data.fd = socket( p->ai_family, p->ai_socktype, p->ai_protocol );
-		if ( socket_data.fd == -1 ) {
+		if ( m_impl.IsSocketInvalid( socket_data.fd ) ) {
 			Log( "Failed to creating listening socket on " + socket_data.local_address );
 			continue; // don't fail right away, maybe we can open on some other interface // TODO: show warning to user?
 		}
@@ -129,7 +130,7 @@ MT_Response SimpleTCP::ListenStart() {
 	freeaddrinfo( res );
 
 	if ( m_server.listening_sockets.empty() ) {
-		return Error( "Failed to listen on port " + std::to_string( GLSMAC_PORT ) );
+		return Error( "Failed to listen on port " + std::to_string( m_port ) );
 	}
 
 	m_tmp.event.Clear();
@@ -169,7 +170,7 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 
 	ASSERT( m_client.socket.fd == 0, "connection socket already active" );
 
-	Log( (std::string)"Connecting to " + remote_address + " port " + std::to_string( GLSMAC_PORT ) );
+	Log( (std::string)"Connecting to " + remote_address + " port " + std::to_string( m_port ) );
 
 	addrinfo hints, * p;
 	memset( &hints, 0, sizeof( hints ) );
@@ -177,7 +178,7 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;
 
-	m_tmp.tmpint = getaddrinfo( remote_address.c_str(), std::to_string( GLSMAC_PORT ).c_str(), &hints, &p );
+	m_tmp.tmpint = getaddrinfo( remote_address.c_str(), std::to_string( m_port ).c_str(), &hints, &p );
 	if ( m_tmp.tmpint != 0 ) {
 		return Error( (std::string)"Failed to getaddrinfo: " + gai_strerror( m_tmp.tmpint ) );
 	}
@@ -257,6 +258,8 @@ MT_Response SimpleTCP::Connect( const std::string& remote_address, MT_CANCELABLE
 	m_client.socket.ping_needed = false;
 	m_client.socket.pong_needed = false;
 	m_client.socket.ping_sent = false;
+	m_client.socket.outgoing.data.clear();
+	m_client.socket.outgoing.offset = 0;
 
 	Log( "Connection successful" );
 
@@ -283,7 +286,10 @@ MT_Response SimpleTCP::DisconnectClient( const network::cid_t cid ) {
 	}
 
 	const auto fd = GetFdFromCid( cid );
-	ASSERT( fd, "could not find client fd" );
+	if ( !fd ) {
+		Log( "Client " + std::to_string( cid ) + " is already disconnected" );
+		return Success();
+	}
 	auto it = m_server.client_sockets.find( fd );
 	if ( it != m_server.client_sockets.end() ) {
 		CloseClientSocket( it->second );
@@ -312,14 +318,14 @@ void SimpleTCP::ProcessEvents() {
 					}
 					auto it = m_server.client_sockets.find( fd );
 					if ( it != m_server.client_sockets.end() ) { // if not found it may mean event is old so can be ignored
-						if ( !WriteToSocket( it->second.fd, event.data.packet_data ) ) {
+						if ( !WriteToSocket( it->second, event.data.packet_data ) ) {
 							CloseClientSocket( it->second );
 							m_server.client_sockets.erase( it );
 						}
 					}
 				}
 				else if ( m_client.socket.fd ) {
-					if ( !WriteToSocket( m_client.socket.fd, event.data.packet_data ) ) {
+					if ( !WriteToSocket( m_client.socket, event.data.packet_data ) ) {
 						CloseSocket( m_client.socket.fd );
 						free( m_client.socket.buffer.data1 );
 						free( m_client.socket.buffer.data2 );
@@ -373,9 +379,10 @@ void SimpleTCP::Iterate() {
 	if ( !m_server.listening_sockets.empty() ) {
 		// Log( "Checking for connections" ); // SPAMMY
 		for ( auto& it : m_server.listening_sockets ) {
-
-			m_server.tmp.newfd = accept( it.first, (sockaddr*)&m_server.tmp.client_addr, &sockaddr_in_size );
-			if ( m_server.tmp.newfd != -1 ) {
+			sockaddr_storage client_addr = {};
+			socklen_t client_addr_size = sizeof( client_addr );
+			m_server.tmp.newfd = accept( it.first, reinterpret_cast< sockaddr* >( &client_addr ), &client_addr_size );
+			if ( !m_impl.IsSocketInvalid( m_server.tmp.newfd ) ) {
 
 				Log( "Accepting connection " + std::to_string( m_server.tmp.newfd ) );
 
@@ -389,8 +396,22 @@ void SimpleTCP::Iterate() {
 				data.buffer.ptr = data.buffer.data;
 				data.fd = m_server.tmp.newfd;
 
-				char str[ INET_ADDRSTRLEN ];
-				data.remote_address = inet_ntop( AF_INET, &( (struct sockaddr_in*)&m_server.tmp.client_addr )->sin_addr, str, INET_ADDRSTRLEN );
+				char str[ INET6_ADDRSTRLEN ] = {};
+				const void* remote_address = nullptr;
+				if ( client_addr.ss_family == AF_INET ) {
+					remote_address = &reinterpret_cast< sockaddr_in* >( &client_addr )->sin_addr;
+				}
+				else if ( client_addr.ss_family == AF_INET6 ) {
+					remote_address = &reinterpret_cast< sockaddr_in6* >( &client_addr )->sin6_addr;
+				}
+				if ( !remote_address || !inet_ntop( client_addr.ss_family, remote_address, str, sizeof( str ) ) ) {
+					Log( "Failed to resolve remote address for accepted socket" );
+					CloseSocket( data.fd, 0, true );
+					free( data.buffer.data1 );
+					free( data.buffer.data2 );
+					continue;
+				}
+				data.remote_address = str;
 
 				data.last_data_at = m_tmp.now;
 				data.ping_needed = false;
@@ -419,7 +440,7 @@ void SimpleTCP::Iterate() {
 
 	// process pings
 	for ( auto it = m_server.client_sockets.begin() ; it != m_server.client_sockets.end() ; ) {
-		if ( !MaybePingDo( it->second ) ) {
+		if ( !FlushSocketWrites( it->second ) || !MaybePingDo( it->second ) ) {
 			CloseClientSocket( it->second );
 			m_server.client_sockets.erase( it++ );
 		}
@@ -428,7 +449,7 @@ void SimpleTCP::Iterate() {
 		}
 	}
 	if ( m_client.socket.fd ) {
-		if ( !MaybePingDo( m_client.socket ) ) {
+		if ( !FlushSocketWrites( m_client.socket ) || !MaybePingDo( m_client.socket ) ) {
 			CloseSocket( m_client.socket.fd );
 			free( m_client.socket.buffer.data1 );
 			free( m_client.socket.buffer.data2 );
@@ -461,7 +482,11 @@ void SimpleTCP::Iterate() {
 bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 
 	// max allowed size to read
-	m_tmp.tmpint = ( BUFFER_SIZE - socket.buffer.len );
+	if ( socket.buffer.len >= static_cast< size_t >( BUFFER_SIZE ) ) {
+		Log( "Socket read buffer is full" );
+		return false;
+	}
+	m_tmp.tmpint = BUFFER_SIZE - static_cast< int >( socket.buffer.len );
 
 	//Log( "Reading up to " + std::to_string( m_tmp.tmpint ) + " bytes from " + std::to_string( socket.fd ) + " (buffer=" + std::to_string( (long int) socket.buffer.ptr ) + ", BUFFER_SIZE=" + std::to_string( BUFFER_SIZE ) + " buffer len = " + std::to_string( socket.buffer.len ) + ")" );
 	m_tmp.tmpint2 = m_impl.Receive( socket.fd, socket.buffer.ptr, m_tmp.tmpint );
@@ -481,10 +506,8 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 	}
 
 	if ( m_tmp.tmpint2 == 0 ) {
-		// no pending data
-		if ( !MaybePing( socket ) ) {
-			return false;
-		}
+		Log( "Connection closed by remote host" );
+		return false;
 	}
 
 	if ( m_tmp.tmpint2 > 0 ) {
@@ -514,6 +537,10 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 
 		m_tmp.ptr = socket.buffer.data;
 		memcpy( &m_tmp.tmpint, m_tmp.ptr, sizeof( m_tmp.tmpint ) );
+		if ( m_tmp.tmpint < 0 || m_tmp.tmpint > BUFFER_SIZE - static_cast< int >( sizeof( m_tmp.tmpint ) ) ) {
+			Log( "Invalid incoming packet size: " + std::to_string( m_tmp.tmpint ) );
+			return false;
+		}
 		m_tmp.tmpint2 = sizeof( m_tmp.tmpint ) + m_tmp.tmpint;
 
 		if ( socket.buffer.len < m_tmp.tmpint2 ) {
@@ -596,31 +623,50 @@ bool SimpleTCP::ReadFromSocket( remote_socket_data_t& socket ) {
 	return false;
 }
 
-bool SimpleTCP::WriteToSocket( int fd, const std::string& data ) {
-	//Log( "WriteToSocket( " + to_string( fd ) + " )" ); // SPAMMY
-	m_tmp.tmpint2 = data.size();
-	//Log( "Writing " + to_string( m_tmp.tmpint2 ) + " bytes" );
-	// send size
-	m_tmp.tmpint = m_impl.Send( fd, &m_tmp.tmpint2, sizeof( m_tmp.tmpint2 ) );
-	if ( m_tmp.tmpint <= 0 ) {
-		m_tmp.tmpint = m_impl.GetLastErrorCode();
-		if ( m_impl.IsConnectionIdle( m_tmp.tmpint ) ) {
-			return true; // no data but connection is alive
-		}
-		Log( "Error writing size to socket (errno=" + std::to_string( m_tmp.tmpint ) + " size=" + std::to_string( m_tmp.tmpint ) + " reqsize=" + std::to_string( m_tmp.tmpint2 ) + ")" );
+bool SimpleTCP::WriteToSocket( remote_socket_data_t& socket, const std::string& data ) {
+	if ( data.size() > BUFFER_SIZE - sizeof( int ) ) {
+		Log( "Outgoing packet is too large: " + std::to_string( data.size() ) );
+		return false;
+	}
 
+	auto& outgoing = socket.outgoing;
+	if ( outgoing.offset > 0 ) {
+		outgoing.data.erase( 0, outgoing.offset );
+		outgoing.offset = 0;
+	}
+	const auto frame_size = sizeof( int ) + data.size();
+	if ( outgoing.data.size() + frame_size > MAX_PENDING_WRITE_SIZE ) {
+		Log( "Outgoing socket queue exceeded " + std::to_string( MAX_PENDING_WRITE_SIZE ) + " bytes" );
 		return false;
 	}
-	// send data
-	m_tmp.tmpint = m_impl.Send( fd, data.data(), data.size() );
-	if ( m_tmp.tmpint2 <= 0 ) {
-		if ( errno == EAGAIN ) {
-			return true; // no data but connection is alive
+
+	const auto packet_size = static_cast< int >( data.size() );
+	outgoing.data.append( reinterpret_cast< const char* >( &packet_size ), sizeof( packet_size ) );
+	outgoing.data.append( data );
+	return FlushSocketWrites( socket );
+}
+
+bool SimpleTCP::FlushSocketWrites( remote_socket_data_t& socket ) {
+	auto& outgoing = socket.outgoing;
+	while ( outgoing.offset < outgoing.data.size() ) {
+		const auto remaining = outgoing.data.size() - outgoing.offset;
+		const auto send_size = static_cast< int >( std::min< size_t >( remaining, BUFFER_SIZE ) );
+		const auto sent = m_impl.Send( socket.fd, outgoing.data.data() + outgoing.offset, send_size );
+		if ( sent > 0 ) {
+			outgoing.offset += sent;
+			continue;
 		}
-		Log( "Error writing data to socket" );
+
+		const auto error = m_impl.GetLastErrorCode();
+		if ( sent < 0 && m_impl.IsConnectionIdle( error ) ) {
+			return true;
+		}
+		Log( "Error writing to socket (result=" + std::to_string( sent ) + " code=" + std::to_string( error ) + ")" );
 		return false;
 	}
-	//Log( "Write successful" );
+
+	outgoing.data.clear();
+	outgoing.offset = 0;
 	return true;
 }
 
@@ -662,20 +708,20 @@ bool SimpleTCP::MaybePingDo( remote_socket_data_t& socket ) {
 		types::Packet packet( types::Packet::PT_PING );
 		std::string data = packet.Serialize().ToString();
 		socket.ping_sent = true;
-		return WriteToSocket( socket.fd, data );
+		return WriteToSocket( socket, data );
 	}
 	if ( socket.pong_needed ) {
 		//Log( "Ping received, sending pong to " + std::to_string( socket.fd ) + " (cid " + std::to_string( socket.cid ) + ")" );
 		types::Packet packet( types::Packet::PT_PONG );
 		socket.pong_needed = false;
 		std::string data = packet.Serialize().ToString();
-		return WriteToSocket( socket.fd, data );
+		return WriteToSocket( socket, data );
 	}
 
 	return true;
 }
 
-void SimpleTCP::CloseSocket( int fd, cid_t cid, bool skip_event ) {
+void SimpleTCP::CloseSocket( fd_t fd, cid_t cid, bool skip_event ) {
 	Log( "Closing socket " + std::to_string( fd ) );
 	uint32_t bye = 0;
 	m_impl.Send( fd, &bye, sizeof( bye ) );

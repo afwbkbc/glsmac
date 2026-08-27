@@ -24,7 +24,11 @@ void Render::Serialize( types::Buffer& buf, const Render* render ) {
 }
 
 Render* Render::Deserialize( types::Buffer& buf ) {
-	const auto render_type = (render_type_t)buf.ReadInt();
+	const auto serialized_render_type = buf.ReadInt();
+	if ( serialized_render_type != RT_SPRITE ) {
+		THROW( "unknown render type on read: " + std::to_string( serialized_render_type ) );
+	}
+	const auto render_type = static_cast< render_type_t >( serialized_render_type );
 	switch ( render_type ) {
 		case RT_SPRITE:
 			return SpriteRender::Deserialize( buf );

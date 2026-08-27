@@ -168,16 +168,10 @@ return {
 			get_stats_str: (object) => {
 				switch (#classof(object)) {
 					case 'Unit': {
-						let stats_str = '';
-						// tmp
 						const def = object.get_def();
-						if (def.id == 'SporeLauncher') {
-							stats_str += '(?)';
-						} else {
-							stats_str += '?';
-						}
-						stats_str += ' - ? - ' + #to_string(#round(def.movement_per_turn));
-						return stats_str;
+						const offense = def.is_native ? 'Psi' : #to_string(def.offense);
+						const defense = def.is_native ? 'Psi' : #to_string(def.defense);
+						return offense + ' - ' + defense + ' - ' + #to_string(#round(def.movement_per_turn));
 					}
 				}
 				return '';

@@ -31,7 +31,8 @@ Unit::Unit(
 	const backend::unit::movement_t movement,
 	const backend::unit::morale_t morale,
 	const std::string& morale_string,
-	const backend::unit::health_t health
+	const backend::unit::health_t health,
+	const bool embarked
 )
 	: TileObject( TOT_UNIT, tile )
 	, m_um( um )
@@ -52,7 +53,8 @@ Unit::Unit(
 	, m_movement( movement )
 	, m_morale( morale )
 	, m_morale_string( morale_string )
-	, m_health( health ) {
+	, m_health( health )
+	, m_is_embarked( embarked ) {
 	m_is_active = ShouldBeActive();
 	m_render.badge.def = m_slot_badges->GetUnitBadgeSprite( m_morale, m_is_active );
 	m_render.badge.healthbar.def = m_badge_defs->GetBadgeHealthbarSprite( m_health );
@@ -88,6 +90,14 @@ const bool Unit::IsActive() const {
 	return m_is_active;
 }
 
+const bool Unit::IsEmbarked() const {
+	return m_is_embarked;
+}
+
+const bool Unit::IsPlanetBuster() const {
+	return m_def->IsPlanetBuster();
+}
+
 tile::Tile* Unit::GetTile() const {
 	return m_tile;
 }
@@ -102,7 +112,7 @@ const size_t Unit::GetSelectionWeight() const {
 
 	// non-artillery units have priority
 	// TODO: use real unit properties
-	if ( m_def->IsArtillery() ) {
+	if ( !m_def->IsArtillery() ) {
 		weight += 60;
 	}
 
@@ -165,7 +175,7 @@ void Unit::SetActiveOnTile() {
 }
 
 void Unit::Show() {
-	if ( !m_render.is_rendered ) {
+	if ( !m_is_embarked && !m_render.is_rendered ) {
 		const auto& c = m_render.coords;
 
 		auto* sprite = m_def->GetSprite( m_morale );
@@ -203,7 +213,9 @@ void Unit::Hide() {
 }
 
 const bool Unit::IsBadgeVisible() const {
-	return m_render.badge.def->instanced_sprite->actor->HasInstance( m_render.badge.instance_id );
+	return
+		m_render.badge.instance_id &&
+		m_render.badge.def->instanced_sprite->actor->HasInstance( m_render.badge.instance_id );
 }
 
 void Unit::ShowBadge() {
@@ -212,14 +224,21 @@ void Unit::ShowBadge() {
 }
 
 void Unit::HideBadge() {
-	m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
-	m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
+	if ( m_render.badge.instance_id ) {
+		m_render.badge.def->instanced_sprite->actor->RemoveInstance( m_render.badge.instance_id );
+	}
+	if ( m_render.badge.healthbar.instance_id ) {
+		m_render.badge.healthbar.def->instanced_sprite->actor->RemoveInstance( m_render.badge.healthbar.instance_id );
+	}
 }
 
 void Unit::ShowFakeBadge( const uint8_t offset ) {
+	if ( m_is_embarked ) {
+		return;
+	}
 	if ( !m_render.fake_badge.instance_id || m_fake_badge_offset != offset ) {
 		if ( m_render.fake_badge.instance_id ) {
-			m_slot_badges->HideFakeBadge( !m_render.fake_badge.instance_id );
+			m_slot_badges->HideFakeBadge( m_render.fake_badge.instance_id );
 		}
 		m_render.fake_badge.instance_id = m_slot_badges->ShowFakeBadge( m_render.coords, offset );
 		m_fake_badge_offset = offset;
@@ -304,6 +323,23 @@ void Unit::SetMovement( const backend::unit::movement_t movement ) {
 	}
 }
 
+void Unit::SetMorale( const backend::unit::morale_t morale, const std::string& morale_string ) {
+	if ( morale != m_morale || morale_string != m_morale_string ) {
+		if ( m_render.is_rendered ) {
+			GetSprite()->instanced_sprite->actor->RemoveInstance( m_render.instance_id );
+			m_render.instance_id = 0;
+		}
+		m_morale = morale;
+		m_morale_string = morale_string;
+		if ( m_render.is_rendered ) {
+			auto* sprite = GetSprite();
+			m_render.instance_id = sprite->next_instance_id++;
+			sprite->instanced_sprite->actor->SetInstance( m_render.instance_id, m_render.coords );
+		}
+		m_need_refresh = true;
+	}
+}
+
 void Unit::SetHealth( const backend::unit::health_t health ) {
 	if ( health != m_health ) {
 		m_health = health;
@@ -315,7 +351,7 @@ const bool Unit::CanMove() const {
 	return m_movement >= backend::unit::Unit::MINIMUM_MOVEMENT_TO_KEEP;
 }
 
-void Unit::SetTile( tile::Tile* dst_tile ) {
+void Unit::SetTile( tile::Tile* dst_tile, const bool update_render ) {
 	ASSERT( m_tile, "source tile not set" );
 	ASSERT( dst_tile, "destination tile not set" );
 
@@ -325,7 +361,21 @@ void Unit::SetTile( tile::Tile* dst_tile ) {
 
 	m_tile->AddUnit( this );
 
-	UpdateFromTile();
+	if ( update_render ) {
+		UpdateFromTile();
+	}
+}
+
+void Unit::SetEmbarked( const bool embarked ) {
+	if ( embarked != m_is_embarked ) {
+		if ( embarked ) {
+			Hide();
+			HideFakeBadge();
+		}
+		m_is_embarked = embarked;
+		m_tile->InvalidateUnitOrder();
+		m_need_refresh = true;
+	}
 }
 
 void Unit::MoveToTile( tile::Tile* dst_tile ) {

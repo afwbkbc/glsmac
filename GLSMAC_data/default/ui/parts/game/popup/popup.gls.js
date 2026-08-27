@@ -3,6 +3,14 @@ return {
 	available_popups: [
 		'turn_confirmation',
 		'please_dont_go',
+		'social_engineering',
+		'planetary_council',
+		'economic_victory',
+		'diplomacy',
+		'probe_operations',
+		'alien_artifact',
+		'psi_gate',
+		'unit_upgrade',
 		'base_screen',
 	],
 

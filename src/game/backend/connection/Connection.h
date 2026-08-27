@@ -99,7 +99,7 @@ public:
 	virtual void SendMessage( const std::string& message ) = 0;
 
 protected:
-	const int DOWNLOAD_CHUNK_SIZE = 16384;
+	static constexpr size_t DOWNLOAD_CHUNK_SIZE = 16384;
 
 	network::Network* const m_network;
 
@@ -132,6 +132,7 @@ protected:
 	void IgnoreCID( const network::cid_t cid );
 
 	virtual void SendGameEvents( const game_events_t& game_events ) = 0;
+	void FlushPendingGameEvents();
 
 private:
 	const network::connection_mode_t m_connection_mode = network::CM_NONE;
@@ -150,6 +151,7 @@ private:
 
 	void ProcessPending( const bool nosend );
 	void ClearPending();
+	void FinalizeStoppedNetwork();
 
 	gc::Space* const m_gc_space;
 
