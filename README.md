@@ -58,6 +58,17 @@ I also made 'demo mod' to demonstrate how scripting can be used: https://github.
 
 Once I replicate original game, I'll focus on other things, such as: larger maps, larger maximum number of players, online services such as game browser or hosting long-turns games (where people can login and make 1 turn per day or so), alternative art packs (used instead of original, this may mean better graphics). See "GLSMAC v2.x+ features" section below.
 
+### Contribution guidelines
+
+Pass criteria for any PR (AI or not):
+
+1) Code looks nice. (No bloat, duplication, excessive comments, chaotic placement of functions amongst files, ...)
+2) No theoretical possibilities for vulnerabilities or crashes (in case of C++ changes)
+3) The result compiles correctly on Linux, Windows, FreeBSD, and (in future) MacOS. (You should test it if your AI decided to modify cmake files or anything related to build.)
+4) The result works correctly without obvious problems. (Misaligned elements, wrong popup sequence, wrong game logic, crashes, ...)
+5) The result does not cause unnecessary performance overhead. (For example, in scripts: calling function where it's not needed, splitting something into too many nested functions (scripting language is not fast yet so it will have impact), creating too much single-use variables, ...) For C++ it's more relaxed as compiler will take care of optimization, however I already stumbled across PR that introduces map zoom lags by pushing some rendering stuff into main thread back and forth all the time.
+6) Code style should match existing. For example **camelCase is not welcome**.
+
 ### AI policy
 
 I myself don't and won't use AI-generated code.
