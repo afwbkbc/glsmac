@@ -147,22 +147,37 @@ int Engine::Run() {
 
 	// TODO: dynamic threadpool
 
+#ifdef __APPLE__
+	// Cocoa requires window creation and event processing on the process main
+	// thread. The engine's first logical thread owns those SDL modules, so run
+	// it inline and keep only the remaining logical threads in std::threads.
+	for ( auto thread = m_threads.begin() + 1; thread != m_threads.end(); ++thread ) {
+		( *thread )->T_Start();
+	}
+#else
 	for ( auto& thread : m_threads ) {
 		thread->T_Start();
 	}
+#endif
 
 	try {
+#ifdef __APPLE__
+		m_threads.front()->T_RunInCurrentThread();
+#else
 		while ( !m_is_shutting_down ) {
 			for ( auto& thread : m_threads ) {
 				// ?
 			}
 			std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
 		}
+#endif
 		Log( "Shutting down" );
 
+#ifndef __APPLE__
 		for ( auto& thread : m_threads ) {
 			thread->T_Stop();
 		}
+#endif
 #ifdef DEBUG
 		util::Timer thread_running_timer;
 		thread_running_timer.SetInterval( 1000 );
@@ -203,7 +218,19 @@ int Engine::Run() {
 
 void Engine::ShutDown() {
 
+#ifdef __APPLE__
+	if ( m_is_shutting_down.exchange( true ) ) {
+		return;
+	}
+
+	// Engine::Run() is occupied by the inline main loop on macOS, so deliver
+	// the stop command here instead of waiting for Run() to poll the flag.
+	for ( auto& thread : m_threads ) {
+		thread->T_Stop();
+	}
+#else
 	m_is_shutting_down = true;
+#endif
 }
 
 void Engine::Log( const std::string& text ) const {

@@ -55,6 +55,28 @@ void OpenGL::Start() {
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
 
+	const auto set_gl_attributes = []() {
+		SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+		SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+		SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
+		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+		SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+	};
+
+#ifdef __APPLE__
+	set_gl_attributes();
+	// macOS otherwise creates a legacy OpenGL 2.1 context. GLSMAC's shaders
+	// use GLSL 3.30, which requires the core profile (provided by Apple's
+	// OpenGL 4.1 context).
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
+#endif
+
 	m_window = SDL_CreateWindow(
 		m_options.title.c_str(),
 		SDL_WINDOWPOS_CENTERED,
@@ -77,15 +99,10 @@ void OpenGL::Start() {
 
 	Log( "Initializing OpenGL" );
 
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+#ifndef __APPLE__
+	set_gl_attributes();
 	SDL_GL_SetSwapInterval( (char)m_options.vsync );
+#endif
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
@@ -93,11 +110,28 @@ void OpenGL::Start() {
 	}
 
 	SDL_GL_MakeCurrent( m_window, m_gl_context );
+#ifdef __APPLE__
+	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
+	glewExperimental = GL_TRUE;
+#endif
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
 	}
+
+#ifdef __APPLE__
+	// GLEW probes unsupported extensions while initializing a macOS core
+	// context and may leave GL_INVALID_ENUM behind. Do not attribute those
+	// probe errors to GLSMAC's first real OpenGL operation.
+	while ( glGetError() != GL_NO_ERROR ) {}
+
+	// Core-profile OpenGL stores vertex attribute and element-buffer state in
+	// a vertex array object. GLSMAC manages one set of bindings at a time, so a
+	// single VAO can remain bound for the lifetime of the context.
+	glGenVertexArrays( 1, &m_vertex_array );
+	glBindVertexArray( m_vertex_array );
+#endif
 
 	{ // print some OpenGL info
 		auto* renderer = (const char*)glGetString( GL_RENDERER );
@@ -153,7 +187,9 @@ void OpenGL::Start() {
 	glDepthFunc( GL_LEQUAL );
 
 	glCullFace( GL_FRONT );
+#ifndef __APPLE__
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST );
+#endif
 
 
 	// generate 'empty' texture (transparent 1x1)
@@ -196,6 +232,12 @@ void OpenGL::Stop() {
 		DELETE( *it );
 	}
 	m_shader_programs.clear();
+
+#ifdef __APPLE__
+	glBindVertexArray( 0 );
+	glDeleteVertexArrays( 1, &m_vertex_array );
+	m_vertex_array = 0;
+#endif
 
 	ProcessPendingUnloads();
 
