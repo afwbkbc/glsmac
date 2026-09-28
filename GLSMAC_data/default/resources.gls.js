@@ -89,7 +89,8 @@ const result = {
 			}
 
 			// base
-			if (e.tile.get_base() != null) {
+			const base = e.tile.get_base();
+			if (base != null) {
 				// TODO: reuse terraforming logic
 				if (result.NUTRIENTS < 2) {
 					result.NUTRIENTS = 2;
@@ -100,6 +101,9 @@ const result = {
 				const min_energy = e.tile.features.river ? 2 : 1;
 				if (result.ENERGY < min_energy) {
 					result.ENERGY = min_energy;
+				}
+				if (base.has_facility('HEADQUARTERS')) {
+					result.ENERGY = result.ENERGY + 1;
 				}
 			} else {
 				// TODO: terraforming

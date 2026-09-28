@@ -10,8 +10,8 @@ namespace base {
 
 PopDef::PopDef(
 	const std::string& name,
-	const backend::base::pop_render_infos_t& renders_human,
-	const backend::base::pop_render_infos_t& renders_progenitor
+	const backend::base::render_infos_t& renders_human,
+	const backend::base::render_infos_t& renders_progenitor
 )
 	: m_name( name ) {
 	auto* tl = g_engine->GetTextureLoader();

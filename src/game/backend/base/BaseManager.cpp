@@ -9,6 +9,7 @@
 
 #include "Base.h"
 #include "PopDef.h"
+#include "FacilityDef.h"
 
 #include "gse/context/Context.h"
 #include "gse/callable/Native.h"
@@ -42,7 +43,7 @@ void BaseManager::Clear() {
 	m_base_updates.clear();
 }
 
-base::PopDef* BaseManager::GetPopDef( const std::string& id ) const {
+PopDef* BaseManager::GetPopDef( const std::string& id ) const {
 	const auto& it = m_base_popdefs.find( id );
 	if ( it != m_base_popdefs.end() ) {
 		return it->second;
@@ -52,7 +53,7 @@ base::PopDef* BaseManager::GetPopDef( const std::string& id ) const {
 	}
 }
 
-base::Base* BaseManager::GetBase( const size_t id ) const {
+Base* BaseManager::GetBase( const size_t id ) const {
 	const auto& it = m_bases.find( id );
 	if ( it != m_bases.end() ) {
 		return it->second;
@@ -62,7 +63,7 @@ base::Base* BaseManager::GetBase( const size_t id ) const {
 	}
 }
 
-void BaseManager::DefinePop( base::PopDef* pop_def ) {
+void BaseManager::DefinePop( PopDef* pop_def ) {
 	Log( "Defining base pop ('" + pop_def->m_id + "')" );
 
 	ASSERT( m_base_popdefs.find( pop_def->m_id ) == m_base_popdefs.end(), "Base pop def '" + pop_def->m_id + "' already exists" );
@@ -75,7 +76,7 @@ void BaseManager::DefinePop( base::PopDef* pop_def ) {
 	);
 
 	auto fr = FrontendRequest( FrontendRequest::FR_BASE_POP_DEFINE );
-	NEW( fr.data.base_pop_define.serialized_popdef, std::string, base::PopDef::Serialize( pop_def ).ToString() );
+	NEW( fr.data.base_pop_define.serialized_popdef, std::string, PopDef::Serialize( pop_def ).ToString() );
 	m_game->AddFrontendRequest( fr );
 }
 
@@ -91,7 +92,48 @@ void BaseManager::UndefinePop( const std::string& id ) {
 	m_game->AddFrontendRequest( fr );
 }
 
-void BaseManager::SpawnBase( GSE_CALLABLE, base::Base* base ) {
+FacilityDef* BaseManager::GetFacilityDef( const std::string& id ) const {
+	const auto& it = m_base_facilitydefs.find( id );
+	if ( it != m_base_facilitydefs.end() ) {
+		return it->second;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+void BaseManager::DefineFacility( FacilityDef* facility_def ) {
+	Log( "Defining base facility ('" + facility_def->m_id + "')" );
+
+	ASSERT( m_base_popdefs.find( facility_def->m_id ) == m_base_popdefs.end(), "Base facility def '" + facility_def->m_id + "' already exists" );
+
+	m_base_facilitydefs.insert(
+		{
+			facility_def->m_id,
+			facility_def
+		}
+	);
+
+	// TODO
+	/*auto fr = FrontendRequest( FrontendRequest::FR_BASE_FACILITY_DEFINE );
+	NEW( fr.data.base_facility_define.serialized_facilitydef, std::string, FacilityDef::Serialize( facility_def ).ToString() );
+	m_game->AddFrontendRequest( fr );*/
+}
+
+void BaseManager::UndefineFacility( const std::string& id ) {
+	Log( "Undefining base facility ('" + id + "')" );
+
+	ASSERT( m_base_facilitydefs.find( id ) != m_base_facilitydefs.end(), "Base facility def '" + id + "' does not exist" );
+
+	m_base_facilitydefs.erase( id );
+
+	/* TODO
+	auto fr = FrontendRequest( FrontendRequest::FR_BASE_FACILITY_UNDEFINE );
+	NEW( fr.data.base_facility_undefine.id, std::string, id );
+	m_game->AddFrontendRequest( fr );*/
+}
+
+void BaseManager::SpawnBase( GSE_CALLABLE, Base* base ) {
 
 	auto* tile = base->GetTile();
 
@@ -193,7 +235,7 @@ const BaseManager::popdefs_t& BaseManager::GetBasePopDefs() const {
 
 void BaseManager::ProcessUnprocessed( GSE_CALLABLE ) {
 	for ( auto& it : m_unprocessed_bases ) {
-		SpawnBase( GSE_CALL, base::Base::Deserialize( it, m_game ) );
+		SpawnBase( GSE_CALL, Base::Deserialize( it, m_game ) );
 	}
 	m_unprocessed_bases.clear();
 }
@@ -264,9 +306,9 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				N_GETPROP( name, def, "name", String );
 
-				base::pop_render_infos_t rh = {};
-				base::pop_render_infos_t rp = {};
-				const auto& f_read_renders = [ &def, &arg, &gc_space, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, base::pop_render_infos_t& out ) {
+				render_infos_t rh = {};
+				render_infos_t rp = {};
+				const auto& f_read_renders = [ &def, &arg, &gc_space, &ctx, &si, &ep, &getprop_val, &obj_it ]( const std::string& key, render_infos_t& out ) {
 					N_GETPROP( renders, def, key, Array );
 					out.reserve( renders.size() );
 					for ( const auto& v : renders ) {
@@ -282,15 +324,13 @@ WRAPIMPL_BEGIN( BaseManager )
 							N_GETPROP( y, ov, "y", Int );
 							N_GETPROP( w, ov, "w", Int );
 							N_GETPROP( h, ov, "h", Int );
-							out.push_back(
-								base::pop_render_info_t{
-									file,
-									(uint16_t)x,
-									(uint16_t)y,
-									(uint16_t)w,
-									(uint16_t)h
-								}
-							);
+							out.push_back({
+								file,
+								(uint16_t)x,
+								(uint16_t)y,
+								(uint16_t)w,
+								(uint16_t)h
+							});
 						}
 						else {
 							GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
@@ -301,13 +341,13 @@ WRAPIMPL_BEGIN( BaseManager )
 				f_read_renders( "renders_human", rh );
 				f_read_renders( "renders_progenitor", rp );
 
-				base::PopDef::pop_flags_t flags = base::PopDef::PF_NONE;
+				PopDef::pop_flags_t flags = PopDef::PF_NONE;
 				N_GETPROP_OPT( bool, can_work_tiles, def, "tile_worker", Bool, false );
 				if ( can_work_tiles ) {
-					flags |= base::PopDef::PF_TILE_WORKER;
+					flags |= PopDef::PF_TILE_WORKER;
 				}
 
-				DefinePop( new base::PopDef( id, name, rh, rp, flags ) );
+				DefinePop( new PopDef( id, name, rh, rp, flags ) );
 
 				return VALUE( gse::value::Undefined );
 			} )
@@ -353,6 +393,62 @@ WRAPIMPL_BEGIN( BaseManager )
 			} )
 		},
 		{
+			"define_facility",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( id, 0, String );
+				N_GETVALUE( def, 1, Object );
+
+				N_GETPROP( name, def, "name", String );
+				N_GETPROP( description, def, "description", String );
+				N_GETPROP( cost, def, "cost", Int );
+
+				N_GETPROP( render, def, "render", Object );
+
+				RenderInfo r = {};
+				N_GETPROP( type, render, "type", String );
+				if ( type == "sprite" ) {
+					N_GETPROP( file, render, "file", String );
+					N_GETPROP( x, render, "x", Int );
+					N_GETPROP( y, render, "y", Int );
+					N_GETPROP( w, render, "w", Int );
+					N_GETPROP( h, render, "h", Int );
+					r = {
+						file,
+						(uint16_t)x,
+						(uint16_t)y,
+						(uint16_t)w,
+						(uint16_t)h
+					};
+				}
+				else {
+					GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite facilities are supported for now" );
+				}
+
+				DefineFacility( new FacilityDef( id, name, description, cost, r ) );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"undefine_facility",
+			NATIVE_CALL( this ) {
+
+				m_game->CheckRW( GSE_CALL );
+
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( id, 0, String );
+
+				UndefineFacility( id );
+
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+
+		{
 			"spawn_base",
 			NATIVE_CALL( this ) {
 
@@ -365,17 +461,38 @@ WRAPIMPL_BEGIN( BaseManager )
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
 
-				if ( arguments.size() > 3 ) {
-					// N_GET_CALLABLE( on_spawn, 3 ); not used???
+				std::map< std::string, const FacilityDef* > facilities = {};
+				{
+					const auto& it = info.find( "facilities" );
+					if ( it != info.end() ) {
+						if ( it->second->type != gse::VT_ARRAY ) {
+							GSE_ERROR( gse::EC.GAME_ERROR, "Facilities must be array, found: " + it->second->GetTypeString() );
+						}
+						for ( const auto& f : ((gse::value::Array*)it->second)->value ) {
+							if ( f->type != gse::VT_STRING ) {
+								GSE_ERROR( gse::EC.GAME_ERROR, "Facilities elements must be string IDs, found: " + f->GetTypeString() );
+							}
+							const auto& id = ((gse::value::String*)f)->value;
+							if ( facilities.find( id ) != facilities.end() ) {
+								GSE_ERROR( gse::EC.GAME_ERROR, "Duplicate base facility: " + id );
+							}
+							const auto& f_it = m_base_facilitydefs.find( id );
+							if ( f_it == m_base_facilitydefs.end() ) {
+								GSE_ERROR( gse::EC.GAME_ERROR, "Unknown base facility: " + id );
+							}
+							facilities.insert({ id, f_it->second } );
+						}
+					}
 				}
 
-				auto* base = new base::Base(
+				auto* base = new Base(
 					m_game,
-					base::Base::GetNextId(),
+					Base::GetNextId(),
 					owner->GetSlot(),
 					owner->GetFaction(),
 					tile,
 					m_name,
+					facilities,
 					{}
 				);
 
@@ -441,17 +558,17 @@ void BaseManager::Serialize( types::Buffer& buf ) const {
 	buf.WriteInt( m_base_popdefs.size() );
 	for ( const auto& it : m_base_popdefs ) {
 		buf.WriteString( it.first );
-		buf.WriteString( base::PopDef::Serialize( it.second ).ToString() );
+		buf.WriteString( PopDef::Serialize( it.second ).ToString() );
 	}
 
 	Log( "Serializing " + std::to_string( m_bases.size() ) + " bases" );
 	buf.WriteInt( m_bases.size() );
 	for ( const auto& it : m_bases ) {
-		buf.WriteString( base::Base::Serialize( it.second ).ToString() );
+		buf.WriteString( Base::Serialize( it.second ).ToString() );
 	}
-	buf.WriteInt( base::Base::GetNextId() );
+	buf.WriteInt( Base::GetNextId() );
 
-	Log( "Saved next base id: " + std::to_string( base::Base::GetNextId() ) );
+	Log( "Saved next base id: " + std::to_string( Base::GetNextId() ) );
 }
 
 void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
@@ -465,7 +582,7 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		const auto name = buf.ReadString();
 		auto b = types::Buffer( buf.ReadString() );
-		DefinePop( base::PopDef::Deserialize( b ) );
+		DefinePop( PopDef::Deserialize( b ) );
 	}
 
 	sz = buf.ReadInt();
@@ -476,22 +593,22 @@ void BaseManager::Deserialize( GSE_CALLABLE, types::Buffer& buf ) {
 	for ( size_t i = 0 ; i < sz ; i++ ) {
 		auto b = types::Buffer( buf.ReadString() );
 		if ( m_game->IsRunning() ) {
-			SpawnBase( GSE_CALL, base::Base::Deserialize( b, m_game ) );
+			SpawnBase( GSE_CALL, Base::Deserialize( b, m_game ) );
 		}
 		else {
 			m_unprocessed_bases.push_back( b );
 		}
 	}
 
-	base::Base::SetNextId( buf.ReadInt() );
-	Log( "Restored next base id: " + std::to_string( base::Base::GetNextId() ) );
+	Base::SetNextId( buf.ReadInt() );
+	Log( "Restored next base id: " + std::to_string( Base::GetNextId() ) );
 }
 
-void BaseManager::RefreshBase( const base::Base* base ) {
+void BaseManager::RefreshBase( const Base* base ) {
 	QueueBaseUpdate( base, BUO_REFRESH );
 }
 
-void BaseManager::AddUpdateTrigger( base::Base* base ) {
+void BaseManager::AddUpdateTrigger( Base* base ) {
 	std::lock_guard guard( m_updated_bases_mutex );
 	m_updated_bases.insert( base );
 }

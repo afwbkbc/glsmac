@@ -1,4 +1,5 @@
 const pops = #include('pops');
+const facilities = #include('facilities');
 
 const globals = {};
 
@@ -250,6 +251,7 @@ return (game) => {
 	});
 
 	pops.define(game);
+	facilities.define(game);
 
 	game.on('start', (e) => {
 

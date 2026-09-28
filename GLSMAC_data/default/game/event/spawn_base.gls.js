@@ -9,6 +9,7 @@ return {
 	apply: (e) => {
 		const base = e.game.bm.spawn_base(e.data.owner, e.data.tile, {
 			// name: e.data.name,
+			facilities: e.data.facilities,
 		});
 
 		return {

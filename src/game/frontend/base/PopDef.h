@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "game/backend/base/Types.h"
+#include "game/backend/base/RenderInfo.h"
 
 namespace types::texture {
 class Texture;
@@ -16,8 +16,8 @@ class PopDef {
 public:
 	PopDef(
 		const std::string& name,
-		const backend::base::pop_render_infos_t& renders_human,
-		const backend::base::pop_render_infos_t& renders_progenitor
+		const backend::base::render_infos_t& renders_human,
+		const backend::base::render_infos_t& renders_progenitor
 	);
 
 	const std::string m_name;

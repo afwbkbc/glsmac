@@ -32,6 +32,8 @@ class Tile;
 
 namespace base {
 
+class FacilityDef;
+
 class Base : public gse::Wrappable, public MapObject, public ResourceRelated {
 public:
 
@@ -39,6 +41,7 @@ public:
 	static const void SetNextId( const size_t id );
 
 	typedef std::map< size_t, Pop > pops_t;
+	typedef std::map< std::string, const FacilityDef* > facilities_t;
 
 	Base(
 		Game* game,
@@ -47,6 +50,7 @@ public:
 		faction::Faction* faction, // faction may differ from owner's faction in some cases, i.e. after being conquered
 		map::tile::Tile* tile,
 		const std::string& name,
+		const facilities_t& facilities,
 		const pops_t& pops,
 		const size_t next_pop_id = 1
 	);
@@ -62,6 +66,7 @@ public:
 	slot::Slot* m_owner;
 	faction::Faction* m_faction;
 	std::string m_name;
+	facilities_t m_facilities;
 	pops_t m_pops;
 
 	static const types::Buffer Serialize( const Base* base );

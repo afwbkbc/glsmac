@@ -143,9 +143,13 @@ return {
 			ecodamage: 0, // TODO
 		});
 
-		this.sections.facilities.set([
-			'Recycling Tanks',
-		]);
+		let facilities = [];
+		const ff = base.get_facilities();
+		for (f in ff) {
+			facilities :+ff[f].name;
+		}
+
+		this.sections.facilities.set(facilities);
 
 		const resource_data = {
 			nutrients: {
@@ -171,7 +175,7 @@ return {
 			labs: {
 				allocation: allocation_labs,
 				value: #round(#to_float(total_energy) * allocation_labs),
-				bonus: 2,
+				bonus: 0,
 			},
 			psych: {
 				allocation: allocation_psych,

@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "Types.h"
+#include "RenderInfo.h"
 #include "types/Buffer.h"
 
 namespace game {
@@ -18,7 +18,7 @@ public:
 		const std::string& name,
 		const std::string& description,
 		const size_t cost,
-		const render_info_t& render_info
+		const RenderInfo& render_info
 	);
 	virtual ~FacilityDef() = default;
 
@@ -26,7 +26,7 @@ public:
 	const std::string m_name;
 	const std::string m_description;
 	const size_t m_cost;
-	const render_info_t m_render_info;
+	const RenderInfo m_render_info;
 
 	const std::string ToString( const std::string& prefix = "" ) const;
 

@@ -7,8 +7,8 @@ namespace base {
 PopDef::PopDef(
 	const std::string& id,
 	const std::string& name,
-	const pop_render_infos_t& renders_human,
-	const pop_render_infos_t& renders_progenitor,
+	const render_infos_t& renders_human,
+	const render_infos_t& renders_progenitor,
 	const pop_flags_t flags
 )
 	: m_id( id )
@@ -41,11 +41,7 @@ const types::Buffer PopDef::Serialize( const PopDef* def ) {
 #define X( _r ) \
     buf.WriteInt( def->_r.size() ); \
     for ( const auto& r : def->_r ) { \
-        buf.WriteString( r.file ); \
-        buf.WriteInt( r.x ); \
-        buf.WriteInt( r.y ); \
-        buf.WriteInt( r.width ); \
-        buf.WriteInt( r.height ); \
+        r.Write( buf ); \
     }
 	X( m_renders_human )
 	X( m_renders_progenitor )
@@ -58,7 +54,7 @@ PopDef* PopDef::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
 #define X( _r ) \
-    pop_render_infos_t _r = {}; \
+    render_infos_t _r = {}; \
     _r.resize( buf.ReadInt() ); \
     for ( auto& r : _r ) { \
         r.file = buf.ReadString(); \
@@ -74,16 +70,12 @@ PopDef* PopDef::Deserialize( types::Buffer& buf ) {
 	return new PopDef( id, name, renders_human, renders_progenitor, flags );
 }
 
-const std::string PopDef::InfosToString( const std::string& prefix, const std::string& name, const pop_render_infos_t& infos ) const {
+const std::string PopDef::InfosToString( const std::string& prefix, const std::string& name, const render_infos_t& infos ) const {
 	std::string result = TS_ARR_BEGIN( name );
 	for ( size_t i = 0 ; i < infos.size() ; i++ ) {
 		const auto& info = infos.at( i );
 		result += TS_OBJ_BEGIN( std::to_string( i ) ) +
-			TS_OBJ_PROP_STR( "file", info.file ) +
-			TS_OBJ_PROP_NUM( "x", info.x ) +
-			TS_OBJ_PROP_NUM( "y", info.y ) +
-			TS_OBJ_PROP_NUM( "width", info.width ) +
-			TS_OBJ_PROP_NUM( "height", info.height ) +
+			info.ToString( prefix ) +
 			TS_OBJ_END();
 	}
 	result += TS_ARR_END();

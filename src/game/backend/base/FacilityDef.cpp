@@ -9,7 +9,7 @@ FacilityDef::FacilityDef(
 	const std::string& name,
 	const std::string& description,
 	const size_t cost,
-	const render_info_t& render_info
+	const RenderInfo& render_info
 )
 	: m_id( id )
 	, m_name( name )
@@ -26,7 +26,9 @@ const std::string FacilityDef::ToString( const std::string& prefix ) const {
 		TS_OBJ_PROP_STR( "name", m_name ) +
 		TS_OBJ_PROP_STR( "description", m_description ) +
 		TS_OBJ_PROP_NUM( "cost", m_cost ) +
-		m_render_info.ToString( "render", prefix ) +
+		TS_OBJ_BEGIN( "render" ) +
+		m_render_info.ToString( prefix ) +
+		TS_OBJ_END() +
 		TS_OBJ_END();
 }
 
@@ -36,11 +38,7 @@ const types::Buffer FacilityDef::Serialize( const FacilityDef* def ) {
 	buf.WriteString( def->m_name );
 	buf.WriteString( def->m_description );
 	buf.WriteInt( def->m_cost );
-	buf.WriteString( def->m_render_info.file );
-	buf.WriteInt( def->m_render_info.x );
-	buf.WriteInt( def->m_render_info.y );
-	buf.WriteInt( def->m_render_info.width );
-	buf.WriteInt( def->m_render_info.height );
+	def->m_render_info.Write( buf );
 	return buf;
 }
 
@@ -49,7 +47,7 @@ FacilityDef* FacilityDef::Deserialize( types::Buffer& buf ) {
 	const auto name = buf.ReadString();
 	const auto description = buf.ReadString();
 	const auto cost = buf.ReadInt();
-	render_info_t r = {};
+	RenderInfo r = {};
 	r.file = buf.ReadString();
 	r.x = buf.ReadInt();
 	r.y = buf.ReadInt();

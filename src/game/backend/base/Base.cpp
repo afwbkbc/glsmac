@@ -18,6 +18,7 @@
 #include "game/backend/base/BaseManager.h"
 #include "Pop.h"
 #include "PopDef.h"
+#include "FacilityDef.h"
 #include "game/backend/Random.h"
 #include "game/backend/resource/ResourceManager.h"
 
@@ -40,6 +41,7 @@ Base::Base(
 	faction::Faction* faction,
 	map::tile::Tile* tile,
 	const std::string& name,
+	const facilities_t& facilities,
 	const pops_t& pops,
 	const size_t next_pop_id
 )
@@ -49,6 +51,7 @@ Base::Base(
 	, m_owner( owner )
 	, m_faction( faction )
 	, m_name( name )
+	, m_facilities( facilities )
 	, m_pops( pops )
 	, m_next_pop_id( next_pop_id ) {
 	if ( next_id <= id ) {
@@ -62,7 +65,7 @@ Base::Base(
 	}
 }
 
-const  Game* const Base::GetGame() const {
+const Game* const Base::GetGame() const {
 	return m_game;
 }
 
@@ -103,6 +106,10 @@ const types::Buffer Base::Serialize( const Base* base ) {
 	buf.WriteInt( base->m_tile->coord.x );
 	buf.WriteInt( base->m_tile->coord.y );
 	buf.WriteString( base->m_name );
+	buf.WriteInt( base->m_facilities.size() );
+	for ( const auto& it : base->m_facilities ) {
+		buf.WriteString( it.first );
+	}
 	buf.WriteInt( base->m_pops.size() );
 	for ( const auto& it : base->m_pops ) {
 		buf.WriteInt( it.first );
@@ -122,6 +129,19 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 	const auto pos_y = buf.ReadInt();
 	auto* tile = game->GetMap()->GetTile( pos_x, pos_y );
 	const auto name = buf.ReadString();
+	facilities_t facilities = {};
+	const auto facilities_count = buf.ReadInt();
+	if ( facilities_count > 0 ) {
+		const auto& bm = game->GetBM();
+		for ( size_t i = 0 ; i < facilities_count ; i++ ) {
+			const auto facility_id = buf.ReadString();
+			const auto* def = bm->GetFacilityDef( facility_id );
+			if ( !def ) {
+				THROW( "can't deserialize base - facility def not found: " + facility_id );
+			}
+			facilities.insert({ facility_id, def });
+		}
+	}
 	pops_t pops = {};
 	const auto pops_count = buf.ReadInt();
 	for ( size_t i = 0 ; i < pops_count ; i++ ) {
@@ -131,7 +151,7 @@ Base* Base::Deserialize( types::Buffer& buf, Game* game ) {
 		pops.insert_or_assign( pop_id, pop );
 	}
 	const auto next_pop_id = buf.ReadInt();
-	return new Base( game, id, slot, faction, tile, name, pops, next_pop_id );
+	return new Base( game, id, slot, faction, tile, name, facilities, pops, next_pop_id );
 }
 
 WRAPIMPL_SERIALIZE( Base )
@@ -248,6 +268,34 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			}
 
 			return VALUE( gse::value::Array,, elements );
+		} ),
+	},
+	{
+		"get_facilities",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+
+			gse::value::object_properties_t result = {};
+
+			for ( auto& it : m_facilities ) {
+				result.insert( { it.first, VALUEEXT( gse::value::Object, GSE_CALL, {
+					{ "name", VALUE( gse::value::String,, it.second->m_name ) },
+					{ "description", VALUE( gse::value::String,, it.second->m_description ) },
+					{ "cost", VALUE( gse::value::Int,, it.second->m_cost ) },
+				} ) } );
+			}
+
+			return VALUEEXT( gse::value::Object, GSE_CALL, result );
+		} ),
+	},
+	{
+		"has_facility",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 1 );
+
+			N_GETVALUE( id, 0, String );
+
+			return VALUE( gse::value::Bool,, m_facilities.find( id ) != m_facilities.end() );
 		} ),
 	},
 	{

@@ -11,7 +11,7 @@
 
 #include "gse/value/Object.h"
 
-#include "Types.h"
+#include "RenderInfo.h"
 
 namespace game {
 namespace backend {
@@ -33,11 +33,13 @@ namespace base {
 
 class Base;
 class PopDef;
+class FacilityDef;
 
 CLASS( BaseManager, gse::GCWrappable )
 public:
 
-	typedef std::unordered_map< std::string, base::PopDef* > popdefs_t;
+	typedef std::unordered_map< std::string, PopDef* > popdefs_t;
+	typedef std::unordered_map< std::string, FacilityDef* > facilitydefs_t;
 
 	BaseManager( Game* game );
 	~BaseManager();
@@ -45,10 +47,15 @@ public:
 	void Clear();
 
 	PopDef* GetPopDef( const std::string& id ) const;
-	Base* GetBase( const size_t id ) const;
-	void DefinePop( base::PopDef* pop_def );
+	void DefinePop( PopDef* pop_def );
 	void UndefinePop( const std::string& id );
-	void SpawnBase( GSE_CALLABLE, base::Base* base );
+
+	FacilityDef* GetFacilityDef( const std::string& id ) const;
+	void DefineFacility( FacilityDef* facility_def );
+	void UndefineFacility( const std::string& id );
+
+	Base* GetBase( const size_t id ) const;
+	void SpawnBase( GSE_CALLABLE, Base* base );
 	void DespawnBase( GSE_CALLABLE, const size_t base_id );
 
 	const std::map< size_t, Base* >& GetBases() const;
@@ -64,9 +71,9 @@ public:
 	void Serialize( types::Buffer& buf ) const;
 	void Deserialize( GSE_CALLABLE, types::Buffer& buf );
 
-	void RefreshBase( const base::Base* base );
+	void RefreshBase( const Base* base );
 
-	void AddUpdateTrigger( base::Base* base ); // TODO: combine with RefreshBase?
+	void AddUpdateTrigger( Base* base ); // TODO: combine with RefreshBase?
 
 	void GetReachableObjects( std::unordered_set< Object* >& reachable_objects ) override;
 
@@ -74,7 +81,9 @@ private:
 	Game* m_game = nullptr;
 
 	popdefs_t m_base_popdefs = {};
-	std::map< size_t, base::Base* > m_bases = {};
+	facilitydefs_t m_base_facilitydefs = {};
+
+	std::map< size_t, Base* > m_bases = {};
 	std::vector< types::Buffer > m_unprocessed_bases = {};
 
 	std::unordered_set< std::string > m_registered_base_names = {};
@@ -87,11 +96,11 @@ private:
 	};
 	struct base_update_t {
 		base_update_op_t ops = BUO_NONE;
-		const base::Base* base = nullptr;
+		const Base* base = nullptr;
 	};
 	std::unordered_map< size_t, base_update_t > m_base_updates = {};
 
-	void QueueBaseUpdate( const base::Base* base, const base_update_op_t op );
+	void QueueBaseUpdate( const Base* base, const base_update_op_t op );
 
 private:
 	std::mutex m_updated_bases_mutex;

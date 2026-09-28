@@ -37,8 +37,11 @@ void Pop::Deserialize( types::Buffer& buf, Game* game ) {
 	ASSERT( bm, "bm is null" );
 
 	m_id = buf.ReadInt();
-	m_def = bm->GetPopDef( buf.ReadString() );
-	ASSERT( m_def, "pop def not found" );
+	const auto pop_id = buf.ReadString();
+	m_def = bm->GetPopDef( pop_id );
+	if ( !m_def ) {
+		THROW( "can't deserialize pop - def not found: " + pop_id );
+	}
 	m_variant = buf.ReadInt();
 }
 

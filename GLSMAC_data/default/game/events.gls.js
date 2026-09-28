@@ -15,6 +15,7 @@ return (game) => {
 		'attack_unit',
 		'unit_skip_turn',
 		'define_base_pop',
+		'define_base_facility',
 		'spawn_base',
 		'add_base_pop',
 		'remove_base_pop',
