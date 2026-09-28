@@ -1,5 +1,7 @@
 #include "FramesRow.h"
 
+#include <limits>
+
 namespace game {
 namespace backend {
 namespace animation {
@@ -93,18 +95,32 @@ FramesRow* FramesRow::Deserialize(
 	const auto frame_padding = buf.ReadInt();
 	const auto frames_count = buf.ReadInt();
 	const auto frames_per_row = buf.ReadInt();
+	const auto max_u16 = static_cast< long long >( std::numeric_limits< uint16_t >::max() );
+	const auto max_u8 = static_cast< long long >( std::numeric_limits< uint8_t >::max() );
+	if (
+		row_x < 0 || row_x > max_u16 || row_y < 0 || row_y > max_u16 ||
+		frame_width < 1 || frame_width > max_u16 ||
+		frame_height < 1 || frame_height > max_u16 ||
+		frame_center_x < 0 || frame_center_x > max_u16 ||
+		frame_center_y < 0 || frame_center_y > max_u16 ||
+		frame_padding < 0 || frame_padding > max_u16 ||
+		frames_count < 1 || frames_count > max_u8 || duration_ms < frames_count ||
+		frames_per_row < 1 || frames_per_row > frames_count
+	) {
+		THROW( "invalid frames-row animation data" );
+	}
 	return new FramesRow(
 		id,
 		file,
-		row_x,
-		row_y,
-		frame_width,
-		frame_height,
-		frame_center_x,
-		frame_center_y,
-		frame_padding,
-		frames_count,
-		frames_per_row,
+		static_cast< uint16_t >( row_x ),
+		static_cast< uint16_t >( row_y ),
+		static_cast< uint16_t >( frame_width ),
+		static_cast< uint16_t >( frame_height ),
+		static_cast< uint16_t >( frame_center_x ),
+		static_cast< uint16_t >( frame_center_y ),
+		static_cast< uint16_t >( frame_padding ),
+		static_cast< uint8_t >( frames_count ),
+		static_cast< uint8_t >( frames_per_row ),
 		scale_x,
 		scale_y,
 		duration_ms,

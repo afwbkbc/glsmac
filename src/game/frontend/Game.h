@@ -310,7 +310,7 @@ private:
 			};
 		} edge_scrolling;
 		types::Vec2< float > last_mouse_position;
-		unsigned char mouse_buttons_pressed;
+		size_t mouse_buttons_pressed;
 		float key_zooming = 0;
 	} m_map_control = {};
 

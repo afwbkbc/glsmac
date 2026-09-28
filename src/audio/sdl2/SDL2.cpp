@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <cmath>
+#include <limits>
 
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
@@ -47,8 +49,17 @@ void SDL2::Start() {
 	m_mix_buffer_size = sizeof( AUDIO_MIX_TYPE ) * m_buffer_length;
 	m_mix_buffer = (AUDIO_MIX_TYPE*)malloc( m_mix_buffer_size );
 	m_buffer = (AUDIO_SAMPLE_TYPE*)malloc( m_buffer_size );
+	if ( !m_mix_buffer || !m_buffer ) {
+		Log( "Unable to allocate audio buffers, game will start without sound." );
+		free( m_buffer );
+		free( m_mix_buffer );
+		m_buffer = nullptr;
+		m_mix_buffer = nullptr;
+		SDL_QuitSubSystem( SDL_INIT_AUDIO );
+		return;
+	}
 
-	SDL_AudioSpec wav_spec;
+	SDL_AudioSpec wav_spec = {};
 	wav_spec.freq = AUDIO_FREQUENCY;
 	wav_spec.format = AUDIO_FORMAT;
 	wav_spec.channels = AUDIO_CHANNELS;
@@ -61,6 +72,11 @@ void SDL2::Start() {
 	if ( ret < 0 ) {
 		Log( (std::string)"Couldn't open audio: " + SDL_GetError() );
 		Log( "Failed to enable audio, game will start without sound." );
+		free( m_buffer );
+		free( m_mix_buffer );
+		m_buffer = nullptr;
+		m_mix_buffer = nullptr;
+		SDL_QuitSubSystem( SDL_INIT_AUDIO );
 		return;
 	}
 
@@ -77,9 +93,13 @@ void SDL2::Stop() {
 
 	Log( "Deinitializing SDL2" );
 	SDL_CloseAudio();
+	m_is_sound_enabled = false;
 
 	free( m_buffer );
 	free( m_mix_buffer );
+	m_buffer = nullptr;
+	m_mix_buffer = nullptr;
+	SDL_QuitSubSystem( SDL_INIT_AUDIO );
 
 }
 
@@ -129,26 +149,38 @@ void SDL2::RemoveActor( scene::actor::Sound* actor ) {
 
 void SDL2::Mix( Uint8* stream, int len ) {
 	ASSERT( m_is_sound_enabled, "SDL2::Mix() called while sound not enabled" );
-	ASSERT( len == m_buffer_size, "sample type or size mismatch" );
+	ASSERT( len >= 0 && static_cast< size_t >( len ) == m_buffer_size, "sample type or size mismatch" );
+	if ( len <= 0 || static_cast< size_t >( len ) != m_buffer_size ) {
+		if ( len > 0 ) {
+			memset( stream, 0, static_cast< size_t >( len ) );
+		}
+		return;
+	}
+	const auto buffer_size = static_cast< size_t >( len );
 
 	memset( ptr( m_mix_buffer, 0, m_mix_buffer_size ), 0, m_mix_buffer_size );
 	{
 		std::lock_guard guard( m_actors_mutex );
+		const auto attenuation = AUDIO_VOLUME * std::pow( AUDIO_VOLUME_LOWERING_FROM_ACTORS, m_actors.size() );
 
 		for ( auto& actor : m_actors ) {
 			if ( actor.second->IsActive() ) {
-				actor.second->GetNextBuffer( (uint8_t*)m_buffer, len );
+				actor.second->GetNextBuffer( (uint8_t*)m_buffer, buffer_size );
 				for ( size_t i = 0 ; i < m_buffer_length ; i++ ) {
-					m_mix_buffer[ i ] = m_mix_buffer[ i ] + m_buffer[ i ] * actor.second->GetVolume() * AUDIO_VOLUME * pow( AUDIO_VOLUME_LOWERING_FROM_ACTORS, m_actors.size() );
+					m_mix_buffer[ i ] += m_buffer[ i ] * actor.second->GetVolume() * attenuation;
 				}
 			}
 		}
 	}
+	const auto sample_min = static_cast< AUDIO_MIX_TYPE >( std::numeric_limits< AUDIO_SAMPLE_TYPE >::min() );
+	const auto sample_max = static_cast< AUDIO_MIX_TYPE >( std::numeric_limits< AUDIO_SAMPLE_TYPE >::max() );
 	for ( size_t i = 0 ; i < m_buffer_length ; i++ ) {
-		m_buffer[ i ] = floor( m_mix_buffer[ i ] );
+		m_buffer[ i ] = static_cast< AUDIO_SAMPLE_TYPE >(
+			std::clamp( std::floor( m_mix_buffer[ i ] ), sample_min, sample_max )
+		);
 	}
 
-	SDL_memcpy( stream, (uint8_t*)m_buffer, len );
+	SDL_memcpy( stream, (uint8_t*)m_buffer, buffer_size );
 }
 
 }

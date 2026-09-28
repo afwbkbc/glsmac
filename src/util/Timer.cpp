@@ -1,13 +1,22 @@
 #include "Timer.h"
 
+#include <cstdint>
+#include <limits>
+
 namespace util {
 
+static std::chrono::milliseconds GetMonotonicMilliseconds() {
+	return std::chrono::duration_cast< std::chrono::milliseconds >(
+		std::chrono::steady_clock::now().time_since_epoch()
+	);
+}
+
 Timer::Timer() {
-	m_current = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now().time_since_epoch() );
+	m_current = GetMonotonicMilliseconds();
 }
 
 void Timer::Tick() {
-	auto current = std::chrono::duration_cast< std::chrono::milliseconds >( std::chrono::system_clock::now().time_since_epoch() );
+	const auto current = GetMonotonicMilliseconds();
 	if ( m_operation != NONE ) {
 		m_elapsed += current - m_current;
 	}
@@ -55,19 +64,28 @@ void Timer::Stop() {
 }
 
 void Timer::SetTimeout( const size_t ms ) {
+	if ( static_cast< uint64_t >( ms ) > static_cast< uint64_t >( std::numeric_limits< std::chrono::milliseconds::rep >::max() ) ) {
+		THROW( "timer duration is too large" );
+	}
 	Tick();
 	Stop();
 	m_operation = TIMEOUT;
 	m_elapsed = std::chrono::milliseconds::zero();
-	m_target = m_current + std::chrono::milliseconds( ms );
+	m_target = m_current + std::chrono::milliseconds( static_cast< std::chrono::milliseconds::rep >( ms ) );
 }
 
 void Timer::SetInterval( const size_t ms ) {
+	if ( ms == 0 ) {
+		THROW( "timer interval must be greater than zero" );
+	}
+	if ( static_cast< uint64_t >( ms ) > static_cast< uint64_t >( std::numeric_limits< std::chrono::milliseconds::rep >::max() ) ) {
+		THROW( "timer duration is too large" );
+	}
 	Tick();
 	Stop();
 	m_operation = INTERVAL;
 	m_elapsed = std::chrono::milliseconds::zero();
-	m_interval = std::chrono::milliseconds( ms );
+	m_interval = std::chrono::milliseconds( static_cast< std::chrono::milliseconds::rep >( ms ) );
 	m_target = m_current + m_interval;
 }
 

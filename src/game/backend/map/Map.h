@@ -13,6 +13,7 @@
 #include "types/texture/Types.h"
 
 #include "types/Buffer.h"
+#include "types/Vec2.h"
 
 namespace types {
 namespace texture {
@@ -64,6 +65,7 @@ CLASS2( Map, types::Serializable, gse::GCWrappable )
 		EC_UNKNOWN = 1,
 		EC_ABORTED = 2,
 		EC_MAPFILE_FORMAT_ERROR = 3,
+		EC_INVALID_MAP_DIMENSIONS = 4,
 	};
 
 	const error_code_t Generate( settings::MapSettings* map_settings, MT_CANCELABLE );
@@ -176,6 +178,8 @@ private:
 	module_passes_t m_modules_deferred; // after finalizing and deferred calls
 
 	void InitTextureAndMesh();
+	const types::Vec2< size_t > GetTextureAtlasDimensions() const;
+	const types::Vec2< size_t > GetTextureAtlasPosition( const size_t tile_x, const size_t tile_y, const tile::tile_layer_type_t layer ) const;
 	void ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE );
 	void LoadTiles( const tiles_t& tiles, MT_CANCELABLE );
 	void FixNormals( const tiles_t& tiles, MT_CANCELABLE );

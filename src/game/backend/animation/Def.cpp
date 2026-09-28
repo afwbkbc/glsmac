@@ -1,5 +1,8 @@
 #include "Def.h"
 
+#include <cmath>
+#include <limits>
+
 #include "FramesRow.h"
 
 namespace game {
@@ -44,11 +47,24 @@ const types::Buffer Def::Serialize( const Def* def ) {
 
 Def* Def::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
-	const auto type = (animation_type_t)buf.ReadInt();
+	const auto type_value = buf.ReadInt();
 	const auto scale_x = buf.ReadFloat();
 	const auto scale_y = buf.ReadFloat();
-	const auto duration_ms = buf.ReadInt();
+	const auto duration_value = buf.ReadInt();
 	const auto sound_file = buf.ReadString();
+	if ( type_value != AT_FRAMES_ROW ) {
+		THROW( "unknown def type on read: " + std::to_string( type_value ) );
+	}
+	if (
+		!std::isfinite( scale_x ) || scale_x <= 0.0f ||
+		!std::isfinite( scale_y ) || scale_y <= 0.0f ||
+		duration_value < 1 ||
+		duration_value > static_cast< long long >( std::numeric_limits< uint16_t >::max() )
+	) {
+		THROW( "invalid animation definition data" );
+	}
+	const auto type = static_cast< animation_type_t >( type_value );
+	const auto duration_ms = static_cast< uint16_t >( duration_value );
 	switch ( type ) {
 		case AT_FRAMES_ROW:
 			return FramesRow::Deserialize( buf, id, scale_x, scale_y, duration_ms, sound_file );

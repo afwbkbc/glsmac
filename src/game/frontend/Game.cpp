@@ -62,7 +62,7 @@
 #include "input/Event.h"
 #include "game/backend/resource/Resource.h"
 
-#define INITIAL_CAMERA_ANGLE { -M_PI * 0.5, M_PI * 0.75, 0 }
+#define INITIAL_CAMERA_ANGLE { -(float)M_PI * 0.5f, (float)M_PI * 0.75f, 0.0f }
 
 namespace game {
 namespace frontend {
@@ -212,9 +212,21 @@ void Game::Iterate() {
 
 	const auto f_handle_nonsuccess_init = [ this ]( const backend::MT_Response& response ) -> void {
 		switch ( response.result ) {
-			case backend::R_ABORTED:
-			case backend::R_ERROR: {
+			case backend::R_ABORTED: {
 				CancelGame();
+				break;
+			}
+			case backend::R_ERROR: {
+				const std::string error_text = response.data.error.error_text
+					? *response.data.error.error_text
+					: "Unknown error";
+				HideLoader();
+				m_glsmac->ShowError(
+					"Game initialization failed: " + error_text,
+					[ this ]() {
+						CancelGame();
+					}
+				);
 				break;
 			}
 			default: {
@@ -331,7 +343,10 @@ void Game::Iterate() {
 				m_map_data.filename = util::FS::GetBaseName( *response.data.save_map.path );
 			}
 			else {
-				THROW( "TODO: Map saving failed" );
+				const std::string error_text = response.data.error.error_text
+					? *response.data.error.error_text
+					: "Unknown error";
+				m_glsmac->ShowError( "Failed to save map: " + error_text, {} );
 			}
 			game->MT_DestroyResponse( response );
 		}
@@ -671,7 +686,7 @@ void Game::UpdateMapInstances() {
 
 	const float mhw = backend::map::s_consts.tile.scale.x * m_map_data.width / 2;
 
-	uint8_t instances_before_after = floor(
+	const size_t instances_before_after = (size_t)std::floor(
 		m_viewport.aspect_ratio
 			/
 				(
@@ -683,7 +698,7 @@ void Game::UpdateMapInstances() {
 				2
 	) + 1;
 
-	for ( uint8_t i = instances_before_after ; i > 0 ; i-- ) {
+	for ( size_t i = instances_before_after ; i > 0 ; i-- ) {
 		instances.push_back(
 			{
 				-mhw * i,
@@ -910,11 +925,16 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 	const auto f_exit = [ this ]( const std::string& quit_reason ) -> void {
 		ExitGame(
 			[ this, quit_reason ]() -> void {
-				if ( g_engine->GetConfig()->HasLaunchFlag( config::Config::LF_QUICKSTART ) ) {
+				const auto* config = g_engine->GetConfig();
+				if (
+					config->HasLaunchFlag( config::Config::LF_QUICKSTART ) ||
+					config->HasLaunchFlag( config::Config::LF_HOST ) ||
+					config->HasLaunchFlag( config::Config::LF_JOIN )
+				) {
 					g_engine->ShutDown();
 				}
 				else {
-					THROW( "TODO: ReturnToMainMenu" );
+					m_glsmac->Reset();
 				}
 			}
 		);
@@ -943,6 +963,7 @@ void Game::ProcessRequest( const FrontendRequest* request ) {
 					f_exit( errmsg );
 				}
 			);
+			break;
 		}
 		case FrontendRequest::FR_UPDATE_TILES: {
 			const auto& tiles_data = *request->data.update_tiles.tile_updates;
@@ -1359,24 +1380,36 @@ void Game::Initialize(
 	UpdateMapData( map_size );
 
 	ASSERT( tiles, "tiles not set" );
-	ASSERT( tiles->size() == m_map_data.width * m_map_data.height, "tiles count mismatch" ); // TODO: /2
+	ASSERT( tiles->size() == m_map_data.width * m_map_data.height / 2, "tiles count mismatch" );
 	ASSERT( tile_states, "tile states not set" );
-	ASSERT( tile_states->size() == m_map_data.width * m_map_data.height, "tile states count mismatch" ); // TODO: /2
+	ASSERT( tile_states->size() == m_map_data.width * m_map_data.height / 2, "tile states count mismatch" );
 
 	for ( size_t y = 0 ; y < m_map_data.height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_map_data.width ; x += 2 ) {
 			auto* tile = m_tm->GetTile( x, y );
 			//Log( "Initializing tile: " + tile->GetCoords().ToString() );
-			tile->Update( tiles->at( y * m_map_data.width + x / 2 ), tile_states->at( y * m_map_data.width + x / 2 ) );
+			const size_t tile_index = y * ( m_map_data.width / 2 ) + x / 2;
+			tile->Update( tiles->at( tile_index ), tile_states->at( tile_index ) );
 		}
 	}
 
 	m_viewport.bottom_bar_overlap = 32; // it has transparent area on top so let map render through it
 
 	auto* game = g_engine->GetGame();
+	const auto f_is_outside_viewport = [ this ]( const input::Event& event ) -> bool {
+		if ( !( event.flags & input::EF_MOUSE ) ) {
+			return false;
+		}
+		const auto x = event.data.mouse.x;
+		const auto y = event.data.mouse.y;
+		return
+			x < 0 || y < 0 ||
+			(size_t)x >= m_viewport.width ||
+			(size_t)y >= m_viewport.height;
+	};
 
 	m_global_handlers.before = m_ui->AddGlobalHandler(
-		ui::UI::GH_BEFORE, EH( this, game ) {
+		ui::UI::GH_BEFORE, EH( this, game, f_is_outside_viewport ) {
 
 			switch ( event.type ) {
 				case input::EV_MOUSE_DOWN: {
@@ -1384,8 +1417,9 @@ void Game::Initialize(
 					break;
 				}
 				case input::EV_MOUSE_UP: {
-					ASSERT( m_map_control.mouse_buttons_pressed > 0, "mouse_buttons_pressed mismatch" );
-					m_map_control.mouse_buttons_pressed--;
+					if ( m_map_control.mouse_buttons_pressed ) {
+						m_map_control.mouse_buttons_pressed--;
+					}
 					switch ( event.data.mouse.button ) {
 						case input::MB_MIDDLE: {
 							if ( m_map_control.is_dragging ) {
@@ -1403,10 +1437,7 @@ void Game::Initialize(
 			}
 
 			// ignore out-of-viewport events
-			if ( event.flags & input::EF_MOUSE && (
-				event.data.mouse.x > m_viewport.width ||
-					event.data.mouse.y > m_viewport.height
-			) ) {
+			if ( f_is_outside_viewport( event ) ) {
 				return false;
 			}
 
@@ -1435,14 +1466,14 @@ void Game::Initialize(
 					const auto& c = event.data.mouse;
 
 					m_map_control.last_mouse_position = {
-						GetFixedX( c.x ),
+						GetFixedX( (float)c.x ),
 						(float)c.y
 					};
 
 					if ( m_map_control.is_dragging ) {
 						types::Vec2< float > current_drag_position = {
-							m_clamp.x.Clamp( c.x ),
-							m_clamp.y.Clamp( c.y )
+							m_clamp.x.Clamp( (float)c.x ),
+							m_clamp.y.Clamp( (float)c.y )
 						};
 						types::Vec2< float > drag = current_drag_position - m_map_control.last_drag_position;
 
@@ -1457,19 +1488,23 @@ void Game::Initialize(
 							const ssize_t edge_distance = m_viewport.is_fullscreen
 								? Game::s_consts.map_scroll.static_scrolling.edge_distance_px.fullscreen
 								: Game::s_consts.map_scroll.static_scrolling.edge_distance_px.windowed;
-							if ( c.x < edge_distance ) {
+							const auto window_width = (ssize_t)m_viewport.window_width;
+							const auto window_height = (ssize_t)m_viewport.window_height;
+							const auto horizontal_edge_distance = std::min( edge_distance, window_width / 2 );
+							const auto vertical_edge_distance = std::min( edge_distance, window_height / 2 );
+							if ( c.x < horizontal_edge_distance ) {
 								m_map_control.edge_scrolling.speed.x = Game::s_consts.map_scroll.static_scrolling.speed.x;
 							}
-							else if ( c.x >= m_viewport.window_width - edge_distance ) {
+							else if ( c.x >= window_width - horizontal_edge_distance ) {
 								m_map_control.edge_scrolling.speed.x = -Game::s_consts.map_scroll.static_scrolling.speed.x;
 							}
 							else {
 								m_map_control.edge_scrolling.speed.x = 0;
 							}
-							if ( c.y <= edge_distance ) {
+							if ( c.y < vertical_edge_distance ) {
 								m_map_control.edge_scrolling.speed.y = Game::s_consts.map_scroll.static_scrolling.speed.y;
 							}
-							else if ( c.y >= m_viewport.window_height - edge_distance ) {
+							else if ( c.y >= window_height - vertical_edge_distance ) {
 								m_map_control.edge_scrolling.speed.y = -Game::s_consts.map_scroll.static_scrolling.speed.y;
 							}
 							else {
@@ -1509,13 +1544,10 @@ void Game::Initialize(
 	);
 
 	m_global_handlers.after = m_ui->AddGlobalHandler(
-		ui::UI::GH_AFTER, EH( this, game ) {
+		ui::UI::GH_AFTER, EH( this, game, f_is_outside_viewport ) {
 
 			// ignore out-of-viewport events
-			if ( event.flags & input::EF_MOUSE && (
-				event.data.mouse.x > m_viewport.width ||
-					event.data.mouse.y > m_viewport.height
-			) ) {
+			if ( f_is_outside_viewport( event ) ) {
 				return false;
 			}
 
@@ -1654,8 +1686,8 @@ void Game::Initialize(
 							m_scroller.Stop();
 							m_map_control.is_dragging = true;
 							m_map_control.last_drag_position = {
-								m_clamp.x.Clamp( c.x ),
-								m_clamp.y.Clamp( c.y )
+								m_clamp.x.Clamp( (float)c.x ),
+								m_clamp.y.Clamp( (float)c.y )
 							};
 							break;
 						}
@@ -1665,7 +1697,7 @@ void Game::Initialize(
 					break;
 				}
 				case input::EV_MOUSE_SCROLL: {
-					SmoothScroll( m_map_control.last_mouse_position, event.data.mouse.scroll_y );
+					SmoothScroll( m_map_control.last_mouse_position, (float)event.data.mouse.scroll_y );
 					break;
 				}
 				default: {

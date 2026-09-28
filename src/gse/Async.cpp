@@ -13,6 +13,7 @@
 #include "gse/callable/Native.h"
 #include "gse/value/Undefined.h"
 #include "gse/value/Object.h"
+#include "util/FinallyGuard.h"
 
 namespace gse {
 
@@ -64,6 +65,10 @@ const timer_id_t Async::StartTimer( const size_t ms, gse::value::Callable* const
 }
 
 const bool Async::StopTimer( const gse::timer_id_t id ) {
+	if ( m_processing_timer_ids.find( id ) != m_processing_timer_ids.end() ) {
+		m_canceled_timer_ids.insert( id );
+		return true;
+	}
 	const auto& it = m_timers_ms.find( id );
 	if ( it == m_timers_ms.end() ) {
 		return false;
@@ -81,6 +86,7 @@ const bool Async::StopTimer( const gse::timer_id_t id ) {
 }
 
 void Async::StopTimers() {
+	m_canceled_timer_ids.insert( m_processing_timer_ids.begin(), m_processing_timer_ids.end() );
 	m_timers.clear();
 	m_timers_ms.clear();
 }
@@ -158,88 +164,88 @@ void Async::ValidateMs( const int64_t ms, GSE_CALLABLE ) const {
 
 void Async::ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep ) {
 	std::lock_guard guard( m_process_timers_mutex );
+	m_gc_space->Accumulate(
+		this,
+		[ this, &it, &ep ]() {
+			timers_t timers_new = {};
 
-	std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_new = {};
+			const auto timers = it->second;
+			m_timers.erase( it );
+			for ( const auto& timer : timers ) {
+				m_timers_ms.erase( timer.first );
+				m_processing_timer_ids.insert( timer.first );
+			}
+			util::FinallyGuard cleanup( [ this, &timers ]() {
+				for ( const auto& timer : timers ) {
+					m_processing_timer_ids.erase( timer.first );
+					m_canceled_timer_ids.erase( timer.first );
+				}
+			} );
 
-	const auto timers = it->second;
+			for ( const auto& it2 : timers ) {
+				if ( m_canceled_timer_ids.find( it2.first ) != m_canceled_timer_ids.end() ) {
+					continue;
+				}
 
-	for ( const auto& it2 : timers ) {
-		const auto& timer = it2.second;
+				const auto& timer = it2.second;
+				auto* ctx = timer.ctx;
+				const auto f = timer.callable;
+				const auto si = timer.si;
 
-		auto* ctx = timer.ctx;
-		const auto f = timer.callable;
-		const auto si = timer.si;
-
-		size_t ms = 0;
-		bool repeat = false;
-		m_gc_space->Accumulate(
-			this,
-			[ this, &ctx, &ep, &si, &f, &timer, &repeat, &ms ]() {
-
+				size_t ms = 0;
+				bool repeat = false;
 				const auto result = f->Run( m_gc_space, GSE_CALL_NOGC, {} );
 
-				const auto& r = result;
-				if ( r ) {
-					switch ( r->type ) {
+				if ( result ) {
+					switch ( result->type ) {
 						case VT_UNDEFINED:
 						case VT_NULL:
 							break;
 						case VT_BOOL: {
-							if ( ( (value::Bool*)r )->value ) {
+							if ( ( (value::Bool*)result )->value ) {
 								repeat = true;
 								ms = timer.ms;
 							}
 							break;
 						}
 						case VT_INT: {
-							ms = ( (value::Int*)r )->value;
+							ms = ( (value::Int*)result )->value;
 							ValidateMs( ms, m_gc_space, GSE_CALL_NOGC );
 							repeat = true;
 							break;
 						}
 						default:
-							GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int,, got: " + result->GetTypeString() );
+							GSE_ERROR( EC.INVALID_HANDLER, "Unexpected async return type. Expected: Nothing, Undefined, Null, Bool or Int, got: " + result->GetTypeString() );
+					}
+				}
+
+				if ( repeat && m_canceled_timer_ids.find( it2.first ) == m_canceled_timer_ids.end() ) {
+					timers_new[ util::Time::Now() + ms ].insert(
+						{
+							it2.first,
+							{
+								ms,
+								f,
+								ctx,
+								si,
+							}
+						}
+					);
+				}
+			}
+
+			for ( const auto& it_new : timers_new ) {
+				for ( const auto& timer : it_new.second ) {
+					if ( m_canceled_timer_ids.find( timer.first ) == m_canceled_timer_ids.end() ) {
+						m_timers[ it_new.first ].insert( timer );
+						m_timers_ms[ timer.first ] = it_new.first;
 					}
 				}
 			}
-		);
-
-		if ( repeat ) {
-			timers_new[ util::Time::Now() + ms ].insert(
-				{
-					it2.first,
-					{
-						ms,
-						f,
-						ctx,
-						si,
-					}
-				}
-			);
-		}
-
-		if ( m_timers_ms.find( it2.first ) == m_timers_ms.end() ) {
-			// timer was deleted in its own handler, should restart the whole cycle
-			return;
-		}
-
-		m_timers_ms.erase( it2.first );
-	}
-
-	{
-		m_timers.erase( it );
-		for ( const auto& it_new : timers_new ) {
-			for ( const auto& timer : it_new.second ) {
-				m_timers[ it_new.first ].insert( timer );
-				m_timers_ms.insert(
-					{
-						timer.first,
-						it_new.first
-					}
-				);
-			}
-		}
-	}
+		},
+		nullptr,
+		true
+	);
 }
 
 }

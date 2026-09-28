@@ -1,5 +1,9 @@
-SET( SRC ${SRC}
-
-	${PWD}/GSEPrompt.cpp
-
-	PARENT_SCOPE )
+IF ( CMAKE_CONFIGURATION_TYPES )
+	SET( SRC ${SRC}
+		$<$<OR:$<CONFIG:Debug>,$<CONFIG:FastDebug>>:${PWD}/GSEPrompt.cpp>
+		PARENT_SCOPE )
+ELSE ()
+	SET( SRC ${SRC}
+		${PWD}/GSEPrompt.cpp
+		PARENT_SCOPE )
+ENDIF ()

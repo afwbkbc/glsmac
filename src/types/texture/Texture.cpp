@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include <cmath>
+#include <limits>
+#include <vector>
 
 #include "common/ObjectLink.h"
 #include "engine/Engine.h"
@@ -67,13 +69,19 @@ const bool Texture::Resize( const size_t width, const size_t height ) {
 		free( m_bitmap );
 	}
 
+	if ( m_height > 0 && m_width > std::numeric_limits< size_t >::max() / m_height / m_bpp ) {
+		THROW( "texture dimensions overflow" );
+	}
 	m_bitmap_size = m_width * m_height * m_bpp;
 
 	if ( m_height > 0 && m_width > 0 ) {
 
-		m_aspect_ratio = m_height / m_width;
+		m_aspect_ratio = (float)m_height / (float)m_width;
 
 		m_bitmap = (unsigned char*)malloc( m_bitmap_size );
+		if ( !m_bitmap ) {
+			THROW( "unable to allocate texture bitmap ( " + std::to_string( m_bitmap_size ) + " bytes )" );
+		}
 		memset( ptr( m_bitmap, 0, m_bitmap_size ), 0, m_bitmap_size );
 	}
 	else {
@@ -222,10 +230,8 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	float ssx_start, ssx, ssy; // stretched source
 
 	// for perlin borders
-	size_t perlin_maxx[h];
-	memset( &perlin_maxx, 0, sizeof( perlin_maxx ) );
-	size_t perlin_maxy[w];
-	memset( &perlin_maxy, 0, sizeof( perlin_maxy ) );
+	std::vector< size_t > perlin_maxx( h, 0 );
+	std::vector< size_t > perlin_maxy( w, 0 );
 
 	if (
 		( flags & types::texture::AM_ROUND_LEFT ) ||
@@ -396,8 +402,10 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 
 #ifdef DEBUG
 	// extra checks to make sure every destination pixel was processed (and only once)
-	bool px_processed[w][h];
-	memset( px_processed, false, sizeof( px_processed ) );
+	std::vector< bool > px_processed( w * h, false );
+	const auto f_px_processed_index = [h]( const size_t x, const size_t y ) -> size_t {
+		return x * h + y;
+	};
 #endif
 
 	// spammy
@@ -609,8 +617,9 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 				}*/
 
 #ifdef DEBUG
-				ASSERT( !px_processed[ dx ][ dy ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
-				px_processed[ dx ][ dy ] = true;
+				const auto px_processed_index = f_px_processed_index( dx, dy );
+				ASSERT( !px_processed[ px_processed_index ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
+				px_processed[ px_processed_index ] = true;
 #endif
 				ASSERT( sx >= x1, "sx < x1" );
 				ASSERT( sx <= x2, "sx > x2" );
@@ -746,8 +755,9 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 			}
 #ifdef DEBUG
 			else {
-				ASSERT( !px_processed[ dx ][ dy ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
-				px_processed[ dx ][ dy ] = true;
+				const auto px_processed_index = f_px_processed_index( dx, dy );
+				ASSERT( !px_processed[ px_processed_index ], "pixel at " + std::to_string( dx ) + "x" + std::to_string( dy ) + " was already processed" );
+				px_processed[ px_processed_index ] = true;
 			}
 #endif
 
@@ -765,7 +775,7 @@ void Texture::AddFrom( const types::texture::Texture* source, add_flag_t flags, 
 	// make sure every pixel was processed
 	for ( auto y = 0 ; y < h ; y++ ) {
 		for ( auto x = 0 ; x < w ; x++ ) {
-			ASSERT( px_processed[ x ][ y ], "pixel at " + std::to_string( x ) + "x" + std::to_string( y ) + " was not processed (flags: " + std::to_string( flags ) + ")" );
+			ASSERT( px_processed[ f_px_processed_index( x, y ) ], "pixel at " + std::to_string( x ) + "x" + std::to_string( y ) + " was not processed (flags: " + std::to_string( flags ) + ")" );
 		}
 	}
 #endif

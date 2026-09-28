@@ -1,8 +1,10 @@
 #include <thread>
+#include <string>
+#include <utility>
+#include <vector>
 
 #if defined( DEBUG ) || defined ( FASTDEBUG )
 
-#include <string>
 #include <stdlib.h>
 
 #endif
@@ -10,6 +12,7 @@
 #include "config/Config.h"
 
 #ifdef _WIN32
+#include <shellapi.h>
 #include "error_handler/Win32.h"
 #else
 
@@ -19,7 +22,6 @@
 
 #if defined( DEBUG ) || defined( FASTDEBUG )
 
-#include "logger/Stdout.h"
 #include "graphics/Null.h"
 #include "loader/font/Null.h"
 #include "loader/texture/Null.h"
@@ -28,10 +30,9 @@
 #include "audio/Null.h"
 
 #else
-
-#include "logger/Logger.h"
-
 #endif
+
+#include "logger/Stdout.h"
 
 #include "resource/ResourceManager.h"
 
@@ -101,12 +102,31 @@ debug::MemoryWatcher memory_watcher;
 
 #ifdef _WIN32
 int argc = 0;
-const LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
-char* argv[ argc ];
+LPWSTR* const argw = CommandLineToArgvW( GetCommandLineW(), &argc );
+if ( !argw ) {
+	return EXIT_FAILURE;
+}
+std::vector< std::string > argv_strings;
+argv_strings.reserve( argc );
 for ( int i = 0; i < argc; i++ ) {
-	const int sz = wcslen( argw[ i ] );
-	argv[ i ] = (char*)malloc( sz + 1 );
-	wcstombs( argv[ i ], argw[ i ], sz + 1 );
+	const int size = WideCharToMultiByte( CP_UTF8, 0, argw[ i ], -1, nullptr, 0, nullptr, nullptr );
+	if ( size <= 0 ) {
+		LocalFree( argw );
+		return EXIT_FAILURE;
+	}
+	std::string value( size, '\0' );
+	if ( !WideCharToMultiByte( CP_UTF8, 0, argw[ i ], -1, value.data(), size, nullptr, nullptr ) ) {
+		LocalFree( argw );
+		return EXIT_FAILURE;
+	}
+	value.pop_back();
+	argv_strings.push_back( std::move( value ) );
+}
+LocalFree( argw );
+std::vector< char* > argv_storage( argc );
+char** argv = argv_storage.data();
+for ( int i = 0; i < argc; i++ ) {
+	argv[ i ] = argv_strings[ i ].data();
 }
 #else
 int main( const int argc, char* const argv[] ) {
@@ -179,12 +199,13 @@ int main( const int argc, char* const argv[] ) {
 	// logger needs to be outside of scope to be destroyed last
 
 	std::vector< logger::Logger* > loggers = {};
-
+	bool enable_stdout_logger = config.HasLaunchFlag( config::Config::LF_VERBOSE );
 #if defined( DEBUG ) || defined( FASTDEBUG )
-	if ( !config.HasDebugFlag( config::Config::DF_QUIET ) ) {
+	enable_stdout_logger = enable_stdout_logger || !config.HasDebugFlag( config::Config::DF_QUIET );
+#endif
+	if ( enable_stdout_logger ) {
 		loggers.push_back( new logger::Stdout() );
 	}
-#endif
 
 #ifdef _WIN32
 	error_handler::Win32 error_handler;
@@ -272,7 +293,13 @@ int main( const int argc, char* const argv[] ) {
 			start_fullscreen = false;
 		}
 
-		graphics::opengl::OpenGL graphics( title, window_size.x, window_size.y, vsync, start_fullscreen );
+		graphics::opengl::OpenGL graphics(
+			title,
+			static_cast< unsigned short >( window_size.x ),
+			static_cast< unsigned short >( window_size.y ),
+			vsync,
+			start_fullscreen
+		);
 		audio::sdl2::SDL2 audio;
 
 		// game entry point
