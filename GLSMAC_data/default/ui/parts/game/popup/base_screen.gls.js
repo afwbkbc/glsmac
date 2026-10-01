@@ -13,12 +13,19 @@ return {
 		'bottom_bar',
 	],
 
+	production_selection_no_hiding: {
+		buttons: true,
+		bottom_bar: true,
+	},
+
 	init: (p) => {
 
 		this.sections = {};
 		this.p = p;
 		this.is_open = false;
 		this.base_id = null;
+
+		this.production_selection = null;
 
 		p.ui.class('base-screen-frame').set({
 			border: 'rgb(35,59,34),2',
@@ -78,6 +85,8 @@ return {
 
 		return p.create('', 680, 442, (body, cb) => {
 
+			this.body = body;
+
 			body.listen(p.game, 'update_base', (e) => {
 				if (this.is_open && e.base.id == this.base_id) {
 					this.set({
@@ -94,12 +103,15 @@ return {
 				modules: p.modules,
 				utils: {
 					set_cells: parent.parent.set_cells,
+					show_production_selection: parent.parent.show_production_selection,
+					hide_production_selection: parent.parent.hide_production_selection,
+					update_production_selection: parent.parent.update_production_selection,
 				},
 			};
 
 			for (s of this.available_sections) {
 				this.sections[s] = #include('base_screen/' + s);
-				this.sections[s].init(pp);
+				this.sections[s].body = this.sections[s].init(pp);
 			}
 
 		});
@@ -117,6 +129,8 @@ return {
 
 		const intake = base.get_intake();
 		const consumption = base.get_consumption();
+
+		this.hide_production_selection();
 
 		// dummy data for now
 
@@ -201,6 +215,7 @@ return {
 
 	on_hide: () => {
 		this.sections.bottom_bar.frame.hide();
+		this.hide_production_selection();
 		this.is_open = false;
 	},
 
@@ -257,6 +272,46 @@ return {
 			progress_in = #ceil(#to_float(rows * columns - filled) / #to_float(pending));
 		}
 		label_el.text = f_label(progress_in);
+	},
+
+	hide_production_selection: () => {
+		if (this.production_selection != null) {
+			this.production_selection.remove();
+			this.production_selection = null;
+			this.sections.buttons.show_default();
+			for (s in this.sections) {
+				if (!#is_defined(this.production_selection_no_hiding[s])) {
+					this.sections[s].body.show();
+				}
+			}
+		}
+	},
+
+	show_production_selection: () => {
+		if (this.production_selection == null) {
+			for (s in this.sections) {
+				if (!#is_defined(this.production_selection_no_hiding[s])) {
+					this.sections[s].body.hide();
+				}
+			}
+			this.production_selection = this.body.panel({
+				class: 'default-panel',
+				top: 0,
+				left: 0,
+				right: 0,
+				bottom: 0,
+			});
+			this.sections.buttons.show_production_selection();
+		}
+	},
+
+	update_production_selection: () => {
+		if (this.production_selection != null) {
+
+			// TODO: update selection to selected item
+
+			this.hide_production_selection();
+		}
 	},
 
 };

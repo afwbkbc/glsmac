@@ -64,6 +64,7 @@ return {
 			this.pages[p] = page;
 		}
 
+		return this.area;
 	},
 
 	set: (data) => {

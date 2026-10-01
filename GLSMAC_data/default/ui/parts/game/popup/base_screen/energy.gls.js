@@ -185,6 +185,7 @@ return {
 			},
 		};
 
+		return this.frame;
 	},
 
 	_pad: (value) => {

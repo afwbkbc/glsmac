@@ -50,6 +50,10 @@ return {
 			bottom: 20,
 		});
 
+		body.on('mousedown', (e) => {
+			this.p.utils.show_production_selection();
+			return true;
+		});
 	},
 
 	set: (data) => {

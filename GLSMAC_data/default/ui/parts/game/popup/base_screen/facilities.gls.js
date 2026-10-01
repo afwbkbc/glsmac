@@ -24,6 +24,7 @@ return {
 			padding: 4,
 		});
 
+		return this.frame;
 	},
 
 	set: (data) => {

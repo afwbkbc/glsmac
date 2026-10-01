@@ -45,6 +45,7 @@ return {
 			left: 5,
 		});
 
+		return this.frame;
 	},
 
 	set: (data) => {

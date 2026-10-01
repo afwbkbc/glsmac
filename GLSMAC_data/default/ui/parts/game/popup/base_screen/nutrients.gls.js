@@ -50,6 +50,8 @@ return {
 			align: 'bottom center',
 			bottom: 12,
 		});
+
+		return this.frame;
 	},
 
 	set: (data) => {

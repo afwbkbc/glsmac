@@ -26,6 +26,7 @@ return {
 			text: 'NONE',
 		});
 
+		return this.frame;
 	},
 
 	set_commerce: (data) => {

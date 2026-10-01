@@ -105,6 +105,7 @@ return {
 			text: 'CONQUER',
 		});
 
+		return this.buttons;
 	},
 
 };

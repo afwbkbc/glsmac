@@ -73,6 +73,7 @@ return {
 			this.parts[s].init(pp);
 		}
 
+		return this.frame;
 	},
 
 	set: (data) => {
