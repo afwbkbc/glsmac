@@ -106,6 +106,7 @@ protected:
 	void OnWindowResize() override;
 
 private:
+	void AbortStartup( const bool video_initialized ) noexcept;
 
 	struct texture_data_t {
 		GLuint obj = 0;

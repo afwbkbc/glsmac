@@ -1,5 +1,7 @@
 #include "OpenGL.h"
 
+#include <memory>
+
 #include "engine/Engine.h"
 
 #include "shader_program/Orthographic.h"
@@ -48,10 +50,23 @@ OpenGL::~OpenGL() {}
 
 void OpenGL::Start() {
 
+	// Thread only calls Stop after Start succeeds. Keep partial startup owned
+	// here, including failures before a current context or GL loader exists.
+	struct StartupGuard {
+		OpenGL* graphics;
+		bool video_initialized = false;
+		~StartupGuard() {
+			if ( graphics ) {
+				graphics->AbortStartup( video_initialized );
+			}
+		}
+	} startup{ this };
+
 	Log( "Initializing SDL2" );
 	if ( SDL_VideoInit( NULL ) != 0 ) {
 		THROW( (std::string)"Could not initialize SDL2 video: " + SDL_GetError() );
 	}
+	startup.video_initialized = true;
 
 	Log( "Creating window" );
 
@@ -87,11 +102,6 @@ void OpenGL::Start() {
 
 	if ( !m_window ) {
 		THROW( (std::string)"Could not create SDL2 window: " + SDL_GetError() );
-	}
-
-	if ( m_is_fullscreen ) {
-		m_is_fullscreen = false; // to prevent assert on next line
-		SetFullscreen();
 	}
 
 	Log( "Initializing OpenGL" );
@@ -155,6 +165,11 @@ void OpenGL::Start() {
 		);
 	}
 
+	// Reserve before allocating children so registering a new child cannot
+	// throw and leave it outside the startup guard's ownership.
+	m_shader_programs.reserve( 2 );
+	m_routines.reserve( 2 );
+
 	// shader programs
 	NEWV( sp_orthographic, shader_program::Orthographic );
 	m_shader_programs.push_back( sp_orthographic );
@@ -209,7 +224,53 @@ void OpenGL::Start() {
 
 	m_capture_to_texture_fbo = CreateFBO();
 
+	// Fullscreen resizing calls GL and resize handlers, so it needs the
+	// context, loader and graphics children to be ready first.
+	if ( m_is_fullscreen ) {
+		m_is_fullscreen = false; // to prevent assert on next line
+		SetFullscreen();
+	}
+
 	OnWindowResize();
+	startup.graphics = nullptr;
+}
+
+void OpenGL::AbortStartup( const bool video_initialized ) noexcept {
+	// Do not call Stop on partially started shaders/routines. Their CPU
+	// objects can be destroyed directly; deleting the context also releases
+	// any GL objects created before a shader or later startup step failed.
+	for ( auto* routine : m_routines ) {
+		DELETE( routine );
+	}
+	m_routines.clear();
+	for ( auto* shader : m_shader_programs ) {
+		DELETE( shader );
+	}
+	m_shader_programs.clear();
+	for ( auto* fbo : m_fbos ) {
+		DELETE( fbo );
+	}
+	m_fbos.clear();
+	m_capture_to_texture_fbo = nullptr;
+	m_textures.clear();
+	m_texture_objs_to_unload.clear();
+	m_no_texture = 0;
+#ifdef __APPLE__
+	m_vertex_array = 0;
+#endif
+	// Until GLEW succeeds there are no children/FBOs, so early failures do
+	// not issue GL calls or require a successfully activated context.
+	if ( m_gl_context ) {
+		SDL_GL_DeleteContext( m_gl_context );
+		m_gl_context = nullptr;
+	}
+	if ( m_window ) {
+		SDL_DestroyWindow( m_window );
+		m_window = nullptr;
+	}
+	if ( video_initialized ) {
+		SDL_VideoQuit();
+	}
 }
 
 void OpenGL::Stop() {
@@ -636,9 +697,11 @@ void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f )
 
 FBO* OpenGL::CreateFBO() {
 	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
+	const auto delete_fbo = []( FBO* value ) { DELETE( value ); };
+	std::unique_ptr< FBO, decltype( delete_fbo ) > pending( fbo, delete_fbo );
 	Log( "Created FBO " + fbo->GetName() );
 	m_fbos.insert( fbo );
-	return fbo;
+	return pending.release();
 }
 
 void OpenGL::DestroyFBO( FBO* fbo ) {
