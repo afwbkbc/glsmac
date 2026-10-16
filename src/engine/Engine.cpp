@@ -1,5 +1,6 @@
 #include <ctime>
 #include <thread>
+#include <exception>
 
 #include "Engine.h"
 #include "config/Config.h"
@@ -144,55 +145,75 @@ Engine::~Engine() {
 
 int Engine::Run() {
 	int result = EXIT_SUCCESS;
+	std::exception_ptr error;
+	size_t started_workers = 0;
 
 	// TODO: dynamic threadpool
 
 	// SDL video initialization, event pumping and rendering must stay on the
 	// process main thread (in particular for Cocoa on macOS).
-	for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
-		m_threads[ i ]->T_Start();
-	}
-
 	try {
+		for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
+			m_threads[ i ]->T_Start();
+			++started_workers;
+		}
 		m_threads.front()->RunOnCurrentThread( [ this ]() { return m_is_shutting_down.load(); } );
 		Log( "Shutting down" );
+	}
+	catch ( ... ) {
+		error = std::current_exception();
+	}
 
-		for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
+	// Keep the engine and GC alive until every launched worker has stopped and
+	// joined, including when main-thread startup, iteration or cleanup failed.
+	ShutDown();
+	for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+		try {
 			m_threads[ i ]->T_Stop();
 		}
+		catch ( ... ) {
+			if ( !error ) {
+				error = std::current_exception();
+			}
+		}
+	}
 #ifdef DEBUG
-		util::Timer thread_running_timer;
-		thread_running_timer.SetInterval( 1000 );
+	util::Timer thread_running_timer;
+	thread_running_timer.SetInterval( 1000 );
 #endif
-		bool any_thread_running = true;
-		while ( any_thread_running ) {
-			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
-			any_thread_running = false;
+	bool any_thread_running = true;
+	while ( any_thread_running ) {
+		std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+		any_thread_running = false;
 #ifdef DEBUG
-			const bool announce_frozen_threads = thread_running_timer.HasTicked();
+		const bool announce_frozen_threads = thread_running_timer.HasTicked();
 #endif
-			for ( auto& thread : m_threads ) {
-				if ( thread->T_IsRunning() ) {
+		for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+			auto* thread = m_threads[ i ];
+			if ( thread->T_IsRunning() ) {
 #ifdef DEBUG
-					if ( announce_frozen_threads ) {
-						Log( "Thread " + thread->GetThreadName() + " still running" );
-					}
+				if ( announce_frozen_threads ) {
+					Log( "Thread " + thread->GetThreadName() + " still running" );
+				}
 #endif
-					any_thread_running = true;
+				any_thread_running = true;
 #ifdef DEBUG
-					if ( !announce_frozen_threads )
+				if ( !announce_frozen_threads )
 #endif
-					{
-						break;
-					}
+				{
+					break;
 				}
 			}
 		}
-
 	}
-	catch ( std::runtime_error& e ) {
-		result = EXIT_FAILURE;
-		m_error_handler->HandleError( e );
+	if ( error ) {
+		try {
+			std::rethrow_exception( error );
+		}
+		catch ( const std::runtime_error& e ) {
+			result = EXIT_FAILURE;
+			m_error_handler->HandleError( e );
+		}
 	}
 
 	return result;

@@ -110,6 +110,10 @@ void OpenGL::Start() {
 	}
 #ifdef __APPLE__
 	glewExperimental = GL_TRUE;
+	const auto prior_error = glGetError();
+	if ( prior_error != GL_NO_ERROR ) {
+		THROW( "OpenGL error before GLEW initialization: " + std::to_string( prior_error ) );
+	}
 #endif
 
 	GLenum res = glewInit();
@@ -118,6 +122,14 @@ void OpenGL::Start() {
 	}
 
 #ifdef __APPLE__
+	// Older GLEW builds can probe legacy extensions in a core context. Ignore
+	// only that probe's INVALID_ENUM, at the initialization boundary; retain
+	// normal error checking for all other startup and rendering operations.
+	for ( auto error = glGetError() ; error != GL_NO_ERROR ; error = glGetError() ) {
+		if ( error != GL_INVALID_ENUM ) {
+			THROW( "OpenGL error during GLEW initialization: " + std::to_string( error ) );
+		}
+	}
 	// Core profiles require a VAO even when attributes are set for each draw.
 	glGenVertexArrays( 1, &m_vertex_array );
 	glBindVertexArray( m_vertex_array );

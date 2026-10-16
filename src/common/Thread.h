@@ -32,6 +32,7 @@ CLASS( Thread, Class )
 	void AddModule( Module* module );
 
 	void T_Start();
+	// On failure, stops successfully started modules before rethrowing.
 	void RunOnCurrentThread( const std::function< bool() >& should_stop );
 	bool T_IsRunning();
 	void T_Stop();
