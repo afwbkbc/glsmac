@@ -57,6 +57,8 @@ bool Thread::T_IsRunning() {
 	}
 	else {
 		if ( m_thread ) {
+			// INACTIVE means module cleanup finished; wait for Run (including
+			// its final log) to return before the owner can destroy the engine.
 			m_thread->join();
 			delete m_thread;
 			m_thread = nullptr;
@@ -94,8 +96,8 @@ void Thread::Run( const std::function< bool() >& should_stop ) {
 		size_t step_len_rounded;
 
 #ifdef DEBUG
-		/*std::vector< size_t > modulensdiff = {};
-		modulensdiff.resize( m_modules.size() );*/
+	/*std::vector< size_t > modulensdiff = {};
+	modulensdiff.resize( m_modules.size() );*/
 #endif
 
 		m_state = STATE_ACTIVE;
@@ -117,9 +119,9 @@ void Thread::Run( const std::function< bool() >& should_stop ) {
 				//Log( "Iterating [" + (*it)->GetName() + "]" );
 				( *it )->Iterate();
 #ifdef DEBUG
-				/*auto mfinish = std::chrono::high_resolution_clock::now();
-				modulensdiff[ it - m_modules.begin() ] = std::chrono::duration_cast< std::chrono::nanoseconds >( mfinish - mstart ).count();
-				mstart = mfinish;*/
+			/*auto mfinish = std::chrono::high_resolution_clock::now();
+			modulensdiff[ it - m_modules.begin() ] = std::chrono::duration_cast< std::chrono::nanoseconds >( mfinish - mstart ).count();
+			mstart = mfinish;*/
 #endif
 			}
 
@@ -130,12 +132,12 @@ void Thread::Run( const std::function< bool() >& should_stop ) {
 			step_len = 1000000000 / m_ips - step_diff;
 			if ( nsdiff > step_len ) {
 #ifdef DEBUG
-	/*	TODO: fix and add stats to debug overlay
-					Log( "Thread lag detected!" );
-					for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
-						Log( (*it)->GetName() + " " + std::to_string( modulensdiff[ it - m_modules.begin() ] ) + "ns ( " + std::to_string( (float) modulensdiff[ it - m_modules.begin() ] * 100 / step_len ) + "%)");
-					}
-					*/
+/*	TODO: fix and add stats to debug overlay
+				Log( "Thread lag detected!" );
+				for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
+					Log( (*it)->GetName() + " " + std::to_string( modulensdiff[ it - m_modules.begin() ] ) + "ns ( " + std::to_string( (float) modulensdiff[ it - m_modules.begin() ] * 100 / step_len ) + "%)");
+				}
+				*/
 #endif
 				step_diff = 0.0f;
 				// TODO: change ips?
@@ -147,10 +149,10 @@ void Thread::Run( const std::function< bool() >& should_stop ) {
 
 #ifdef DEBUG
 				m_icounter++;
-	/*				Log( "frame " + std::to_string( m_icounter ) + ": sleeping " + std::to_string( step_len_rounded) + "ns (nsdiff: " + std::to_string( nsdiff ) + ", stepdiff: " + std::to_string( step_diff ) + ")" );
-					for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
-						Log( (*it)->GetName() + " " + std::to_string( modulensdiff[ it - m_modules.begin() ] ) + "ns ( " + std::to_string( (float) modulensdiff[ it - m_modules.begin() ] * 100 / step_len ) + "%)");
-					}*/
+/*				Log( "frame " + std::to_string( m_icounter ) + ": sleeping " + std::to_string( step_len_rounded) + "ns (nsdiff: " + std::to_string( nsdiff ) + ", stepdiff: " + std::to_string( step_diff ) + ")" );
+				for ( modules_t::iterator it = m_modules.begin() ; it != m_modules.end() ; ++it ) {
+					Log( (*it)->GetName() + " " + std::to_string( modulensdiff[ it - m_modules.begin() ] ) + "ns ( " + std::to_string( (float) modulensdiff[ it - m_modules.begin() ] * 100 / step_len ) + "%)");
+				}*/
 #endif
 
 				std::this_thread::sleep_for( std::chrono::nanoseconds( step_len_rounded ) );

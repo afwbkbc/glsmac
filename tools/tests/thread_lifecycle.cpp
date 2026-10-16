@@ -1,5 +1,6 @@
 #include <chrono>
 #include <cstdlib>
+#include <future>
 #include <iostream>
 #include <memory>
 #include <new>
@@ -198,6 +199,35 @@ static void CheckNormalEngineShutdown() {
 	fixture.CheckStopped();
 }
 
+static void CheckWorkerJoinAfterCleanup() {
+	EngineFixture fixture;
+	common::Thread worker( "JOIN_BOUNDARY" );
+	worker.SetIPS( 100000 );
+	LifecycleModule module;
+	worker.AddModule( &module );
+	std::promise< void > final_log_entered, release_final_log;
+	auto entered = final_log_entered.get_future();
+	auto release = release_final_log.get_future();
+	fixture.engine->AddLogCallback( &worker, [ & ]( const std::string& text ) {
+		if ( text.find( "JOIN_BOUNDARY" ) != std::string::npos && text.find( "Thread stopped" ) != std::string::npos ) {
+			final_log_entered.set_value();
+			release.wait();
+		}
+	} );
+	worker.T_Start();
+	worker.T_Stop();
+	entered.wait();
+	// Module cleanup has completed, but the worker still uses the engine.
+	// T_IsRunning must not report completion until that final use returns.
+	auto running = std::async( std::launch::async, [ & ]() { return worker.T_IsRunning(); } );
+	const auto status = running.wait_for( std::chrono::milliseconds( 20 ) );
+	release_final_log.set_value();
+	const auto was_running = running.get();
+	fixture.engine->RemoveLogCallback( &worker );
+	Require( status == std::future_status::timeout && !was_running, "worker was not joined after module cleanup" );
+	Require( module.stops == 1 && !module.active, "worker cleanup incomplete" );
+}
+
 int main() {
 	try {
 		CheckThreadFailure( "start", false );
@@ -213,7 +243,8 @@ int main() {
 		CheckThreadLaunchFailure();
 		CheckPartialWorkerLaunch();
 		CheckNormalEngineShutdown();
-		std::cout << "13 lifecycle regression cases passed\n";
+		CheckWorkerJoinAfterCleanup();
+		std::cout << "14 lifecycle regression cases passed\n";
 		return EXIT_SUCCESS;
 	}
 	catch ( const std::exception& error ) {
