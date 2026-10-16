@@ -12,8 +12,9 @@
 #include "common/Thread.h"
 #include "engine/Engine.h"
 
-// Inject failure at Thread's allocation of its std::thread object. Restrict
-// the fault to the caller so concurrent worker allocations remain unaffected.
+// Include Thread's std::thread allocation, but do not assume every allocation
+// of this size starts another worker: library launch bookkeeping may match too.
+// Restrict faults to the caller so worker allocations remain unaffected.
 static thread_local int thread_allocations_before_failure = -1;
 
 void* operator new( std::size_t size ) {
@@ -171,20 +172,53 @@ static void CheckThreadLaunchFailure() {
 }
 
 static void CheckPartialWorkerLaunch() {
-	EngineFixture fixture;
-	thread_allocations_before_failure = 1;
-	bool caught = false;
-	try {
-		fixture.engine->Run();
+	bool partial_launch_exercised = false;
+	bool launch_succeeded = false;
+	unsigned failure_positions = 0;
+	// Discover allocation positions rather than encoding a standard library's
+	// allocation count. The bound prevents an unexpectedly long test sweep.
+	for ( int position = 0; position < 64; ++position ) {
+		EngineFixture fixture;
+		// Stop injecting once worker launch is complete. A position beyond the
+		// launch allocations must still terminate through normal main shutdown.
+		fixture.config.on_start = []() { thread_allocations_before_failure = -1; };
+		fixture.input.on_iterate = [ & ]() { fixture.engine->ShutDown(); };
+		thread_allocations_before_failure = position;
+		bool caught = false;
+		int result = EXIT_FAILURE;
+		try {
+			result = fixture.engine->Run();
+		}
+		catch ( const std::bad_alloc& ) {
+			caught = true;
+		}
+		thread_allocations_before_failure = -1;
+		LifecycleModule* workers[] = { &fixture.network, fixture.engine->GetGC(), &fixture.game };
+		unsigned started = 0;
+		bool unstarted_seen = false;
+		for ( const auto* worker : workers ) {
+			const auto starts = worker->starts.load();
+			Require( starts <= 1 && worker->stops == starts && !worker->active, "launched worker was not stopped exactly once" );
+			Require( !unstarted_seen || starts == 0, "worker launch did not stop at the failure" );
+			unstarted_seen = unstarted_seen || starts == 0;
+			started += starts;
+		}
+		Require( fixture.handled == 0, "allocation failure reached the runtime error handler" );
+		if ( caught ) {
+			++failure_positions;
+			partial_launch_exercised = partial_launch_exercised || ( started > 0 && started < 3 );
+			Require( fixture.config.starts == 0 && fixture.config.stops == 0, "unstarted main modules were touched" );
+		}
+		else {
+			Require( result == EXIT_SUCCESS && started == 3, "allocation sweep did not finish normal startup" );
+			Require( fixture.config.starts == 1 && fixture.config.stops == 1, "normal main shutdown incomplete" );
+			launch_succeeded = true;
+			break;
+		}
 	}
-	catch ( const std::bad_alloc& ) {
-		caught = true;
-	}
-	thread_allocations_before_failure = -1;
-	Require( caught, "second worker launch failure was not injected" );
-	Require( fixture.network.starts == 1 && fixture.network.stops == 1 && !fixture.network.active, "launched worker was not stopped" );
-	Require( fixture.engine->GetGC()->starts == 0 && fixture.game.starts == 0, "unexpected worker started after launch failure" );
-	Require( fixture.config.starts == 0 && fixture.config.stops == 0, "unstarted main modules were touched" );
+	Require( partial_launch_exercised, "allocation sweep never exercised a partial worker launch" );
+	Require( launch_succeeded, "worker launch allocation sweep exceeded its bound" );
+	std::cout << "Worker launch sweep covered " << failure_positions << " allocation failure positions\n";
 }
 
 static void CheckNormalEngineShutdown() {
