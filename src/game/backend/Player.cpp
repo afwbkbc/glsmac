@@ -11,6 +11,10 @@
 #include "engine/Engine.h"
 #include "Game.h"
 
+#include "game/backend/base/BaseManager.h"
+#include "game/backend/base/production/Facility.h"
+#include "game/backend/base/production/Custom.h"
+
 namespace game {
 namespace backend {
 
@@ -31,6 +35,12 @@ Player::Player(
 
 Player::Player( const Player* const other ) {
 	*this = *other;
+}
+
+Player::~Player() {
+	for ( const auto& it : m_production_choices ) {
+		delete it.second;
+	}
 }
 
 const std::string& Player::GetPlayerName() const {
@@ -102,6 +112,43 @@ void Player::CompleteTurn() {
 
 void Player::UncompleteTurn() {
 	m_is_turn_completed = false;
+}
+
+void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::value::object_properties_t& data ) {
+	if ( m_production_choices.find( id ) != m_production_choices.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Production choice '" + id + "' is already defined" );
+	}
+	const auto& type_it = data.find( "type" );
+	if ( type_it == data.end() || type_it->second->type != gse::VT_STRING ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - type is not specified or is not a string" );
+	}
+	const auto& type = ((gse::value::String*)type_it->second)->value;
+	base::production::Production* production = nullptr;
+	if ( type == "facility" ) {
+		const auto& facility_id_it = data.find( "id" );
+		if ( facility_id_it == data.end() || facility_id_it->second->type != gse::VT_STRING ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - facility id is not specified or is not string" );
+		}
+		const auto& facility_id = ((gse::value::String*)facility_id_it->second)->value;
+		const auto* const facility = g_engine->GetGame()->GetBM()->GetFacilityDef( facility_id );
+		if ( !facility ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - facility id not found: " + facility_id );
+		}
+		production = new base::production::Facility( facility );
+	}
+	else if ( type == "custom" ) {
+		const auto& render_it = data.find( "render" );
+		if ( render_it == data.end() || render_it->second->type != gse::VT_OBJECT ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - render is not specified or is not object" );
+		}
+		const auto& render = ((gse::value::Object*)render_it->second)->value;
+		const auto r = base::RenderInfo::FromValue( GSE_CALL, render );
+		production = new base::production::Custom( r );
+	}
+	else {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown production choice type: " + type );
+	}
+	m_production_choices.insert({ id, production });
 }
 
 WRAPIMPL_BEGIN( Player )
@@ -190,6 +237,30 @@ WRAPIMPL_BEGIN( Player )
 				"is_master",
 				VALUE( gse::value::Bool, , m_role == PR_SINGLE || m_role == PR_HOST )
 			},
+			{
+				"add_production_choice",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					N_EXPECT_ARGS( 2 );
+					N_GETVALUE( id, 0, String );
+					N_GETVALUE( data, 1, Object );
+
+					AddProductionChoice( GSE_CALL, id, data );
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
+			{
+				"remove_production_choice",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
 		};
 WRAPIMPL_END_PTR()
 
@@ -206,6 +277,12 @@ const types::Buffer Player::Serialize() const {
 	}
 	buf.WriteString( m_difficulty_level );
 
+	buf.WriteInt( m_production_choices.size() );
+	for ( const auto& it : m_production_choices ) {
+		buf.WriteString( it.first );
+		it.second->Serialize( buf );
+	}
+
 	return buf;
 }
 
@@ -219,6 +296,13 @@ void Player::Deserialize( types::Buffer buf ) {
 		m_faction->Deserialize( buf.ReadString() );
 	}
 	m_difficulty_level = buf.ReadString();
+
+	ASSERT( m_production_choices.empty(), "production choices not empty" );
+	const size_t sz = buf.ReadInt();
+	for ( size_t i = 0 ; i < sz ; i++ ) {
+		const auto id = buf.ReadString();
+		m_production_choices.insert({ id, base::production::Production::Deserialize( buf ) });
+	}
 
 }
 

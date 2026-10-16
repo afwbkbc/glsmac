@@ -1,3 +1,5 @@
+SUBDIR( production )
+
 SET( SRC ${SRC}
 
 	${PWD}/RenderInfo.cpp

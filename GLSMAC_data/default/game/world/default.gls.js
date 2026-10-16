@@ -68,6 +68,32 @@ return (game) => {
 
 		const tile = get_good_starting_base_location(faction.is_naval);
 
+		// initial production choices (TODO: technologies)
+		game.event('add_production_choice', {
+			player: player,
+			id: 'RECYCLING_TANKS',
+			data: {
+				type: 'facility',
+				id: 'RECYCLING_TANKS',
+			},
+		});
+		game.event('add_production_choice', {
+			player: player,
+			id: 'STOCKPILE_ENERGY',
+			data: {
+				type: 'custom',
+				render: {
+					type: 'sprite',
+					file: 'facs/fac038.pcx',
+					x: 0,
+					y: 0,
+					w: 215,
+					h: 215,
+				},
+				hint: 'Minerals to Energy',
+			},
+		});
+
 		// spawn headquarters base
 		game.event('spawn_base', {
 			owner: player,

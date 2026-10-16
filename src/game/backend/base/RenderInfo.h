@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "gse/Value.h"
+
 namespace types {
 class Buffer;
 }
@@ -19,6 +21,8 @@ public:
 	uint16_t y;
 	uint16_t width;
 	uint16_t height;
+	static const RenderInfo FromValue( GSE_CALLABLE, const gse::value::object_properties_t& render );
+	static const RenderInfo FromBuffer( types::Buffer& buf );
 	const std::string ToString( const std::string& prefix ) const;
 	void Write( types::Buffer& buf ) const;
 };

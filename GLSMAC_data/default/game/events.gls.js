@@ -25,6 +25,7 @@ return (game) => {
 		'chat_message',
 		'work_base_tile',
 		'unwork_base_tile',
+		'add_production_choice',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

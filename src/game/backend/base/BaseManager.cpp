@@ -317,25 +317,8 @@ WRAPIMPL_BEGIN( BaseManager )
 						}
 						const auto* obj = (gse::value::Object*)v;
 						const auto& ov = obj->value;
-						N_GETPROP( type, ov, "type", String );
-						if ( type == "sprite" ) {
-							N_GETPROP( file, ov, "file", String );
-							N_GETPROP( x, ov, "x", Int );
-							N_GETPROP( y, ov, "y", Int );
-							N_GETPROP( w, ov, "w", Int );
-							N_GETPROP( h, ov, "h", Int );
-							out.push_back({
-								file,
-								(uint16_t)x,
-								(uint16_t)y,
-								(uint16_t)w,
-								(uint16_t)h
-							});
-						}
-						else {
-							GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite pops are supported for now" );
-						}
-
+						const auto r = RenderInfo::FromValue( GSE_CALL, ov );
+						out.push_back( r );
 					}
 				};
 				f_read_renders( "renders_human", rh );
@@ -407,26 +390,7 @@ WRAPIMPL_BEGIN( BaseManager )
 				N_GETPROP( cost, def, "cost", Int );
 
 				N_GETPROP( render, def, "render", Object );
-
-				RenderInfo r = {};
-				N_GETPROP( type, render, "type", String );
-				if ( type == "sprite" ) {
-					N_GETPROP( file, render, "file", String );
-					N_GETPROP( x, render, "x", Int );
-					N_GETPROP( y, render, "y", Int );
-					N_GETPROP( w, render, "w", Int );
-					N_GETPROP( h, render, "h", Int );
-					r = {
-						file,
-						(uint16_t)x,
-						(uint16_t)y,
-						(uint16_t)w,
-						(uint16_t)h
-					};
-				}
-				else {
-					GSE_ERROR( gse::EC.INVALID_CALL, "Only sprite facilities are supported for now" );
-				}
+				const auto r = RenderInfo::FromValue( GSE_CALL, render );
 
 				DefineFacility( new FacilityDef( id, name, description, cost, r ) );
 

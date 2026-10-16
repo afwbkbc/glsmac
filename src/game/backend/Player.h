@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
@@ -16,6 +17,10 @@ class Faction;
 
 namespace slot {
 class Slot;
+}
+
+namespace base::production {
+class Production;
 }
 
 CLASS2( Player, types::Serializable, gse::Wrappable )
@@ -35,6 +40,8 @@ CLASS2( Player, types::Serializable, gse::Wrappable )
 		const std::string& difficulty_level
 	);
 	Player( const Player* const other );
+
+	virtual ~Player();
 
 	const std::string& GetPlayerName() const;
 	const std::string GetFullName() const;
@@ -59,6 +66,8 @@ CLASS2( Player, types::Serializable, gse::Wrappable )
 	void CompleteTurn();
 	void UncompleteTurn();
 
+	void AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::value::object_properties_t& data );
+
 	WRAPDEFS_PTR( Player );
 
 	const types::Buffer Serialize() const override;
@@ -80,6 +89,8 @@ private:
 	std::string m_difficulty_level = "";
 
 	bool m_is_turn_completed = false;
+
+	std::unordered_map< std::string, const base::production::Production* > m_production_choices = {};
 };
 
 }

@@ -47,12 +47,7 @@ FacilityDef* FacilityDef::Deserialize( types::Buffer& buf ) {
 	const auto name = buf.ReadString();
 	const auto description = buf.ReadString();
 	const auto cost = buf.ReadInt();
-	RenderInfo r = {};
-	r.file = buf.ReadString();
-	r.x = buf.ReadInt();
-	r.y = buf.ReadInt();
-	r.width = buf.ReadInt();
-	r.height = buf.ReadInt();
+	const auto r = RenderInfo::FromBuffer( buf );
 	return new FacilityDef( id, name, description, cost, r );
 }
 
