@@ -45,10 +45,10 @@ void Thread::T_Start() {
 	}
 }
 
-void Thread::RunOnCurrentThread( const std::function< bool() >& should_stop ) {
+void Thread::RunOnCurrentThread( const std::function< bool() >& should_stop, const std::function< void() >& before_stop ) {
 	ASSERT( !m_thread && m_state == STATE_INACTIVE, "thread already running" );
 	m_state = STATE_STARTING;
-	Run( should_stop );
+	Run( should_stop, before_stop );
 }
 
 bool Thread::T_IsRunning() {
@@ -73,7 +73,7 @@ void Thread::T_Stop() {
 	Log( "Sent STOP command" );
 }
 
-void Thread::Run( const std::function< bool() >& should_stop ) {
+void Thread::Run( const std::function< bool() >& should_stop, const std::function< void() >& before_stop ) {
 
 	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
 	size_t started_modules = 0;
@@ -178,6 +178,16 @@ void Thread::Run( const std::function< bool() >& should_stop ) {
 	}
 
 	m_state = STATE_STOPPING;
+	try {
+		if ( before_stop ) {
+			before_stop();
+		}
+	}
+	catch ( ... ) {
+		if ( !error ) {
+			error = std::current_exception();
+		}
+	}
 	// A failed Start must clean up its own partial initialization. Stop only
 	// modules whose Start returned, and continue even if one Stop fails.
 	while ( started_modules ) {

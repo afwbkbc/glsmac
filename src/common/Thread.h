@@ -32,8 +32,9 @@ CLASS( Thread, Class )
 	void AddModule( Module* module );
 
 	void T_Start();
-	// On failure, stops successfully started modules before rethrowing.
-	void RunOnCurrentThread( const std::function< bool() >& should_stop );
+	// Runs before_stop before module cleanup, even on failure. Cleanup failures
+	// do not replace an earlier exception; all started modules are stopped.
+	void RunOnCurrentThread( const std::function< bool() >& should_stop, const std::function< void() >& before_stop = {} );
 	bool T_IsRunning();
 	void T_Stop();
 
@@ -42,7 +43,7 @@ CLASS( Thread, Class )
 protected:
 	const std::string m_thread_name = "";
 
-	void Run( const std::function< bool() >& should_stop = {} );
+	void Run( const std::function< bool() >& should_stop = {}, const std::function< void() >& before_stop = {} );
 	std::thread* m_thread = nullptr;
 
 	std::atomic< thread_state_t > m_state = STATE_INACTIVE;

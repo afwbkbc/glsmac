@@ -34,7 +34,7 @@ static void Require( bool condition, const std::string& message ) {
 	if ( !condition ) { throw std::runtime_error( message ); }
 }
 
-static void CheckThreadFailure( const std::string& phase, bool cleanup_also_fails ) {
+static void CheckThreadFailure( const std::string& phase, bool cleanup_also_fails, bool hook_also_fails = false ) {
 	common::Thread thread( "TEST" );
 	thread.SetIPS( 100000 );
 	LifecycleModule first, second, third;
@@ -66,7 +66,11 @@ static void CheckThreadFailure( const std::string& phase, bool cleanup_also_fail
 	try {
 		thread.RunOnCurrentThread( [ & ]() {
 			if ( phase == "predicate" ) { throw std::runtime_error( "primary" ); }
-			return phase == "stop";
+			return phase == "stop" || phase == "before_stop";
+		}, [ & ]() {
+			record( "before_stop" );
+			if ( phase == "before_stop" ) { throw std::runtime_error( "primary" ); }
+			if ( hook_also_fails ) { throw std::runtime_error( "hook failure" ); }
 		} );
 	}
 	catch ( const std::runtime_error& error ) {
@@ -78,10 +82,10 @@ static void CheckThreadFailure( const std::string& phase, bool cleanup_also_fail
 	Require( first.stops == 1, "first module not stopped exactly once" );
 	if ( phase == "start" ) {
 		Require( second.stops == 0 && third.starts == 0 && third.stops == 0, "partial startup stopped unstarted module" );
-		Require( events == std::vector< std::string >{ "first.stop" }, "wrong partial-start cleanup order" );
+		Require( events == std::vector< std::string >{ "before_stop", "first.stop" }, "wrong partial-start cleanup order" );
 	}
 	else {
-		Require( events == std::vector< std::string >{ "third.stop", "second.stop", "first.stop" }, "cleanup did not continue in reverse order" );
+		Require( events == std::vector< std::string >{ "before_stop", "third.stop", "second.stop", "first.stop" }, "cleanup did not continue in reverse order" );
 	}
 }
 
@@ -102,6 +106,8 @@ struct EngineFixture {
 	game::backend::Game game;
 	std::unique_ptr< engine::Engine > engine;
 	unsigned handled = 0;
+	std::atomic< unsigned > worker_final_logs = 0;
+	bool early_main_cleanup = false;
 
 	explicit EngineFixture( bool single_thread = false ) {
 		config.single_thread = single_thread;
@@ -109,6 +115,18 @@ struct EngineFixture {
 			&config, &errors, std::vector< logger::Logger* >{ &logger }, &resources,
 			&fonts, &textures, &sounds, &text, &scheduler, &input, &graphics, &audio, &network, &game
 		);
+		if ( !single_thread ) {
+			engine->AddLogCallback( this, [ this ]( const std::string& text ) {
+				if ( text.find( "Thread stopped" ) != std::string::npos &&
+					( text.find( "NETWORK" ) != std::string::npos || text.find( "GC" ) != std::string::npos || text.find( "GAME" ) != std::string::npos ) ) {
+					++worker_final_logs;
+				}
+			} );
+			LifecycleModule* main_modules[] = { &config, &errors, &fonts, &textures, &sounds, &logger, &resources, &input, &graphics, &audio, &scheduler };
+			for ( auto* module : main_modules ) {
+				module->on_stop = [ this ]() { CheckMainCleanupOrder(); };
+			}
+		}
 		errors.on_error = [ this ]( const std::runtime_error& error ) {
 			++handled;
 			Require( std::string( error.what() ) == "main failure", "wrong engine error reported" );
@@ -116,7 +134,13 @@ struct EngineFixture {
 		};
 	}
 
+	void CheckMainCleanupOrder() {
+		// Record failures so an earlier injected exception cannot mask them.
+		early_main_cleanup = early_main_cleanup || network.active || game.active || engine->GetGC()->active || worker_final_logs != 3;
+	}
+
 	void CheckStopped() {
+		Require( !early_main_cleanup, "main module cleanup began before workers finished" );
 		Require( !network.active && !game.active && !engine->GetGC()->active, "error reported before workers stopped" );
 		Require( network.stops == 1 && game.stops == 1 && engine->GetGC()->stops == 1, "worker cleanup incomplete" );
 	}
@@ -134,7 +158,10 @@ static void CheckEngineFailure( const std::string& phase, bool single_thread = f
 	}
 	else {
 		fixture.input.on_iterate = [ & ]() { fixture.engine->ShutDown(); };
-		fixture.graphics.on_stop = []() { throw std::runtime_error( "main failure" ); };
+		fixture.graphics.on_stop = [ & ]() {
+			if ( !single_thread ) { fixture.CheckMainCleanupOrder(); }
+			throw std::runtime_error( "main failure" );
+		};
 	}
 	Require( fixture.engine->Run() == EXIT_FAILURE, "engine did not return failure" );
 	Require( fixture.handled == 1, "engine error not handled exactly once" );
@@ -153,6 +180,23 @@ static void CheckUnexpectedEngineFailure() {
 		caught = true;
 	}
 	Require( caught, "non-runtime exception was swallowed" );
+	fixture.CheckStopped();
+}
+
+static void CheckWorkerStopCommandFailure( bool primary_failure ) {
+	EngineFixture fixture;
+	auto caller = std::this_thread::get_id();
+	fixture.engine->AddLogCallback( &caller, [ & ]( const std::string& text ) {
+		if ( std::this_thread::get_id() == caller && text.find( "NETWORK" ) != std::string::npos && text.find( "Sent STOP command" ) != std::string::npos ) {
+			throw std::runtime_error( primary_failure ? "secondary failure" : "main failure" );
+		}
+	} );
+	fixture.input.on_iterate = [ & ]() {
+		if ( primary_failure ) { throw std::runtime_error( "main failure" ); }
+		fixture.engine->ShutDown();
+	};
+	Require( fixture.engine->Run() == EXIT_FAILURE, "worker stop command failure was not reported" );
+	Require( fixture.handled == 1, "worker stop command failure was not handled exactly once" );
 	fixture.CheckStopped();
 }
 
@@ -211,6 +255,7 @@ static void CheckPartialWorkerLaunch() {
 		}
 		else {
 			Require( result == EXIT_SUCCESS && started == 3, "allocation sweep did not finish normal startup" );
+			fixture.CheckStopped();
 			Require( fixture.config.starts == 1 && fixture.config.stops == 1, "normal main shutdown incomplete" );
 			launch_succeeded = true;
 			break;
@@ -264,21 +309,24 @@ static void CheckWorkerJoinAfterCleanup() {
 
 int main() {
 	try {
-		CheckThreadFailure( "start", false );
+		CheckThreadFailure( "start", false, true );
 		CheckThreadFailure( "iterate", false );
-		CheckThreadFailure( "iterate", true );
+		CheckThreadFailure( "iterate", true, true );
 		CheckThreadFailure( "stop", true );
 		CheckThreadFailure( "predicate", false );
+		CheckThreadFailure( "before_stop", true );
 		CheckEngineFailure( "start" );
 		CheckEngineFailure( "iterate" );
 		CheckEngineFailure( "stop" );
 		CheckEngineFailure( "iterate", true );
 		CheckUnexpectedEngineFailure();
+		CheckWorkerStopCommandFailure( false );
+		CheckWorkerStopCommandFailure( true );
 		CheckThreadLaunchFailure();
 		CheckPartialWorkerLaunch();
 		CheckNormalEngineShutdown();
 		CheckWorkerJoinAfterCleanup();
-		std::cout << "14 lifecycle regression cases passed\n";
+		std::cout << "17 lifecycle regression cases passed\n";
 		return EXIT_SUCCESS;
 	}
 	catch ( const std::exception& error ) {

@@ -148,6 +148,61 @@ int Engine::Run() {
 	std::exception_ptr error;
 	size_t started_workers = 0;
 
+	bool workers_stopped = false;
+	const auto stop_workers = [ & ]() {
+		if ( workers_stopped ) { return; }
+		std::exception_ptr stop_error;
+		// Workers may still use graphics, logging and other main-thread services.
+		// Join them before any main module cleanup, including on failure.
+		ShutDown();
+		for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+			try {
+				m_threads[ i ]->T_Stop();
+			}
+			catch ( ... ) {
+				if ( !stop_error ) {
+					stop_error = std::current_exception();
+				}
+			}
+		}
+#ifdef DEBUG
+		util::Timer thread_running_timer;
+		thread_running_timer.SetInterval( 1000 );
+#endif
+		bool any_thread_running = true;
+		while ( any_thread_running ) {
+			std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+			any_thread_running = false;
+#ifdef DEBUG
+			const bool announce_frozen_threads = thread_running_timer.HasTicked();
+#endif
+			for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+				auto* thread = m_threads[ i ];
+				if ( thread->T_IsRunning() ) {
+#ifdef DEBUG
+					if ( announce_frozen_threads ) {
+						try {
+							Log( "Thread " + thread->GetThreadName() + " still running" );
+						}
+						catch ( ... ) {
+							if ( !stop_error ) { stop_error = std::current_exception(); }
+						}
+					}
+#endif
+					any_thread_running = true;
+#ifdef DEBUG
+					if ( !announce_frozen_threads )
+#endif
+					{
+						break;
+					}
+				}
+			}
+		}
+		workers_stopped = true;
+		if ( stop_error ) { std::rethrow_exception( stop_error ); }
+	};
+
 	// TODO: dynamic threadpool
 
 	// SDL video initialization, event pumping and rendering must stay on the
@@ -157,54 +212,19 @@ int Engine::Run() {
 			m_threads[ i ]->T_Start();
 			++started_workers;
 		}
-		m_threads.front()->RunOnCurrentThread( [ this ]() { return m_is_shutting_down.load(); } );
+		m_threads.front()->RunOnCurrentThread( [ this ]() { return m_is_shutting_down.load(); }, stop_workers );
 		Log( "Shutting down" );
 	}
 	catch ( ... ) {
 		error = std::current_exception();
 	}
 
-	// Keep the engine and GC alive until every launched worker has stopped and
-	// joined, including when main-thread startup, iteration or cleanup failed.
-	ShutDown();
-	for ( size_t i = 1 ; i <= started_workers ; ++i ) {
-		try {
-			m_threads[ i ]->T_Stop();
-		}
-		catch ( ... ) {
-			if ( !error ) {
-				error = std::current_exception();
-			}
-		}
+	// Worker launch can fail before the main thread enters Run.
+	try {
+		stop_workers();
 	}
-#ifdef DEBUG
-	util::Timer thread_running_timer;
-	thread_running_timer.SetInterval( 1000 );
-#endif
-	bool any_thread_running = true;
-	while ( any_thread_running ) {
-		std::this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
-		any_thread_running = false;
-#ifdef DEBUG
-		const bool announce_frozen_threads = thread_running_timer.HasTicked();
-#endif
-		for ( size_t i = 1 ; i <= started_workers ; ++i ) {
-			auto* thread = m_threads[ i ];
-			if ( thread->T_IsRunning() ) {
-#ifdef DEBUG
-				if ( announce_frozen_threads ) {
-					Log( "Thread " + thread->GetThreadName() + " still running" );
-				}
-#endif
-				any_thread_running = true;
-#ifdef DEBUG
-				if ( !announce_frozen_threads )
-#endif
-				{
-					break;
-				}
-			}
-		}
+	catch ( ... ) {
+		if ( !error ) { error = std::current_exception(); }
 	}
 	if ( error ) {
 		try {
