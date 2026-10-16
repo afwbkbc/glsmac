@@ -147,21 +147,18 @@ int Engine::Run() {
 
 	// TODO: dynamic threadpool
 
-	for ( auto& thread : m_threads ) {
-		thread->T_Start();
+	// SDL video initialization, event pumping and rendering must stay on the
+	// process main thread (in particular for Cocoa on macOS).
+	for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
+		m_threads[ i ]->T_Start();
 	}
 
 	try {
-		while ( !m_is_shutting_down ) {
-			for ( auto& thread : m_threads ) {
-				// ?
-			}
-			std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
-		}
+		m_threads.front()->RunOnCurrentThread( [ this ]() { return m_is_shutting_down.load(); } );
 		Log( "Shutting down" );
 
-		for ( auto& thread : m_threads ) {
-			thread->T_Stop();
+		for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
+			m_threads[ i ]->T_Stop();
 		}
 #ifdef DEBUG
 		util::Timer thread_running_timer;

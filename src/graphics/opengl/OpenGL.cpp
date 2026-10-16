@@ -49,11 +49,30 @@ OpenGL::~OpenGL() {}
 void OpenGL::Start() {
 
 	Log( "Initializing SDL2" );
-	SDL_VideoInit( NULL );
+	if ( SDL_VideoInit( NULL ) != 0 ) {
+		THROW( (std::string)"Could not initialize SDL2 video: " + SDL_GetError() );
+	}
 
 	Log( "Creating window" );
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
+
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+
+#ifdef __APPLE__
+	// macOS exposes modern OpenGL only through a forward-compatible core context.
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
+#endif
 
 	m_window = SDL_CreateWindow(
 		m_options.title.c_str(),
@@ -77,27 +96,32 @@ void OpenGL::Start() {
 
 	Log( "Initializing OpenGL" );
 
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
 
-	SDL_GL_MakeCurrent( m_window, m_gl_context );
+	if ( SDL_GL_MakeCurrent( m_window, m_gl_context ) != 0 ) {
+		THROW( (std::string)"Could not activate OpenGL context: " + SDL_GetError() );
+	}
+	if ( SDL_GL_SetSwapInterval( m_options.vsync ? 1 : 0 ) != 0 ) {
+		Log( (std::string)"Could not set swap interval: " + SDL_GetError() );
+	}
+#ifdef __APPLE__
+	glewExperimental = GL_TRUE;
+#endif
 
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
 	}
+
+#ifdef __APPLE__
+	// Core profiles require a VAO even when attributes are set for each draw.
+	glGenVertexArrays( 1, &m_vertex_array );
+	glBindVertexArray( m_vertex_array );
+#endif
 
 	{ // print some OpenGL info
 		auto* renderer = (const char*)glGetString( GL_RENDERER );
@@ -153,7 +177,10 @@ void OpenGL::Start() {
 	glDepthFunc( GL_LEQUAL );
 
 	glCullFace( GL_FRONT );
+#ifndef __APPLE__
+	// Fixed-function perspective hints are not part of the core profile.
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST );
+#endif
 
 
 	// generate 'empty' texture (transparent 1x1)
@@ -204,6 +231,10 @@ void OpenGL::Stop() {
 	}
 	m_textures.clear();
 
+#ifdef __APPLE__
+	glDeleteVertexArrays( 1, &m_vertex_array );
+	m_vertex_array = 0;
+#endif
 	SDL_GL_DeleteContext( m_gl_context );
 
 	Log( "Destroying window" );

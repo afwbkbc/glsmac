@@ -35,7 +35,13 @@ void Thread::AddModule( Module* module ) {
 void Thread::T_Start() {
 	ASSERT( !m_thread, "thread object already initialized" );
 	m_state = STATE_STARTING;
-	m_thread = new std::thread( &Thread::Run, this );
+	m_thread = new std::thread( [ this ]() { Run(); } );
+}
+
+void Thread::RunOnCurrentThread( const std::function< bool() >& should_stop ) {
+	ASSERT( !m_thread && m_state == STATE_INACTIVE, "thread already running" );
+	m_state = STATE_STARTING;
+	Run( should_stop );
 }
 
 bool Thread::T_IsRunning() {
@@ -58,7 +64,7 @@ void Thread::T_Stop() {
 	m_command = Thread::COMMAND_STOP;
 }
 
-void Thread::Run() {
+void Thread::Run( const std::function< bool() >& should_stop ) {
 
 	ASSERT( m_state == STATE_STARTING, "starting thread from invalid state" );
 
@@ -88,6 +94,9 @@ void Thread::Run() {
 //	try {
 
 	while ( m_state == STATE_ACTIVE ) {
+		if ( should_stop && should_stop() ) {
+			break;
+		}
 
 		auto start = std::chrono::high_resolution_clock::now();
 
@@ -154,7 +163,7 @@ void Thread::Run() {
 	Log( "Stopping thread" );
 
 	m_state = STATE_STOPPING;
-	for ( modules_t::iterator it = m_modules.end() - 1 ; it >= m_modules.begin() ; --it ) {
+	for ( auto it = m_modules.rbegin() ; it != m_modules.rend() ; ++it ) {
 		( *it )->Stop();
 	}
 
