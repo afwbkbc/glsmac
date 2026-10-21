@@ -24,6 +24,7 @@ public:
 	static const RenderInfo FromValue( GSE_CALLABLE, const gse::value::object_properties_t& render );
 	static const RenderInfo FromBuffer( types::Buffer& buf );
 	const std::string ToString( const std::string& prefix ) const;
+	const std::string ToTextureString() const;
 	void Write( types::Buffer& buf ) const;
 };
 typedef std::vector< RenderInfo > render_infos_t;

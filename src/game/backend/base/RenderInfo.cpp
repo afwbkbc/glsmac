@@ -50,6 +50,11 @@ const std::string RenderInfo::ToString( const std::string& prefix ) const {
 		TS_OBJ_PROP_NUM( "width", width ) +
 		TS_OBJ_PROP_NUM( "height", height );
 }
+
+const std::string RenderInfo::ToTextureString() const {
+	return file + ":crop(" + std::to_string( x ) + "," + std::to_string( y ) + "," + std::to_string( x + width ) + "," + std::to_string( y + height ) + ")";
+}
+
 void RenderInfo::Write( types::Buffer& buf ) const {
 	buf.WriteString( file );
 	buf.WriteInt( x );

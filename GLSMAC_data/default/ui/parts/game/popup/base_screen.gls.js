@@ -11,11 +11,13 @@ return {
 		'energy',
 		'buttons',
 		'bottom_bar',
+		'production_selection',
 	],
 
 	production_selection_no_hiding: {
 		buttons: true,
 		bottom_bar: true,
+		production_selection: true,
 	},
 
 	init: (p) => {
@@ -25,7 +27,7 @@ return {
 		this.is_open = false;
 		this.base_id = null;
 
-		this.production_selection = null;
+		this.production_selection_visible = false;
 
 		p.ui.class('base-screen-frame').set({
 			border: 'rgb(35,59,34),2',
@@ -211,6 +213,10 @@ return {
 		this.sections.bottom_bar.set({
 			base: base,
 		});
+
+		this.sections.production_selection.set({
+			base: base,
+		});
 	},
 
 	on_hide: () => {
@@ -275,9 +281,9 @@ return {
 	},
 
 	hide_production_selection: () => {
-		if (this.production_selection != null) {
-			this.production_selection.remove();
-			this.production_selection = null;
+		if (this.production_selection_visible) {
+			this.production_selection_visible = false;
+			this.sections.production_selection.hide();
 			this.sections.buttons.show_default();
 			for (s in this.sections) {
 				if (!#is_defined(this.production_selection_no_hiding[s])) {
@@ -287,26 +293,21 @@ return {
 		}
 	},
 
-	show_production_selection: () => {
-		if (this.production_selection == null) {
+	show_production_selection: (base) => {
+		if (!this.production_selection_visible) {
 			for (s in this.sections) {
 				if (!#is_defined(this.production_selection_no_hiding[s])) {
 					this.sections[s].body.hide();
 				}
 			}
-			this.production_selection = this.body.panel({
-				class: 'default-panel',
-				top: 0,
-				left: 0,
-				right: 0,
-				bottom: 0,
-			});
 			this.sections.buttons.show_production_selection();
+			this.sections.production_selection.show();
+			this.production_selection_visible = true;
 		}
 	},
 
 	update_production_selection: () => {
-		if (this.production_selection != null) {
+		if (this.production_selection_visible) {
 
 			// TODO: update selection to selected item
 

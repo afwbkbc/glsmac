@@ -21,6 +21,8 @@
 #include "FacilityDef.h"
 #include "game/backend/Random.h"
 #include "game/backend/resource/ResourceManager.h"
+#include "game/backend/Player.h"
+#include "production/Production.h"
 
 namespace game {
 namespace backend {
@@ -340,6 +342,13 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			return GetConsumption( GSE_CALL );
 		} ),
 	},
+	{
+		"get_production_choices",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return GetProductionChoices( GSE_CALL );
+		} ),
+	}
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()
@@ -428,6 +437,36 @@ gse::value::Object* const Base::GetConsumption( GSE_CALLABLE ) {
 			m_owner->Wrap( GSE_CALL )
 		},
 	}; } );
+}
+
+gse::value::Array* const Base::GetProductionChoices( GSE_CALLABLE ) {
+
+	// sort by group order and then alphabetically by id (TODO: use name instead of id?)
+
+	std::map< uint8_t, std::map< std::string, gse::Value* > > ordered_values = {};
+	size_t count = 0;
+
+	for ( const auto& it : m_owner->GetPlayer()->GetProductionChoices() ) {
+		const auto& choice = it.second;
+		const auto gp = choice->GetGroupOrder();
+		auto it2 = ordered_values.find( gp );
+		if ( it2 == ordered_values.end() ) {
+			it2 = ordered_values.insert({ gp, {} } ).first;
+		}
+		ASSERT( it2->second.find( it.first ) == it2->second.end(), "duplicate production id: " + it.first );
+		it2->second.insert({ it.first, choice->ToValue( GSE_CALL, it.first )});
+		count++;
+	}
+
+	gse::value::array_elements_t result = {};
+	result.reserve( count );
+	for ( const auto& it : ordered_values ) {
+		for ( const auto& it2 : it.second ) {
+			result.push_back( it2.second );
+		}
+	}
+
+	return VALUE( gse::value::Array,, result );
 }
 
 void Base::TriggerUpdate() {

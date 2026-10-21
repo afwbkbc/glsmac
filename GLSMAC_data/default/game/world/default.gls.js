@@ -75,6 +75,7 @@ return (game) => {
 			data: {
 				type: 'facility',
 				id: 'RECYCLING_TANKS',
+				hint: 'Bonus Resources',
 			},
 		});
 		game.event('add_production_choice', {
@@ -82,6 +83,7 @@ return (game) => {
 			id: 'STOCKPILE_ENERGY',
 			data: {
 				type: 'custom',
+				name: 'Stockpile Energy',
 				render: {
 					type: 'sprite',
 					file: 'facs/fac038.pcx',

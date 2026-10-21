@@ -66,7 +66,9 @@ CLASS2( Player, types::Serializable, gse::Wrappable )
 	void CompleteTurn();
 	void UncompleteTurn();
 
+	typedef std::unordered_map< std::string, const base::production::Production* > production_choices_t;
 	void AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::value::object_properties_t& data );
+	const production_choices_t& GetProductionChoices() const;
 
 	WRAPDEFS_PTR( Player );
 
@@ -90,7 +92,7 @@ private:
 
 	bool m_is_turn_completed = false;
 
-	std::unordered_map< std::string, const base::production::Production* > m_production_choices = {};
+	production_choices_t m_production_choices = {};
 };
 
 }

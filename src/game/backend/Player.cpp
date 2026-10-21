@@ -123,6 +123,16 @@ void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse
 		GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - type is not specified or is not a string" );
 	}
 	const auto& type = ((gse::value::String*)type_it->second)->value;
+	std::string hint = "";
+	{
+		const auto& hint_it = data.find( "hint" );
+		if ( hint_it != data.end() ) {
+			if ( hint_it->second->type != gse::VT_STRING ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - hint is not string" );
+			}
+			hint = ((gse::value::String*)hint_it->second)->value;
+		}
+	}
 	base::production::Production* production = nullptr;
 	if ( type == "facility" ) {
 		const auto& facility_id_it = data.find( "id" );
@@ -134,21 +144,31 @@ void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse
 		if ( !facility ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - facility id not found: " + facility_id );
 		}
-		production = new base::production::Facility( facility );
+		production = new base::production::Facility( facility, hint );
 	}
 	else if ( type == "custom" ) {
 		const auto& render_it = data.find( "render" );
 		if ( render_it == data.end() || render_it->second->type != gse::VT_OBJECT ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - render is not specified or is not object" );
 		}
-		const auto& render = ((gse::value::Object*)render_it->second)->value;
-		const auto r = base::RenderInfo::FromValue( GSE_CALL, render );
-		production = new base::production::Custom( r );
+		const auto& name_it = data.find( "name" );
+		if ( name_it == data.end() || name_it->second->type != gse::VT_STRING ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data -name is not specified or is not string" );
+		}
+		production = new base::production::Custom(
+			base::RenderInfo::FromValue( GSE_CALL, ((gse::value::Object*)render_it->second)->value ),
+			((gse::value::String*)name_it->second)->value,
+			hint
+		);
 	}
 	else {
 		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown production choice type: " + type );
 	}
 	m_production_choices.insert({ id, production });
+}
+
+const Player::production_choices_t& Player::GetProductionChoices() const {
+	return m_production_choices;
 }
 
 WRAPIMPL_BEGIN( Player )

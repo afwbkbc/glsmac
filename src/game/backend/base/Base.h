@@ -92,6 +92,7 @@ private:
 	gse::value::Array* const GetUnworkedTiles( GSE_CALLABLE );
 	gse::value::Object* const GetIntake( GSE_CALLABLE );
 	gse::value::Object* const GetConsumption( GSE_CALLABLE );
+	gse::value::Array* const GetProductionChoices( GSE_CALLABLE );
 
 	void TriggerUpdate();
 };
