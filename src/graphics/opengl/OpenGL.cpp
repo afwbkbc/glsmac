@@ -1,5 +1,7 @@
 #include "OpenGL.h"
 
+#include <memory>
+
 #include "engine/Engine.h"
 
 #include "shader_program/Orthographic.h"
@@ -48,12 +50,44 @@ OpenGL::~OpenGL() {}
 
 void OpenGL::Start() {
 
+	// Thread only calls Stop after Start succeeds. Keep partial startup owned
+	// here, including failures before a current context or GL loader exists.
+	struct StartupGuard {
+		OpenGL* graphics;
+		bool video_initialized = false;
+		~StartupGuard() {
+			if ( graphics ) {
+				graphics->AbortStartup( video_initialized );
+			}
+		}
+	} startup{ this };
+
 	Log( "Initializing SDL2" );
-	SDL_VideoInit( NULL );
+	if ( SDL_VideoInit( NULL ) != 0 ) {
+		THROW( (std::string)"Could not initialize SDL2 video: " + SDL_GetError() );
+	}
+	startup.video_initialized = true;
 
 	Log( "Creating window" );
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
+
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+
+#ifdef __APPLE__
+	// macOS exposes modern OpenGL only through a forward-compatible core context.
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 4 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
+#endif
 
 	m_window = SDL_CreateWindow(
 		m_options.title.c_str(),
@@ -70,34 +104,46 @@ void OpenGL::Start() {
 		THROW( (std::string)"Could not create SDL2 window: " + SDL_GetError() );
 	}
 
-	if ( m_is_fullscreen ) {
-		m_is_fullscreen = false; // to prevent assert on next line
-		SetFullscreen();
-	}
-
 	Log( "Initializing OpenGL" );
 
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-	SDL_GL_SetSwapInterval( (char)m_options.vsync );
 
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
 
-	SDL_GL_MakeCurrent( m_window, m_gl_context );
+	if ( SDL_GL_MakeCurrent( m_window, m_gl_context ) != 0 ) {
+		THROW( (std::string)"Could not activate OpenGL context: " + SDL_GetError() );
+	}
+	if ( SDL_GL_SetSwapInterval( m_options.vsync ? 1 : 0 ) != 0 ) {
+		Log( (std::string)"Could not set swap interval: " + SDL_GetError() );
+	}
+#ifdef __APPLE__
+	glewExperimental = GL_TRUE;
+	const auto prior_error = glGetError();
+	if ( prior_error != GL_NO_ERROR ) {
+		THROW( "OpenGL error before GLEW initialization: " + std::to_string( prior_error ) );
+	}
+#endif
 
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
 	}
+
+#ifdef __APPLE__
+	// Older GLEW builds can probe legacy extensions in a core context. Ignore
+	// only that probe's INVALID_ENUM, at the initialization boundary; retain
+	// normal error checking for all other startup and rendering operations.
+	for ( auto error = glGetError() ; error != GL_NO_ERROR ; error = glGetError() ) {
+		if ( error != GL_INVALID_ENUM ) {
+			THROW( "OpenGL error during GLEW initialization: " + std::to_string( error ) );
+		}
+	}
+	// Core profiles require a VAO even when attributes are set for each draw.
+	glGenVertexArrays( 1, &m_vertex_array );
+	glBindVertexArray( m_vertex_array );
+#endif
 
 	{ // print some OpenGL info
 		auto* renderer = (const char*)glGetString( GL_RENDERER );
@@ -118,6 +164,11 @@ void OpenGL::Start() {
 				"\nGLSL Version         : " + glslVersion
 		);
 	}
+
+	// Reserve before allocating children so registering a new child cannot
+	// throw and leave it outside the startup guard's ownership.
+	m_shader_programs.reserve( 2 );
+	m_routines.reserve( 2 );
 
 	// shader programs
 	NEWV( sp_orthographic, shader_program::Orthographic );
@@ -153,7 +204,10 @@ void OpenGL::Start() {
 	glDepthFunc( GL_LEQUAL );
 
 	glCullFace( GL_FRONT );
+#ifndef __APPLE__
+	// Fixed-function perspective hints are not part of the core profile.
 	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST );
+#endif
 
 
 	// generate 'empty' texture (transparent 1x1)
@@ -170,7 +224,53 @@ void OpenGL::Start() {
 
 	m_capture_to_texture_fbo = CreateFBO();
 
+	// Fullscreen resizing calls GL and resize handlers, so it needs the
+	// context, loader and graphics children to be ready first.
+	if ( m_is_fullscreen ) {
+		m_is_fullscreen = false; // to prevent assert on next line
+		SetFullscreen();
+	}
+
 	OnWindowResize();
+	startup.graphics = nullptr;
+}
+
+void OpenGL::AbortStartup( const bool video_initialized ) noexcept {
+	// Do not call Stop on partially started shaders/routines. Their CPU
+	// objects can be destroyed directly; deleting the context also releases
+	// any GL objects created before a shader or later startup step failed.
+	for ( auto* routine : m_routines ) {
+		DELETE( routine );
+	}
+	m_routines.clear();
+	for ( auto* shader : m_shader_programs ) {
+		DELETE( shader );
+	}
+	m_shader_programs.clear();
+	for ( auto* fbo : m_fbos ) {
+		DELETE( fbo );
+	}
+	m_fbos.clear();
+	m_capture_to_texture_fbo = nullptr;
+	m_textures.clear();
+	m_texture_objs_to_unload.clear();
+	m_no_texture = 0;
+#ifdef __APPLE__
+	m_vertex_array = 0;
+#endif
+	// Until GLEW succeeds there are no children/FBOs, so early failures do
+	// not issue GL calls or require a successfully activated context.
+	if ( m_gl_context ) {
+		SDL_GL_DeleteContext( m_gl_context );
+		m_gl_context = nullptr;
+	}
+	if ( m_window ) {
+		SDL_DestroyWindow( m_window );
+		m_window = nullptr;
+	}
+	if ( video_initialized ) {
+		SDL_VideoQuit();
+	}
 }
 
 void OpenGL::Stop() {
@@ -204,6 +304,10 @@ void OpenGL::Stop() {
 	}
 	m_textures.clear();
 
+#ifdef __APPLE__
+	glDeleteVertexArrays( 1, &m_vertex_array );
+	m_vertex_array = 0;
+#endif
 	SDL_GL_DeleteContext( m_gl_context );
 
 	Log( "Destroying window" );
@@ -593,9 +697,11 @@ void OpenGL::WithTexture( const types::texture::Texture* texture, const f_t& f )
 
 FBO* OpenGL::CreateFBO() {
 	NEWV( fbo, FBO, this, m_options.viewport_width, m_options.viewport_height );
+	const auto delete_fbo = []( FBO* value ) { DELETE( value ); };
+	std::unique_ptr< FBO, decltype( delete_fbo ) > pending( fbo, delete_fbo );
 	Log( "Created FBO " + fbo->GetName() );
 	m_fbos.insert( fbo );
-	return fbo;
+	return pending.release();
 }
 
 void OpenGL::DestroyFBO( FBO* fbo ) {
