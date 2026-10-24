@@ -111,6 +111,7 @@ private:
 	};
 	typedef std::unordered_map< const types::texture::Texture*, texture_data_t > m_textures_map;
 	m_textures_map m_textures = {};
+	GLuint m_default_vao = 0;
 	GLuint m_no_texture = 0;
 
 	std::unordered_map< uint8_t, types::Vec2< ssize_t > > m_active_mousedowns = {};

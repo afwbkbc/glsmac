@@ -53,6 +53,7 @@ CLASS( Config, common::Module )
 		LF_JOIN = 1 << 19,
 		LF_MAXIPS = 1 << 20,
 		LF_SINGLE_THREAD = 1 << 21,
+		LF_VERBOSE = 1 << 22,
 	};
 
 #if defined( DEBUG ) || defined( FASTDEBUG )

@@ -32,6 +32,7 @@ GSE::GSE()
 GSE::~GSE() {
 	{
 		Finish();
+		m_gc_space->StopCollecting();
 		for ( auto& it : m_include_cache ) {
 			it.second.Cleanup( this );
 		}

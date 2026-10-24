@@ -1,5 +1,7 @@
 #include "Sprite.h"
 
+#include <vector>
+
 #include "scene/Scene.h"
 #include "scene/Light.h"
 #include "scene/Camera.h"
@@ -133,16 +135,16 @@ void Sprite::DrawImpl( shader_program::ShaderProgram* shader_program, scene::Cam
 
 									auto* lights = m_actor->GetScene()->GetLights();
 									if ( !( flags & scene::actor::Actor::RF_IGNORE_LIGHTING ) && !lights->empty() ) {
-										types::Vec3 light_pos[lights->size()];
-										types::Color::color_t light_color[lights->size()];
+										std::vector< types::Vec3 > light_pos( lights->size() );
+										std::vector< types::Color::color_t > light_color( lights->size() );
 										size_t i = 0;
 										for ( auto& light : *lights ) {
 											light_pos[ i ] = light->GetPosition();
 											light_color[ i ] = light->GetColor();
 											i++;
 										}
-										glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos );
-										glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color );
+										glUniform3fv( sp->uniforms.light_pos, lights->size(), (const GLfloat*)light_pos.data() );
+										glUniform4fv( sp->uniforms.light_color, lights->size(), (const GLfloat*)light_color.data() );
 									}
 
 									if ( !( flags & scene::actor::Actor::RF_SPRITES_DEPTH ) ) {

@@ -37,7 +37,7 @@ CLASS( Sound, Actor )
 	const size_t GetPos() const;
 
 	void Rewind();
-	void GetNextBuffer( uint8_t* buffer, int len );
+	void GetNextBuffer( uint8_t* buffer, size_t len );
 
 private:
 	const types::Sound* m_sound = nullptr;

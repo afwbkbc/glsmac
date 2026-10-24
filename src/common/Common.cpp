@@ -40,17 +40,23 @@ const std::string& Class::GetLocalName() const {
 }
 
 #ifdef DEBUG
-static uint64_t last_time = 0;
+static std::atomic< int64_t > s_last_time_ns = 0;
 #endif
 
 void Class::Log( const std::string& text ) const {
 	if ( g_engine != NULL ) {
 #ifdef DEBUG
-		const auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		const auto duration = last_time
-			? time - last_time
+		const auto time = std::chrono::duration_cast< std::chrono::nanoseconds >(
+			std::chrono::steady_clock::now().time_since_epoch()
+		).count();
+		auto previous = s_last_time_ns.load( std::memory_order_relaxed );
+		while (
+			previous < time &&
+			!s_last_time_ns.compare_exchange_weak( previous, time, std::memory_order_relaxed )
+		) {}
+		const auto duration = previous > 0 && time > previous
+			? time - previous
 			: 0;
-		last_time = time;
 #endif
 		g_engine->Log(
 #ifdef DEBUG

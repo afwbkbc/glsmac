@@ -395,7 +395,7 @@ const std::string& ResourceManager::TryGetCustomPath( const std::string& path ) 
 		}
 
 		// look in SMAC dir
-		resolved_file = util::FS::GetExistingCaseSensitivePath( m_smac_path, GetFixedPath( path, m_extension_path_map, m_path_modifiers ) );
+		resolved_file = ResolveSMACPath( m_smac_path, GetFixedPath( path, m_extension_path_map, m_path_modifiers ) );
 	}
 	if ( !resolved_file.empty() && !util::FS::IsFile( resolved_file ) ) {
 		resolved_file = "";
@@ -435,6 +435,23 @@ const std::string ResourceManager::GetFixedPath( const std::string& file, const 
 	return fixed_path;
 }
 
+const std::string ResourceManager::ResolveSMACPath( const std::string& base_path, const std::string& path ) const {
+	auto resolved_file = util::FS::GetExistingCaseSensitivePath( base_path, path );
+	if ( !resolved_file.empty() ) {
+		return resolved_file;
+	}
+
+	std::string extension = util::FS::GetExtension( path );
+	std::transform( extension.begin(), extension.end(), extension.begin(), ::tolower );
+	if ( extension == ".pcx" ) {
+		const auto palette_path = util::FS::GetExistingCaseSensitivePath( base_path, "Color Blind Palette" );
+		if ( !palette_path.empty() && util::FS::IsDirectory( palette_path ) ) {
+			resolved_file = util::FS::GetExistingCaseSensitivePath( palette_path, util::FS::GetBaseName( path ) );
+		}
+	}
+	return resolved_file;
+}
+
 const bool ResourceManager::CheckFiles( const std::string& path, const std::vector< std::string >& files, const bool print_errors ) const {
 	for ( const auto& file : files ) {
 		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, file );
@@ -464,7 +481,7 @@ const bool ResourceManager::ResolveBuiltins( const std::string& path, const exte
 		if ( sub_it != substitutes.end() ) {
 			file = sub_it->second;
 		}
-		const auto resolved_file = util::FS::GetExistingCaseSensitivePath( path, GetFixedPath( file, extension_path_map, path_modifiers ) );
+		const auto resolved_file = ResolveSMACPath( path, GetFixedPath( file, extension_path_map, path_modifiers ) );
 		if ( resolved_file.empty() || !util::FS::IsFile( resolved_file ) ) {
 			if ( print_errors ) {
 				Log(

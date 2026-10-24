@@ -1,6 +1,7 @@
 #include "GLSMAC.h"
 
 #include "util/FS.h"
+#include "util/String.h"
 #include "engine/Engine.h"
 #include "config/Config.h"
 #include "resource/ResourceManager.h"
@@ -328,8 +329,29 @@ void GLSMAC::HideLoader() {
 
 void GLSMAC::ShowError( const std::string& text, const std::function< void() >& on_close ) {
 	Log( text );
+	m_gc_space->Accumulate( this, [ this, text, on_close ](){
+		TriggerObject( m_ui, "error", ARGS_F( this, &text, &on_close ) {
+			{
+				"error",
+				VALUE( gse::value::String,, text )
+			},
+			{
+				"on_close",
+				VALUE( gse::callable::Native,, ctx, [ on_close ]( GSE_CALLABLE, const gse::value::function_arguments_t& arguments ) -> gse::Value* {
+					if ( on_close ) {
+						on_close();
+					}
+					return VALUE( gse::value::Undefined );
+				} )
+			}
+		}; } );
+	});
+}
+
+void GLSMAC::Reset() {
 	m_gc_space->Accumulate( this, [ this ](){
-		TriggerObject( m_ui, "error_popup" );
+		gse::ExecutionPointer ep;
+		Reset( m_gc_space, m_ctx, {}, ep );
 	});
 }
 
@@ -454,7 +476,7 @@ void GLSMAC::S_Game( GSE_CALLABLE ) {
 void GLSMAC::UpdateLoaderText() {
 	ASSERT( m_is_loader_shown, "loader not shown" );
 	std::string text = m_loader_text + std::string( m_loader_dots, '.' ) + std::string( 3 - m_loader_dots, ' ' );
-	m_gc_space->Accumulate( this, [ this, &text ]() {
+	m_gc_space->Accumulate( this, [ this, text ]() {
 		try {
 			TriggerObject( m_ui, "loader_text", ARGS_F( this, &text ) {
 				{
@@ -485,13 +507,16 @@ void GLSMAC::Reset( GSE_CALLABLE ) {
 		if ( c->HasLaunchFlag( config::Config::LF_QUICKSTART_FACTION ) ) {
 			const auto* fm = m_state->GetFM();
 			ASSERT( fm, "fm is null" );
-			faction = fm->Get( c->GetQuickstartFaction() );
+			faction = fm->Get( util::String::GetUpperCase( c->GetQuickstartFaction() ) );
 			if ( !faction ) {
 				std::string errmsg = "Faction \"" + c->GetQuickstartFaction() + "\" does not exist. Available factions:";
 				for ( const auto& f : fm->GetAll() ) {
 					errmsg += " " + f->m_id;
 				}
-				THROW( errmsg );
+				ShowError( errmsg, []() {
+					g_engine->ShutDown();
+				} );
+				return;
 			}
 		}
 		AddSinglePlayerSlot( faction );
@@ -588,8 +613,18 @@ void GLSMAC::StartGame( GSE_CALLABLE ) {
 					TriggerObject( this, "start_game" );
 				}
 			);
-		}, [] () {
-			// THROW( "TODO: cancel" );
+		}, [ this ] () {
+			const auto* config = g_engine->GetConfig();
+			if (
+				config->HasLaunchFlag( config::Config::LF_QUICKSTART ) ||
+				config->HasLaunchFlag( config::Config::LF_HOST ) ||
+				config->HasLaunchFlag( config::Config::LF_JOIN )
+			) {
+				g_engine->ShutDown();
+			}
+			else {
+				Reset();
+			}
 		}
 	);
 

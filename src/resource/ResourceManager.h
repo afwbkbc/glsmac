@@ -45,6 +45,7 @@ private:
 	std::unordered_map< std::string, std::string > m_custom_resource_paths = {};
 
 	const std::string GetFixedPath( const std::string& file, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers );
+	const std::string ResolveSMACPath( const std::string& base_path, const std::string& path ) const;
 	const bool CheckFiles( const std::string& path, const std::vector< std::string >& files, const bool print_errors ) const;
 	const bool ResolveBuiltins( const std::string& path, const extension_path_map_t& extension_path_map, const path_modifier_t path_modifiers, const resource_substitutes_t& substitutes, const bool print_errors );
 

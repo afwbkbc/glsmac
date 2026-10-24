@@ -590,3 +590,14 @@ const big_ternary =
 		: true
 ;
 test.assert(big_ternary == true);
+
+const int64_max = 9223372036854775807;
+const int64_min = -9223372036854775807 - 1;
+test.assert(#to_int('9223372036854775807') == int64_max);
+let random_counter = 0;
+while (random_counter++ < 32) {
+	const random_value = #random_int(int64_min, int64_max);
+	test.assert(random_value >= int64_min);
+	test.assert(random_value <= int64_max);
+}
+test.assert(#random_int(7, 7) == 7);

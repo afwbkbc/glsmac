@@ -50,7 +50,7 @@ return (glsmac) => {
 			});
 
 			game.on('error', (e) => {
-				glsmac.ui.error('Game initialization failed', () => {
+				glsmac.ui.error('Game initialization failed: ' + e.error, () => {
 					if (
 						#is_defined(glsmac.config.quickstart) ||
 						#is_defined(glsmac.config.host) ||

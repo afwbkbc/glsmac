@@ -1,5 +1,7 @@
 #include "Console.h"
 
+#include <algorithm>
+
 #include "scene/Scene.h"
 #include "engine/Engine.h"
 #include "graphics/Graphics.h"
@@ -193,9 +195,15 @@ void Console::AddLine( const std::string& text ) {
 
 void Console::Realign() {
 	const auto vh = m_graphics->GetViewportHeight();
-	m_lines_on_screen = std::floor( ( vh - s_font_padding * 2 ) / s_font_size );
-	m_lines_diff = 2.0f / m_lines_on_screen;
-	m_padding_diff = 2.0f / ( vh / s_font_padding );
+	const auto reserved_height = s_font_padding * 2;
+	const auto available_height = vh > reserved_height
+		? static_cast< size_t >( vh ) - reserved_height
+		: 0;
+	m_lines_on_screen = std::max< size_t >( 1, available_height / s_font_size );
+	m_lines_diff = 2.0f / static_cast< float >( m_lines_on_screen );
+	m_padding_diff = vh
+		? 2.0f * static_cast< float >( s_font_padding ) / static_cast< float >( vh )
+		: 0.0f;
 }
 
 scene::actor::Text* const Console::AddLineActor( const std::string& text, const float y ) {

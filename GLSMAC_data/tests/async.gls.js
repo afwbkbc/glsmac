@@ -92,14 +92,17 @@ let values = [];
 		});
 
 		// stop it after 1 second
+		let stopped_size = 0;
 		#async(1000, () => {
 			timer.stop();
+			stopped_size = #sizeof(result);
 		});
 
 		// after 2 seconds check if it was actually stopped
 		#async( 2000, () => {
 			#print(result);
-			//test.assert(result == [ 2, 3, 4, 5, 6, 7, 8, 9 ]);
+			test.assert(stopped_size > 0);
+			test.assert(#sizeof(result) == stopped_size);
 		});
 
 	});

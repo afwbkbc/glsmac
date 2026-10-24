@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_set>
 #include <vector>
 #include <atomic>
 
@@ -51,6 +52,8 @@ private:
 	typedef std::map< uint64_t, std::map< timer_id_t, timer_t > > timers_t;
 	timers_t m_timers = {};
 	std::map< timer_id_t, uint64_t > m_timers_ms = {};
+	std::unordered_set< timer_id_t > m_processing_timer_ids = {};
+	std::unordered_set< timer_id_t > m_canceled_timer_ids = {};
 
 	void ValidateMs( const int64_t ms, GSE_CALLABLE ) const;
 	void ProcessTimers( const timers_t::const_iterator& it, ExecutionPointer& ep );

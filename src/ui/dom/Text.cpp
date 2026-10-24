@@ -86,7 +86,7 @@ Text::Text( DOM_ARGS )
 				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Invalid font size: " + v->ToString() );
 			}
 			m_fontname = parts.at( 0 );
-			m_fontsize = sz;
+			m_fontsize = static_cast< uint8_t >( sz );
 			UpdateFont();
 		},
 		[ this ]( GSE_CALLABLE ) {
@@ -121,8 +121,8 @@ void Text::SetText( const std::string& text ) {
 	if ( transformed_text != m_text ) {
 		m_text = transformed_text;
 		m_actor->SetText( m_text );
-		m_geometry->SetWidth( m_actor->GetWidth() );
-		m_geometry->SetHeight( m_actor->GetHeight() );
+		m_geometry->SetWidth( static_cast< ui::coord_t >( m_actor->GetWidth() ) );
+		m_geometry->SetHeight( static_cast< ui::coord_t >( m_actor->GetHeight() ) );
 	}
 }
 
@@ -147,8 +147,8 @@ void Text::UpdateFont() {
 		}
 	}
 	m_actor->SetFont( font );
-	m_geometry->SetWidth( m_actor->GetWidth() );
-	m_geometry->SetHeight( m_actor->GetHeight() );
+	m_geometry->SetWidth( static_cast< ui::coord_t >( m_actor->GetWidth() ) );
+	m_geometry->SetHeight( static_cast< ui::coord_t >( m_actor->GetHeight() ) );
 }
 
 }

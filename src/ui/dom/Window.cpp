@@ -1,5 +1,7 @@
 #include "Window.h"
 
+#include <limits>
+
 #include "Panel.h"
 #include "Text.h"
 #include "Surface.h"
@@ -86,7 +88,11 @@ Window::Window( DOM_ARGS )
 	Property(
 		GSE_CALL, "header_height", gse::VT_INT, VALUE( gse::value::Int, , 20 ), PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
-			SetHeaderHeight( ( (gse::value::Int*)v )->value );
+			const auto value = ( (gse::value::Int*)v )->value;
+			if ( value < 0 || value > std::numeric_limits< unsigned short >::max() ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'header_height' must be between 0 and 65535" );
+			}
+			SetHeaderHeight( static_cast< ui::coord_t >( value ) );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetHeaderHeight( 0 );
@@ -95,7 +101,11 @@ Window::Window( DOM_ARGS )
 	Property(
 		GSE_CALL, "header_padding", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
-			m_header->GetGeometry()->SetPadding( ( (gse::value::Int*)v )->value );
+			const auto value = ( (gse::value::Int*)v )->value;
+			if ( value < 0 || value > std::numeric_limits< unsigned short >::max() ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'header_padding' must be between 0 and 65535" );
+			}
+			m_header->GetGeometry()->SetPadding( static_cast< ui::coord_t >( value ) );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			m_header->GetGeometry()->SetPadding( 0 );
