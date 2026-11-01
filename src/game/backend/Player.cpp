@@ -133,6 +133,16 @@ void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse
 			hint = ((gse::value::String*)hint_it->second)->value;
 		}
 	}
+	std::string intent = "";
+	{
+		const auto& intent_it = data.find( "intent" );
+		if ( intent_it != data.end() ) {
+			if ( intent_it->second->type != gse::VT_STRING ) {
+				GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - intent is not string" );
+			}
+			intent = ((gse::value::String*)intent_it->second)->value;
+		}
+	}
 	base::production::Production* production = nullptr;
 	if ( type == "facility" ) {
 		const auto& facility_id_it = data.find( "id" );
@@ -144,7 +154,7 @@ void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse
 		if ( !facility ) {
 			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - facility id not found: " + facility_id );
 		}
-		production = new base::production::Facility( facility, hint );
+		production = new base::production::Facility( facility, hint, intent );
 	}
 	else if ( type == "custom" ) {
 		const auto& render_it = data.find( "render" );
@@ -158,7 +168,7 @@ void Player::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse
 		production = new base::production::Custom(
 			base::RenderInfo::FromValue( GSE_CALL, ((gse::value::Object*)render_it->second)->value ),
 			((gse::value::String*)name_it->second)->value,
-			hint
+			hint, intent
 		);
 	}
 	else {

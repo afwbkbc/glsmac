@@ -17,6 +17,7 @@ public:
 		const std::string& id,
 		const std::string& name,
 		const std::string& description,
+		const std::string& intent,
 		const size_t cost,
 		const RenderInfo& render_info
 	);
@@ -25,6 +26,7 @@ public:
 	const std::string m_id;
 	const std::string m_name;
 	const std::string m_description;
+	const std::string m_intent;
 	const size_t m_cost;
 	const RenderInfo m_render_info;
 

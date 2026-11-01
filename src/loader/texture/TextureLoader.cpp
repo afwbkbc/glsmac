@@ -299,6 +299,11 @@ types::texture::Texture* TextureLoader::TryLoadCustomTexture( const std::string&
 		m_transparent_colors = GetTCs( res );
 		m_fix_yellow_shadows = s_fix_yellow_shadow.find( res ) != s_fix_yellow_shadow.end();
 	}
+	else if ( filename.length() > 5 && !strncmp( filename.c_str(), "facs/", 5 ) ) {
+		m_transparent_colors = {
+			s_tc_darkpurple, // all facs/*.pcx seem to have dark purple as transparent color
+		};
+	}
 	const auto path = TryGetCustomFilename( filename );
 	auto* result = path.empty()
 		? nullptr

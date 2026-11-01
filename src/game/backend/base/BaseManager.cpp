@@ -387,12 +387,13 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				N_GETPROP( name, def, "name", String );
 				N_GETPROP( description, def, "description", String );
+				N_GETPROP( intent, def, "intent", String );
 				N_GETPROP( cost, def, "cost", Int );
 
 				N_GETPROP( render, def, "render", Object );
 				const auto r = RenderInfo::FromValue( GSE_CALL, render );
 
-				DefineFacility( new FacilityDef( id, name, description, cost, r ) );
+				DefineFacility( new FacilityDef( id, name, description, intent, cost, r ) );
 
 				return VALUE( gse::value::Undefined );
 			} )

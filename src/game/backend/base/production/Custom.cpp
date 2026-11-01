@@ -5,8 +5,8 @@ namespace backend {
 namespace base {
 namespace production {
 
-Custom::Custom( const RenderInfo& render_info, const std::string& name, const std::string& hint )
-	: Production( PT_CUSTOM, hint )
+Custom::Custom( const RenderInfo& render_info, const std::string& name, const std::string& hint, const std::string& intent )
+	: Production( PT_CUSTOM, hint, intent )
 	, m_name( name )
 	, m_render_info( render_info ) {}
 
@@ -16,6 +16,7 @@ gse::value::Object* const Custom::ToValue( GSE_CALLABLE, const std::string& id )
 		{ "name", VALUE( gse::value::String, , m_name ) },
 		{ "texture", VALUE( gse::value::String, , m_render_info.ToTextureString() ) },
 		{ "hint", VALUE( gse::value::String, , m_hint ) },
+		{ "intent", VALUE( gse::value::String, , m_intent ) },
 	} );
 }
 
@@ -28,10 +29,10 @@ void Custom::SerializeImpl( types::Buffer& buf ) const {
 	buf.WriteString( m_name );
 }
 
-const Production* const Custom::DeserializeImpl( types::Buffer& buf, const std::string& hint ) {
+const Production* const Custom::DeserializeImpl( types::Buffer& buf, const std::string& hint, const std::string& intent ) {
 	const auto render_info = RenderInfo::FromBuffer( buf );
 	const std::string name = buf.ReadString();
-	return new Custom( render_info, name, hint );
+	return new Custom( render_info, name, hint, intent );
 }
 
 }

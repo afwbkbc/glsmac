@@ -8,12 +8,14 @@ FacilityDef::FacilityDef(
 	const std::string& id,
 	const std::string& name,
 	const std::string& description,
+	const std::string& intent,
 	const size_t cost,
 	const RenderInfo& render_info
 )
 	: m_id( id )
 	, m_name( name )
 	, m_description( description )
+	, m_intent( intent )
 	, m_cost( cost )
 	, m_render_info( render_info ) {
 	//
@@ -25,6 +27,7 @@ const std::string FacilityDef::ToString( const std::string& prefix ) const {
 		TS_OBJ_PROP_STR( "id", m_id ) +
 		TS_OBJ_PROP_STR( "name", m_name ) +
 		TS_OBJ_PROP_STR( "description", m_description ) +
+		TS_OBJ_PROP_STR( "intent", m_intent ) +
 		TS_OBJ_PROP_NUM( "cost", m_cost ) +
 		TS_OBJ_BEGIN( "render" ) +
 		m_render_info.ToString( prefix ) +
@@ -37,6 +40,7 @@ const types::Buffer FacilityDef::Serialize( const FacilityDef* def ) {
 	buf.WriteString( def->m_id );
 	buf.WriteString( def->m_name );
 	buf.WriteString( def->m_description );
+	buf.WriteString( def->m_intent );
 	buf.WriteInt( def->m_cost );
 	def->m_render_info.Write( buf );
 	return buf;
@@ -46,9 +50,10 @@ FacilityDef* FacilityDef::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto name = buf.ReadString();
 	const auto description = buf.ReadString();
+	const auto intent = buf.ReadString();
 	const auto cost = buf.ReadInt();
 	const auto r = RenderInfo::FromBuffer( buf );
-	return new FacilityDef( id, name, description, cost, r );
+	return new FacilityDef( id, name, description, intent, cost, r );
 }
 
 }

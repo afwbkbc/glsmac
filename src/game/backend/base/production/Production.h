@@ -18,7 +18,7 @@ public:
 		PT_CUSTOM,
 	};
 
-	Production( const production_type_t type, const std::string& hint );
+	Production( const production_type_t type, const std::string& hint, const std::string& intent );
 	virtual ~Production() = default;
 
 	void Serialize( types::Buffer& buf ) const;
@@ -29,6 +29,7 @@ public:
 
 protected:
 	const std::string m_hint;
+	const std::string m_intent;
 
 	virtual void SerializeImpl( types::Buffer& buf ) const = 0;
 

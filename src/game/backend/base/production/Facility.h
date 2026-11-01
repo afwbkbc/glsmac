@@ -12,7 +12,7 @@ namespace production {
 
 class Facility : public Production {
 public:
-	Facility( const FacilityDef* const def, const std::string& hint );
+	Facility( const FacilityDef* const def, const std::string& hint, const std::string& intent );
 	virtual ~Facility() = default;
 
 	const uint8_t GetGroupOrder() const override;
@@ -20,7 +20,7 @@ public:
 
 private:
 	friend class Production;
-	static const Production* const DeserializeImpl( types::Buffer& buf, const std::string& hint );
+	static const Production* const DeserializeImpl( types::Buffer& buf, const std::string& hint, const std::string& intent );
 
 protected:
 	void SerializeImpl( types::Buffer& buf ) const override;

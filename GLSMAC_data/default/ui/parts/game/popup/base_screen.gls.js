@@ -85,6 +85,30 @@ return {
 			align: 'center',
 		});
 
+		p.ui.class('base-screen-production-title').set({
+			align: 'top center',
+			top: 7,
+			font: 'arialnb.ttf:15',
+		});
+
+		p.ui.class('base-screen-production-preview').set({
+			align: 'center',
+			width: 50,
+			height: 50,
+		});
+
+		p.ui.class('base-screen-production-footer').set({
+			align: 'bottom center',
+			font: 'arialnb.ttf:13',
+			color: 'rgb(68,133,145)',
+		});
+		p.ui.class('base-screen-production-eta').extend('base-screen-production-footer').set({
+			bottom: 16,
+		});
+		p.ui.class('base-screen-production-hint').extend('base-screen-production-footer').set({
+			bottom: 5,
+		});
+
 		return p.create('', 680, 442, (body, cb) => {
 
 			this.body = body;

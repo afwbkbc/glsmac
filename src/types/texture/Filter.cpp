@@ -63,7 +63,9 @@ void Filter::Tint( const types::Color& color, const float intensity ) {
 		const auto yw = y * m_width;
 		for ( auto x = 0 ; x < m_width ; x++ ) {
 			auto& c = m_colormap[ yw + x ];
-			c = c * a + b;
+			if ( c.alpha > 0 && ( c.red > 0 || c.green > 0 || c.blue > 0 ) ) {
+				c = c * a + b;
+			}
 		}
 	}
 }

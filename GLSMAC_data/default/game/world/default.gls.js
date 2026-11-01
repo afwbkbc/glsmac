@@ -93,6 +93,7 @@ return (game) => {
 					h: 215,
 				},
 				hint: 'Minerals to Energy',
+				intent: 'build',
 			},
 		});
 

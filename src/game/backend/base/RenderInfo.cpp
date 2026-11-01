@@ -52,7 +52,7 @@ const std::string RenderInfo::ToString( const std::string& prefix ) const {
 }
 
 const std::string RenderInfo::ToTextureString() const {
-	return file + ":crop(" + std::to_string( x ) + "," + std::to_string( y ) + "," + std::to_string( x + width ) + "," + std::to_string( y + height ) + ")";
+	return file + ":crop(" + std::to_string( x ) + "," + std::to_string( y ) + "," + std::to_string( x + width - 1 ) + "," + std::to_string( y + height - 1 ) + ")";
 }
 
 void RenderInfo::Write( types::Buffer& buf ) const {
