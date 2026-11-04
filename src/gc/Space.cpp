@@ -24,7 +24,7 @@ Space::Space( Object* const root_object )
 }
 
 Space::~Space() {
-	g_engine->GetGC()->RemoveSpace( this );
+	StopCollecting();
 
 	{
 		// cleanup anything that didn't execute in time
@@ -35,10 +35,6 @@ Space::~Space() {
 			}
 		}
 	}
-
-	m_collect_mutex.lock(); // wait for any ongoing collects to finish
-	m_is_destroying = true;
-	m_collect_mutex.unlock();
 
 	// collect until there's nothing to collect
 	GC_LOG( "Destroying remaining objects" );
@@ -66,6 +62,14 @@ Space::~Space() {
 		m_objects_mutex.unlock();
 	}
 	GC_LOG( "All objects have been destroyed." );
+}
+
+void Space::StopCollecting() {
+	if ( !m_is_destroying.exchange( true ) ) {
+		// RemoveSpace waits for a currently running GC iteration, so the root
+		// object can be torn down safely after this returns.
+		g_engine->GetGC()->RemoveSpace( this );
+	}
 }
 
 void Space::Add( Object* object ) {

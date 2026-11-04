@@ -959,7 +959,9 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			//m_state->SetGame( this );
 
 			InitGame( response, MT_C );
-			response.data.init.slot_index = m_slot_num;
+			if ( response.result == R_SUCCESS ) {
+				response.data.init.slot_index = m_slot_num;
+			}
 			break;
 		}
 		case OP_GET_MAP_DATA: {
@@ -1007,7 +1009,7 @@ const MT_Response Game::ProcessRequest( const MT_Request& request, MT_CANCELABLE
 			const auto ec = m_map->SaveToFile( *request.data.save_map.path );
 			if ( ec ) {
 				response.result = R_ERROR;
-				response.data.error.error_text = &( map::Map::GetErrorString( ec ) );
+				NEW( response.data.error.error_text, std::string, map::Map::GetErrorString( ec ) );
 			}
 			else {
 				response.result = R_SUCCESS;
@@ -1105,6 +1107,22 @@ void Game::DestroyRequest( const MT_Request& request ) {
 }
 
 void Game::DestroyResponse( const MT_Response& response ) {
+	if ( response.result == R_ERROR ) {
+		switch ( response.op ) {
+			case OP_INIT:
+			case OP_GET_MAP_DATA:
+			case OP_SAVE_MAP: {
+				if ( response.data.error.error_text ) {
+					DELETE( response.data.error.error_text );
+				}
+				break;
+			}
+			default: {
+				// no error payload
+			}
+		}
+		return;
+	}
 	if ( response.result == R_SUCCESS ) {
 		switch ( response.op ) {
 			case OP_GET_MAP_DATA: {
@@ -1374,7 +1392,7 @@ void Game::InitComplete( GSE_CALLABLE ) {
 }
 
 void Game::InitFailed( const std::string& error_text ) {
-	HideLoader();
+	MTModule::Log( "Initialization failed: " + error_text );
 	// need to delete these here because they weren't passed to main thread
 	if ( m_map->m_textures.terrain ) {
 		DELETE( m_map->m_textures.terrain );
@@ -1393,28 +1411,15 @@ void Game::InitFailed( const std::string& error_text ) {
 	if ( m_state->m_connection ) {
 		m_state->m_connection->Disconnect( "Failed to initialize game" );
 	}
-	m_state->TriggerObject(
-		this, "error", ARGS_F( this, &error_text ) {
-			{
-				"game",
-				Wrap( GSE_CALL )
-			},
-			{
-				"error",
-				VALUE( gse::value::String, , error_text ),
-			},
-		}; }
-	);
 
+	m_initialization_error = error_text;
 	ResetGame();
 	m_state = nullptr;
 
-	m_initialization_error = error_text;
-
 	if ( m_old_map ) {
 		MTModule::Log( "Restoring old map state" );
-		DELETE( m_map );
 		m_map = m_old_map; // restore old state // TODO: test
+		m_old_map = nullptr;
 	}
 }
 
@@ -1636,7 +1641,8 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 						}
 						ASSERT( !m_available_factions.empty(), "no factions found" );
 					}
-					const auto it = m_available_factions.begin() + m_random->GetUInt( 0, m_available_factions.size() - 1 );
+					ASSERT( m_available_factions.size() <= UINT32_MAX, "too many factions" );
+					const auto it = m_available_factions.begin() + m_random->GetUInt( 0, (uint32_t)m_available_factions.size() - 1 );
 					player->SetFaction( factions.at( *it ) );
 					m_available_factions.erase( it );
 				}
@@ -1858,6 +1864,15 @@ void Game::InitGame( MT_Response& response, MT_CANCELABLE ) {
 			}
 			m_game_state = GS_INITIALIZING;
 			response.result = R_SUCCESS;
+		}
+		else if ( ec == map::Map::EC_ABORTED ) {
+			response.result = R_ABORTED;
+		}
+		else {
+			const std::string error_text = map::Map::GetErrorString( ec );
+			response.result = R_ERROR;
+			NEW( response.data.error.error_text, std::string, error_text );
+			InitFailed( error_text );
 		}
 	}
 	else {

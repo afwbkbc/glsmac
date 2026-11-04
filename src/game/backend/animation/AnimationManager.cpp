@@ -1,5 +1,8 @@
 #include "AnimationManager.h"
 
+#include <cmath>
+#include <limits>
+
 #include "game/backend/Game.h"
 #include "Def.h"
 
@@ -155,24 +158,41 @@ WRAPIMPL_BEGIN( AnimationManager )
 					N_GETPROP_OPT( float, scale_y, animation_def, "scale_y", Float, 1.0f );
 					N_GETPROP( duration_ms, animation_def, "duration_ms", Int );
 					N_GETPROP( sound, animation_def, "sound", String );
+					const auto max_u16 = static_cast< int64_t >( std::numeric_limits< uint16_t >::max() );
+					const auto max_u8 = static_cast< int64_t >( std::numeric_limits< uint8_t >::max() );
+					if (
+						row_x < 0 || row_x > max_u16 || row_y < 0 || row_y > max_u16 ||
+						frame_width < 1 || frame_width > max_u16 ||
+						frame_height < 1 || frame_height > max_u16 ||
+						frame_center_x < 0 || frame_center_x > max_u16 ||
+						frame_center_y < 0 || frame_center_y > max_u16 ||
+						frame_padding < 0 || frame_padding > max_u16 ||
+						frames_count < 1 || frames_count > max_u8 ||
+						frames_per_row < 1 || frames_per_row > frames_count ||
+						duration_ms < frames_count || duration_ms > max_u16 ||
+						!std::isfinite( scale_x ) || scale_x <= 0.0f ||
+						!std::isfinite( scale_y ) || scale_y <= 0.0f
+					) {
+						GSE_ERROR( gse::EC.INVALID_DEFINITION, "Animation fields are outside their supported ranges" );
+					}
 					if ( !g_engine->GetSoundLoader()->LoadCustomSound( sound ) ) {
 						GSE_ERROR( gse::EC.GAME_ERROR, "Failed to load animation sound '" + sound + "'" );
 					}
 					auto* def = new animation::FramesRow(
 						id,
 						file,
-						row_x,
-						row_y,
-						frame_width,
-						frame_height,
-						frame_center_x,
-						frame_center_y,
-						frame_padding,
-						frames_count,
-						frames_per_row,
+						static_cast< uint16_t >( row_x ),
+						static_cast< uint16_t >( row_y ),
+						static_cast< uint16_t >( frame_width ),
+						static_cast< uint16_t >( frame_height ),
+						static_cast< uint16_t >( frame_center_x ),
+						static_cast< uint16_t >( frame_center_y ),
+						static_cast< uint16_t >( frame_padding ),
+						static_cast< uint8_t >( frames_count ),
+						static_cast< uint8_t >( frames_per_row ),
 						scale_x,
 						scale_y,
-						duration_ms,
+						static_cast< uint16_t >( duration_ms ),
 						sound
 					);
 					DefineAnimation( def );

@@ -1,6 +1,7 @@
 #include "Math.h"
 
 #include <cmath>
+#include <limits>
 
 #include "gse/GSE.h"
 #include "gse/context/Context.h"
@@ -108,6 +109,9 @@ void Math::AddToContext( gc::Space* const gc_space, context::Context* ctx, Execu
 		switch ( arguments.at( 0 )->type ) {
 			case VT_INT: {
 				N_GETVALUE( a, 0, Int );
+				if ( a == std::numeric_limits< int64_t >::min() ) {
+					GSE_ERROR( EC.INVALID_CALL, "Absolute value is outside the Int range" );
+				}
 				return VALUE( gse::value::Int,, std::abs( a ) );
 			}
 			case VT_FLOAT: {

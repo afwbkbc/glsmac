@@ -51,6 +51,23 @@ void OpenGL::Start() {
 	Log( "Initializing SDL2" );
 	SDL_VideoInit( NULL );
 
+	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+#ifdef __APPLE__
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG );
+#else
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY );
+#endif
+
 	Log( "Creating window" );
 
 	SDL_SetHint( SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0" );
@@ -77,27 +94,20 @@ void OpenGL::Start() {
 
 	Log( "Initializing OpenGL" );
 
-	SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
-	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1 );
-	SDL_GL_SetSwapInterval( (char)m_options.vsync );
-
 	m_gl_context = SDL_GL_CreateContext( m_window );
 	if ( !m_gl_context ) {
 		THROW( (std::string)"Could not create OpenGL context: " + SDL_GetError() );
 	}
 
 	SDL_GL_MakeCurrent( m_window, m_gl_context );
+	SDL_GL_SetSwapInterval( (int)m_options.vsync );
 
 	GLenum res = glewInit();
 	if ( res != GLEW_OK ) {
 		THROW( "Unable to initialize OpenGL!" );
 	}
+	glGenVertexArrays( 1, &m_default_vao );
+	glBindVertexArray( m_default_vao );
 
 	{ // print some OpenGL info
 		auto* renderer = (const char*)glGetString( GL_RENDERER );
@@ -117,6 +127,12 @@ void OpenGL::Start() {
 				"\nGL Version (integer) : " + std::to_string( major ) + "." + std::to_string( minor ) +
 				"\nGLSL Version         : " + glslVersion
 		);
+		if ( major < 3 || ( major == 3 && minor < 3 ) ) {
+			THROW(
+				"GLSMAC requires OpenGL 3.3 or newer, but the driver created an OpenGL " +
+				std::to_string( major ) + "." + std::to_string( minor ) + " context"
+			);
+		}
 	}
 
 	// shader programs
@@ -203,6 +219,10 @@ void OpenGL::Stop() {
 		glDeleteTextures( 1, &texture.second.obj );
 	}
 	m_textures.clear();
+
+	glBindVertexArray( 0 );
+	glDeleteVertexArrays( 1, &m_default_vao );
+	m_default_vao = 0;
 
 	SDL_GL_DeleteContext( m_gl_context );
 
@@ -442,7 +462,7 @@ void OpenGL::LoadTexture( types::texture::Texture* texture, const bool smoothen 
 
 					const uint8_t od = 1; // overlap distance
 
-					const auto f_are_combineable = []( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
+					const auto f_are_combineable = [od]( const types::texture::Texture::updated_area_t& first, const types::texture::Texture::updated_area_t& second ) -> bool {
 						return
 							(
 								( first.left + od >= second.left && first.left - od <= second.right ) ||

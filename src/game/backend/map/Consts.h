@@ -374,7 +374,7 @@ struct Consts {
 			scale.x / 2,
 			scale.y / 2
 		};
-		const float rotated_width = sqrt( pow( scale.x, 2 ) + pow( scale.y, 2 ) );
+		const float rotated_width = std::sqrt( scale.x * scale.x + scale.y * scale.y );
 		const tile::elevation_t maximum_allowed_slope_elevation = 650; // TODO: fix black lines when texture is perpendicular to camera
 		const struct {
 			const float texture_edge_stretch_min = 0.05f;

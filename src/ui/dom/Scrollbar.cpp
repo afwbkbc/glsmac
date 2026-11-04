@@ -1,5 +1,9 @@
 #include "Scrollbar.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 #include "Button.h"
 
 #include "input/Event.h"
@@ -69,8 +73,11 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		GSE_CALL, "fromto_size", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::Int*)v )->value;
+			if ( value < 0 || value > std::numeric_limits< unsigned short >::max() ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'fromto_size' must be between 0 and 65535" );
+			}
 			if ( value != m_fromto_size ) {
-				m_fromto_size = value;
+				m_fromto_size = static_cast< size_t >( value );
 				ResizeFromTo();
 				RealignSlider();
 			}
@@ -88,7 +95,10 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 		GSE_CALL, "slider_size", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
 			const auto value = ( (gse::value::Int*)v )->value;
-			SetSliderSize( value );
+			if ( value < 0 || value > std::numeric_limits< unsigned short >::max() ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'slider_size' must be between 0 and 65535" );
+			}
+			SetSliderSize( static_cast< size_t >( value ) );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetSliderSize( 0 );
@@ -137,11 +147,14 @@ Scrollbar::Scrollbar( DOM_ARGS_T )
 					const auto offset = m_scroll_type == ST_VERTICAL
 						? event.data.mouse.y - m_geometry->m_area.top - m_slider_drag.initial_offset
 						: event.data.mouse.x - m_geometry->m_area.left - m_slider_drag.initial_offset;
-					auto mintop = m_fromto_size;
-					auto maxtop = m_scroll_type == ST_VERTICAL
-						? m_geometry->m_area.height - m_fromto_size * 2
-						: m_geometry->m_area.width - m_fromto_size * 2;
-					SetValue( GSE_CALL, ( offset - mintop ) * ( m_max - m_min ) / ( maxtop - m_slider_size ) + m_min, true );
+					const auto mintop = static_cast< coord_t >( m_fromto_size );
+					const auto maxtop = m_scroll_type == ST_VERTICAL
+						? m_geometry->m_area.height - mintop * 2.0f
+						: m_geometry->m_area.width - mintop * 2.0f;
+					const auto travel = maxtop - static_cast< coord_t >( m_slider_size );
+					if ( travel > 0.0f ) {
+						SetValue( GSE_CALL, ( offset - mintop ) * ( m_max - m_min ) / travel + m_min, true );
+					}
 					return true;
 				}
 				case input::EV_MOUSE_UP: {
@@ -226,7 +239,14 @@ void Scrollbar::SetSliderSizeByPercentage( const float percentage ) {
 		default:
 			ASSERT( false, "Unknown scrollbar type: " + std::to_string( m_scroll_type ) );
 	}
-	SetSliderSize( percentage * ( size - m_fromto_size * 2 ) );
+	const auto track_size = std::max(
+		0.0f,
+		size - static_cast< coord_t >( m_fromto_size ) * 2.0f
+	);
+	const auto normalized = std::isfinite( percentage )
+		? std::clamp( percentage, 0.0f, 1.0f )
+		: 0.0f;
+	SetSliderSize( static_cast< size_t >( std::round( normalized * track_size ) ) );
 }
 
 const bool Scrollbar::ProcessEvent( GSE_CALLABLE, const input::Event& event ) {
@@ -366,12 +386,12 @@ void Scrollbar::ResizeFromTo() {
 			g_from->SetLeft( 0 );
 			g_from->SetRight( 0 );
 			g_from->SetTop( 0 );
-			g_from->SetHeight( m_fromto_size );
+			g_from->SetHeight( static_cast< coord_t >( m_fromto_size ) );
 			g_to->SetAlign( geometry::Geometry::ALIGN_BOTTOM_CENTER );
 			g_to->SetLeft( 0 );
 			g_to->SetRight( 0 );
 			g_to->SetBottom( 0 );
-			g_to->SetHeight( m_fromto_size );
+			g_to->SetHeight( static_cast< coord_t >( m_fromto_size ) );
 			break;
 		}
 		case ST_HORIZONTAL: {
@@ -379,12 +399,12 @@ void Scrollbar::ResizeFromTo() {
 			g_from->SetTop( 0 );
 			g_from->SetBottom( 0 );
 			g_from->SetLeft( 0 );
-			g_from->SetWidth( m_fromto_size );
+			g_from->SetWidth( static_cast< coord_t >( m_fromto_size ) );
 			g_to->SetAlign( geometry::Geometry::ALIGN_RIGHT_CENTER );
 			g_to->SetTop( 0 );
 			g_to->SetBottom( 0 );
 			g_to->SetRight( 0 );
-			g_to->SetWidth( m_fromto_size );
+			g_to->SetWidth( static_cast< coord_t >( m_fromto_size ) );
 			break;
 		}
 		default:
@@ -399,14 +419,14 @@ void Scrollbar::ResizeSlider() {
 			g->SetAlign( geometry::Geometry::ALIGN_TOP_CENTER );
 			g->SetLeft( 0 );
 			g->SetRight( 0 );
-			g->SetHeight( m_slider_size );
+			g->SetHeight( static_cast< coord_t >( m_slider_size ) );
 			break;
 		}
 		case ST_HORIZONTAL: {
 			g->SetAlign( geometry::Geometry::ALIGN_LEFT_CENTER );
 			g->SetTop( 0 );
 			g->SetBottom( 0 );
-			g->SetWidth( m_slider_size );
+			g->SetWidth( static_cast< coord_t >( m_slider_size ) );
 			break;
 		}
 		default:
@@ -417,15 +437,15 @@ void Scrollbar::ResizeSlider() {
 void Scrollbar::RealignSlider() {
 	switch ( m_scroll_type ) {
 		case ST_VERTICAL: {
-			coord_t mintop = m_fromto_size;
-			coord_t maxtop = m_geometry->m_area.height - m_fromto_size * 2;
-			m_slider->GetGeometry()->SetTop( mintop + ( maxtop - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
+			const auto mintop = static_cast< coord_t >( m_fromto_size );
+			const auto maxtop = m_geometry->m_area.height - mintop * 2.0f;
+			m_slider->GetGeometry()->SetTop( mintop + ( maxtop - static_cast< coord_t >( m_slider_size ) ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}
 		case ST_HORIZONTAL: {
-			coord_t minleft = m_fromto_size;
-			coord_t maxleft = m_geometry->m_area.width - m_fromto_size * 2;
-			m_slider->GetGeometry()->SetLeft( minleft + ( maxleft - m_slider_size ) * ( m_value - m_min ) / ( m_max - m_min ) );
+			const auto minleft = static_cast< coord_t >( m_fromto_size );
+			const auto maxleft = m_geometry->m_area.width - minleft * 2.0f;
+			m_slider->GetGeometry()->SetLeft( minleft + ( maxleft - static_cast< coord_t >( m_slider_size ) ) * ( m_value - m_min ) / ( m_max - m_min ) );
 			break;
 		}
 		default:
@@ -444,7 +464,9 @@ void Scrollbar::Scroll( const float value ) {
 }
 
 void Scrollbar::SetSliderSize( const size_t size ) {
-	ASSERT( size < VERY_BIG_NUMBER, "scrollbar size overflow" );
+	if ( size > std::numeric_limits< unsigned short >::max() ) {
+		THROW( "scrollbar size overflow" );
+	}
 	if ( size != m_slider_size ) {
 		m_slider_size = size;
 		ResizeSlider();

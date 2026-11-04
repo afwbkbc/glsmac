@@ -22,10 +22,9 @@ Tiles::~Tiles() {
 }
 
 void Tiles::Resize( const uint32_t width, const uint32_t height ) {
-	ASSERT( width > 0, "can't resize to zero width" );
-	ASSERT( height > 0, "can't resize to zero height" );
-	ASSERT( !( width & 1 ), "can't resize to non-even width" );
-	ASSERT( !( height & 1 ), "can't resize to non-even height" );
+	if ( !width || !height || ( width & 1 ) || ( height & 1 ) ) {
+		THROW( "map dimensions must be positive even numbers" );
+	}
 
 	if ( width != m_width || height != m_height ) {
 		Log( "Initializing tiles ( " + std::to_string( width ) + " x " + std::to_string( height ) + " )" );
@@ -33,11 +32,15 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 		m_width = width;
 		m_height = height;
 
-		m_data.resize( width * height );
+		const uint64_t tile_count = (uint64_t)width * height / 2;
+		if ( tile_count > m_data.max_size() ) {
+			THROW( "map dimensions exceed tile storage capacity" );
+		}
+		m_data.resize( (size_t)tile_count );
 		for ( auto& tile : m_data ) {
 			tile.tiles = this;
 		}
-		m_top_vertex_row.resize( m_width * 2 );
+		m_top_vertex_row.resize( (size_t)m_width * 2 );
 		m_top_right_vertex_row.resize( width );
 
 		Tile* tile;
@@ -192,14 +195,14 @@ Tile& Tiles::At( const size_t x, const size_t y ) {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
-	return m_data.at( y * m_width + x / 2 );
+	return m_data.at( y * ( m_width / 2 ) + x / 2 );
 }
 
 const Tile& Tiles::AtConst( const size_t x, const size_t y ) const {
 	ASSERT( x < m_width, "invalid x tile coordinate ( " + std::to_string( x ) + " >= " + std::to_string( m_width ) + " )" );
 	ASSERT( y < m_height, "invalid y tile coordinate ( " + std::to_string( y ) + " >= " + std::to_string( m_height ) + " )" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile coordinate axis oddity differs" );
-	return m_data.at( y * m_width + x / 2 );
+	return m_data.at( y * ( m_width / 2 ) + x / 2 );
 }
 
 std::vector< Tile >* Tiles::GetTilesPtr() {
@@ -280,7 +283,7 @@ void Tiles::FixTopBottomRows( util::random::Random* random ) {
 
 const std::vector< Tile* > Tiles::GetVector( MT_CANCELABLE ) {
 	std::vector< Tile* > tiles = {};
-	const size_t tiles_count = GetDataCount() / 2; // / 2 because SMAC coordinate system
+	const size_t tiles_count = GetDataCount();
 	tiles.reserve( tiles_count );
 	for ( size_t y = 0 ; y < m_height ; y++ ) {
 		for ( size_t x = y & 1 ; x < m_width ; x += 2 ) {

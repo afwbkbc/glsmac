@@ -21,7 +21,7 @@ CLASS( Sound, common::Class )
 
 	const bool IsActive();
 	const float GetVolume() const;
-	void GetNextBuffer( uint8_t* buffer, int len );
+	void GetNextBuffer( uint8_t* buffer, size_t len );
 
 private:
 	scene::actor::Sound* m_actor = nullptr;

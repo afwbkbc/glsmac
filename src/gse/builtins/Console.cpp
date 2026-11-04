@@ -25,6 +25,14 @@ const std::string& Console::CaptureStopGet() const {
 }
 #endif
 
+static void CaptureLine( const std::string& line ) {
+#if defined( DEBUG ) || defined( FASTDEBUG )
+	if ( s_is_capturing ) {
+		s_capture_buffer += line + "\n";
+	}
+#endif
+}
+
 void Console::AddToContext( gc::Space* const gc_space, context::Context* ctx, ExecutionPointer& ep ) {
 
 	ctx->CreateBuiltin( "print", NATIVE_CALL() {
@@ -35,11 +43,7 @@ void Console::AddToContext( gc::Space* const gc_space, context::Context* ctx, Ex
 			}
 			line += it->ToString();
 		}
-#if defined( DEBUG ) || defined( FASTDEBUG )
-		if ( s_is_capturing ) {
-			s_capture_buffer += line + "\n";
-		}
-#endif
+		CaptureLine( line );
 		util::LogHelper::Println( "    " + si.ToString() + " " + line );
 		return VALUE( value::Undefined );
 	} ), ep );

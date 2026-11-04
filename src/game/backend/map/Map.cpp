@@ -1,5 +1,8 @@
 #include "Map.h"
 
+#include <cmath>
+#include <limits>
+
 #include "game/backend/Game.h"
 #include "game/backend/settings/Settings.h"
 #include "game/backend/map/generator/SimplePerlin.h"
@@ -252,8 +255,9 @@ void Map::Deserialize( types::Buffer buf ) {
 const std::string& Map::GetErrorString( const error_code_t& code ) {
 
 	static const std::unordered_map< error_code_t, const std::string > m_error_code_strings = {
-		{ EC_UNKNOWN,              "Unknown error" },
-		{ EC_MAPFILE_FORMAT_ERROR, "Invalid map file format" }
+		{ EC_UNKNOWN,                "Unknown error" },
+		{ EC_MAPFILE_FORMAT_ERROR,   "Invalid map file format" },
+		{ EC_INVALID_MAP_DIMENSIONS, "Map dimensions must be positive even 32-bit values" }
 	};
 
 	auto it = m_error_code_strings.find( code );
@@ -287,11 +291,12 @@ void Map::ClearTexture() {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "ClearTexture called outside of tile generation" );
 	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
+		const auto atlas_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, (tile::tile_layer_type_t)lt );
 		m_textures.terrain->Erase(
-			m_current_ts->tex_coord.x1,
-			lt * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
-			m_current_ts->tex_coord.x2 - 1,
-			lt * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y2 - 1
+			atlas_pos.x,
+			atlas_pos.y,
+			atlas_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+			atlas_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1
 		);
 	}
 }
@@ -300,6 +305,7 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "AddTexture called outside of tile generation" );
 	ASSERT( m_textures.terrain, "terrain texture not set" );
+	const auto atlas_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_textures.terrain->AddFrom(
 		m_textures.source.texture_pcx,
 		mode,
@@ -307,8 +313,8 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 		tc.y,
 		tc.x + s_consts.tc.texture_pcx.dimensions.x - 1,
 		tc.y + s_consts.tc.texture_pcx.dimensions.y - 1,
-		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		atlas_pos.x,
+		atlas_pos.y,
 		rotate,
 		alpha,
 		GetRandom(),
@@ -319,15 +325,21 @@ void Map::AddTexture( const tile::tile_layer_type_t tile_layer, const pcx_textur
 void Map::CopyTextureFromLayer( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureFromLayer called outside of tile generation" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer_from
+	);
+	const auto dest_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_textures.terrain->AddFrom(
 		m_textures.terrain,
 		mode,
-		tx_from,
-		tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-		tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-		tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
-		m_current_ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + m_current_ts->tex_coord.y1,
+		source_pos.x,
+		source_pos.y,
+		source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+		source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
+		dest_pos.x,
+		dest_pos.y,
 		rotate,
 		alpha,
 		GetRandom(),
@@ -352,15 +364,21 @@ void Map::CopyTexture( const tile::tile_layer_type_t tile_layer_from, const tile
 void Map::CopyTextureDeferred( const tile::tile_layer_type_t tile_layer_from, const size_t tx_from, const size_t ty_from, const tile::tile_layer_type_t tile_layer, const types::texture::add_flag_t mode, const uint8_t rotate, const float alpha, util::Perlin* perlin ) {
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( m_current_ts, "CopyTextureDeferred called outside of tile generation" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer_from
+	);
+	const auto dest_pos = GetTextureAtlasPosition( m_current_tile->coord.x, m_current_tile->coord.y, tile_layer );
 	m_map_state->copy_from_after.push_back(
 		{
 			mode,
-			tx_from,
-			tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-			tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-			tile_layer_from * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
-			(size_t)m_current_ts->tex_coord.x1,
-			tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + (size_t)m_current_ts->tex_coord.y1,
+			source_pos.x,
+			source_pos.y,
+			source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+			source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
+			dest_pos.x,
+			dest_pos.y,
 			rotate,
 			alpha,
 			perlin
@@ -391,13 +409,18 @@ void Map::GetTextureFromLayer( types::texture::Texture* dest_texture, const tile
 	ASSERT( m_map_state, "map state not set" );
 	ASSERT( dest_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile dest texture width mismatch" );
 	ASSERT( dest_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile dest texture height mismatch" );
+	const auto source_pos = GetTextureAtlasPosition(
+		tx_from / s_consts.tc.texture_pcx.dimensions.x,
+		ty_from / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer
+	);
 	dest_texture->AddFrom(
 		m_textures.terrain,
 		mode,
-		tx_from,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from,
-		tx_from + s_consts.tc.texture_pcx.dimensions.x - 1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ty_from + s_consts.tc.texture_pcx.dimensions.y - 1,
+		source_pos.x,
+		source_pos.y,
+		source_pos.x + s_consts.tc.texture_pcx.dimensions.x - 1,
+		source_pos.y + s_consts.tc.texture_pcx.dimensions.y - 1,
 		0,
 		0,
 		rotate,
@@ -412,15 +435,20 @@ void Map::SetTexture( const tile::tile_layer_type_t tile_layer, tile::TileState*
 	ASSERT( m_textures.terrain, "terrain texture not set" );
 	ASSERT( src_texture->GetWidth() == s_consts.tc.texture_pcx.dimensions.x, "tile src texture width mismatch" );
 	ASSERT( src_texture->GetHeight() == s_consts.tc.texture_pcx.dimensions.y, "tile src texture height mismatch" );
+	const auto atlas_pos = GetTextureAtlasPosition(
+		(size_t)ts->tex_coord.x1 / s_consts.tc.texture_pcx.dimensions.x,
+		(size_t)ts->tex_coord.y1 / s_consts.tc.texture_pcx.dimensions.y,
+		tile_layer
+	);
 	m_textures.terrain->AddFrom(
 		src_texture,
 		mode,
 		0,
 		0,
 		s_consts.tc.texture_pcx.dimensions.x - 1,
-		s_consts.tc.texture_pcx.dimensions.x - 1,
-		ts->tex_coord.x1,
-		tile_layer * m_map_state->dimensions.y * s_consts.tc.texture_pcx.dimensions.y + ts->tex_coord.y1,
+		s_consts.tc.texture_pcx.dimensions.y - 1,
+		atlas_pos.x,
+		atlas_pos.y,
 		rotate,
 		alpha,
 		GetRandom()
@@ -661,6 +689,14 @@ const Map::error_code_t Map::Generate( settings::MapSettings* map_settings, MT_C
 			? c->GetQuickstartMapCloudCover()
 			: random->GetFloat( 0.2, 0.8f );
 	}
+	if (
+		map_settings->size_x <= 0 || map_settings->size_y <= 0 ||
+		( map_settings->size_x & 1 ) || ( map_settings->size_y & 1 ) ||
+		map_settings->size_x > std::numeric_limits< uint32_t >::max() ||
+		map_settings->size_y > std::numeric_limits< uint32_t >::max()
+	) {
+		return EC_INVALID_MAP_DIMENSIONS;
+	}
 	Log( "Generating map of size " + std::to_string( map_settings->size_x ) + "x" + std::to_string( map_settings->size_y ) );
 	ASSERT( !m_tiles, "tiles already set" );
 	NEW( m_tiles, tile::Tiles, this, map_settings->size_x, map_settings->size_y );
@@ -717,7 +753,7 @@ const Map::error_code_t Map::SaveToFile( const std::string& path ) const {
 		util::FS::WriteFile( path, m_tiles->Serialize().ToString() );
 		return EC_NONE;
 	}
-	catch ( std::runtime_error& e ) {
+	catch ( const std::runtime_error& ) {
 		return EC_MAPFILE_FORMAT_ERROR;
 	}
 }
@@ -742,11 +778,6 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 		-( s_consts.tile.scale.x * ( m_map_state->dimensions.x + 1 ) / 4 - s_consts.tile.radius.x ),
 		-( s_consts.tile.scale.y * ( m_map_state->dimensions.y + 1 ) / 4 - s_consts.tile.radius.y )
 	};
-	m_map_state->variables.texture_scaling = {
-		1.0f / s_consts.tc.texture_pcx.dimensions.x / ( m_map_state->dimensions.x + 1 ), // + 1 for overdraw column
-		1.0f / s_consts.tc.texture_pcx.dimensions.y / m_map_state->dimensions.y / tile::LAYER_MAX
-	};
-
 	m_map_state->LinkTileStates( MT_C );
 	MT_RETIFV( EC_ABORTED );
 
@@ -779,13 +810,19 @@ const Map::error_code_t Map::Initialize( MT_CANCELABLE ) {
 }
 
 void Map::InitTextureAndMesh() {
+	const auto atlas_dimensions = GetTextureAtlasDimensions();
+	Log( "Terrain texture atlas: " + atlas_dimensions.ToString() );
+	m_map_state->variables.texture_scaling = {
+		1.0f / atlas_dimensions.x,
+		1.0f / atlas_dimensions.y
+	};
 
 	if ( m_textures.terrain ) {
 		DELETE( m_textures.terrain );
 	}
 	NEW( m_textures.terrain, types::texture::Texture, "TerrainTexture",
-		( m_map_state->dimensions.x + 1 ) * s_consts.tc.texture_pcx.dimensions.x, // + 1 for overdraw_column
-		( m_map_state->dimensions.y * tile::LAYER_MAX ) * s_consts.tc.texture_pcx.dimensions.y
+		atlas_dimensions.x,
+		atlas_dimensions.y
 	);
 
 	// not deleting meshes because if they exist - it means they are already linked to actor and are deleted together when needed
@@ -801,6 +838,39 @@ void Map::InitTextureAndMesh() {
 	// TODO: refactor?
 	m_map_state->terrain_texture = m_textures.terrain;
 	m_map_state->ter1_pcx = m_textures.source.ter1_pcx;
+}
+
+const types::Vec2< size_t > Map::GetTextureAtlasDimensions() const {
+	ASSERT( m_map_state, "map state not set" );
+	ASSERT( m_map_state->dimensions.x > 0 && m_map_state->dimensions.x % 2 == 0, "map width must be a positive even number" );
+	const size_t cell_count =
+		( m_map_state->dimensions.x / 2 ) *
+		m_map_state->dimensions.y *
+		tile::LAYER_MAX;
+	const size_t columns = (size_t)std::ceil( std::sqrt( (double)cell_count ) );
+	const size_t rows = ( cell_count + columns - 1 ) / columns;
+	return {
+		columns * s_consts.tc.texture_pcx.dimensions.x,
+		rows * s_consts.tc.texture_pcx.dimensions.y
+	};
+}
+
+const types::Vec2< size_t > Map::GetTextureAtlasPosition( const size_t tile_x, const size_t tile_y, const tile::tile_layer_type_t layer ) const {
+	ASSERT( m_map_state, "map state not set" );
+	ASSERT( m_map_state->dimensions.x > 0 && m_map_state->dimensions.x % 2 == 0, "map width must be a positive even number" );
+	ASSERT( tile_x < m_map_state->dimensions.x, "texture atlas tile x overflow" );
+	ASSERT( tile_y < m_map_state->dimensions.y, "texture atlas tile y overflow" );
+	ASSERT( ( tile_x % 2 ) == ( tile_y % 2 ), "texture atlas tile axis oddity differs" );
+	ASSERT( layer < tile::LAYER_MAX, "texture atlas layer overflow" );
+	const size_t tile_count = ( m_map_state->dimensions.x / 2 ) * m_map_state->dimensions.y;
+	const size_t cell_count = tile_count * tile::LAYER_MAX;
+	const size_t atlas_columns = (size_t)std::ceil( std::sqrt( (double)cell_count ) );
+	const size_t tile_index = tile_y * ( m_map_state->dimensions.x / 2 ) + tile_x / 2;
+	const size_t cell_index = (size_t)layer * tile_count + tile_index;
+	return {
+		( cell_index % atlas_columns ) * s_consts.tc.texture_pcx.dimensions.x,
+		( cell_index / atlas_columns ) * s_consts.tc.texture_pcx.dimensions.y
+	};
 }
 
 void Map::ProcessTiles( module_passes_t& module_passes, const tiles_t& tiles, MT_CANCELABLE ) {

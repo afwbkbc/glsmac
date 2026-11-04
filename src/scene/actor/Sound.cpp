@@ -1,4 +1,5 @@
 #include <cstring>
+#include <cmath>
 
 #include "Sound.h"
 #include "types/Sound.h"
@@ -28,9 +29,9 @@ void Sound::Rewind() {
 	}
 }
 
-void Sound::GetNextBuffer( uint8_t* buffer, int len ) {
+void Sound::GetNextBuffer( uint8_t* buffer, size_t len ) {
 
-	ASSERT( len < m_sound->m_buffer_size, "buffer size is smaller than len" );
+	ASSERT( len <= m_sound->m_buffer_size, "buffer size is smaller than len" );
 
 	if ( m_is_finished || !m_is_active ) {
 		memset( ptr( buffer, 0, len ), 0, len );
@@ -77,7 +78,9 @@ void Sound::SetAutoPlay( const bool autoplay ) {
 }
 
 void Sound::SetVolume( const float volume ) {
-	ASSERT( volume >= 0 && volume <= 1, "invalid volume " + std::to_string( volume ) );
+	if ( !std::isfinite( volume ) || volume < 0.0f || volume > 1.0f ) {
+		THROW( "invalid volume " + std::to_string( volume ) );
+	}
 	m_volume = volume;
 }
 

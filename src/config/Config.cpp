@@ -1,5 +1,6 @@
 #include <stdexcept>
 #include <sstream>
+#include <limits>
 
 #include "Config.h"
 
@@ -29,15 +30,29 @@ void Config::Error( const std::string& error ) {
 const types::Vec2< size_t > Config::ParseSize( const std::string& value ) {
 	const size_t pos = value.find( 'x' );
 	const std::string s_invalid_format = "Invalid size specified! Format is WIDTHxHEIGHT, for example: 80x40";
-	if ( pos == std::string::npos ) {
+	if ( pos == std::string::npos || pos == 0 || pos == value.size() - 1 || value.find( 'x', pos + 1 ) != std::string::npos ) {
 		Error( s_invalid_format );
 	}
 	types::Vec2< size_t > result = {};
 	try {
-		result.x = std::stoul( value.substr( 0, pos ) );
-		result.y = std::stoul( value.substr( pos + 1 ) );
+		size_t parsed = 0;
+		const auto width = std::stoull( value.substr( 0, pos ), &parsed );
+		if ( parsed != pos ) {
+			Error( s_invalid_format );
+		}
+		const auto height = value.substr( pos + 1 );
+		const auto height_value = std::stoull( height, &parsed );
+		if (
+			parsed != height.size() || width == 0 || height_value == 0 ||
+			width > std::numeric_limits< size_t >::max() ||
+			height_value > std::numeric_limits< size_t >::max()
+		) {
+			Error( s_invalid_format );
+		}
+		result.x = static_cast< size_t >( width );
+		result.y = static_cast< size_t >( height_value );
 	}
-	catch ( std::invalid_argument& e ) {
+	catch ( const std::exception& ) {
 		Error( s_invalid_format );
 	}
 	return result;
@@ -125,6 +140,11 @@ Config::Config( const std::string& path )
 		}
 	);
 	m_manager->AddRule(
+		"verbose", "Output runtime logs to the console", AH( this ) {
+			m_launch_flags |= LF_VERBOSE;
+		}
+	);
+	m_manager->AddRule(
 		"windowed", "Start in windowed mode", AH( this ) {
 			m_launch_flags |= LF_WINDOWED;
 		}
@@ -135,6 +155,15 @@ Config::Config( const std::string& path )
 				Error( "Window-related options can only be used after --windowed argument!" );
 			}
 			m_window_size = ParseSize( value );
+			if ( !m_window_size.x || !m_window_size.y ) {
+				Error( "Window width and height must be at least 1" );
+			}
+			if (
+				m_window_size.x > std::numeric_limits< unsigned short >::max() ||
+				m_window_size.y > std::numeric_limits< unsigned short >::max()
+			) {
+				Error( "Window width and height cannot exceed 65535" );
+			}
 			m_launch_flags |= LF_WINDOW_SIZE;
 		}
 	);
@@ -153,7 +182,7 @@ Config::Config( const std::string& path )
 			try {
 				m_quickstart_seed = util::random::Random::GetStateFromString( value );
 			}
-			catch ( std::runtime_error& e ) {
+			catch ( const std::runtime_error& ) {
 				Error( "Invalid seed format! Seed must contain four numbers separated by colon, for example: 1651011033:1377505029:3019448108:3247278135" );
 			}
 			m_launch_flags |= LF_QUICKSTART_SEED;
@@ -177,6 +206,12 @@ Config::Config( const std::string& path )
 				Error( s_quickstart_argument_missing );
 			}
 			m_quickstart_mapsize = ParseSize( value );
+			if (
+				m_quickstart_mapsize.x < 4 || m_quickstart_mapsize.y < 4 ||
+				( m_quickstart_mapsize.x & 1 ) || ( m_quickstart_mapsize.y & 1 )
+			) {
+				Error( "Quickstart map width and height must be even numbers of at least 4" );
+			}
 			m_launch_flags |= LF_QUICKSTART_MAP_SIZE;
 		}
 	);
@@ -283,7 +318,7 @@ Config::Config( const std::string& path )
 			if ( !util::String::ParseInt( value, maxips ) || maxips < 1 || maxips > 1000 ) {
 				Error( "--maxips value must be a number from 1 to 1000" );
 			}
-			m_maxips = maxips;
+			m_maxips = static_cast< uint16_t >( maxips );
 		}
 	);
 	m_manager->AddRule(

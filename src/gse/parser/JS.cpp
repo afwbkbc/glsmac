@@ -978,16 +978,23 @@ const program::Operand* JS::GetOperand( const Identifier* element, program::vari
 			try {
 				// maybe it's int?
 				const bool is_float = element->m_name.find( '.' ) != std::string::npos;
+				size_t parsed_length = 0;
 				if ( is_float ) {
-					const auto v = std::stof( element->m_name.c_str() );
+					const auto v = std::stof( element->m_name, &parsed_length );
+					if ( parsed_length != element->m_name.size() ) {
+						throw std::invalid_argument( "unexpected characters after number" );
+					}
 					return new program::Value( element->m_si, static_var_f( v, m_gc_space ) );
 				}
 				else {
-					const auto v = std::stol( element->m_name.c_str() );
+					const auto v = std::stoll( element->m_name, &parsed_length );
+					if ( parsed_length != element->m_name.size() ) {
+						throw std::invalid_argument( "unexpected characters after number" );
+					}
 					return new program::Value( element->m_si, static_var_i( v, m_gc_space ) );
 				}
 			}
-			catch ( std::logic_error const& ex ) {
+			catch ( std::logic_error const& ) {
 				THROW( "value is not a number: " + element->m_name );
 			}
 		}

@@ -19,4 +19,3 @@ IF ( NOT WIN32 ) # TODO: make it buildable on windows
 ENDIF()
 
 ADD_SUBDIRECTORY( yaml-cpp )
-SET( YAML_CPP_LINK_OPTIONS "${YAML_CPP_LINK_OPTIONS}" PARENT_SCOPE )

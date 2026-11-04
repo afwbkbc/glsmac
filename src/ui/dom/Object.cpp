@@ -522,8 +522,17 @@ const bool Object::TryParseColor( GSE_CALLABLE, const std::string& str, types::C
 				f_error();
 			}
 			color = is_rgb
-				? types::Color::FromRGB( r, g, b )
-				: types::Color::FromRGBA( r, g, b, a )
+				? types::Color::FromRGB(
+					static_cast< uint8_t >( r ),
+					static_cast< uint8_t >( g ),
+					static_cast< uint8_t >( b )
+				)
+				: types::Color::FromRGBA(
+					static_cast< uint8_t >( r ),
+					static_cast< uint8_t >( g ),
+					static_cast< uint8_t >( b ),
+					static_cast< uint8_t >( a )
+				)
 			;
 			return true;
 		}

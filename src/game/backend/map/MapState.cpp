@@ -12,14 +12,14 @@ tile::TileState* MapState::At( const size_t x, const size_t y ) {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return &m_tiles.at( y * dimensions.x + x / 2 );
+	return &m_tiles.at( y * ( dimensions.x / 2 ) + x / 2 );
 }
 
 const tile::TileState* MapState::AtConst( const size_t x, const size_t y ) const {
 	ASSERT( x < dimensions.x, "tile state x overflow" );
 	ASSERT( y < dimensions.y, "tile state y overflow" );
 	ASSERT( ( x % 2 ) == ( y % 2 ), "tile state axis oddity differs" );
-	return &m_tiles.at( y * dimensions.x + x / 2 );
+	return &m_tiles.at( y * ( dimensions.x / 2 ) + x / 2 );
 }
 
 const std::vector< tile::TileState >* MapState::GetTileStatesPtr() const {
@@ -29,7 +29,8 @@ const std::vector< tile::TileState >* MapState::GetTileStatesPtr() const {
 void MapState::LinkTileStates( MT_CANCELABLE ) {
 
 	ASSERT( m_tiles.empty(), "m_tiles already set" );
-	m_tiles.resize( dimensions.y * dimensions.x );
+	ASSERT( dimensions.x > 0 && dimensions.x % 2 == 0, "map width must be a positive even number" );
+	m_tiles.resize( dimensions.y * dimensions.x / 2 );
 
 	Log( "Linking tile states" );
 

@@ -1,5 +1,9 @@
 #include "Sound.h"
 
+#include <cmath>
+#include <cstdint>
+#include <limits>
+
 #include "types/Sound.h"
 #include "scene/actor/Sound.h"
 
@@ -69,7 +73,11 @@ Sound::Sound( DOM_ARGS )
 	Property(
 		GSE_CALL, "volume", gse::VT_FLOAT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
-			SetVolume( ( (gse::value::Float*)v )->value );
+			const auto value = ( (gse::value::Float*)v )->value;
+			if ( !std::isfinite( value ) || value < 0.0f || value > 1.0f ) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'volume' must be between 0 and 1" );
+			}
+			SetVolume( value );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetVolume( 1.0f );
@@ -79,7 +87,14 @@ Sound::Sound( DOM_ARGS )
 	Property(
 		GSE_CALL, "delay", gse::VT_INT, nullptr, PF_NONE,
 		[ this ]( GSE_CALLABLE, gse::Value* const v ) {
-			SetStartDelay( ( (gse::value::Int*)v )->value );
+			const auto value = ( (gse::value::Int*)v )->value;
+			if (
+				value < 0 ||
+				static_cast< uint64_t >( value ) > static_cast< uint64_t >( std::numeric_limits< size_t >::max() )
+			) {
+				GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, "Property 'delay' must be a non-negative timer duration" );
+			}
+			SetStartDelay( static_cast< size_t >( value ) );
 		},
 		[ this ]( GSE_CALLABLE ) {
 			SetStartDelay( 0 );

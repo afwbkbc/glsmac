@@ -1,5 +1,7 @@
 #include "Area.h"
 
+#include <limits>
+
 #include "Container.h"
 #include "ui/geometry/Rectangle.h"
 #include "input/Event.h"
@@ -33,7 +35,11 @@ Area::Area( DOM_ARGS_T )
 
 #define GEOMPROP( _key, _method ) \
     GEOMSETTER( _key, VT_INT ) { \
-        m_geometry->_method( ( (gse::value::Int*)v )->value ); \
+		const auto value = ( (gse::value::Int*)v )->value; \
+		if ( value < 0 || value > std::numeric_limits< unsigned short >::max() ) { \
+			GSE_ERROR( gse::EC.INVALID_ASSIGNMENT, (std::string)"Property '" + _key + "' must be between 0 and 65535" ); \
+		} \
+		m_geometry->_method( static_cast< ui::coord_t >( value ) ); \
         if ( m_parent ) { \
             m_parent->UpdateMouseOver( GSE_CALL ); \
         } \
@@ -99,13 +105,13 @@ void Area::WrapEvent( GSE_CALLABLE, const input::Event& e, gse::value::object_pr
 			obj.insert(
 				{
 					"x",
-					VALUE( gse::value::Int, , e.data.mouse.x - area.left )
+					VALUE( gse::value::Int, , static_cast< int64_t >( e.data.mouse.x - area.left ) )
 				}
 			);
 			obj.insert(
 				{
 					"y",
-					VALUE( gse::value::Int, , e.data.mouse.y - area.top )
+					VALUE( gse::value::Int, , static_cast< int64_t >( e.data.mouse.y - area.top ) )
 				}
 			);
 			obj.insert(

@@ -39,6 +39,7 @@ CLASS( Space, common::Class )
 
 	void SetThreadId( const std::thread::id& thread_id );
 	void ProcessAccumulations(); // scripts will actually execute here
+	void StopCollecting();
 
 	void Remove( Object* object );
 

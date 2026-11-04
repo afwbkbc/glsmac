@@ -46,6 +46,7 @@ void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapSta
 	}
 
 	for ( auto lt = 0 ; lt < tile::LAYER_MAX ; lt++ ) {
+		const auto atlas_pos = m_map->GetTextureAtlasPosition( tile->coord.x, tile->coord.y, (tile::tile_layer_type_t)lt );
 
 		// raise everything on z axis to prevent negative z values ( camera doesn't like it when zoomed in )
 #define x( _k ) ts->layers[ lt ].coords._k.z += s_consts.tile.scale.z;
@@ -88,8 +89,8 @@ void Finalize::GenerateTile( const tile::Tile* tile, tile::TileState* ts, MapSta
 		}
 
 #define x( _k ) tex_coords._k = ts->layers[ lt ].tex_coords._k = { \
-                ts->layers[ lt ].tex_coords._k.x * ms->variables.texture_scaling.x, \
-                ( ts->layers[ lt ].tex_coords._k.y + lt * ms->dimensions.y * s_consts.tc.texture_pcx.dimensions.y ) * ms->variables.texture_scaling.y \
+                ( atlas_pos.x + ts->layers[ lt ].tex_coords._k.x - ts->tex_coord.x1 ) * ms->variables.texture_scaling.x, \
+                ( atlas_pos.y + ts->layers[ lt ].tex_coords._k.y - ts->tex_coord.y1 ) * ms->variables.texture_scaling.y \
             }
 		do_x();
 #undef x

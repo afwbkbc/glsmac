@@ -1,6 +1,8 @@
 #include <random>
 #include <algorithm>
 #include <climits>
+#include <cstring>
+#include <limits>
 
 #include "Random.h"
 
@@ -59,7 +61,22 @@ const uint32_t Random::GetUInt( const uint32_t min, const uint32_t max ) {
 const int64_t Random::GetInt64( int64_t min, int64_t max ) {
 	ASSERT( max >= min, "GetInt64 min larger than max" );
 
-	return min + llabs( (int64_t)( ( (uint64_t)GetUInt() << 32 ) | GetUInt() ) ) % ( max - min + 1 );
+	const uint64_t range = (uint64_t)max - (uint64_t)min + 1;
+	const uint64_t rejection_threshold = range
+		? ( std::numeric_limits< uint64_t >::max() - range + 1 ) % range
+		: 0;
+	uint64_t value;
+	do {
+		value = ( (uint64_t)Generate() << 32 ) | Generate();
+	} while ( value < rejection_threshold );
+	if ( range ) {
+		value %= range;
+	}
+
+	const uint64_t result_bits = (uint64_t)min + value;
+	int64_t result;
+	std::memcpy( &result, &result_bits, sizeof( result ) );
+	return result;
 }
 
 #define FLOAT_RANGE_MAX 100.0f
@@ -115,29 +132,33 @@ const std::string Random::GetStateString() {
 
 const state_t Random::GetStateFromString( std::string value ) {
 	state_t state = {};
-	size_t pos = 0;
 	const std::string s_invalid_state_format = "Invalid state format";
-	const auto f_trynext = [ &value, &pos, &s_invalid_state_format ]( value_t* ptr ) -> void {
-		pos = value.find( s_state_divisor );
-		if ( pos == std::string::npos ) {
-			THROW( s_invalid_state_format );
-		}
+	const auto f_parse = [ &s_invalid_state_format ]( const std::string& token ) -> value_t {
 		try {
-			*ptr = std::stoul( value.substr( 0, pos ) );
+			size_t parsed = 0;
+			const auto result = std::stoull( token, &parsed );
+			if ( parsed != token.size() || result > std::numeric_limits< value_t >::max() ) {
+				THROW( s_invalid_state_format );
+			}
+			return (value_t)result;
 		}
-		catch ( std::invalid_argument& e ) {
+		catch ( const std::exception& ) {
 			THROW( s_invalid_state_format );
 		}
-		value = value.substr( pos + 1 );
 	};
-	f_trynext( &state.a );
-	f_trynext( &state.b );
-	f_trynext( &state.c );
-	try {
-		state.d = std::stoul( value );
-	}
-	catch ( std::invalid_argument& e ) {
-		THROW( s_invalid_state_format );
+	value_t* parts[] = { &state.a, &state.b, &state.c, &state.d };
+	for ( size_t i = 0 ; i < 4 ; i++ ) {
+		const auto pos = value.find( s_state_divisor );
+		if ( ( i < 3 ) != ( pos != std::string::npos ) ) {
+			THROW( s_invalid_state_format );
+		}
+		const auto token = i < 3
+			? value.substr( 0, pos )
+			: value;
+		*parts[ i ] = f_parse( token );
+		if ( i < 3 ) {
+			value.erase( 0, pos + 1 );
+		}
 	}
 	return state;
 }
