@@ -31,6 +31,9 @@ CLASS( Thread, Class )
 	void AddModule( Module* module );
 
 	void T_Start();
+#ifdef __APPLE__
+	void T_RunInCurrentThread();
+#endif
 	bool T_IsRunning();
 	void T_Stop();
 
