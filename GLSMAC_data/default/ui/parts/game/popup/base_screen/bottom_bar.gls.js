@@ -62,6 +62,7 @@ return {
 		});
 
 		const pp = {
+			INTENT_COLORS: p.INTENT_COLORS,
 			ui: p.ui,
 			game: p.game,
 			body: parent.frame,
@@ -79,10 +80,8 @@ return {
 	set: (data) => {
 
 		this.parts.production.set({
-			rows: 3,
-			columns: 10,
-			filled: 8,
-			pending: 4,
+			base: data.base,
+			minerals_per_turn: data.minerals_per_turn,
 		});
 
 		this.parts.queue.set([

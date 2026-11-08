@@ -32,6 +32,10 @@ class Tile;
 
 namespace base {
 
+namespace production {
+class Production;
+}
+
 class FacilityDef;
 
 class Base : public gse::Wrappable, public MapObject, public ResourceRelated {
@@ -62,12 +66,15 @@ public:
 	void RemovePop( const size_t pop_id );
 	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
 
+	void SetProduction( GSE_CALLABLE, const std::string& production_id );
+
 	const size_t m_id;
 	slot::Slot* m_owner;
 	faction::Faction* m_faction;
 	std::string m_name;
 	facilities_t m_facilities;
 	pops_t m_pops;
+	const production::Production* m_production;
 
 	static const types::Buffer Serialize( const Base* base );
 	static Base* Deserialize( types::Buffer& buf, Game* game );
@@ -93,6 +100,7 @@ private:
 	gse::value::Object* const GetIntake( GSE_CALLABLE );
 	gse::value::Object* const GetConsumption( GSE_CALLABLE );
 	gse::value::Array* const GetProductionChoices( GSE_CALLABLE );
+	gse::value::Object* const GetProduction( GSE_CALLABLE );
 
 	void TriggerUpdate();
 };

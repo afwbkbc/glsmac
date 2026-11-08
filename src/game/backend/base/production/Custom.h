@@ -11,15 +11,15 @@ namespace production {
 
 class Custom : public Production {
 public:
-	Custom( const RenderInfo& render_info, const std::string& name, const std::string& hint, const std::string& intent );
+	Custom( const std::string& id, const RenderInfo& render_info, const std::string& name, const std::string& hint, const std::string& intent );
 	virtual ~Custom() = default;
 
 	const uint8_t GetGroupOrder() const override;
-	gse::value::Object* const ToValue( GSE_CALLABLE, const std::string& id ) const override;
+	gse::value::Object* const ToValue( GSE_CALLABLE ) const override;
 
 private:
 	friend class Production;
-	static const Production* const DeserializeImpl( types::Buffer& buf, const std::string& hint, const std::string& intent );
+	static const Production* const DeserializeImpl( types::Buffer& buf, const std::string& id, const std::string& hint, const std::string& intent );
 
 protected:
 	void SerializeImpl( types::Buffer& buf ) const override;

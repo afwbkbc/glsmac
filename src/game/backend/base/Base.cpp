@@ -55,7 +55,8 @@ Base::Base(
 	, m_name( name )
 	, m_facilities( facilities )
 	, m_pops( pops )
-	, m_next_pop_id( next_pop_id ) {
+	, m_next_pop_id( next_pop_id )
+	, m_production( nullptr ) {
 	if ( next_id <= id ) {
 		next_id = id + 1;
 	}
@@ -96,6 +97,17 @@ void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& 
 	}
 	if ( pop.m_def != it->second ) {
 		pop.m_def = it->second;
+		TriggerUpdate();
+	}
+}
+
+void Base::SetProduction( GSE_CALLABLE, const std::string& production_id ) {
+	const auto* const production = m_owner->GetProductionChoice( production_id );
+	if ( !production ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown production choice: " + production_id );
+	}
+	if ( m_production != production ) {
+		m_production = production;
 		TriggerUpdate();
 	}
 }
@@ -348,7 +360,28 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 			N_EXPECT_ARGS( 0 );
 			return GetProductionChoices( GSE_CALL );
 		} ),
-	}
+	},
+	{
+		"get_production",
+		NATIVE_CALL( this ) {
+			N_EXPECT_ARGS( 0 );
+			return GetProduction( GSE_CALL );
+		} ),
+	},
+	{
+		"set_production",
+		NATIVE_CALL( this ) {
+
+			m_game->CheckRW( GSE_CALL );
+
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( id, 0, String );
+
+			SetProduction( GSE_CALL, id );
+
+			return VALUE( gse::value::Undefined );
+		} ),
+	},
 WRAPIMPL_DYNAMIC_SETTERS( Base )
 WRAPIMPL_DYNAMIC_ON_SET( Base )
 WRAPIMPL_DYNAMIC_END()
@@ -446,7 +479,7 @@ gse::value::Array* const Base::GetProductionChoices( GSE_CALLABLE ) {
 	std::map< uint8_t, std::map< std::string, gse::Value* > > ordered_values = {};
 	size_t count = 0;
 
-	for ( const auto& it : m_owner->GetPlayer()->GetProductionChoices() ) {
+	for ( const auto& it : m_owner->GetProductionChoices() ) {
 		const auto& choice = it.second;
 		const auto gp = choice->GetGroupOrder();
 		auto it2 = ordered_values.find( gp );
@@ -454,7 +487,7 @@ gse::value::Array* const Base::GetProductionChoices( GSE_CALLABLE ) {
 			it2 = ordered_values.insert({ gp, {} } ).first;
 		}
 		ASSERT( it2->second.find( it.first ) == it2->second.end(), "duplicate production id: " + it.first );
-		it2->second.insert({ it.first, choice->ToValue( GSE_CALL, it.first )});
+		it2->second.insert({ it.first, choice->ToValue( GSE_CALL ) });
 		count++;
 	}
 
@@ -467,6 +500,11 @@ gse::value::Array* const Base::GetProductionChoices( GSE_CALLABLE ) {
 	}
 
 	return VALUE( gse::value::Array,, result );
+}
+
+gse::value::Object* const Base::GetProduction( GSE_CALLABLE ) {
+	ASSERT( m_production, "base production not set" );
+	return m_production->ToValue( GSE_CALL );
 }
 
 void Base::TriggerUpdate() {

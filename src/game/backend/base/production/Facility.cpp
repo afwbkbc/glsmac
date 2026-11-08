@@ -11,13 +11,13 @@ namespace backend {
 namespace base {
 namespace production {
 
-Facility::Facility( const FacilityDef* const def, const std::string& hint, const std::string& intent )
-	: Production( PT_FACILITY, hint, intent )
+Facility::Facility( const std::string& id, const FacilityDef* const def, const std::string& hint, const std::string& intent )
+	: Production( id, PT_FACILITY, hint, intent )
 	, m_def( def ) {}
 
-gse::value::Object* const Facility::ToValue( GSE_CALLABLE, const std::string& id ) const {
+gse::value::Object* const Facility::ToValue( GSE_CALLABLE ) const {
 	return VALUEEXT( gse::value::Object, GSE_CALL, {
-		{ "id", VALUE( gse::value::String, , id ) },
+		{ "id", VALUE( gse::value::String, , m_id ) },
 		{ "name", VALUE( gse::value::String, , m_def->m_name ) },
 		{ "texture", VALUE( gse::value::String, , m_def->m_render_info.ToTextureString() ) },
 		{
@@ -48,13 +48,13 @@ void Facility::SerializeImpl( types::Buffer& buf ) const {
 	buf.WriteString( m_def->m_id );
 }
 
-const Production* const Facility::DeserializeImpl( types::Buffer& buf, const std::string& hint, const std::string& intent ) {
+const Production* const Facility::DeserializeImpl( types::Buffer& buf, const std::string& id, const std::string& hint, const std::string& intent ) {
 	const auto facility_id = buf.ReadString();
 	const auto* def = g_engine->GetGame()->GetBM()->GetFacilityDef( facility_id );
 	if ( !def ) {
 		THROW( "failed to deserialize production choice - facility id not found: " + facility_id );
 	}
-	return new Facility( def, hint, intent );
+	return new Facility( id, def, hint, intent );
 }
 
 }

@@ -425,6 +425,7 @@ WRAPIMPL_BEGIN( BaseManager )
 
 				N_GETVALUE( info, 2, Object );
 				N_GETPROP_OPT( std::string, name, info, "name", String, "" );
+				N_GETPROP( production, info, "production", String );
 
 				std::map< std::string, const FacilityDef* > facilities = {};
 				{
@@ -456,10 +457,12 @@ WRAPIMPL_BEGIN( BaseManager )
 					owner->GetSlot(),
 					owner->GetFaction(),
 					tile,
-					m_name,
+					name,
 					facilities,
 					{}
 				);
+
+				base->SetProduction( GSE_CALL, production );
 
 				SpawnBase( GSE_CALL, base );
 

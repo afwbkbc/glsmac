@@ -19,7 +19,14 @@ return {
 			class: 'default-panel-inner',
 		});
 
-		body.text({
+		this.production_preview = body.surface({
+			align: 'top center',
+			top: 20,
+			width: 40,
+			height: 40,
+		});
+
+		this.production_title = body.text({
 			class: 'base-screen-frame-title',
 			text: 'NOTHING',
 			align: 'top center',
@@ -44,7 +51,7 @@ return {
 			top: 85,
 		});
 
-		this.production_label = body.text({
+		this.production_eta = body.text({
 			class: 'base-screen-frame-text',
 			align: 'bottom center',
 			bottom: 20,
@@ -58,20 +65,38 @@ return {
 
 	set: (data) => {
 
-		this.p.utils.set_cells(
-			108,
-			60,
-			data.columns,
-			data.rows,
-			data.filled,
-			data.pending,
-			this.production_cells,
-			'base-screen-bottombar-production-cell',
-			this.production_label,
-			(progress_in) => {
-				return #to_string(progress_in) + ' TURNS';
-			},
-		);
+		const production = data.base.get_production();
+
+		const c = this.p.INTENT_COLORS[production.intent];
+
+		this.production_preview.background = production.texture + ':tint(' + c + ',1.0):stretch';
+		this.production_title.text = production.name;
+		this.production_title.color = c;
+
+		if (#is_defined(production.cost)) {
+			this.production_cells.show();
+			this.production_eta.show();
+			this.p.utils.set_cells(
+				108,
+				60,
+				8,
+				production.cost / 8,
+				0 /* TODO: accumulated minerals */,
+				data.minerals_per_turn,
+				this.production_cells,
+				'base-screen-bottombar-production-cell',
+				this.production_eta,
+				(progress_in) => {
+					return progress_in > 0
+						? #to_string(progress_in) + ' TURNS'
+						: 'No Minerals'
+						;
+				},
+			);
+		} else {
+			this.production_cells.hide();
+			this.production_eta.hide();
+		}
 
 	},
 

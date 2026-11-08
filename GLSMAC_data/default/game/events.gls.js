@@ -26,6 +26,7 @@ return (game) => {
 		'work_base_tile',
 		'unwork_base_tile',
 		'add_production_choice',
+		'set_base_production',
 	]) {
 		game.register_event(e, #include('event/' + e));
 	}

@@ -1,5 +1,12 @@
 return {
 
+	INTENT_COLORS: {
+		explore: '#588c2c',
+		build: '#e8d48c',
+		discover: '#adc4c0',
+		conquer: '#da8677',
+	},
+
 	available_sections: [
 		'top_buttons',
 		'nutrients',
@@ -85,6 +92,24 @@ return {
 			align: 'center',
 		});
 
+		p.ui.class('base-screen-production-item').set({
+			background: 'interface.pcx:crop(8, 236, 31, 259)',
+			align: 'top left',
+			width: 132,
+			height: 105,
+			border: 'transparent',
+			_hover: {
+				border: '#4d628d',
+			},
+		});
+		p.ui.class('base-screen-production-item-active').extend('base-screen-production-item').set({
+			background: 'interface.pcx:crop(86, 236, 109, 259)',
+			border: 'white',
+			_hover: {
+				border: 'white',
+			},
+		});
+
 		p.ui.class('base-screen-production-title').set({
 			align: 'top center',
 			top: 7,
@@ -127,11 +152,11 @@ return {
 				game: p.game,
 				hide: p.hide,
 				modules: p.modules,
+				INTENT_COLORS: parent.INTENT_COLORS,
 				utils: {
 					set_cells: parent.parent.set_cells,
 					show_production_selection: parent.parent.show_production_selection,
 					hide_production_selection: parent.parent.hide_production_selection,
-					update_production_selection: parent.parent.update_production_selection,
 				},
 			};
 
@@ -139,6 +164,7 @@ return {
 				this.sections[s] = #include('base_screen/' + s);
 				this.sections[s].body = this.sections[s].init(pp);
 			}
+			pp.sections = this.sections;
 
 		});
 
@@ -155,6 +181,8 @@ return {
 
 		const intake = base.get_intake();
 		const consumption = base.get_consumption();
+
+		const minerals_per_turn = intake.MINERALS - consumption.MINERALS;
 
 		this.hide_production_selection();
 
@@ -234,12 +262,18 @@ return {
 			base: base,
 		});
 
+		this.sections.buttons.set({
+			base: base,
+		});
+
 		this.sections.bottom_bar.set({
 			base: base,
+			minerals_per_turn: minerals_per_turn,
 		});
 
 		this.sections.production_selection.set({
 			base: base,
+			minerals_per_turn: minerals_per_turn,
 		});
 	},
 
@@ -327,15 +361,6 @@ return {
 			this.sections.buttons.show_production_selection();
 			this.sections.production_selection.show();
 			this.production_selection_visible = true;
-		}
-	},
-
-	update_production_selection: () => {
-		if (this.production_selection_visible) {
-
-			// TODO: update selection to selected item
-
-			this.hide_production_selection();
 		}
 	},
 

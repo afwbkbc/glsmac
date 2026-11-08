@@ -1,5 +1,7 @@
 return {
 
+	base: null,
+
 	hide_buttons: () => {
 		for (button of this.buttons) {
 			button.remove();
@@ -76,12 +78,21 @@ return {
 		];
 
 		btn_cancel.on('click', (e) => {
+			this.p.sections.production_selection.reset();
 			this.p.utils.hide_production_selection();
 			return true;
 		});
 
 		btn_ok.on('click', (e) => {
-			this.p.utils.update_production_selection();
+			const s = this.p.sections.production_selection;
+			if (s.selected_production != s.pending_production) {
+				this.p.game.event('set_base_production', {
+					base: parent.base,
+					id: s.pending_production,
+				});
+				s.reset();
+			}
+			this.p.utils.hide_production_selection();
 			return true;
 		});
 
@@ -109,6 +120,10 @@ return {
 		this.show_default();
 
 		return this.frame;
+	},
+
+	set: (data) => {
+		this.base = data.base;
 	},
 
 };

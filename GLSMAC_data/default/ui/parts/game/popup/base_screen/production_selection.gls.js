@@ -4,14 +4,15 @@ return {
 	ITEM_HEIGHT: 105,
 	ITEM_PADDING: 3,
 
-	COLORS: {
-		explore: '#588c2c',
-		build: '#e8d48c',
-		discover: '#adc4c0',
-		conquer: '#da8677',
-	},
+	selected_production: null,
+	pending_production: null,
+
+	selected_item: null,
+	pending_item: null,
 
 	init: (p) => {
+
+		this.p = p;
 
 		this.area = p.body.panel({
 			class: 'default-panel',
@@ -33,48 +34,66 @@ return {
 		this.area.hide();
 	},
 
+	reset: () => {
+		if (
+			this.selected_production != null &&
+			this.selected_item != null &&
+			this.selected_production != this.pending_production
+		) {
+			this.pending_item.class = 'base-screen-production-item';
+			this.pending_item = this.selected_item;
+			this.pending_item.class = 'base-screen-production-item-active';
+			this.pending_production = this.selected_production;
+		}
+	},
+
 	set: (data) => {
 		this.area.clear();
 		const production_choices = data.base.get_production_choices();
 		let x = this.ITEM_PADDING;
 		let y = this.ITEM_PADDING;
 
-		const intake = data.base.get_intake();
-		const consumption = data.base.get_consumption();
-		const minerals_per_turn = intake.MINERALS - consumption.MINERALS;
+		this.selected_production = data.base.get_production().id;
+		this.pending_production = this.selected_production;
 
 		for (choice of production_choices) {
 
+			const id = choice.id;
+			const is_selected = id == this.selected_production;
+
 			const panel = this.area.panel({
-				class: 'default-panel-inner',
-				align: 'top left',
+				class: is_selected ? 'base-screen-production-item-active' : 'base-screen-production-item',
 				left: x,
 				top: y,
-				width: parent.ITEM_WIDTH,
-				height: parent.ITEM_HEIGHT,
 			});
+			if (is_selected) {
+				this.selected_item = panel;
+				this.pending_item = panel;
+			}
+
+			const c = this.p.INTENT_COLORS[choice.intent];
 
 			panel.text({
 				class: 'base-screen-production-title',
 				text: choice.name,
-				color: parent.COLORS[choice.intent],
+				color: c,
 			});
 
 			panel.surface({
 				class: 'base-screen-production-preview',
-				background: choice.texture + ':tint(' + parent.COLORS[choice.intent] + ',1.0):stretch',
+				background: choice.texture + ':tint(' + c + ',1.0):stretch',
 			});
 
 			let eta = '';
 			if (#is_defined(choice.cost)) {
-				const turns = #ceil(#to_float(choice.cost) / #to_float(minerals_per_turn));
+				const turns = #ceil(#to_float(choice.cost) / #to_float(data.minerals_per_turn));
 				if (turns != 1) {
 					eta = #to_string(turns) + ' turns';
 				} else {
 					eta = #to_string(turns) + ' turn';
 				}
-			} else if (choice.id == 'STOCKPILE_ENERGY') {
-				eta = #to_string(#floor(#to_float(minerals_per_turn) / 2.0)) + ' Energy per turn';
+			} else if (id == 'STOCKPILE_ENERGY') {
+				eta = #to_string(#floor(#to_float(data.minerals_per_turn) / 2.0)) + ' Energy per turn';
 			}
 
 			panel.text({
@@ -85,6 +104,18 @@ return {
 			panel.text({
 				class: 'base-screen-production-hint',
 				text: choice.hint,
+			});
+
+			panel.on('mousedown', (e) => {
+				if (id != this.pending_production) {
+					if (this.pending_item != null) {
+						this.pending_item.class = 'base-screen-production-item';
+					}
+					this.pending_item = panel;
+					this.pending_item.class = 'base-screen-production-item-active';
+					this.pending_production = id;
+				}
+				return true;
 			});
 
 			x += this.ITEM_WIDTH + this.ITEM_PADDING;

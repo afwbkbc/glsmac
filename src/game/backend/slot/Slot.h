@@ -1,5 +1,8 @@
 #pragma once
 
+#include <unordered_map>
+#include <string>
+
 #include "types/Serializable.h"
 #include "gse/Wrappable.h"
 
@@ -9,6 +12,10 @@
 namespace game {
 namespace backend {
 
+namespace base::production {
+class Production;
+}
+
 class State;
 class Player;
 
@@ -17,6 +24,7 @@ namespace slot {
 CLASS2( Slot, types::Serializable, gse::Wrappable )
 
 	Slot( const size_t index, State* state );
+	virtual ~Slot();
 
 	enum slot_state_t {
 		SS_CLOSED,
@@ -50,6 +58,11 @@ CLASS2( Slot, types::Serializable, gse::Wrappable )
 	const types::Buffer Serialize() const override;
 	void Deserialize( types::Buffer buf ) override;
 
+	typedef std::unordered_map< std::string, const base::production::Production* > production_choices_t;
+	void AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::value::object_properties_t& data );
+	const production_choices_t& GetProductionChoices() const;
+	const base::production::Production* const GetProductionChoice( const std::string& id ) const;
+
 	WRAPDEFS_PTR( Slot );
 
 private:
@@ -66,6 +79,8 @@ private:
 		player_flag_t flags = PF_NONE;
 	} m_player_data = {};
 	std::string m_linked_gsid = "";
+
+	production_choices_t m_production_choices = {};
 
 	void Update();
 };

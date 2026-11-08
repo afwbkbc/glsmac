@@ -10,6 +10,7 @@ return {
 		const base = e.game.bm.spawn_base(e.data.owner, e.data.tile, {
 			// name: e.data.name,
 			facilities: e.data.facilities,
+			production: 'STOCKPILE_ENERGY', // TODO: some logic to pick something important
 		});
 
 		return {

@@ -18,16 +18,17 @@ public:
 		PT_CUSTOM,
 	};
 
-	Production( const production_type_t type, const std::string& hint, const std::string& intent );
+	Production( const std::string& id, const production_type_t type, const std::string& hint, const std::string& intent );
 	virtual ~Production() = default;
 
 	void Serialize( types::Buffer& buf ) const;
 	static const Production* const Deserialize( types::Buffer& buf );
 
 	virtual const uint8_t GetGroupOrder() const = 0;
-	virtual gse::value::Object* const ToValue( GSE_CALLABLE, const std::string& id ) const = 0;
+	virtual gse::value::Object* const ToValue( GSE_CALLABLE ) const = 0;
 
 protected:
+	const std::string m_id;
 	const std::string m_hint;
 	const std::string m_intent;
 
