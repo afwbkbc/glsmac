@@ -507,7 +507,36 @@ void Game::Event( GSE_CALLABLE, const std::string& name, const gse::value::objec
 WRAPIMPL_BEGIN( Game )
 	WRAPIMPL_PROPS
 	WRAPIMPL_TRIGGERS
-	WRAPIMPL_CUSTOM_SETTERS
+		// game has it's own setters because, unlike game object values, they are
+		// not to be transmitted via events in multiplayer (hence the naming)
+		// also they can only be set during game initialization and can't be unset
+		{
+			"set",
+			NATIVE_CALL( this ) {
+				if ( m_game_state != GS_STARTING ) {
+					GSE_ERROR( gse::EC.GAME_ERROR, "Game custom values can only be set during initialization" );
+				}
+				N_EXPECT_ARGS( 2 );
+				N_GETVALUE( key, 0, String );
+				auto* const value = arguments[ 1 ];
+				CustomSet( key, value );
+				return VALUE( gse::value::Undefined );
+			} )
+		},
+		{
+			"get",
+			NATIVE_CALL( this ) {
+				N_EXPECT_ARGS( 1 );
+				N_GETVALUE( key, 0, String );
+				auto* const value = CustomGet( key );
+				if ( value ) { \
+					return value; \
+				}
+				else {
+					return VALUE( gse::value::Undefined ); \
+				}
+			} )
+		},
 		{
 			"is_master",
 			NATIVE_CALL( this ) {

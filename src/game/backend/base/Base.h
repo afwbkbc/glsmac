@@ -66,6 +66,8 @@ public:
 	void RemovePop( const size_t pop_id );
 	void ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& def_id );
 
+	void AddFacility( GSE_CALLABLE, const std::string& id );
+
 	void SetProduction( GSE_CALLABLE, const std::string& production_id );
 
 	const size_t m_id;

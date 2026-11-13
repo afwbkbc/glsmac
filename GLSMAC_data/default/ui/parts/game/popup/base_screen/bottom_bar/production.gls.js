@@ -81,16 +81,20 @@ return {
 				60,
 				8,
 				production.cost / 8,
-				0 /* TODO: accumulated minerals */,
+				data.base.get('accumulated_minerals'),
 				data.minerals_per_turn,
 				this.production_cells,
 				'base-screen-bottombar-production-cell',
 				this.production_eta,
 				(progress_in) => {
-					return progress_in > 0
-						? #to_string(progress_in) + ' TURNS'
-						: 'No Minerals'
-						;
+					if (data.minerals_per_turn > 0) {
+						return progress_in > 0
+							? #to_string(progress_in) + ' TURNS'
+							: 'COMPLETE'
+							;
+					} else {
+						return 'No Minerals';
+					}
 				},
 			);
 		} else {

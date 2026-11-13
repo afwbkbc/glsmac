@@ -13,7 +13,8 @@ namespace backend {
 namespace base {
 
 Pop::Pop( Base* const base, const size_t id, const PopDef* def, const uint8_t variant, map::tile::Tile* const worked_tile )
-	: m_base( base )
+	: GameObject( base->GetGame() )
+	, m_base( base )
 	, m_id( id )
 	, m_def( def )
 	, m_variant( variant ) {
@@ -52,7 +53,7 @@ void Pop::SetBase( Base* const base ) {
 
 WRAPIMPL_BEGIN( Pop )
 	WRAPIMPL_PROPS
-	WRAPIMPL_CUSTOM_SETTERS
+	WRAPIMPL_GAME_OBJECT
 		{
 			"id",
 			VALUE( gse::value::Int,, m_id ),

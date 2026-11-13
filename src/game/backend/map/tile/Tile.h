@@ -8,6 +8,7 @@
 
 #include "gse/Wrappable.h"
 #include "game/backend/ResourceRelated.h"
+#include "game/backend/GameObject.h"
 
 #include "Types.h"
 
@@ -37,8 +38,11 @@ class Tiles;
 //   you can read any properties you need
 //   but be careful modifying anything, some things are only to be modified within Tile::Update() to keep consistent state
 // Some day this class will be refactored with access isolation and getters/setters
-class Tile : public gse::Wrappable, public ResourceRelated {
+class Tile : public gse::Wrappable, public ResourceRelated, public GameObject {
 public:
+
+	Tile()
+		: GameObject( nullptr ) {} // HACK: m_game MUST be assigned later before custom setters/getters are called
 
 	typedef std::unordered_map< std::string, uint8_t > resources_t;
 

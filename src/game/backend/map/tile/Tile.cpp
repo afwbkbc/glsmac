@@ -162,7 +162,7 @@ const std::string Tile::ToString() const {
 
 WRAPIMPL_BEGIN( Tile )
 	WRAPIMPL_PROPS
-	WRAPIMPL_CUSTOM_SETTERS
+	WRAPIMPL_GAME_OBJECT
 		{
 			"x",
 			VALUE( gse::value::Int,, coord.x )

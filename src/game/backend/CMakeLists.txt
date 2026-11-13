@@ -19,6 +19,7 @@ SET( SRC ${SRC}
 	${PWD}/Game.cpp
 	${PWD}/Account.cpp
 	${PWD}/Player.cpp
+	${PWD}/GameObject.cpp
 	${PWD}/MapObject.cpp
 	${PWD}/ResourceRelated.cpp
 

@@ -6,6 +6,8 @@
 #include "util/Clamper.h"
 #include "util/random/Random.h"
 
+#include "game/backend/map/Map.h"
+
 namespace game {
 namespace backend {
 namespace map {
@@ -33,9 +35,11 @@ void Tiles::Resize( const uint32_t width, const uint32_t height ) {
 		m_width = width;
 		m_height = height;
 
+		const auto* const game = m_map->GetGame();
 		m_data.resize( width * height );
 		for ( auto& tile : m_data ) {
 			tile.tiles = this;
+			tile.m_game = game;
 		}
 		m_top_vertex_row.resize( m_width * 2 );
 		m_top_right_vertex_row.resize( width );

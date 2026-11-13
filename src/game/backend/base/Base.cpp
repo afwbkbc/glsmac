@@ -101,6 +101,20 @@ void Base::ChangePopType( GSE_CALLABLE, const size_t pop_id, const std::string& 
 	}
 }
 
+void Base::AddFacility( GSE_CALLABLE, const std::string& id ) {
+	if ( m_facilities.find( id ) != m_facilities.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Base facility already exists: " + id );
+	}
+	auto* bm = m_game->GetBM();
+	auto* const facility = bm->GetFacilityDef( id );
+	if ( !facility ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Unknown facility: " + id );
+	}
+	m_facilities.insert({ id, facility } );
+	bm->RefreshBase( this );
+	TriggerUpdate();
+}
+
 void Base::SetProduction( GSE_CALLABLE, const std::string& production_id ) {
 	const auto* const production = m_owner->GetProductionChoice( production_id );
 	if ( !production ) {
@@ -184,7 +198,7 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 	WRAPIMPL_GET_CUSTOM( "name", String, m_name )
 	WRAPIMPL_LINK( "get_owner", m_owner )
 	WRAPIMPL_LINK( "get_tile", m_tile )
-	WRAPIMPL_CUSTOM_SETTERS
+	WRAPIMPL_GAME_OBJECT
 	{
 		"create_pop",
 		NATIVE_CALL( this ) {
@@ -306,10 +320,23 @@ WRAPIMPL_DYNAMIC_GETTERS( Base )
 		"has_facility",
 		NATIVE_CALL( this ) {
 			N_EXPECT_ARGS( 1 );
-
 			N_GETVALUE( id, 0, String );
 
 			return VALUE( gse::value::Bool,, m_facilities.find( id ) != m_facilities.end() );
+		} ),
+	},
+	{
+		"add_facility",
+		NATIVE_CALL( this ) {
+
+			m_game->CheckRW( GSE_CALL );
+
+			N_EXPECT_ARGS( 1 );
+			N_GETVALUE( id, 0, String );
+
+			AddFacility( GSE_CALL, id );
+
+			return VALUE( gse::value::Undefined );
 		} ),
 	},
 	{

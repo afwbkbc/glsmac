@@ -34,9 +34,9 @@ gse::value::Object* const Facility::ToValue( GSE_CALLABLE ) const {
 					: m_def->m_intent
 			)
 		},
-		{
-			"cost", VALUE( gse::value::Int, , m_def->m_cost ),
-		}
+		{ "type", VALUE( gse::value::String, , "facility" ) },
+		{ "cost", VALUE( gse::value::Int, , m_def->m_cost ) },
+		{ "facility_id", VALUE( gse::value::String, , m_def->m_id ) },
 	} );
 }
 

@@ -17,6 +17,7 @@ gse::value::Object* const Custom::ToValue( GSE_CALLABLE ) const {
 		{ "texture", VALUE( gse::value::String, , m_render_info.ToTextureString() ) },
 		{ "hint", VALUE( gse::value::String, , m_hint ) },
 		{ "intent", VALUE( gse::value::String, , m_intent ) },
+		{ "type", VALUE( gse::value::String, , "custom" ) },
 	} );
 }
 

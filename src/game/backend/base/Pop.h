@@ -3,6 +3,7 @@
 #include "types/Buffer.h"
 
 #include "gse/Wrappable.h"
+#include "game/backend/GameObject.h"
 
 namespace game {
 namespace backend {
@@ -18,7 +19,7 @@ namespace base {
 class Base;
 class PopDef;
 
-class Pop : public gse::Wrappable {
+class Pop : public gse::Wrappable, public GameObject {
 public:
 
 	Pop( Base* base = nullptr, const size_t id = 0, const PopDef* def = nullptr, const uint8_t variant = 0, map::tile::Tile* const worked_tile = nullptr );

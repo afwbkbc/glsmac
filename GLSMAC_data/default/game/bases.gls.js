@@ -7,10 +7,16 @@ const get_nutrients_for_growth = (game, base) => {
 	return globals.map_growth_base * (base.get_size() + 1);
 };
 
+// TODO: refactor these two somehow
 const get_pending_growth = (base) => {
 	const intake = base.get_intake();
 	const consumption = base.get_consumption();
 	return intake.NUTRIENTS - consumption.NUTRIENTS;
+};
+const get_pending_production = (base) => {
+	const intake = base.get_intake();
+	const consumption = base.get_consumption();
+	return intake.MINERALS - consumption.MINERALS;
 };
 
 const reset_nutrients = (game, base) => {
@@ -24,6 +30,9 @@ const reset_nutrients = (game, base) => {
 		updated = 0;
 	}
 	base.set('accumulated_nutrients', updated);
+};
+const reset_minerals = (game, base) => {
+	base.set('accumulated_minerals', 0);
 };
 
 const get_tile_score = (base, tile) => {
@@ -128,6 +137,46 @@ const process_growth = (game, base) => {
 			});
 		}
 	}
+};
+
+const process_production = (game, base) => {
+	let accumulated = base.get('accumulated_minerals');
+	if (!#is_defined(accumulated)) {
+		accumulated = 0;
+	}
+	accumulated += get_pending_production(base);
+	if (accumulated < 0) {
+		// TODO: disband some unit
+		accumulated = 0;
+	} else {
+		const production = base.get_production();
+		switch (production.type) {
+			case 'custom': {
+				switch (production.id) {
+					case 'STOCKPILE_ENERGY': {
+						#print('TODO: STOCKPILE_ENERGY', accumulated / 2);
+						accumulated = 0;
+						break;
+					}
+				}
+				break;
+			}
+			case 'facility': {
+				if (base.has_facility(production.facility_id)) {
+					// avoid duplicate production
+					base.set_production('STOCKPILE_ENERGY');
+					accumulated = 0; // TODO: should minerals be refunded?
+				} else if (accumulated >= production.cost) {
+					// production finished
+					base.add_facility(production.facility_id);
+					base.set_production('STOCKPILE_ENERGY');
+					accumulated -= production.cost;
+				}
+				break;
+			}
+		}
+	}
+	base.set('accumulated_minerals', accumulated);
 };
 
 const calculate_growth_base = (game) => {
@@ -270,9 +319,13 @@ return (game) => {
 		// new turn, process all bases
 		game.on('turn', (e) => {
 			for (base of bm.get_bases()) {
-
 				process_growth(game, base);
 
+				if (e.year > 2101) { // no production on first turn
+					process_production(game, base);
+				} else {
+					reset_minerals(game, base); // initialize
+				}
 			}
 		});
 

@@ -105,6 +105,11 @@ const result = {
 				if (base.has_facility('HEADQUARTERS')) {
 					result.ENERGY = result.ENERGY + 1;
 				}
+				if (base.has_facility('RECYCLING_TANKS')) {
+					result.NUTRIENTS = result.NUTRIENTS + 1;
+					result.MINERALS = result.MINERALS + 1;
+					result.ENERGY = result.ENERGY + 1;
+				}
 			} else {
 				// TODO: terraforming
 			}

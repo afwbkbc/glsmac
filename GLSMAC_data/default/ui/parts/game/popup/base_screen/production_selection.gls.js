@@ -58,6 +58,13 @@ return {
 
 		for (choice of production_choices) {
 
+			if (choice.type == 'facility') {
+				if (data.base.has_facility(choice.facility_id)) {
+					// skip existing buildings
+					continue;
+				}
+			}
+
 			const id = choice.id;
 			const is_selected = id == this.selected_production;
 
@@ -86,7 +93,11 @@ return {
 
 			let eta = '';
 			if (#is_defined(choice.cost)) {
-				const turns = #ceil(#to_float(choice.cost) / #to_float(data.minerals_per_turn));
+				let minerals_left = choice.cost - data.base.get('accumulated_minerals');
+				if (minerals_left < 0) {
+					minerals_left = 0;
+				}
+				const turns = #ceil(#to_float(minerals_left) / #to_float(data.minerals_per_turn));
 				if (turns != 1) {
 					eta = #to_string(turns) + ' turns';
 				} else {
