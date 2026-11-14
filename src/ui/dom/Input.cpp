@@ -120,7 +120,15 @@ const bool Input::ProcessEventImpl( GSE_CALLABLE, const input::Event& event ) {
 							SetValue( GSE_CALL, m_value + util::String::FilterPrintable( g_engine->GetInput()->GetClipboardText() ) );
 							return true;
 						}
+						break;
 					}
+					case input::K_V: {
+						if ( event.data.key.modifiers & input::KM_CTRL ) {
+							SetValue( GSE_CALL, m_value + util::String::FilterPrintable( g_engine->GetInput()->GetClipboardText() ) );
+							return true;
+						}
+					}
+					// fallthrough
 					default: {
 						if ( event.data.key.is_printable ) {
 							SetValue( GSE_CALL, m_value + std::string( 1, event.data.key.key ) );
