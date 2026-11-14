@@ -84,15 +84,7 @@ return {
 		});
 
 		btn_ok.on('click', (e) => {
-			const s = this.p.sections.production_selection;
-			if (s.selected_production != s.pending_production) {
-				this.p.game.event('set_base_production', {
-					base: parent.base,
-					id: s.pending_production,
-				});
-				s.reset();
-			}
-			this.p.utils.hide_production_selection();
+			this.p.sections.production_selection.submit();
 			return true;
 		});
 
