@@ -659,7 +659,7 @@ const std::string* UnitManager::MoveUnitToTile( GSE_CALLABLE, Unit* unit, map::t
 
 	const auto* locked_tile = tm->FindLockedTile( tiles_to_lock );
 	if ( locked_tile ) {
-		GSE_ERROR( gse::EC.GAME_ERROR, "Tile " + locked_tile->coord.ToString() + " is locked" );
+		return new std::string( "Tile " + locked_tile->coord.ToString() + " is locked" );
 	}
 
 	m_game->GetTM()->LockTiles( m_game->GetSlotNum(), tiles_to_lock );

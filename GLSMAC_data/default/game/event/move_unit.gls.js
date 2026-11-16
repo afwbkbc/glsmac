@@ -1,12 +1,16 @@
-const get_movement_cost = (unit, src_tile, dst_tile) => {
-	const is_native = true; // TODO: non-native units
-
-	if (
+const is_road = (src_tile, dst_tile) => {
+	return src_tile.is_land &&
 		dst_tile.is_land &&
 		src_tile.features.river &&
 		dst_tile.features.river
 		// TODO: roads
-	) {
+		;
+};
+
+const get_movement_cost = (unit, src_tile, dst_tile) => {
+	const is_native = true; // TODO: non-native units
+
+	if (is_road(src_tile, dst_tile)) {
 		return 1.0 / 3.0;
 	}
 
@@ -25,6 +29,9 @@ const get_movement_cost = (unit, src_tile, dst_tile) => {
 
 const get_movement_aftercost = (unit, src_tile, dst_tile) => {
 	const is_native = true; // TODO: non-native units
+	if (is_road(src_tile, dst_tile)) {
+		return 0.0;
+	}
 	if (is_native && dst_tile.features.xenofungus) {
 		return 0.0;
 	}
@@ -143,7 +150,6 @@ return {
 	},
 
 	rollback: (e) => {
-
 		const unit = e.data.unit;
 		const orig = e.applied.orig;
 		unit.move_to_tile(orig.tile, () => {
