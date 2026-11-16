@@ -1,5 +1,6 @@
 #include <ctime>
 #include <thread>
+#include <exception>
 
 #include "Engine.h"
 #include "config/Config.h"
@@ -144,24 +145,25 @@ Engine::~Engine() {
 
 int Engine::Run() {
 	int result = EXIT_SUCCESS;
+	std::exception_ptr error;
+	size_t started_workers = 0;
 
-	// TODO: dynamic threadpool
-
-	for ( auto& thread : m_threads ) {
-		thread->T_Start();
-	}
-
-	try {
-		while ( !m_is_shutting_down ) {
-			for ( auto& thread : m_threads ) {
-				// ?
+	bool workers_stopped = false;
+	const auto stop_workers = [ & ]() {
+		if ( workers_stopped ) { return; }
+		std::exception_ptr stop_error;
+		// Workers may still use graphics, logging and other main-thread services.
+		// Join them before any main module cleanup, including on failure.
+		ShutDown();
+		for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+			try {
+				m_threads[ i ]->T_Stop();
 			}
-			std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
-		}
-		Log( "Shutting down" );
-
-		for ( auto& thread : m_threads ) {
-			thread->T_Stop();
+			catch ( ... ) {
+				if ( !stop_error ) {
+					stop_error = std::current_exception();
+				}
+			}
 		}
 #ifdef DEBUG
 		util::Timer thread_running_timer;
@@ -174,11 +176,17 @@ int Engine::Run() {
 #ifdef DEBUG
 			const bool announce_frozen_threads = thread_running_timer.HasTicked();
 #endif
-			for ( auto& thread : m_threads ) {
+			for ( size_t i = 1 ; i <= started_workers ; ++i ) {
+				auto* thread = m_threads[ i ];
 				if ( thread->T_IsRunning() ) {
 #ifdef DEBUG
 					if ( announce_frozen_threads ) {
-						Log( "Thread " + thread->GetThreadName() + " still running" );
+						try {
+							Log( "Thread " + thread->GetThreadName() + " still running" );
+						}
+						catch ( ... ) {
+							if ( !stop_error ) { stop_error = std::current_exception(); }
+						}
 					}
 #endif
 					any_thread_running = true;
@@ -191,11 +199,41 @@ int Engine::Run() {
 				}
 			}
 		}
+		workers_stopped = true;
+		if ( stop_error ) { std::rethrow_exception( stop_error ); }
+	};
 
+	// TODO: dynamic threadpool
+
+	// SDL video initialization, event pumping and rendering must stay on the
+	// process main thread (in particular for Cocoa on macOS).
+	try {
+		for ( size_t i = 1 ; i < m_threads.size() ; ++i ) {
+			m_threads[ i ]->T_Start();
+			++started_workers;
+		}
+		m_threads.front()->RunOnCurrentThread( [ this ]() { return m_is_shutting_down.load(); }, stop_workers );
+		Log( "Shutting down" );
 	}
-	catch ( std::runtime_error& e ) {
-		result = EXIT_FAILURE;
-		m_error_handler->HandleError( e );
+	catch ( ... ) {
+		error = std::current_exception();
+	}
+
+	// Worker launch can fail before the main thread enters Run.
+	try {
+		stop_workers();
+	}
+	catch ( ... ) {
+		if ( !error ) { error = std::current_exception(); }
+	}
+	if ( error ) {
+		try {
+			std::rethrow_exception( error );
+		}
+		catch ( const std::runtime_error& e ) {
+			result = EXIT_FAILURE;
+			m_error_handler->HandleError( e );
+		}
 	}
 
 	return result;
