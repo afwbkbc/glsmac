@@ -96,6 +96,9 @@ protected:
 	types::Vec2< unsigned short > m_viewport_size;
 	SDL_Window* m_window;
 	SDL_GLContext m_gl_context;
+#ifdef __APPLE__
+	GLuint m_vertex_array = 0;
+#endif
 	std::vector< shader_program::ShaderProgram* > m_shader_programs;
 
 	std::vector< routine::Routine* > m_routines;
