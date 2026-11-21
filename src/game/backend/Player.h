@@ -3,7 +3,7 @@
 #include <string>
 
 #include "types/Serializable.h"
-#include "gse/Wrappable.h"
+#include "gse/GCWrappable.h"
 
 namespace game {
 namespace backend {
@@ -18,7 +18,7 @@ namespace slot {
 class Slot;
 }
 
-CLASS2( Player, types::Serializable, gse::Wrappable )
+CLASS2( Player, types::Serializable, gse::GCWrappable )
 
 	enum role_t {
 		PR_NONE,

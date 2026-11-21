@@ -58,7 +58,7 @@ public:
 		const pops_t& pops,
 		const size_t next_pop_id = 1
 	);
-	virtual ~Base() = default;
+	virtual ~Base();
 
 	const Game* const GetGame() const;
 
@@ -105,6 +105,7 @@ private:
 	gse::value::Object* const GetProduction( GSE_CALLABLE );
 
 	void TriggerUpdate();
+
 };
 
 }

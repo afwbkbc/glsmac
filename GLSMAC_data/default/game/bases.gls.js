@@ -19,6 +19,35 @@ const get_pending_production = (base) => {
 	return intake.MINERALS - consumption.MINERALS;
 };
 
+const get_energy_allocation = (base) => {
+
+	const total_energy = base.get_intake().ENERGY - base.get_consumption().ENERGY;
+
+	// TODO: social engineering
+	const allocation_labs = 0.4;
+	const allocation_psych = 0.2;
+
+	const result = {
+		labs: {
+			allocation: allocation_labs,
+			value: #round(#to_float(total_energy) * allocation_labs),
+			bonus: 0,
+		},
+		psych: {
+			allocation: allocation_psych,
+			value: #round(#to_float(total_energy) * allocation_psych),
+			bonus: 0,
+		},
+	};
+	result.economy = {
+		allocation: 1.0 - result.labs.allocation - result.psych.allocation,
+		value: total_energy - result.labs.value - result.psych.value,
+		bonus: 0,
+	};
+
+	return result;
+};
+
 const reset_nutrients = (game, base) => {
 	const nfg = get_nutrients_for_growth(game, base);
 	let accumulated = base.get('accumulated_nutrients');
@@ -139,12 +168,13 @@ const process_growth = (game, base) => {
 	}
 };
 
-const process_production = (game, base) => {
+const process_production = (game, base, f_on_stockpile_energy) => {
 	let accumulated = base.get('accumulated_minerals');
 	if (!#is_defined(accumulated)) {
 		accumulated = 0;
 	}
-	accumulated += get_pending_production(base);
+	const minerals_per_turn = get_pending_production(base);
+	accumulated += minerals_per_turn;
 	if (accumulated < 0) {
 		// TODO: disband some unit
 		accumulated = 0;
@@ -154,8 +184,8 @@ const process_production = (game, base) => {
 			case 'custom': {
 				switch (production.id) {
 					case 'STOCKPILE_ENERGY': {
-						#print('TODO: STOCKPILE_ENERGY', accumulated / 2);
 						accumulated = 0;
+						f_on_stockpile_energy(minerals_per_turn / 2);
 						break;
 					}
 				}
@@ -311,6 +341,7 @@ return (game) => {
 		// set bases-related globals
 		// TODO: prettier way to do this? needs to be callable from events
 		game.set('f_base_get_pending_growth', get_pending_growth);
+		game.set('f_base_get_energy_allocation', get_energy_allocation);
 		game.set('f_base_reset_nutrients', reset_nutrients);
 		game.set('f_base_pop_work_tile', pop_work_tile);
 		game.set('f_base_pop_unwork_tile', pop_unwork);
@@ -318,15 +349,34 @@ return (game) => {
 
 		// new turn, process all bases
 		game.on('turn', (e) => {
-			for (base of bm.get_bases()) {
-				process_growth(game, base);
 
-				if (e.year > 2101) { // no production on first turn
-					process_production(game, base);
-				} else {
-					reset_minerals(game, base); // initialize
+			for (player of game.get_players()) {
+				let total_energy = 0;
+
+				for (base of player.get_bases()) {
+
+					process_growth(game, base);
+
+					total_energy += get_energy_allocation(base).economy.value;
+
+					if (e.year > 2101) { // no production on first turn
+						process_production(game, base, (energy) => {
+							// stockpile energy
+							total_energy += energy;
+						});
+					} else {
+						reset_minerals(game, base); // initialize
+					}
 				}
+
+				game.event('add_player_value', {
+					player: player,
+					key: 'ENERGY',
+					value: total_energy,
+				});
+
 			}
+
 		});
 
 	});

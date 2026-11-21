@@ -7,6 +7,10 @@
 
 #include "gse/value/String.h"
 #include "gse/value/Bool.h"
+#include "gse/value/Float.h"
+#include "gse/value/Array.h"
+
+#include "game/backend/base/Base.h"
 
 #include "engine/Engine.h"
 #include "Game.h"
@@ -14,7 +18,8 @@
 namespace game {
 namespace backend {
 
-Player::Player( types::Buffer buf ) {
+Player::Player( types::Buffer buf )
+	: gse::GCWrappable( nullptr ) {
 	Player::Deserialize( buf );
 }
 
@@ -24,12 +29,14 @@ Player::Player(
 	faction::Faction* faction,
 	const std::string& difficulty_level
 )
-	: m_name( name )
+	: gse::GCWrappable( nullptr )
+	, m_name( name )
 	, m_role( role )
 	, m_faction( faction )
 	, m_difficulty_level( difficulty_level ) {}
 
-Player::Player( const Player* const other ) {
+Player::Player( const Player* const other )
+	: gse::GCWrappable( nullptr ) {
 	*this = *other;
 }
 
@@ -107,6 +114,7 @@ void Player::UncompleteTurn() {
 WRAPIMPL_BEGIN( Player )
 	auto* const game = g_engine->GetGame();
 	WRAPIMPL_PROPS
+	WRAPIMPL_TRIGGERS
 			{
 				"id",
 				VALUE( gse::value::Int, , m_slotnum )
@@ -191,6 +199,18 @@ WRAPIMPL_BEGIN( Player )
 				VALUE( gse::value::Bool, , m_role == PR_SINGLE || m_role == PR_HOST )
 			},
 			{
+				"get_bases",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 0 );
+
+					gse::value::array_elements_t result = {};
+					for ( const auto& it : m_slot->GetBases() ) {
+						result.push_back( it.second->Wrap( GSE_CALL ) );
+					}
+					return VALUE( gse::value::Array,, result );
+				} )
+			},
+			{
 				"add_production_choice", // TODO: expose Slot itself to scripts and move this method there, needed for AI in the future
 				NATIVE_CALL( this, game ) {
 
@@ -211,13 +231,49 @@ WRAPIMPL_BEGIN( Player )
 
 					game->CheckRW( GSE_CALL );
 
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( id, 0, String );
+
+					m_slot->RemoveProductionChoice( GSE_CALL, id );
+
 					return VALUE( gse::value::Undefined );
+				} )
+
+			},
+			{
+				"add_value",
+				NATIVE_CALL( this, game ) {
+
+					game->CheckRW( GSE_CALL );
+
+					N_EXPECT_ARGS( 2 );
+					N_GETVALUE( key, 0, String );
+					N_GETVALUE( value, 1, Float );
+
+					const auto total_value = m_slot->AddValue( key, value );
+
+					Trigger( GSE_CALL, "value_update", ARGS_F( key, total_value ) {
+						{ "key", VALUE( gse::value::String,, key ) },
+						{ "value", VALUE( gse::value::Float,, total_value ) },
+					}; } );
+
+					return VALUE( gse::value::Undefined );
+				} )
+			},
+			{
+				"get_value",
+				NATIVE_CALL( this ) {
+					N_EXPECT_ARGS( 1 );
+					N_GETVALUE( id, 0, String );
+
+					return VALUE( gse::value::Float,, m_slot->GetValue( id ) );
 				} )
 			},
 		};
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( Player )
+
 
 const types::Buffer Player::Serialize() const {
 	types::Buffer buf;

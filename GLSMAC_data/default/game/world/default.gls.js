@@ -68,6 +68,13 @@ return (game) => {
 
 		const tile = get_good_starting_base_location(faction.is_naval);
 
+		// initial energy
+		game.event('add_player_value', {
+			player: player,
+			key: 'ENERGY',
+			value: 10,
+		});
+
 		// initial production choices (TODO: technologies)
 		game.event('add_production_choice', {
 			player: player,

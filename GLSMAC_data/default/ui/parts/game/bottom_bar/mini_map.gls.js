@@ -60,12 +60,21 @@ return {
 		minimap.listen(p.game, 'turn', (e) => {
 			info_year.text = 'Mission Year ' + #to_string(e.year);
 		});
+
+		const player = p.game.get_player();
+
 		const info_energy = info_block.text({
 			class: 'bottombar-minimap-info-text',
 			align: 'bottom left',
 			bottom: 4,
 			left: 3,
-			text: 'Energy: 0',
+			text: 'Energy: ' + #to_string(#round(player.get_value('ENERGY'))),
+		});
+
+		player.on('value_update', (e) => {
+			if (e.key == 'ENERGY') {
+				info_energy.text = 'Energy: ' + #to_string(#round(e.value));
+			}
 		});
 
 		// minimap-related buttons (no functionality yet)

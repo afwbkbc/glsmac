@@ -66,6 +66,13 @@ Base::Base(
 	for ( auto& it : m_pops ) {
 		it.second.SetBase( this );
 	}
+	m_owner->AddBase( this );
+}
+
+Base::~Base() {
+	if ( m_owner ) {
+		m_owner->RemoveBase( this );
+	}
 }
 
 const Game* const Base::GetGame() const {

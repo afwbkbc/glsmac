@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include <string>
 
@@ -12,8 +13,11 @@
 namespace game {
 namespace backend {
 
-namespace base::production {
+namespace base {
+class Base;
+namespace production {
 class Production;
+}
 }
 
 class State;
@@ -60,8 +64,16 @@ CLASS2( Slot, types::Serializable, gse::Wrappable )
 
 	typedef std::unordered_map< std::string, const base::production::Production* > production_choices_t;
 	void AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::value::object_properties_t& data );
+	void RemoveProductionChoice( GSE_CALLABLE, const std::string& id );
 	const production_choices_t& GetProductionChoices() const;
 	const base::production::Production* const GetProductionChoice( const std::string& id ) const;
+
+	void AddBase( base::Base* base );
+	void RemoveBase( base::Base* base );
+	const std::map< size_t, base::Base* >& GetBases() const;
+
+	const double AddValue( const std::string& key, const double value );
+	const double GetValue( const std::string& key ) const;
 
 	WRAPDEFS_PTR( Slot );
 
@@ -80,7 +92,12 @@ private:
 	} m_player_data = {};
 	std::string m_linked_gsid = "";
 
+	const base::production::Production* m_default_production_choice = nullptr;
 	production_choices_t m_production_choices = {};
+
+	std::map< size_t, base::Base* > m_bases = {};
+
+	std::unordered_map< std::string, double > m_resources = {};
 
 	void Update();
 };

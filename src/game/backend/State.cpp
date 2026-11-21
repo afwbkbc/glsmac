@@ -231,6 +231,12 @@ void State::GetReachableObjects( std::unordered_set< Object* >& reachable_object
 		GC_DEBUG_END();
 	}
 
+	GC_DEBUG_BEGIN( "players" );
+	for ( const auto& player : m_players ) {
+		GC_REACHABLE( player );
+	}
+	GC_DEBUG_END();
+
 	GC_DEBUG_END();
 }
 

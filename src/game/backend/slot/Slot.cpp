@@ -8,6 +8,7 @@
 
 #include "gse/value/Int.h"
 
+#include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/production/Facility.h"
 #include "game/backend/base/production/Custom.h"
@@ -21,6 +22,9 @@ Slot::Slot( const size_t index, State* state )
 	, m_state( state ) {}
 
 Slot::~Slot() {
+	for ( const auto& it : m_bases ) {
+		it.second->m_owner = nullptr;
+	}
 	for ( const auto& it : m_production_choices ) {
 		delete it.second;
 	}
@@ -257,6 +261,14 @@ void Slot::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::
 	m_production_choices.insert( { id, production } );
 }
 
+void Slot::RemoveProductionChoice( GSE_CALLABLE, const std::string& id ) {
+	if ( m_production_choices.find( id ) == m_production_choices.end() ) {
+		GSE_ERROR( gse::EC.GAME_ERROR, "Production choice '" + id + "' is not defined" );
+	}
+	// check bases and clear production where needed
+
+}
+
 const Slot::production_choices_t& Slot::GetProductionChoices() const {
 	return m_production_choices;
 }
@@ -268,6 +280,39 @@ const base::production::Production* const Slot::GetProductionChoice( const std::
 	}
 	else {
 		return nullptr;
+	}
+}
+
+void Slot::AddBase( base::Base* base ) {
+	ASSERT( m_bases.find( base->m_id ) == m_bases.end(), "base " + std::to_string( base->m_id ) + " already in slot" );
+	m_bases.insert( { base->m_id, base } );
+}
+
+void Slot::RemoveBase( base::Base* base ) {
+	ASSERT( m_bases.find( base->m_id ) != m_bases.end(), "base " + std::to_string( base->m_id ) + " not in slot" );
+	m_bases.erase( base->m_id );
+}
+
+const std::map< size_t, base::Base* >& Slot::GetBases() const {
+	return m_bases;
+}
+
+const double Slot::AddValue( const std::string& key, const double value ) {
+	auto it = m_resources.find( key );
+	if ( it == m_resources.end() ) {
+		it = m_resources.insert( { key, 0 } ).first;
+	}
+	it->second += value;
+	return it->second;
+}
+
+const double Slot::GetValue( const std::string& key ) const {
+	const auto& it = m_resources.find( key );
+	if ( it != m_resources.end() ) {
+		return it->second;
+	}
+	else {
+		return 0;
 	}
 }
 
