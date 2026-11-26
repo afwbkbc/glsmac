@@ -24,6 +24,7 @@ public:
 	const sprite_render_info_t m_render = {};
 
 	const std::string ToString( const std::string& prefix ) const override;
+	const std::string ToTextureString() const override;
 
 private:
 	friend class Render;

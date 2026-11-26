@@ -47,6 +47,10 @@ const std::string SpriteRender::ToString( const std::string& prefix ) const {
 		TS_OBJ_END();
 }
 
+const std::string SpriteRender::ToTextureString() const {
+	return m_render.file + ":crop(" + std::to_string( m_render.x ) + "," + std::to_string( m_render.y ) + "," + std::to_string( m_render.x + m_render.w - 1 ) + "," + std::to_string( m_render.y + m_render.h - 1 ) + ")";
+}
+
 void SpriteRender::Serialize( types::Buffer& buf, const SpriteRender* render ) {
 	buf.WriteString( render->m_render.file );
 	buf.WriteInt( render->m_render.x );

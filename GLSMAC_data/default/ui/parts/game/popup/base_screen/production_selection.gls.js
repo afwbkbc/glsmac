@@ -169,10 +169,19 @@ return {
 				color: c,
 			});
 
-			panel.surface({
-				class: 'base-screen-production-preview',
-				background: choice.texture + ':tint(' + c + ',1.0):stretch',
-			});
+			if ( choice.type == 'unit' ) {
+				// unit textures have different aspect ratio, also no tint
+				panel.surface({
+					class: 'base-screen-production-preview-unit',
+					background: choice.texture + ':stretch',
+				});
+			}
+			else {
+				panel.surface({
+					class: 'base-screen-production-preview',
+					background: choice.texture + ':tint(' + c + ',1.0):stretch',
+				});
+			}
 
 			let eta = '';
 			if (#is_defined(choice.cost)) {

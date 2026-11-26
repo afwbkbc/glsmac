@@ -375,6 +375,8 @@ WRAPIMPL_BEGIN( UnitManager )
 						GSE_ERROR( gse::EC.INVALID_CALL, "Invalid movement type: " + movement_type_str + ". Specify one of: land water air immovable");
 					}
 					N_GETPROP( movement_per_turn, unit_def, "movement_per_turn", Int );
+					N_GETPROP( cost, unit_def, "cost", Int );
+
 					N_GETPROP( render_def, unit_def, "render", Object );
 					N_GETPROP( render_type, render_def, "type", String );
 					if ( render_type == "sprite" ) {
@@ -396,6 +398,7 @@ WRAPIMPL_BEGIN( UnitManager )
 							name,
 							movement_type,
 							movement_per_turn,
+							cost,
 							new unit::SpriteRender(
 								sprite_file,
 								sprite_x,

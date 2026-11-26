@@ -204,6 +204,19 @@ const process_production = (game, base, f_on_stockpile_energy) => {
 				}
 				break;
 			}
+			case 'unit': {
+				if (accumulated >= production.cost) {
+					// production finished
+					game.event('spawn_unit', {
+						owner: base.get_owner(),
+						tile: base.get_tile(),
+						type: production.unit_id,
+						health: 1.0,
+						morale: 1,
+					});
+					accumulated -= production.cost;
+				}
+			}
 		}
 	}
 	base.set('accumulated_minerals', accumulated);

@@ -13,7 +13,7 @@ const moralesets = [
 	},
 ];
 
-const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => {
+const native_lifeform = (id, name, movement_type, movement_per_turn, base_y, cost) => {
 	return {
 		id: id,
 		data: {
@@ -22,6 +22,7 @@ const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => 
 			type: 'static',
 			movement_type: movement_type,
 			movement_per_turn: movement_per_turn,
+			cost: cost,
 			render: {
 				type: 'sprite',
 				file: 'units.pcx',
@@ -35,10 +36,11 @@ const native_lifeform = (id, name, movement_type, movement_per_turn, base_y) => 
 };
 
 const units = [
-	native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79),
-	native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233),
-	native_lifeform('SeaLurk', 'Sea Lurk', 'water', 4, 310),
-	native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387),
+	// TODO: correct costs
+	native_lifeform('FungalTower', 'Fungal Tower', 'immovable', 0, 79, 24),
+	native_lifeform('MindWorms', 'Mind Worms', 'land', 1, 233, 24),
+	native_lifeform('SeaLurk', 'Sea Lurk', 'water', 4, 310, 24),
+	native_lifeform('SporeLauncher', 'Spore Launcher', 'land', 1, 387, 24),
 ];
 
 const result = {

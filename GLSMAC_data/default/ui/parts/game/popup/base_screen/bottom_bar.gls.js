@@ -84,10 +84,7 @@ return {
 			minerals_per_turn: data.minerals_per_turn,
 		});
 
-		this.parts.queue.set([
-			'Mind Worms',
-			'Recreation Commons',
-		]);
+		this.parts.queue.set([]); // TODO
 
 		this.parts.middle_area.set({
 			name: data.base.name,

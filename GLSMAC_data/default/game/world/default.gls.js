@@ -103,6 +103,14 @@ return (game) => {
 				intent: 'build',
 			},
 		});
+		game.event('add_production_choice', {
+			player: player,
+			id: 'MIND_WORMS',
+			data: {
+				type: 'unit',
+				id: 'MindWorms',
+			},
+		});
 
 		// spawn headquarters base
 		game.event('spawn_base', {

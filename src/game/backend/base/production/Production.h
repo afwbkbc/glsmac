@@ -15,6 +15,7 @@ class Production {
 public:
 	enum production_type_t {
 		PT_FACILITY,
+		PT_UNIT,
 		PT_CUSTOM,
 	};
 

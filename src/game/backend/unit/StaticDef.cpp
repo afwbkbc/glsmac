@@ -48,9 +48,10 @@ StaticDef::StaticDef(
 	const std::string& name,
 	const movement_type_t movement_type,
 	const movement_t movement_per_turn,
+	const size_t cost,
 	const Render* render
 )
-	: Def( id, moraleset, DT_STATIC, name )
+	: Def( id, moraleset, DT_STATIC, name, cost )
 	, m_movement_type( movement_type )
 	, m_movement_per_turn( movement_per_turn )
 	, m_render( render ) {}
@@ -80,12 +81,12 @@ void StaticDef::Serialize( types::Buffer& buf, const StaticDef* def ) {
 	Render::Serialize( buf, def->m_render );
 }
 
-StaticDef* StaticDef::Deserialize( types::Buffer& buf, const std::string& id, const std::string& moraleset_name, const std::string& name ) {
+StaticDef* StaticDef::Deserialize( types::Buffer& buf, const std::string& id, const std::string& moraleset_name, const std::string& name, const size_t cost ) {
 	const auto movement_type = (movement_type_t)buf.ReadInt();
 	const auto movement_per_turn = buf.ReadFloat();
 	const auto* moraleset = g_engine->GetGame()->GetUM()->GetMoraleSet( moraleset_name );
 	ASSERT( moraleset, "could not find morale set: " + moraleset_name );
-	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, Render::Deserialize( buf ) );
+	return new StaticDef( id, moraleset, name, movement_type, movement_per_turn, cost, Render::Deserialize( buf ) );
 }
 
 WRAPIMPL_BEGIN( StaticDef )
@@ -102,6 +103,11 @@ WRAPIMPL_BEGIN( StaticDef )
 WRAPIMPL_END_PTR()
 
 UNWRAPIMPL_PTR( StaticDef )
+
+const std::string StaticDef::GetRenderTextureString() const {
+	ASSERT( m_render, "unit staticdef render not set" );
+	return m_render->ToTextureString();
+}
 
 }
 }

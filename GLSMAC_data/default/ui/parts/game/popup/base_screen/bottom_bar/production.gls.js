@@ -69,7 +69,20 @@ return {
 
 		const c = this.p.INTENT_COLORS[production.intent];
 
-		this.production_preview.background = production.texture + ':tint(' + c + ',1.0):stretch';
+		if (production.type == 'unit') {
+			// unit textures have different aspect ratios (TODO: refactor)
+			// also, no tint
+			this.production_preview.background = production.texture + ':stretch';
+			this.production_preview.width = 100;
+			this.production_preview.height = 50;
+			this.production_preview.top = 0;
+		} else {
+			this.production_preview.background = production.texture + ':tint(' + c + ',1.0):stretch';
+			this.production_preview.width = 40;
+			this.production_preview.height = 40;
+			this.production_preview.top = 20;
+		}
+
 		this.production_title.text = production.name;
 		this.production_title.color = c;
 

@@ -11,7 +11,10 @@
 #include "game/backend/base/Base.h"
 #include "game/backend/base/BaseManager.h"
 #include "game/backend/base/production/Facility.h"
+#include "game/backend/base/production/Unit.h"
 #include "game/backend/base/production/Custom.h"
+
+#include "game/backend/unit/UnitManager.h"
 
 namespace game {
 namespace backend {
@@ -238,6 +241,18 @@ void Slot::AddProductionChoice( GSE_CALLABLE, const std::string& id, const gse::
 			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - facility id not found: " + facility_id );
 		}
 		production = new base::production::Facility( id, facility, hint, intent );
+	}
+	else if ( type == "unit" ) {
+		const auto& unit_id_it = data.find( "id" );
+		if ( unit_id_it == data.end() || unit_id_it->second->type != gse::VT_STRING ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - unit id is not specified or is not string" );
+		}
+		const auto& unit_id = ( (gse::value::String*)unit_id_it->second )->value;
+		const auto* const unit = g_engine->GetGame()->GetUM()->GetUnitDef( unit_id );
+		if ( !unit ) {
+			GSE_ERROR( gse::EC.GAME_ERROR, "Production choice data - unit id not found: " + unit_id );
+		}
+		production = new base::production::Unit( id, unit );
 	}
 	else if ( type == "custom" ) {
 		const auto& render_it = data.find( "render" );

@@ -122,6 +122,13 @@ return {
 			height: 50,
 		});
 
+		// units are textured with different aspect ratio ; TODO: refactor
+		p.ui.class('base-screen-production-preview-unit').extend('base-screen-production-preview').set({
+			align: 'top center',
+			width: 100,
+			top: 20,
+		});
+
 		p.ui.class('base-screen-production-footer').set({
 			align: 'bottom center',
 			font: 'arialnb.ttf:13',

@@ -11,11 +11,12 @@ namespace game {
 namespace backend {
 namespace unit {
 
-Def::Def( const std::string& id, const MoraleSet* moraleset, const def_type_t type, const std::string& name )
+Def::Def( const std::string& id, const MoraleSet* moraleset, const def_type_t type, const std::string& name, const size_t cost )
 	: m_id( id )
 	, m_moraleset( moraleset )
 	, m_type( type )
-	, m_name( name ) {
+	, m_name( name )
+	, m_cost( cost ) {
 	//
 }
 
@@ -24,6 +25,7 @@ const types::Buffer Def::Serialize( const Def* def ) {
 	buf.WriteString( def->m_id );
 	buf.WriteString( def->m_moraleset->m_id );
 	buf.WriteString( def->m_name );
+	buf.WriteInt( def->m_cost );
 	buf.WriteInt( def->m_type );
 	switch ( def->m_type ) {
 		case DT_STATIC: {
@@ -40,10 +42,11 @@ Def* Def::Deserialize( types::Buffer& buf ) {
 	const auto id = buf.ReadString();
 	const auto moraleset = buf.ReadString();
 	const auto name = buf.ReadString();
+	const auto cost = buf.ReadInt();
 	const auto type = (def_type_t)buf.ReadInt();
 	switch ( type ) {
 		case DT_STATIC:
-			return StaticDef::Deserialize( buf, id, moraleset, name );
+			return StaticDef::Deserialize( buf, id, moraleset, name, cost );
 		default:
 			THROW( "unknown def type on read: " + std::to_string( type ) );
 	}
