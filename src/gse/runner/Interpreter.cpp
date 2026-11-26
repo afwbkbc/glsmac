@@ -640,7 +640,8 @@ gse::Value* const Interpreter::EvaluateExpression( context::Context* ctx, Execut
 						properties.insert_or_assign( it.first, it.second );
 					}
 					auto si = expression->m_si;
-					return VALUEEXT( value::Object, GSE_CALL, properties );
+					result = VALUEEXT( value::Object, GSE_CALL, properties );
+					break;
 				}
 			MATH_OP_END()
 		}

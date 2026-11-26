@@ -458,6 +458,31 @@ testobj6.key2 = #undefined;
 test.assert(#to_string(testobj6) == '{ key1: value1, key3: null }');
 
 {
+	// += on an object must assign the merged object back to the variable
+	let compound = {a: 1};
+	compound += {b: 2};
+	test.assert(compound == {a: 1, b: 2});
+
+	// and the expression must evaluate to the merged object, like other compound assignments
+	let compound_result = (compound += {c: 3});
+	test.assert(compound_result == {a: 1, b: 2, c: 3});
+	test.assert(compound == {a: 1, b: 2, c: 3});
+
+	// duplicate keys are still rejected and leave the variable untouched
+	let compound_dup = {a: 1};
+	let compound_dup_caught = false;
+	try {
+		compound_dup += {a: 2};
+	} catch {
+		: (e) => {
+			compound_dup_caught = true;
+		}
+	}
+	test.assert(compound_dup_caught == true);
+	test.assert(compound_dup == {a: 1});
+}
+
+{
 	let pushpop = ['asd', 'qwe'];
 	pushpop :+ 'zxc';
 	test.assert(pushpop == ['asd', 'qwe', 'zxc']);
